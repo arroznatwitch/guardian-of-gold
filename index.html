@@ -404,7 +404,8 @@ const RAID_D = [
   { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 30, spd: 1.25 },
 ];
 let raidD = 0;
-const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15;
+const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15, LUCKY_MAX = 85;
+const luckOk = (lv, id) => ANV_CH[lv] + Math.min(25, 5 * ((save.pity && save.pity[id]) || 0)) < LUCKY_MAX;   // o amuleto so ajuda se a chance for inferior a 85%
 const anvCost = l => 40 * (l + 1) + (l >= 8 ? 100 * (l - 7) : 0), luckyCost = l => 30 + 15 * l, protCost = l => 60 + 30 * l;
 const auraCol = l => l >= 12 ? '#ffd34a' : l >= 10 ? '#ff6a6a' : l >= 5 ? '#7fd0ff' : null;
 
@@ -982,6 +983,7 @@ Object.assign(EN_DICT, {"Entra na tua conta para jogar": "Log in to your account
 Object.assign(EN_DICT, {"MELHOR": "BETTER", "PIOR": "WORSE", "SIMILAR": "SIMILAR", "Slot vazio": "Empty slot", "igual à equipada": "same as equipped", "% vs equipada": "% vs equipped"});
 Object.assign(EN_DICT, {"Arma bloqueada": "Locked weapon", "DESBLOQUEADO!": "UNLOCKED!", "O teu nível:": "Your level:", "Mochila ·": "Backpack ·", "Nenhum item para este slot": "No items for this slot", "Shift+clique: melhor": "Shift+click: best", "Nada melhor na mochila": "Nothing better in the backpack", "PRONTO": "READY"});
 Object.assign(EN_DICT, {"Raids": "Raids", "Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.": "Very hard boss fights, with lots of gold and guaranteed rare items.", "Melhora as tuas armas até +12, com amuletos de sorte e pergaminhos de proteção.": "Upgrade your weapons up to +12, with luck charms and protection scrolls.", "Refina o equipamento até +10 e sorteia encantamentos especiais.": "Refine your gear up to +10 and roll special enchantments.", "Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.": "Merge 5 identical weapons or pieces to gain stars, more power and improved skills.", "Falta": "Only", "Faltam": "Only", "níveis para desbloquear": "levels to go", "nível para desbloquear": "level to go", "Próximo nível:": "Next level:", "Joga no Farm para ganhar XP e subir de nível.": "Play Farm to earn XP and level up."});
+Object.assign(EN_DICT, {"Sorte indisponível (85%+)": "Luck unavailable (85%+)"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1774,6 +1776,7 @@ function hubAnvil() {
   txt(max ? `Dano ${d0}` : `Dano ${d0} > ${d1}`, 205, 208, 14, '#9cf');
   if (max) txt('Nível máximo!', 205, 250, 18, '#ffd34a', 'left', 'bold');
   else {
+    if (anvLucky && !luckOk(lv, w.id)) anvLucky = false;
     const base = ANV_CH[lv], pity = Math.min(25, 5 * (save.pity[w.id] || 0)), lucky = anvLucky ? LUCKY_BONUS : 0, ch = Math.min(100, base + pity + lucky);
     const lc = luckyCost(lv), pc = protCost(lv), useP = anvProt && lv >= 5, total = anvCost(lv) + (anvLucky ? lc : 0) + (useP ? pc : 0);
     txt(`Chance total: ${ch}%`, 205, 234, 17, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold');
@@ -1781,7 +1784,8 @@ function hubAnvil() {
     let px = 205; for (const [v, col] of [[base, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'], [pity, '#ffd34a'], [lucky, '#6cf']]) { const ww = Math.min(bw * v / 100, 205 + bw - px); ctx.fillStyle = col; ctx.fillRect(px, 242, ww, 10); px += ww; }
     txt(`Chance base: ${base}% · Bónus de azar: +${pity}%`, 205, 266, 11, '#9ab');
     wrap(lv >= 5 ? 'Se falhar: perdes o ouro e há 35% de a arma descer 1 nível (evitável com Proteção).' : 'Se falhar: perdes só o ouro.', 205, 284, 205, 14, 11, lv >= 5 ? '#f99' : '#9ab');
-    btn(205, 316, 200, 28, `${anvLucky ? '✓' : '·'} Amuleto da Sorte (+15%) ¢${lc}`, () => anvLucky = !anvLucky, { size: 11, off: anv.t > 0, col: anvLucky ? '#2f6a8a' : '#2a2a48' });
+    const lOk = luckOk(lv, w.id);
+    btn(205, 316, 200, 28, lOk ? `${anvLucky ? '✓' : '·'} Amuleto da Sorte (+15%) ¢${lc}` : 'Sorte indisponível (85%+)', () => { if (lOk) anvLucky = !anvLucky; else lockClick('lucky'); }, { size: 11, off: anv.t > 0, col: !lOk ? '#26262f' : anvLucky ? '#2f6a8a' : '#2a2a48' });
     if (lv >= 5) btn(205, 348, 200, 28, `${anvProt ? '✓' : '·'} Pergaminho de Proteção ¢${pc}`, () => anvProt = !anvProt, { size: 11, off: anv.t > 0, col: anvProt ? '#2f7a4a' : '#2a2a48' });
     txt(`Custo total: ¢${total}`, 205, 400, 15, '#fd5');
     btn(205, 410, 200, 44, anv.t > 0 ? 'A forjar…' : 'MARTELAR!', () => hammer(anvSel), { off: anv.t > 0 || save.gold < total, col: '#a06a20', hot: '#c98a30', size: 19 });
@@ -1798,6 +1802,7 @@ function hubAnvil() {
 function hammer(i) {
   const w = CLASSES[save.cls].weapons[i], lv = save.wl[w.id] || 0;
   if (anv.t > 0 || lv >= ANV_MAX) return;
+  if (anvLucky && !luckOk(lv, w.id)) anvLucky = false;
   const useP = anvProt && lv >= 5, total = anvCost(lv) + (anvLucky ? luckyCost(lv) : 0) + (useP ? protCost(lv) : 0);
   if (save.gold < total) { SFX.error(); return; }
   save.gold -= total;
