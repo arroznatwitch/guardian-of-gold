@@ -831,7 +831,8 @@ function update(dt) {
   // spawn
   if (R.phase === 'hunt' && !dead) {
     R.spawnT -= dt;
-    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / (1 + .1 * (R.raid ? R.raid.d : 0)); }
+    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB + (R.hordeB || 0)) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / ((1 + .1 * (R.raid ? R.raid.d : 0)) * (R.spawnRate || 1)); }
+    if (R.farm && R.hordeB) { R.packT -= dt; if (R.packT <= 0) { R.packT = 6; const n = 3 + Math.min(5, Math.floor(R.wave / 10)); for (let i = 0; i < n; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); } }
   }
 
   // inimigos
@@ -868,7 +869,7 @@ function update(dt) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
     if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < 3 + R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
   }
-  if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (R.wave % 5 === 0) spawnBoss(); else nextWave(); } }
+  if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (isHorde(R.wave)) { giveLoot(R.p.x, R.p.y - 24, 1); R.toast = 'HORDA DERROTADA!'; R.toastT = 2.2; } if (R.wave % 5 === 0) spawnBoss(); else nextWave(); } }
   else if (R.phase === 'hunt' && R.kills >= R.need && !dead) spawnBoss();
 
   // boss
@@ -986,6 +987,7 @@ Object.assign(EN_DICT, {"Arma bloqueada": "Locked weapon", "DESBLOQUEADO!": "UNL
 Object.assign(EN_DICT, {"Raids": "Raids", "Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.": "Very hard boss fights, with lots of gold and guaranteed rare items.", "Melhora as tuas armas até +12, com amuletos de sorte e pergaminhos de proteção.": "Upgrade your weapons up to +12, with luck charms and protection scrolls.", "Refina o equipamento até +10 e sorteia encantamentos especiais.": "Refine your gear up to +10 and roll special enchantments.", "Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.": "Merge 5 identical weapons or pieces to gain stars, more power and improved skills.", "Falta": "Only", "Faltam": "Only", "níveis para desbloquear": "levels to go", "nível para desbloquear": "level to go", "Próximo nível:": "Next level:", "Joga no Farm para ganhar XP e subir de nível.": "Play Farm to earn XP and level up."});
 Object.assign(EN_DICT, {"Sorte indisponível (85%+)": "Luck unavailable (85%+)"});
 Object.assign(EN_DICT, {"Perfil indisponível": "Profile unavailable", "A carregar perfil...": "Loading profile...", "Ainda sem build partilhada": "No build shared yet", "Clica num jogador para ver o perfil": "Click a player to see the profile", "Recorde de waves": "Wave record"});
+Object.assign(EN_DICT, {"HORDA!": "HORDE!", "HORDA DERROTADA!": "HORDE DEFEATED!"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1409,12 +1411,20 @@ function bossDown(b) {
   for (let i = 0; i < (R.raid ? 1 + R.raid.d : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
   if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
 }
+const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
-  const w = R.wave; R.need = Math.min(40, 8 + 2 * w); R.waveKills = 0;
-  R.hpM = 1 + .16 * (w - 1); R.dmgM = 1 + .06 * (w - 1); R.goldM = 1 + .12 * (w - 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9; R.capB = Math.min(6, Math.floor(w / 4));
+  const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(60, 8 + 2 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
+  R.hpM = 1 + .16 * (w - 1); R.dmgM = 1 + .06 * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9;
+  R.capB = Math.min(10, Math.floor(w / 4)) + Math.min(10, 2 * Math.floor(w / 10));       // mais monstros em simultaneo, sempre a subir
+  R.hordeB = h ? 6 + Math.min(10, Math.floor(w / 10)) : 0;                               // a horda aguenta ainda mais
+  R.spawnRate = Math.min(2.2, 1 + .02 * (w - 1)) * (h ? 1.8 : 1); R.packT = 5;
+}
+function hordeBurst() {
+  const n = 8 + Math.min(14, Math.floor(R.wave / 5)); for (let i = 0; i < n; i++) spawnEdge(MISSIONS[R.m].types[Math.floor(Math.random() * MISSIONS[R.m].types.length)]);
 }
 function nextWave() {
-  R.wave++; applyWave(); R.toast = R.wave % 5 === 0 ? `ONDA ${R.wave} · BOSS!` : `ONDA ${R.wave}`; R.toastT = 2.5; heal(R.p.max * .15); SFX.ready(); R.shake = 6;
+  R.wave++; applyWave(); R.toast = isHorde(R.wave) ? `ONDA ${R.wave} · HORDA!` : R.wave % 5 === 0 ? `ONDA ${R.wave} · BOSS!` : `ONDA ${R.wave}`; R.toastT = 2.5; heal(R.p.max * .15); SFX.ready(); R.shake = 6;
+  if (isHorde(R.wave)) { R.toastT = 3.2; R.shake = 14; SFX.boss(); hordeBurst(); }
 }
 function endTitle(win) { return R.farm ? (win ? 'FARM CONCLUÍDO' : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
@@ -2510,7 +2520,8 @@ function drawHUD() {
   ctx.globalAlpha = 1;
   const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
   txt(autoAtk ? `AUTO-ATAQUE (${keyName(binds.auto)})` : '', W - 12, 70, 12, '#7f7', 'right', 'bold');
-  txt(R.phase === 'hunt' ? (R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : 'Derrota o Boss!', W - 12, 26, 16, '#fff', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
+  txt(R.phase === 'hunt' ? (R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : 'Derrota o Boss!', W - 12, 26, 16, R.farm && R.hordeB && R.phase === 'hunt' ? (Math.floor(T * 3) % 2 ? '#ff6a6a' : '#fff') : '#fff', 'right', 'bold');
+  if (R.farm && R.hordeB && R.phase === 'hunt') txt('HORDA!', W - 12, 134, 14, '#ff6a6a', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
   if (R.raid) txt(`Raid ${RAID_D[R.raid.d].n} · Onda ${R.wave}/4`, W - 12, 92, 13, RAID_D[R.raid.d].col, 'right', 'bold');
   if (gameSpeed === 2) txt('VELOCIDADE x2', W - 12, 112, 13, '#ffd34a', 'right', 'bold');
   if (R.boss) { bar(W / 2 - 170, H - 30, 340, 16, R.boss.hp / R.boss.max, R.boss.col); txt(R.boss.name, W / 2, H - 36, 14, '#fff', 'center', 'bold'); }
