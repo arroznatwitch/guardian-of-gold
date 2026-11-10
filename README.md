@@ -2,7 +2,7 @@
 
 # Guardians of Gold
 
-**v1.1-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
+**v1.2-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
 
 <img src="docs/img/menu.jpg" width="640" alt="Menu do Guardians of Gold">
 
@@ -41,7 +41,7 @@ Todas as teclas podem ser mudadas em **Opções > Teclas**.
 
 # Wiki
 
-Índice: [Classes](#classes) · [Armas](#armas) · [Equipamento](#equipamento) · [Encantamentos](#encantamentos-e-bigorna) · [Progressão](#progressão) · [Farm e Raids](#farm-e-raids) · [Mapas](#mapas) · [Inimigos e bosses](#inimigos-e-bosses) · [Skins](#skins)
+Índice: [Classes](#classes) · [Armas](#armas) · [Equipamento](#equipamento) · [Encantamentos](#encantamentos-e-bigorna) · [Fusão](#fusão-de-armas) · [Progressão](#progressão) · [Farm e Raids](#farm-e-raids) · [Mapas](#mapas) · [Inimigos e bosses](#inimigos-e-bosses) · [Skins](#skins) · [Recompensas](#recompensas-e-diamantes)
 
 ## Classes
 
@@ -89,6 +89,23 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 | <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
 | <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
+## Fusão de armas
+
+<p align="center"><img src="docs/img/screen-fusion.jpg" width="48%" alt="Fusão"> <img src="docs/img/screen-rewards.jpg" width="48%" alt="Recompensas"></p>
+
+Armas repetidas caem de inimigos, bosses, raids e baús (ou compram-se no ecrã **Fusão**). Junta-as para as tornar mais fortes:
+
+| Junta | Obténs |
+|---|---|
+| 5 armas base | 1 arma de **1★** |
+| 5 de 1★ | 1 de **2★** |
+| 5 de 2★ | 1 de **3★** |
+| 5 de 3★ | 1 de **4★** |
+| 5 de 4★ | 1 de **5★** |
+| 2 de 5★ | 1 **Ascendida** (MAX) |
+
+A estrela mais alta que tiveres define a força da arma: o dano (e o da habilidade) sobe de ×1,35 (1★) até ×4,20 (Ascendida), e cada estrela dá ainda +3% de velocidade de ataque.
+
 ## Equipamento
 
 Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a raridade é melhor). Guardam-se na **Mochila** (30 lugares) e equipam-se no ecrã **Personagem**.
@@ -131,7 +148,7 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 
 ## Progressão
 
-- Nível máximo **40**. Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis).
+- **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
 - Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
 - Podes redistribuir os pontos por ouro (50 × o teu nível).
 
@@ -180,6 +197,9 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 | <img src="docs/img/enemy-brute.png" width="48" alt=""> | **Bruto** | lento, muita vida e muito dano | 11 | ¢12 |
 | <img src="docs/img/enemy-wolf.png" width="48" alt=""> | **Lobo** | muito rápido | 3 | ¢5 |
 | <img src="docs/img/enemy-ghost.png" width="48" alt=""> | **Fantasma** | mantém distância e dispara orbes | 4 | ¢7 |
+| <img src="docs/img/enemy-imp.png" width="48" alt=""> | **Diabrete** | atira bolas de fogo rápidas | 5 | ¢8 |
+| <img src="docs/img/enemy-beetle.png" width="48" alt=""> | **Escaravelho** | prepara-se (!) e investe em linha reta | 16 | ¢14 |
+| <img src="docs/img/enemy-shroom.png" width="48" alt=""> | **Cogumelo** | explode ao morrer, deixando uma área tóxica | 9 | ¢9 |
 
 ### Bosses
 
@@ -196,7 +216,7 @@ A meio da vida os bosses ficam furiosos (atacam mais depressa e invocam lacaios)
 
 ## Skins
 
-Cosméticos que mudam o aspeto do herói (preço promocional de lançamento: **¢1**).
+Cosméticos que mudam o aspeto do herói. A skin inicial é grátis, a 1.ª extra custa **¢5.000** e as restantes custam **diamantes ◆** (20, 40 e 60).
 
 **Cavaleiro**
 
@@ -215,6 +235,12 @@ Cosméticos que mudam o aspeto do herói (preço promocional de lançamento: **�
 |  |  |  |  |
 |---|---|---|---|
 | <img src="docs/img/skin-mage-0.png" width="64" alt=""><br><sub>Clássico</sub> | <img src="docs/img/skin-mage-1.png" width="64" alt=""><br><sub>Piromante</sub> | <img src="docs/img/skin-mage-2.png" width="64" alt=""><br><sub>Criomante</sub> | <img src="docs/img/skin-mage-3.png" width="64" alt=""><br><sub>Feiticeiro da Noite</sub> |
+
+## Recompensas e diamantes
+
+- **Baús por nível:** cada nível dá um baú no ecrã *Recompensas*, com ouro, pontos de atributo, equipamento e, às vezes, cópias de armas ou diamantes. De 10 em 10 níveis o baú é **dourado** (muito mais ouro, +3 pontos, item Épico ou melhor e cópia garantida).
+- **Diamantes ◆:** ganhas **+10 a cada 10 níveis** e gastas nas skins.
+- **Pets:** ecrã já presente, mas marcado como *Ainda por vir*.
 
 ---
 

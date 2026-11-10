@@ -155,6 +155,9 @@ defSprite('skel', ['..wwww..','.wwwwww.','.wkwwkw.','..wwww..','...ww...','.wwww
 defSprite('brute', ['..oooo..','.oooooo.','.orooro.','.oowwoo.','oooooooo','oooddooo','oooooooo','a.oooo..','a.oddo..','..dd.dd.'], {o:'#6a9a3a',d:'#3d5a20',r:'#d33',w:'#fff',a:'#999'}, 4);
 defSprite('wolf', ['g......g','gg.gg.gg','gggggggg','gwkggkwg','.gggggg.','..gddg..','..gddg..'].map(r => r.slice(0, 8)), {g:'#8a8a98',d:'#5a5a68',w:'#fff',k:'#e22'}, 3);
 defSprite('ghost', ['..wwww..','.wwwwww.','.wkwwkw.','.wwwwww.','.wwwwww.','wwwwwwww','w.ww.ww.'], {w:'#bcd4f5',k:'#223'}, 3);
+defSprite('imp', ['h......h'.slice(0, 0) + 'h.rrrr.h', '.hrrrrh.', '..reer..', '..rrrr..', 'wrrmmrrw', '.wrrrrw.', '..r..r..', '..t..t..'], {h:'#ffd9a0',r:'#e0482a',e:'#ffe14a',w:'#7a1a3a',m:'#2a0a0a',t:'#a02818'}, 3);
+defSprite('beetle', ['..kk..kk..', '..gggggg..', '.gGGggGGg.', 'gGGggggGGg', 'gGlGGGGlGg', 'gGGGGGGGGg', '.gGGGGGGg.', 'k.k....k.k'], {k:'#2a2a2a',g:'#b8892a',G:'#8a6418',l:'#ffe58a'}, 3);
+defSprite('shroom', ['..rrrr..', '.rrwwrr.', 'rrrrrwrr', 'rwrrrrrr', '.wwwwww.', '..wkkw..', '..wwww..', '..wwww..'], {r:'#d8503a',w:'#f0e6c8',k:'#2a1a10'}, 3);
 const mir = h => h.map(r => r + [...r].reverse().join(''));
 const BOSS_DEF = {
   reaper: { pal: { h:'#5a2a80', H:'#2e1048', s:'#ece8d8', e:'#ff3a3a', k:'#222', c:'#cfd6e6', w:'#6b4a22', t:'#3a1458' },
@@ -265,9 +268,10 @@ const UP_LIM = { hp: 15, dmg: 15, spd: 10, cd: 8 };
 const upCost = l => l < 5 ? 40 + 35 * l : l < 10 ? 500 + 300 * (l - 5) : 2500 + 800 * (l - 10);
 const upReq = l => l >= 10 ? 20 : l >= 5 ? 10 : 0;      // nivel de jogador necessario para os prestigios
 const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#d070ff']];
-const MAXLV = 40, xpNeed = l => 60 + 40 * (l - 1);
-function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.lv < MAXLV && pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; } if (pl.lv >= MAXLV) pl.xp = 0; }
-const COIN_RATE = .3;   // ouro por inimigo (reequilibrio v1.1)
+const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
+const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
+const COIN_RATE = .3, ENEMY_HP = 1.3, ENEMY_DMG = 1.2;   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
   { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 2,  spd: 1.05 },
@@ -288,19 +292,22 @@ const EN = {
   brute: { spr: 'brute', hp: 11, spd: 48,  r: 18, dmg: 18, gold: 12, ai: 'chase' },
   wolf:  { spr: 'wolf',  hp: 3,  spd: 150, r: 11, dmg: 9,  gold: 5,  ai: 'chase' },
   ghost: { spr: 'ghost', hp: 4,  spd: 50,  r: 11, dmg: 7,  gold: 7,  ai: 'shoot', shot: 'orb' },
+  imp:    { spr: 'imp',    hp: 5,  spd: 95,  r: 11, dmg: 9,  gold: 8,  ai: 'shoot', shot: 'orb', col: '#ff6a2a', pspd: 280, rate: 1.4 },
+  beetle: { spr: 'beetle', hp: 16, spd: 62,  r: 14, dmg: 15, gold: 14, ai: 'charge' },
+  shroom: { spr: 'shroom', hp: 9,  spd: 42,  r: 12, dmg: 6,  gold: 9,  ai: 'chase', boom: true },
 };
 const MISSIONS = [
   { name: 'Floresta Sombria', desc: 'Limpa a floresta e enfrenta o Ceifador.', kills: 10, types: ['slime','slime','bat'],
     boss: { name: 'O Ceifador', hp: 50, pal: 'reaper', r: 34, spd: 55, ring: 8, charge: 380, col: '#c6f', pattern: ['ring','charge','spread'] }, reward: 60, theme: 0, cap: 5 },
-  { name: 'Cavernas Douradas', desc: 'Esqueletos e lobos guardam o Golem.', kills: 16, types: ['slime','bat','skel','skel','wolf'],
+  { name: 'Cavernas Douradas', desc: 'Esqueletos e lobos guardam o Golem.', kills: 16, types: ['slime','bat','skel','skel','wolf','beetle'],
     boss: { name: 'Golem de Pedra', hp: 85, pal: 'golem', r: 38, spd: 45, ring: 10, charge: 340, col: '#9ef', pattern: ['slam','ring','charge','slam'] }, reward: 120, theme: 1, cap: 6 },
-  { name: 'Castelo Maldito', desc: 'O covil do Dragão Rubro.', kills: 22, types: ['slime','bat','skel','brute'],
+  { name: 'Castelo Maldito', desc: 'O covil do Dragão Rubro.', kills: 22, types: ['slime','bat','skel','brute','imp','imp'],
     boss: { name: 'Dragão Rubro', hp: 120, pal: 'dragon', r: 40, spd: 65, ring: 12, charge: 460, col: '#f93', pattern: ['cone','meteors','charge','cone'] }, reward: 200, theme: 2, cap: 7 },
-  { name: 'Pântano Tóxico', desc: 'Fantasmas e lobos servem a Rainha.', kills: 24, types: ['slime','wolf','ghost','bat'],
+  { name: 'Pântano Tóxico', desc: 'Fantasmas e lobos servem a Rainha.', kills: 24, types: ['slime','wolf','ghost','bat','shroom','shroom'],
     boss: { name: 'Rainha do Pântano', hp: 160, pal: 'queen', r: 36, spd: 60, ring: 10, charge: 420, col: '#8f4', pattern: ['spread','summon','spiral','charge'] }, reward: 260, theme: 3, cap: 7 },
-  { name: 'Deserto Ardente', desc: 'O Faraó desperta das areias.', kills: 26, types: ['wolf','skel','brute','bat'],
+  { name: 'Deserto Ardente', desc: 'O Faraó desperta das areias.', kills: 26, types: ['wolf','skel','brute','bat','beetle','imp'],
     boss: { name: 'Faraó Eterno', hp: 200, pal: 'pharaoh', r: 38, spd: 55, ring: 14, charge: 440, col: '#fd4', pattern: ['meteors','spiral','slam','cone'] }, reward: 340, theme: 4, cap: 8 },
-  { name: 'Abismo Final', desc: 'O Rei Demónio espera no fundo.', kills: 30, types: ['ghost','brute','wolf','skel','bat'],
+  { name: 'Abismo Final', desc: 'O Rei Demónio espera no fundo.', kills: 30, types: ['ghost','brute','wolf','skel','bat','imp','shroom','beetle'],
     boss: { name: 'Rei Demónio', hp: 250, pal: 'demon', r: 42, spd: 70, ring: 16, charge: 500, col: '#f4f', pattern: ['blink','spiral','meteors','charge','summon','slam'] }, reward: 500, theme: 5, cap: 9 },
 ];
 const THEMES = [
@@ -313,19 +320,23 @@ const THEMES = [
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {} };
-  for (const c in CLASSES) { s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1 };
+  for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
-  s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {};
+  s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {
     s.own = s.own || {}; s.eq = s.eq || {}; s.sk = s.sk || {}; s.skE = s.skE || {};
     s.own[c] = (s.own[c] || []).concat([0, 0, 0, 0, 0]).slice(0, 5); s.own[c][0] = 1;
     s.eq[c] = s.eq[c] || 0; s.sk[c] = s.sk[c] || d.sk[c]; while (s.sk[c].length < SKINS[c].length) s.sk[c].push(0); s.skE[c] = s.skE[c] || 0;
   }
+  for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => {
+    const old = s.wst[w.id] || []; s.wst[w.id] = [0, 0, 0, 0, 0, 0, 0].map((_, k) => old[k] || 0);
+    if (!s.wst[w.id].some(x => x)) s.wst[w.id][0] = (s.own[c] && s.own[c][i]) ? 1 : 0;
+  });
   return s;
 }
 let save = null;
@@ -348,7 +359,10 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const DM = () => stats().dm * (1 + .12 * wlvl());
+const STAR_MULT = [1, 1.35, 1.7, 2.1, 2.6, 3.2, 4.2];   // 0..5 estrelas e 6 = Ascendida
+const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = 6; i >= 0; i--) if (a[i] > 0) return i; return 0; };
+const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
+const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
 const heroSpr = () => save.cls + save.skE[save.cls];
 
 /* =====================================================================
@@ -428,7 +442,7 @@ function startMission(i, rd, farm) {
     const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg; R.goldM = D.gold; R.spdM = D.spd;
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
-  R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
+  R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
   if (farm) { R.wave = 1; applyWave(); R.toast = `Farm: ${M.name}`; R.toastT = 3; }
   state = 'play'; setMusic('battle'); mdown = false;
 }
@@ -437,8 +451,9 @@ function endMission(win) {
   if (R.farm) { if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave; if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }
   else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
-  R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0;
+  R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
+  for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
   R.lootN = R.loot.length; save.gold += g; R.earned = g; persist(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
@@ -469,7 +484,7 @@ function hurt(n) {
   const p = R.p;
   if (save.cheat && save.cheat.god) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * (1 - Math.min(60, R.G ? R.G.dr : 0) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * ENEMY_DMG * (1 - Math.min(60, R.G ? R.G.dr : 0) / 100)));
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -491,7 +506,7 @@ function arrow(a, dmg, w, extra) { pProj(Object.assign({ x: R.p.x, y: R.p.y, vx:
 function attack() {
   const p = R.p, w = curW(), s = stats();
   if (p.cd > 0 || R.endT !== undefined) return;
-  p.cd = w.cd * s.cdm * (p.rage > 0 ? .6 : 1); const dmg = w.dmg * DM(); p.swd = p.sw = w.t === 'melee' ? Math.min(.24, w.cd * .75) : .12;
+  p.cd = w.cd * s.cdm * (p.rage > 0 ? .6 : 1) * (1 - .03 * wStar(w.id)); const dmg = w.dmg * DM(); p.swd = p.sw = w.t === 'melee' ? Math.min(.24, w.cd * .75) : .12;
   if (w.t === 'melee') {
     melee(w.range, w.arc, dmg, w.kb, (w.leech || 0) + (p.rage > 0 ? 1.2 : 0));
     R.fx.push({ k: 'arc', x: p.x, y: p.y, a: p.face, range: w.range, arc: w.arc, t: .15, max: .15, col: p.rage > 0 ? '255,80,80' : '255,255,255' }); SFX.slash();
@@ -529,7 +544,7 @@ function areaDmg(x, y, r, dmg, o = {}) {
 
 /* ---- Q: especial da classe ---- */
 function special() {
-  const p = R.p, dm = stats().dm * (1 + .12 * wlvl());
+  const p = R.p, dm = stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
   if (p.sp > 0 || R.endT !== undefined) return;
   p.sp = 8; SFX.special(); R.shake = 7;
   if (save.cls === 'knight') { areaDmg(p.x, p.y, 105, 3 * dm, { kb: 450 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 105, t: .35, max: .35, col: '#fff' }); }
@@ -585,7 +600,7 @@ function dash() {
 /* ---- inimigos & bosses ---- */
 function spawnE(type, x, y) {
   const d = EN[type], k = (1 + .2 * R.m) * (R.hpM || 1);
-  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k, max: d.hp * k, spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
+  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k * ENEMY_HP, max: d.hp * k * ENEMY_HP, spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
 }
 function spawnEdge(type) {
   const s = Math.floor(Math.random() * 4); let x, y;
@@ -594,7 +609,7 @@ function spawnEdge(type) {
 }
 function spawnBoss() {
   const b = MISSIONS[R.m].boss;
-  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: b.hp * (R.bossM || 1), max: b.hp * (R.bossM || 1), spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
+  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: b.hp * (R.bossM || 1) * 1.2, max: b.hp * (R.bossM || 1) * 1.2, spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
   R.enemies = []; R.phase = 'boss'; R.toast = '! ' + b.name + ' apareceu!'; R.toastT = 3; R.shake = 14; SFX.boss();
 }
 function eProj(x, y, a, spd, dmg, kind, col) { R.projs.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, a, r: kind === 'orb' ? 7 : 4, dmg, from: 'e', kind, life: 4, col }); }
@@ -684,18 +699,26 @@ function update(dt) {
     let mx = 0, my = 0;
     if (e.stun > 0) e.stun -= dt;
     else if (d0.ai === 'chase') { mx = dx / d; my = dy / d; }
+    else if (d0.ai === 'charge') {
+      e.ct = (e.ct || 2) - dt;
+      if (e.dash > 0) { e.dash -= dt; mx = e.dx; my = e.dy; }
+      else if (e.wind > 0) { e.wind -= dt; if (e.wind <= 0) { e.dash = .5; e.dx = dx / d; e.dy = dy / d; } }
+      else { mx = dx / d; my = dy / d; if (e.ct <= 0 && d < 280) { e.wind = .55; e.ct = 3 + Math.random(); } }
+    }
     else if (d0.ai === 'bat') { e.ph += dt * 6; mx = dx / d - dy / d * Math.sin(e.ph) * .9; my = dy / d + dx / d * Math.sin(e.ph) * .9; }
     else if (d0.ai === 'shoot') {
       if (d > 240) { mx = dx / d; my = dy / d; } else if (d < 170) { mx = -dx / d; my = -dy / d; } else { mx = -dy / d * .6; my = dx / d * .6; }
-      if (e.cd <= 0 && !dead) { eProj(e.x, e.y, Math.atan2(dy, dx), 230, 8, d0.shot, '#bdf'); e.cd = 2 + Math.random(); }
+      if (e.cd <= 0 && !dead) { eProj(e.x, e.y, Math.atan2(dy, dx), d0.pspd || 230, 8, d0.shot, d0.col || '#bdf'); e.cd = (d0.rate || 2) + Math.random(); }
     }
-    e.x += (mx * e.spd * sl + e.kx) * dt; e.y += (my * e.spd * sl + e.ky) * dt; e.kx *= .86; e.ky *= .86;
+    const bst = e.dash > 0 ? 4.6 : 1; e.x += (mx * e.spd * sl * bst + e.kx) * dt; e.y += (my * e.spd * sl * bst + e.ky) * dt; e.kx *= .86; e.ky *= .86;
     if (d < e.r + 12 && !dead && e.stun <= 0) hurt(d0.dmg);
   }
   for (const e of R.enemies) if (e.hp <= 0) {
     const d0 = EN[e.type]; R.kills++; burst(e.x, e.y, '#9f9', 12); SFX.kill();
+    if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (1 + R.G.gf / 100))) }); R.xp += 4 + 2 * R.m; R.waveKills++;
-    if (Math.random() < .03 + .0025 * (R.wave || 1) + (R.raid ? .03 : 0)) giveLoot(e.x, e.y); if (Math.random() < .12) R.hearts.push({ x: e.x + 10, y: e.y });
+    if (Math.random() < .03 + .0025 * (R.wave || 1) + (R.raid ? .03 : 0)) giveLoot(e.x, e.y);
+    if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .12) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
   if (R.raid && R.phase === 'hunt' && !dead) {
@@ -808,6 +831,8 @@ Object.assign(EN_DICT, {'Queimar':'Burn','Abrandar':'Slow'});
 Object.assign(EN_DICT, {"Efeitos": "Effects", "Música": "Music", "Velocidade do jogo (x1/x2)": "Game speed (x1/x2)", "Velocidade do jogo:": "Game speed:", "VELOCIDADE": "SPEED"});
 Object.assign(EN_DICT, {"Guardião Dourado": "Golden Guardian", "Cavernas Douradas": "Golden Caverns"});
 Object.assign(EN_DICT, {"Ativo": "Active", "Código aceite.": "Code accepted.", "Código removido.": "Code removed."});
+Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", "Cópia:": "Copy:"});
+Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -831,6 +856,8 @@ const ICON_DEF = {
   stun: { rows: ['..y...y..','.yyy.yyy.','..y...y..'], pal: { y:'#ffe040' } },
   skull: { rows: ['.wwwwww.','wwwwwwww','wkkwwkkw','wkkwwkkw','wwwkkwww','.wwwwww.','.wkwkwk.','..wwww..'], pal: { w:'#e8e0f0', k:'#2a2040' } },
   boot: { rows: ['..bbb...','..bbb...','..bbb...','..bbbb..','..bbbbb.','bbbbbbbb','bkkkkkkb','kkkkkkkk'], pal: { b:'#c07a38', k:'#5a3414' } },
+  gem: { rows: ['..cccc..', '.cwCCCc.', 'cwCCCCCc', '.cCCCCc.', '..cCCc..', '...cc...'], pal: { c: '#2a9ad8', C: '#6fe8ff', w: '#ffffff' } },
+  star: { rows: ['...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', '.y...y.'], pal: { y: '#ffd34a' } },
   clock: { rows: ['..cccc..','.cwwwwc.','cwwwkwwc','cwwwkwwc','cwwkkwwc','cwwwwwwc','.cwwwwc.','..cccc..'], pal: { c:'#80a0ff', w:'#e8f0ff', k:'#202040' } },
 };
 const ICN = {}; for (const k in ICON_DEF) ICN[k] = makeSprite(ICON_DEF[k].rows, ICON_DEF[k].pal, 1, false);
@@ -838,9 +865,9 @@ function drawIcon(name, cx, cy, k) {
   if (name.startsWith('w:')) { weaponIcon(name.slice(2), cx, cy, k * .5); return; }
   const im = ICN[name]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k);
 }
-const TOK = { '¢': 'coin', '✓': 'check', '♥': 'heart', '¤': 'lock' };
+const TOK = { '¢': 'coin', '✓': 'check', '♥': 'heart', '¤': 'lock', '◆': 'gem', '★': 'star' };
 function txtParts(s, size) {
-  const parts = s.split(/([¢✓♥¤])/).filter(p => p !== ''), k = Math.max(1, Math.round(size / 9));
+  const parts = s.split(/([¢✓♥¤◆★])/).filter(p => p !== ''), k = Math.max(1, Math.round(size / 9));
   return { parts, k, wd: parts.map(p => TOK[p] ? ICN[TOK[p]].width * k + 3 : ctx.measureText(p).width) };
 }
 function txtW(s, size, w = 'normal') { ctx.font = `${w} ${Math.round(size * FS)}px ${FONT}`; return txtParts(L(s), size).wd.reduce((a, b) => a + b, 0); }
@@ -1003,7 +1030,7 @@ function drawMenu() {
   if (save) {
     const it = menuItems[idx], sel = menuSel === idx++;
     btn(bx, it.y, bw, it.h, '', it.fn, { sel, col: '#2f7a4a', hot: '#3fa061' });
-    txt('Continuar', bx + bw / 2, it.y + 21, 19, '#fff', 'center', 'bold'); txt(`${CLASSES[save.cls].name} · Nv ${save.pl.lv} · ¢${save.gold}`, bx + bw / 2, it.y + 38, 11, '#c8ffd8', 'center');
+    txt('Continuar', bx + bw / 2, it.y + 21, 19, '#fff', 'center', 'bold'); txt(`${CLASSES[save.cls].name} · Nv ${save.pl.lv} · ¢${gfmt(save.gold)}`, bx + bw / 2, it.y + 38, 11, '#c8ffd8', 'center');
   }
   { const it = menuItems[idx], sel = menuSel === idx++; btn(bx, it.y, bw, it.h, menuConfirm ? 'Apagar tudo e começar?' : 'Novo Jogo', it.fn, { sel, size: menuConfirm ? 15 : 19, col: menuConfirm ? '#8a3a2a' : '#5c4a20' }); }
   { const it = menuItems[idx], sel = menuSel === idx++; btn(bx, it.y, bw, it.h, 'Opções', it.fn, { sel, size: 18, col: '#4a3a7a' }); }
@@ -1018,7 +1045,7 @@ function drawMenu() {
     if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * 22, hy + Math.sin(ang) * 22, 11, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   });
   txt('Usa W/S ou ↑↓ e Enter · F ecrã inteiro · M som', gx, H - 14, 12, dayT > .5 ? '#fff6d0' : '#9a8fb8', 'center');
-  txt('v1.1-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
+  txt('v1.2-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
 }
 function drawClass() {
   menuBg(); txt('Escolhe a tua classe', UW / 2, 52, 34, '#f0c060', 'center', 'bold');
@@ -1085,9 +1112,9 @@ function runCheat(raw) {
   if (hashStr(c) === 111798788) {
     const on = !save.cheat.god; save.cheat.god = on; save.cheat.gold = on; save.cheat.used = true;
     if (on) {
-      save.gold = 99999; save.pl = { lv: MAXLV, xp: 0 }; save.attr = { vit: 35, str: 40, agi: 12, per: 30 }; save.pts = 0;
+      save.gold = 999999; save.gems = 999; save.pl = { lv: 60, xp: 0 }; save.attr = { vit: 35, str: 40, agi: 12, per: 30 }; save.pts = 60;
       save.done = MISSIONS.length; MISSIONS.forEach((m, i) => { save.farmBest[i] = Math.max(save.farmBest[i] || 0, 10); save.raids[i] = [1, 1, 1, 1, 1]; });
-      for (const k in CLASSES) { save.own[k] = save.own[k].map(() => 1); save.sk[k] = save.sk[k].map(() => 1); CLASSES[k].weapons.forEach(w => save.wl[w.id] = 12); }
+      for (const k in CLASSES) { save.own[k] = save.own[k].map(() => 1); save.sk[k] = save.sk[k].map(() => 1); CLASSES[k].weapons.forEach(w => { save.wl[w.id] = 12; save.wst[w.id] = [0, 0, 0, 0, 0, 1, 0]; }); }
       for (const sl of SLOTS) { const it = genItem(sl, 4, 40); it.ench = 10; it.spec = rollSpec(it); save.gear[sl] = it; }
     }
     say(on ? 'Código aceite.' : 'Código removido.', on ? '#6f6' : '#fc6'); SFX.buy();
@@ -1200,6 +1227,10 @@ function rollRarity(boost = 0, min = 0) {
 }
 const runIL = () => R.raid ? 6 + R.m * 6 + R.raid.d * 4 : 1 + R.m * 6 + Math.floor((R.wave || 1) * .9);
 const lootBoost = () => R.raid ? 2 + R.raid.d * 2 : Math.min(6, Math.floor((R.wave || 1) / 4));
+function giveWeaponCopy(x, y) {
+  const c = CLASSES[save.cls], ok = c.weapons.map((w, i) => i).filter(i => weaponReq(i).ok), i = ok[Math.floor(Math.random() * ok.length)], w = c.weapons[i];
+  R.wloot.push(w.id); R.texts.push({ x, y: y - 28, s: 'Cópia: ' + w.n, t: 1.8, col: '#ffd34a', sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 24, t: .4, max: .4, col: '#ffd34a' }); SFX.heal();
+}
 function giveLoot(x, y, minR = 0) {
   const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(lootBoost(), minR), Math.min(60, runIL())); R.loot.push(it);
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
@@ -1207,11 +1238,12 @@ function giveLoot(x, y, minR = 0) {
 function bossDown(b) {
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(4, 1 + (R.raid.d >= 2 ? 1 : 0) + (R.raid.d >= 4 ? 1 : 0)) : 1;
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
+  for (let i = 0; i < (R.raid ? 1 + R.raid.d : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
   if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
 }
 function applyWave() {
   const w = R.wave; R.need = Math.min(40, 8 + 2 * w); R.waveKills = 0;
-  R.hpM = 1 + .14 * (w - 1); R.dmgM = 1 + .05 * (w - 1); R.goldM = 1 + .12 * (w - 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9; R.capB = Math.min(6, Math.floor(w / 4));
+  R.hpM = 1 + .16 * (w - 1); R.dmgM = 1 + .06 * (w - 1); R.goldM = 1 + .12 * (w - 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9; R.capB = Math.min(6, Math.floor(w / 4));
 }
 function nextWave() {
   R.wave++; applyWave(); R.toast = R.wave % 5 === 0 ? `ONDA ${R.wave} · BOSS!` : `ONDA ${R.wave}`; R.toastT = 2.5; heal(R.p.max * .15); SFX.ready(); R.shake = 6;
@@ -1220,8 +1252,9 @@ function endTitle(win) { return R.farm ? (win ? 'FARM CONCLUÍDO' : 'DERROTADO')
 function endLines(win) {
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(win ? `Ganhaste ¢${R.earned}` + (R.farm ? '' : ' (inclui recompensa)') : `Guardaste ¢${R.earned} (metade do ouro)`);
-  a.push(`+${R.xpGain} XP · Itens: ${R.lootN}`);
+  a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
   if (R.lvUp) a.push(`Subiste para o nível ${R.lvUp}! (+${R.ptsGain} pontos)`);
+  if (R.gemGain) a.push(`+${R.gemGain} ◆ Diamantes`);
   return a;
 }
 function slotIcon(slot, r, cx, cy, k) { const im = SLOT_SPR[slot][r]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
@@ -1253,17 +1286,19 @@ function drawHub() {
   txt(c.name, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(c.name, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold');
   bar(76, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 76, 61, 11, '#8ab');
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
-  txt('¢' + save.gold, 770, 46, 24, '#fd5', 'right', 'bold');
+  txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
-  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['anvil', 'Bigorna'], ['skins', 'Skins']];
+  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['skins', 'Skins'], ['rewards', 'Recompensas'], ['pets', 'Pets']];
+  const nChest = Math.max(0, save.pl.lv - save.chestDone);
   tabs.forEach((t, i) => {
-    btn(20, 80 + i * 40, 150, 35, t[1], () => { tab = t[0]; if (tab === 'anvil') anvSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 15 });
-    if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, 90 + i * 40, 12, 14); txt('!', 158, 101 + i * 40, 11, '#000', 'center', 'bold'); }
+    const by = 78 + i * 31;
+    btn(20, by, 150, 28, t[1], () => { tab = t[0]; if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 14 });
+    if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 6, 12, 14); txt('!', 158, by + 17, 11, '#000', 'center', 'bold'); }
+    if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(134, by + 6, 30, 14); txt(nChest > 99 ? '99+' : String(nChest), 149, by + 17, 11, '#000', 'center', 'bold'); }
   });
-  btn(20, 404, 150, 32, 'Teclas', () => openKeys('hub'), { size: 14, col: '#2a2a48' });
   btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
-  ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, anvil: hubAnvil, skins: hubSkins })[tab]();
+  ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets })[tab]();
 }
 function hubFarm() {
   txt('Ondas infinitas · boss a cada 5 ondas · ouro, XP e equipamento', 450, 106, 13, '#aab', 'center');
@@ -1522,9 +1557,10 @@ function hubWeapons() {
     ctx.restore();
     const nm = w.n + (lv ? `  +${lv}` : '');
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
-    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv))} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
+    const sst = wStar(w.id); if (own && sst) { if (sst >= 6) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
+    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
-    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.eq[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, col: save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: '#c98a30', size: 14 });
+    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, col: save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');
   });
@@ -1602,22 +1638,120 @@ function updateAnvil(dt) {
     }
   }
 }
+/* ----- Fusão de armas ----- */
+let fuseSel = 0, fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
+const fuseNeed = t => t >= 5 ? 2 : 5;
+const copyPrice = i => Math.max(100, Math.round(CLASSES[save.cls].weapons[i].price * .4));
+function starIcons(n, cx, cy, k) { for (let q = 0; q < n; q++) drawIcon('star', cx + (q - (n - 1) / 2) * 9 * k, cy, k); }
+function doFuse(id, t, all) {
+  const a = save.wst[id]; let n = 0;
+  const step = tt => { const need = fuseNeed(tt); if (tt < 6 && a[tt] >= need) { a[tt] -= need; a[tt + 1]++; n++; return true; } return false; };
+  if (all) { for (let tt = 0; tt < 6; tt++) while (step(tt)); } else step(t);
+  if (!n) { SFX.error(); return; }
+  const st = wStar(id); fz.t = .7; fz.msg = st >= 6 ? 'ASCENDIDA!' : `FUSÃO! ${st}★`; fz.msgT = 2.4; fz.col = st >= 6 ? '#ffd34a' : '#9fe';
+  for (let i = 0; i < 40; i++) fz.sparks.push({ x: 487 + (Math.random() - .5) * 240, y: 215 + (Math.random() - .5) * 60, vx: (Math.random() - .5) * 300, vy: -Math.random() * 260, l: .9, c: i % 2 ? '#ffd34a' : '#fff' });
+  SFX.special(); SFX.buy(); persist();
+}
+function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
+function hubFuse() {
+  const c = CLASSES[save.cls];
+  c.weapons.forEach((w, i) => {
+    const x = 197 + i * 117, tot = wTotal(w.id), st = wStar(w.id);
+    btn(x, 90, 110, 46, '', () => fuseSel = i, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
+    weaponIcon(w.id, x + 30, 113, 1.8); txt(tot ? 'x' + tot : '—', x + 56, 119, 15, tot ? '#fff' : '#667', 'left', 'bold');
+    if (st) drawIcon('star', x + 98, 100, 1.3);
+  });
+  const w = c.weapons[fuseSel], a = save.wst[w.id], st = wStar(w.id), rq = weaponReq(fuseSel), cp = copyPrice(fuseSel);
+  txt('Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).', 487, 156, 13, '#aab', 'center');
+  for (let t = 0; t <= 6; t++) {
+    const x = 205 + t * 81, y = 168, cur = st === t && wTotal(w.id) > 0;
+    bevel(x, y, 75, 92, cur ? '#2c2410' : '#12121f', cur ? '#ffd34a' : '#33334a', '#05050a');
+    if (t === 0) txt('Base', x + 37, y + 16, 13, '#889', 'center'); else if (t === 6) { drawIcon('star', x + 24, y + 11, 1.6); txt('MAX', x + 50, y + 16, 12, '#ffd34a', 'center', 'bold'); } else starIcons(t, x + 37, y + 11, 1.2);
+    ctx.globalAlpha = a[t] > 0 ? 1 : .3; weaponIcon(w.id, x + 37, y + 50, 1.9, -.785); ctx.globalAlpha = 1;
+    if (t === 6 && a[6] > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd34a'; ctx.globalAlpha = .25 + .1 * Math.sin(T * 6); ctx.beginPath(); ctx.arc(x + 37, y + 50, 26, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+    txt('x' + a[t], x + 37, y + 84, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
+    if (t < 6) btn(x, y + 98, 75, 24, `${fuseNeed(t)} > 1`, () => doFuse(w.id, t, false), { size: 13, off: a[t] < fuseNeed(t), col: '#2f7a4a', hot: '#3fa061' });
+  }
+  panel(197, 300, 585, 176, '#16162a');
+  txt(st ? (st >= 6 ? 'Estrela atual: ASCENDIDA' : `Estrela atual: ${st}★`) : 'Estrela atual: nenhuma', 212, 326, 17, '#f0c060', 'left', 'bold');
+  txt(`Dano ×${STAR_MULT[st].toFixed(2)} · Vel. de ataque +${st * 3}%`, 212, 348, 14, '#9cf');
+  if (st < 6) txt(`Próximo (${st + 1 >= 6 ? 'ASCENDIDA' : (st + 1) + '★'}): Dano ×${STAR_MULT[st + 1].toFixed(2)} · Vel. de ataque +${(st + 1) * 3}%`, 212, 368, 14, '#6f6');
+  wrap('Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.', 212, 396, 330, 17, 13, '#9ab');
+  txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 454, 14, '#fff');
+  btn(560, 316, 210, 34, rq.ok ? `Comprar cópia ¢${gfmt(cp)}` : 'Bloqueada', () => { if (rq.ok && save.gold >= cp) { save.gold -= cp; a[0]++; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: save.gold >= cp ? '#a06a20' : '#4a3a3a', hot: '#c98a30' });
+  btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, col: '#2f7a4a', hot: '#3fa061' });
+  if (!rq.ok) txt(rq.text, 665, 414, 12, '#f88', 'center');
+  for (const q of fz.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
+  if (fz.msgT > 0) { ctx.globalAlpha = Math.min(1, fz.msgT); txt(fz.msg, 487, 232, 24, fz.col, 'center', 'bold'); ctx.globalAlpha = 1; }
+}
+
+/* ----- Skins (1.ª com ouro, restantes com diamantes) ----- */
+const SKIN_COST = [[0, 'g'], [5000, 'g'], [20, 'd'], [40, 'd'], [60, 'd']];
 function hubSkins() {
-  txt('PROMOÇÃO DE LANÇAMENTO: todas as skins por ¢1 (por enquanto!)', 487, 106, 14, '#fd5', 'center', 'bold');
+  txt('A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).', 487, 106, 14, '#fd5', 'center', 'bold');
   const n = SKINS[save.cls].length, wide = n > 4, step = wide ? 118 : 148, w = wide ? 110 : 138, k = wide ? 2.8 : 3.4, ns = wide ? 12 : 14;
   SKINS[save.cls].forEach((s, i) => {
-    const x = 197 + i * step, y = 120, h = 350, own = save.sk[save.cls][i], eq = save.skE[save.cls] === i;
+    const x = 197 + i * step, y = 120, h = 350, own = save.sk[save.cls][i], eq = save.skE[save.cls] === i, [cost, cur] = SKIN_COST[i], gem = cur === 'd';
     panel(x, y, w, h, '#232342', eq ? '#f0c060' : '#3a3a5a');
     ctx.fillStyle = '#12121c'; rr(x + 8, y + 10, w - 16, 150, 8); ctx.fill();
     drawSprBig(save.cls + i, x + w / 2, y + 85 + Math.sin(T * 3 + i) * 2, k);
     txt(s.n, x + w / 2, y + 190, ns, '#fff', 'center', 'bold');
     if (!own) {
-      txt(`¢${s.price}`, x + w / 2, y + 222, 14, '#778', 'center'); const tw = txtW(`¢${s.price}`, 14); ctx.fillStyle = '#f66'; ctx.fillRect(x + w / 2 - tw / 2, y + 217, tw, 2);
-      txt(`¢${SKIN_PROMO}`, x + w / 2, y + 250, 22, '#6f6', 'center', 'bold');
-      btn(x + 10, y + 280, w - 20, 40, 'Comprar', () => { if (save.gold >= SKIN_PROMO) { save.gold -= SKIN_PROMO; save.sk[save.cls][i] = 1; save.skE[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { col: '#a06a20', hot: '#c98a30' });
+      const can = gem ? save.gems >= cost : save.gold >= cost;
+      txt((gem ? '◆' : '¢') + gfmt(cost), x + w / 2, y + 240, 22, gem ? '#7fe8ff' : '#fd5', 'center', 'bold');
+      btn(x + 10, y + 280, w - 20, 40, 'Comprar', () => { if (can) { if (gem) save.gems -= cost; else save.gold -= cost; save.sk[save.cls][i] = 1; save.skE[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' });
     } else if (eq) txt('✓ Equipada', x + w / 2, y + 305, 15, '#f0c060', 'center', 'bold');
     else btn(x + 10, y + 280, w - 20, 40, 'Equipar', () => { save.skE[save.cls] = i; persist(); });
   });
+}
+
+/* ----- Recompensas: um baú por nível ----- */
+const CHEST_BASE = ['gggggggggggg', 'mMMMMggMMMMm', 'mMMMMggMMMMm', 'mMMMMMMMMMMm', 'mmmmmmmmmmmm'];
+const CHEST_LID = ['..mmmmmmmm..', '.mMMMMMMMMm.', 'mMMMMMMMMMMm'];
+const CHEST_SPR = [{ m: '#6b4a22', M: '#a06a30', g: '#f5c542' }, { m: '#a8821f', M: '#f5c542', g: '#fff2a8' }].map(pal => ({ base: makeSprite(CHEST_BASE, pal, 1, false), lid: makeSprite(CHEST_LID, pal, 1, false) }));
+let chestAnim = 0, lastRw = null;
+function openChests(n) {
+  const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, n: 0, sold: 0 };
+  for (let i = 0; i < n && save.chestDone < save.pl.lv; i++) {
+    const L = ++save.chestDone, g5 = L % 10 === 0;
+    rw.gold += Math.round((60 + 30 * L) * (.8 + Math.random() * .6) * (g5 ? 5 : 1));
+    if (Math.random() < (g5 ? 1 : .45)) rw.pts += g5 ? 3 : (Math.random() < .3 ? 2 : 1);
+    if (g5 || Math.random() < .28) { const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(60, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
+    if (g5 || Math.random() < .15) { const ok = CLASSES[save.cls].weapons.map((w, k) => k).filter(k => weaponReq(k).ok), wi = ok[Math.floor(Math.random() * ok.length)], id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
+    if (Math.random() < (g5 ? .5 : .06)) rw.gems += g5 ? 5 : 2;
+    rw.n++;
+  }
+  save.gold = Math.min(999999, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; chestAnim = 1.3; SFX.buy(); persist();
+}
+function hubRewards() {
+  const avail = Math.max(0, save.pl.lv - save.chestDone), next = save.chestDone + 1, g5 = next % 10 === 0, sp = CHEST_SPR[g5 ? 1 : 0];
+  txt(g5 ? `Baú dourado: nível ${next}` : `Baú do nível ${next}`, 350, 118, 18, g5 ? '#ffd34a' : '#fff', 'center', 'bold');
+  const k = 7, bx = 350 - 6 * k, by = 252, open = Math.min(1, chestAnim * 2);
+  if (open > 0) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createRadialGradient(350, by, 5, 350, by, 130); gr.addColorStop(0, `rgba(255,220,120,${.5 * open})`); gr.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gr; ctx.fillRect(210, by - 130, 280, 260); ctx.globalCompositeOperation = 'source-over'; }
+  const sh = !avail ? 0 : Math.sin(T * 8) * 1.5;
+  ctx.drawImage(sp.base, bx + sh, by, 12 * k, 5 * k);
+  ctx.save(); ctx.translate(bx + sh, by); ctx.rotate(-open * 1.15); ctx.drawImage(sp.lid, 0, -3 * k, 12 * k, 3 * k); ctx.restore();
+  txt(avail ? `${avail} baús por abrir` : 'Sem baús por abrir', 350, 322, 18, avail ? '#ffd34a' : '#778', 'center', 'bold');
+  btn(235, 340, 230, 36, 'Abrir baú', () => openChests(1), { off: !avail, size: 17, col: '#a06a20', hot: '#c98a30' });
+  btn(235, 384, 230, 34, 'Abrir todos (25)', () => openChests(25), { off: avail < 2, size: 15, col: '#2f7a4a', hot: '#3fa061' });
+  txt(avail ? `Próximo baú dourado: nível ${next + (10 - next % 10) % 10}` : 'Sobe de nível para ganhares mais baús.', 350, 446, 13, '#9ab', 'center');
+  panel(520, 96, 262, 380, '#16162a'); txt('Última abertura', 651, 122, 16, '#f0c060', 'center', 'bold');
+  if (!lastRw) { txt('Ainda não abriste nenhum baú.', 651, 270, 13, '#667', 'center'); return; }
+  const r = lastRw; let y = 150; txt(`${r.n} baú(s)`, 534, y, 13, '#9ab'); y += 24;
+  txt('¢' + gfmt(r.gold) + (r.sold ? ` (+${gfmt(r.sold)} vendas)` : ''), 534, y, 16, '#fd5', 'left', 'bold'); y += 22;
+  if (r.pts) { txt(`+${r.pts} pontos de atributo`, 534, y, 14, '#9fe', 'left', 'bold'); y += 20; }
+  if (r.gems) { txt('◆+' + r.gems, 534, y, 16, '#7fe8ff', 'left', 'bold'); y += 22; }
+  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`Cópia: ${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
+  r.items.slice(0, 6).forEach(it => { slotIcon(it.slot, it.r, 546, y - 4, 1.6); txt(itemName(it), 566, y, 13, RAR[it.r][1], 'left', 'bold'); y += 22; });
+  if (r.items.length > 6) txt(`+${r.items.length - 6} itens`, 534, y, 12, '#889');
+}
+
+/* ----- Pets (em breve) ----- */
+const PET_EGG = makeSprite(['..eeee..', '.eeeeee.', 'eewweeee', 'eewweeee', 'eeeeeeee', 'eeeeeeee', '.eeeeee.', '..eeee..'], { e: '#2f2f4a', w: '#4f4f72' }, 1, false);
+function hubPets() {
+  txt('PETS', 487, 130, 30, '#f0c060', 'center', 'bold'); txt('Ainda por vir', 487, 200, 44, '#ffd34a', 'center', 'bold');
+  txt('Companheiros que te seguem', 487, 240, 17, '#aab', 'center'); txt('e lutam ao teu lado.', 487, 262, 17, '#aab', 'center');
+  [330, 487, 644].forEach((x, i) => { const bob = Math.sin(T * 2 + i) * 4, k = 7; ctx.drawImage(PET_EGG, Math.round(x - 4 * k), Math.round(330 + bob - 5 * k), 8 * k, 8 * k); txt('?', x, 340 + bob, 26, '#ffd34a', 'center', 'bold'); });
 }
 
 /* =====================================================================
@@ -1712,7 +1846,7 @@ function drawWorld() {
     ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r, e.r, e.r * .4, 0, 0, 7); ctx.fill();
     drawSpr(EN[e.type].spr, e.x, e.y, p.x < e.x, e.hit > 0, Math.sin(R.time * 8 + e.ph) * 1.5);
     if (e.slow > 0) { ctx.fillStyle = '#8cf6'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 3, 0, 7); ctx.fill(); }
-    if (e.stun > 0) drawIcon('stun', e.x, e.y - e.r - 12, 1.5); if (e.burn > 0) drawIcon('flame', e.x + e.r, e.y - e.r, 1.5);
+    if (e.wind > 0) txt('!', e.x, e.y - e.r - 14, 18, '#f44', 'center', 'bold'); if (e.stun > 0) drawIcon('stun', e.x, e.y - e.r - 12, 1.5); if (e.burn > 0) drawIcon('flame', e.x + e.r, e.y - e.r, 1.5);
     if (e.hp < e.max) bar(e.x - 14, e.y - e.r - 12, 28, 4, e.hp / e.max, '#e44');
   } });
   if (R.boss) { const b = R.boss; list.push({ y: b.y, f: () => {
@@ -1836,7 +1970,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); if (cheatMsgT > 0) cheatMsgT -= dt; if (save && save.cheat && save.cheat.gold) save.gold = 99999;
+  ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
   if (state === 'menu' || state === 'class' || state === 'keys' || state === 'hub' || state === 'options' || state === 'cheats') { ctx.save(); ctx.translate(UIOX, 0); ({ menu: drawMenu, class: drawClass, keys: drawKeys, hub: drawHub, options: drawOptions, cheats: drawCheats })[state](); ctx.restore(); }
   else drawPlayScreens();
