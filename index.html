@@ -428,7 +428,7 @@ function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
-const COIN_RATE = .25;
+const COIN_RATE = .25, FARM_RATE = .85;   // o Farm da 15% menos ouro e XP
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 // armas fortes exigem nivel e uma raid concluida (raid = indice do mapa, d = dificuldade): a Mitica pede a ultima raid Normal
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0, d: 0 }, { lv: 30, raid: 5, d: 0 }, { lv: 50, raid: 5, d: 1 }];
@@ -930,7 +930,7 @@ function update(dt) {
   for (const e of R.enemies) if (e.hp <= 0) {
     const d0 = EN[e.type]; R.kills++; burst(e.x, e.y, '#9f9', 12); SFX.kill();
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
-    R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (1 + R.G.gf / 100))) }); R.xp += 4 + 2 * R.m; R.waveKills++;
+    R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (4 + 2 * R.m) * (R.farm ? FARM_RATE : 1); R.waveKills++;
     if (Math.random() < .012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) giveLoot(e.x, e.y);
     if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .12) R.hearts.push({ x: e.x + 10, y: e.y });
   }
@@ -958,8 +958,8 @@ function update(dt) {
     b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.y = Math.max(b.r, Math.min(H - b.r, b.y));
     if (d < b.r + 12 && !dead && !b.air) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1));
     if (b.hp <= 0) {
-      burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += 40 + 25 * R.m; R.tels = []; bossDown(b);
-      for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE)) });
+      burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += (40 + 25 * R.m) * (R.farm ? FARM_RATE : 1); R.tels = []; bossDown(b);
+      for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1))) });
     }
   }
 
