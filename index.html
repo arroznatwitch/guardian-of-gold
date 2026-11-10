@@ -627,9 +627,14 @@ function startMission(i, rd, farm) {
   if (farm) { R.wave = 1; applyWave(); R.toast = `Farm: ${M.name}`; R.toastT = 3; }
   state = 'play'; setMusic(R.raid ? 'raid' : 'battle'); mdown = false;
 }
-function endMission(win) {
+function endMission(win, mode) {
+  R.exitMode = mode || '';
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100);
-  if (R.farm) { if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave; if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }
+  if (R.farm) {
+    if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
+    if (!win) { g = 0; xp = 0; R.loot = []; R.wloot = []; }                                              // morrer no Farm: perdes tudo (ouro, XP e itens)
+    else if (mode === 'quit') { g = Math.floor(g * .3); xp = Math.floor(xp * .3); R.loot = R.loot.filter(() => Math.random() < .3); R.wloot = R.wloot.filter(() => Math.random() < .3); }   // sair a meio (Esc): so 30%
+  }
   else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
@@ -1069,6 +1074,7 @@ Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "O nick não pode ser a
 Object.assign(EN_DICT, {"Mudar de bandeira custa ◆": "Changing flag costs ◆", "Podes mudar de bandeira por ◆": "You can change your flag for ◆", "A primeira bandeira é grátis": "Your first flag is free", "Precisas de": "You need", "diamantes para mudar de bandeira": "diamonds to change flag"});
 Object.assign(EN_DICT, {"Selecionar": "Select", "Sair da seleção": "Exit selection", "Modo de seleção": "Selection mode", "Clica nos itens para os marcar e depois vende-os de uma vez.": "Click items to mark them, then sell them all at once.", "selecionados": "selected", "Selecionar todos (visíveis)": "Select all (visible)", "Limpar seleção": "Clear selection", "Vender selecionados": "Sell selected", "Vender selecionados?": "Sell selected?", "Desbloqueia primeiro a Mochila anterior": "Unlock the previous bag first", "Desbloquear a Mochila": "Unlock Bag", "+30 lugares para itens": "+30 item slots", "Comprar": "Buy", "Há um item melhor, mas exige nível": "There is a better item, but it requires level"});
 Object.assign(EN_DICT, {"GUARDIÃO DOURADO": "GOLDEN GUARDIAN", "Guardião Dourado": "Golden Guardian", "O Protetor do Ouro": "The Protector of Gold", "GUARDIÃO DOURADO DERROTADO!": "GOLDEN GUARDIAN DEFEATED!", "! Guardião Dourado !": "! Golden Guardian !"});
+Object.assign(EN_DICT, {"Queres sair agora e guardar tudo o que ganhaste?": "Do you want to leave now and keep everything you earned?", "Se continuares e morreres, perdes tudo (ouro, XP e itens). Sair com Esc a meio deixa só 30%.": "If you continue and die, you lose everything (gold, XP and items). Quitting with Esc keeps only 30%.", "Sair e guardar tudo": "Leave and keep all", "Sair do farm (só 30%)": "Leave farm (only 30%)", "Sair a meio guarda só 30% do que ganhaste.": "Leaving midway keeps only 30% of what you earned.", "FARM GUARDADO": "FARM SAVED", "SAÍSTE DO FARM": "YOU LEFT THE FARM", "Perdeste tudo: sem ouro, XP nem itens.": "You lost everything: no gold, XP or items.", "Saíste a meio: ficaste com 30%": "You left midway: you kept 30%", "Guardaste tudo:": "You kept everything:", "Próxima:": "Next:", "Todas desbloqueadas": "All unlocked", "que o equipado": "than equipped"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1471,7 +1477,7 @@ function bossDown(b) {
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
   for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
-  if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
+  if (R.farm) { if (R.wave % 10 === 0) { R.phase = 'cp'; R.cpWave = R.wave; state = 'cp'; SFX.win(); } else { R.phase = 'hunt'; nextWave(); } } else { R.endT = 1.4; R.endWin = true; }   // a cada 10 ondas (depois do boss) podes sair e guardar tudo
 }
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
@@ -1484,9 +1490,9 @@ function applyWave() {
 function hordeBurst() {
   const n = 8 + Math.min(14, Math.floor(R.wave / 5)); for (let i = 0; i < n; i++) spawnEdge(MISSIONS[R.m].types[Math.floor(Math.random() * MISSIONS[R.m].types.length)]);
 }
-// Depois da onda 40 (e de 10 em 10 ondas) o Guardiao Dourado desce do ceu para te enfrentar
+// Depois da onda 40 (e de 40 em 40 ondas) o Guardiao Dourado desce do ceu para te enfrentar
 const GUARD = { name: 'Guardião Dourado', pal: 'gguard', r: 64, spd: 70, ring: 12, charge: 430, col: '#f5c542', pattern: ['leap', 'spin', 'slam', 'charge', 'leap', 'spin', 'ring'], hpK: 6 };
-const guardHere = w => w > 40 && (w - 1) % 10 === 0;
+const guardHere = w => w > 40 && (w - 1) % 40 === 0;   // o Guardiao Dourado vem nas ondas 41, 81, 121...
 function spawnGuardian() {
   const b = GUARD, hpv = TUNE.boss[R.m] * (R.bossM || 1) * 1.2 * lvHP() * b.hpK;
   R.boss = { boss: true, guardian: true, x: W / 2, y: 130, r: b.r, hp: hpv, max: hpv, spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 1.2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0, air: false, z: 0 };
@@ -1516,10 +1522,10 @@ function nextWave() {
   if (isHorde(R.wave)) { R.toastT = 3.2; R.shake = 14; SFX.boss(); hordeBurst(); }
   if (R.farm && guardHere(R.wave)) spawnGuardian();
 }
-function endTitle(win) { return R.farm ? (win ? 'FARM CONCLUÍDO' : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
+function endTitle(win) { return R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DO FARM' : 'FARM GUARDADO') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
-  a.push(win ? `Ganhaste ¢${R.earned}` + (R.farm ? '' : ' (inclui recompensa)') : `Guardaste ¢${R.earned} (metade do ouro)`);
+  a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : 'Perdeste tudo: sem ouro, XP nem itens.') : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
   if (R.lvUp) a.push(`Subiste para o nível ${R.lvUp}! (+${R.ptsGain} pontos)`);
   if (R.gemGain) a.push(`+${R.gemGain} ◆ Diamantes`);
@@ -1669,40 +1675,42 @@ function hubChar() {
 // ----- Mochila -----
 let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0;
 function hubBag() {
-  [['all', 'Todos']].concat(SLOTS.map(sl => [sl, SLOT_LBL[sl]])).forEach(([k, l], i) => btn(197 + i * 58, 90, 55, 26, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; }, { size: 11, col: bagFilter === k ? '#a8821f' : '#2a2a48' }));
-  // separadores das 5 mochilas
+  [['all', 'Todos']].concat(SLOTS.map(sl => [sl, SLOT_LBL[sl]])).forEach(([k, l], i) => btn(197 + i * 58, 88, 55, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; }, { size: 11, col: bagFilter === k ? '#a8821f' : '#2a2a48' }));
+  // mochilas: cinco separadores numerados; os bloqueados mostram um cadeado e o proximo mostra o preco
   const slots = save.bagSlots | 1; if (bagPage >= slots) bagPage = 0;
+  txt('Mochila', 197, 132, 12, '#8a9ab8', 'left', 'bold');
   for (let k = 0; k < 5; k++) {
-    const x = 197 + k * 60, open = k < slots, next = k === slots, c = BAG_COST[k];
-    btn(x, 120, 56, 22, open ? `Mochila ${k + 1}` : c[0] === 'g' ? '¢' + gfmt(c[1]) : '◆' + c[1], () => { if (open) { bagPage = k; bagSel = -1; } else if (next) { bagBuy = k + 1; } else { SFX.error(); hubToast = { t: 2.4, s: 'Desbloqueia primeiro a Mochila anterior', col: '#f88' }; } }, { size: open ? 10 : 11, col: open ? (bagPage === k ? '#a8821f' : '#2a2a48') : next ? '#5a4a2a' : '#26262f', hot: open ? '#c9a030' : '#7a6a3a' });
-    if (!open) drawIcon('lock', x + 9, 131, 1);
+    const x = 252 + k * 34, open = k < slots, next = k === slots;
+    btn(x, 117, 30, 22, open ? String(k + 1) : '', () => { if (open) { bagPage = k; bagSel = -1; } else if (next) { bagBuy = k + 1; } else { SFX.error(); hubToast = { t: 2.4, s: 'Desbloqueia primeiro a Mochila anterior', col: '#f88' }; } }, { size: 13, col: open ? (bagPage === k ? '#a8821f' : '#2a2a48') : next ? '#4a3a1a' : '#1e1e2a', hot: open ? '#c9a030' : '#7a6a3a' });
+    if (!open) drawIcon('lock', x + 15, 128, 1);
   }
+  { const nk = slots < 5 ? BAG_COST[slots] : null; if (nk) { const gem = nk[0] === 'd', can = gem ? save.gems >= nk[1] : save.gold >= nk[1]; txt('Próxima: ' + (gem ? '◆' : '¢') + gfmt(nk[1]), 430, 132, 11, can ? (gem ? '#7fe8ff' : '#fd5') : '#a88', 'left', 'bold'); } else txt('Todas desbloqueadas', 430, 132, 11, '#6f6', 'left', 'bold'); }
   txt(`${save.bag.length}/${bagMax()}`, 495, 417, 13, save.bag.length >= bagMax() ? '#f66' : '#aab', 'right', 'bold');
   const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter), pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);
   for (let n = 0; n < BAG_PAGE; n++) {
-    const x = 197 + (n % 6) * 44, y = 148 + Math.floor(n / 6) * 44, o = pageList[n], picked = o && bagPick.has(o.it);
-    bevel(x, y, 41, 41, picked ? '#16301c' : '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
+    const x = 197 + (n % 6) * 50, y = 146 + Math.floor(n / 6) * 45, o = pageList[n], picked = o && bagPick.has(o.it);
+    bevel(x, y, 46, 41, picked ? '#16301c' : '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
     if (o) {
-      slotIcon(o.it.slot, o.it.r, x + 20, y + 20, 2.6); if (o.it.ench) txt('+' + o.it.ench, x + 38, y + 38, 9, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 6, y + 6);
-      { const v = cmpItems(o.it, save.gear[o.it.slot]).verdict, c = v > 0 ? '#4cf06a' : v < 0 ? '#ff4a4a' : '#ffd34a'; ctx.fillStyle = '#05050a'; ctx.fillRect(x + 2, y + 31, 9, 9); ctx.fillStyle = c; ctx.fillRect(x + 3, y + 32, 7, 7); }
-      if (!canWear(o.it)) drawIcon('lock', x + 31, y + 11, .9);
-      if (picked) { ctx.strokeStyle = '#4cf06a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 43, 43); txt('✓', x + 33, y + 38, 12, '#4cf06a', 'center', 'bold'); }
-      else if (!bagMulti && bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 43, 43); }
-      const idx = o.i, it2 = o.it; ui.push({ x, y, w: 41, h: 41, fn: () => { if (bagMulti) { if (bagPick.has(it2)) bagPick.delete(it2); else bagPick.add(it2); } else bagSel = idx; } });
+      slotIcon(o.it.slot, o.it.r, x + 23, y + 20, 2.6); if (o.it.ench) txt('+' + o.it.ench, x + 43, y + 38, 9, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 6, y + 6);
+      { const v = cmpItems(o.it, save.gear[o.it.slot]).verdict, c = v > 0 ? '#4cf06a' : v < 0 ? '#ff4a4a' : '#ffd34a'; ctx.fillStyle = c; ctx.fillRect(x + 4, y + 33, 5, 5); }
+      if (!canWear(o.it)) drawIcon('lock', x + 36, y + 10, .9);
+      if (picked) { ctx.strokeStyle = '#4cf06a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 43); txt('✓', x + 38, y + 38, 12, '#4cf06a', 'center', 'bold'); }
+      else if (!bagMulti && bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 43); }
+      const idx = o.i, it2 = o.it; ui.push({ x, y, w: 46, h: 41, fn: () => { if (bagMulti) { if (bagPick.has(it2)) bagPick.delete(it2); else bagPick.add(it2); } else bagSel = idx; } });
     }
   }
-  btn(197, 376, 112, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; bagPick.delete(save.bag[i]); save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 12, col: '#6a4a2a' });
-  btn(313, 376, 100, 28, bagMulti ? 'Sair da seleção' : 'Selecionar', () => { bagMulti = !bagMulti; bagPick.clear(); bagSel = -1; }, { size: 12, col: bagMulti ? '#8a3a2a' : '#3a5a7a', hot: bagMulti ? '#b04a3a' : '#4a7aa0' });
-  btn(417, 376, 78, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; bagPick.clear(); persist(); }, { size: 12 });
-  // legenda e peças equipadas (não se vendem)
-  [['#4cf06a', lang === 'en' ? 'better' : 'melhor', 197], ['#ff4a4a', lang === 'en' ? 'worse' : 'pior', 252], ['#ffd34a', lang === 'en' ? 'same' : 'igual', 292]].forEach(([c, t, lx]) => { ctx.fillStyle = c; ctx.fillRect(lx, 410, 7, 7); txt(t, lx + 11, 417, 10, '#99a'); }); txt(lang === 'en' ? '(vs equipped)' : '(vs equipado)', 330, 417, 10, '#667');
-  { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 428, 12, '#f0c060', 'left', 'bold');
-    SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 49, y = 434, hl = ref === sl;
-      bevel(x, y, 45, 45, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
-      if (it) { slotIcon(sl, it.r, x + 22, y + 22, 3); if (it.ench) txt('+' + it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 7, y + 7); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 22, y + 22, 3); ctx.globalAlpha = 1; }
-      if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
-      ui.push({ x, y, w: 45, h: 45, fn: () => { bagFilter = sl; bagSel = -1; bagPage = 0; } }); });
-    if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 197 + 4 * 49 + 4, 462, 12, '#ffd34a', 'left', 'bold'); }
+  btn(197, 376, 112, 26, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; bagPick.delete(save.bag[i]); save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 12, col: '#6a4a2a' });
+  btn(313, 376, 100, 26, bagMulti ? 'Sair da seleção' : 'Selecionar', () => { bagMulti = !bagMulti; bagPick.clear(); bagSel = -1; }, { size: 12, col: bagMulti ? '#8a3a2a' : '#3a5a7a', hot: bagMulti ? '#b04a3a' : '#4a7aa0' });
+  btn(417, 376, 78, 26, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; bagPick.clear(); persist(); }, { size: 12 });
+  // legenda (cor do quadradinho = comparacao com o equipado)
+  { let lx = 197; [['#4cf06a', lang === 'en' ? 'better' : 'melhor'], ['#ff4a4a', lang === 'en' ? 'worse' : 'pior'], ['#ffd34a', lang === 'en' ? 'same' : 'igual']].forEach(([c, t]) => { ctx.fillStyle = c; ctx.fillRect(lx, 410, 6, 6); txt(t, lx + 10, 417, 10, '#99a'); lx += 10 + txtW(t, 10) + 12; }); txt(lang === 'en' ? 'than equipped' : 'que o equipado', lx, 417, 10, '#667'); }
+  { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 434, 12, '#f0c060', 'left', 'bold');
+    SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 50, y = 438, hl = ref === sl;
+      bevel(x, y, 46, 40, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
+      if (it) { slotIcon(sl, it.r, x + 23, y + 20, 2.6); if (it.ench) txt('+' + it.ench, x + 43, y + 36, 9, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 6, y + 6); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 23, y + 20, 2.6); ctx.globalAlpha = 1; }
+      if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 42); }
+      ui.push({ x, y, w: 46, h: 40, fn: () => { bagFilter = sl; bagSel = -1; bagPage = 0; } }); });
+    if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 197 + 4 * 50 + 4, 462, 12, '#ffd34a', 'left', 'bold'); }
   panel(500, 90, 280, 388, '#16162a');
   if (bagMulti) {
     const picked = save.bag.filter(q => bagPick.has(q)), tot = picked.reduce((a, q) => a + sellValue(q), 0), vis = save.bag.filter(q => bagFilter === 'all' || q.slot === bagFilter);
@@ -2879,12 +2887,25 @@ function overlay(title, col, lines) {
 function drawPlayScreens() {
   drawWorld(); drawHUD(); ctx.save(); ctx.translate(UIOX, 0); playOverlay(); ctx.restore(); drawCine();
 }
+function drawCheckpoint() {
+  const gt = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = Math.round(R.xp * (1 + (R.G ? R.G.xpb : 0) / 100));
+  ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H);
+  const x = 170, y = 96, w = 460, h = 290; panel(x, y, w, h, '#16162a', '#a8821f');
+  txt(lang === 'en' ? `WAVE ${R.cpWave} COMPLETE!` : `ONDA ${R.cpWave} CONCLUÍDA!`, x + w / 2, y + 40, 26, '#ffd34a', 'center', 'bold');
+  txt('Queres sair agora e guardar tudo o que ganhaste?', x + w / 2, y + 72, 14, '#cdd6f0', 'center');
+  bevel(x + 30, y + 90, w - 60, 78, '#10101c', '#33334a', '#05050a');
+  txt('¢' + gfmt(gt), x + 60, y + 124, 22, '#fd5', 'left', 'bold'); txt(`+${gfmt(xp)} XP`, x + w / 2 + 10, y + 124, 18, '#9cf', 'left', 'bold'); txt(`Itens: ${R.loot.length}` + (R.wloot.length ? ` · Cópias: ${R.wloot.length}` : ''), x + 60, y + 152, 13, '#cdd6f0');
+  wrap('Se continuares e morreres, perdes tudo (ouro, XP e itens). Sair com Esc a meio deixa só 30%.', x + 30, y + 196, w - 60, 15, 12, '#f99');
+  btn(x + 30, y + 226, 190, 44, 'Sair e guardar tudo', () => { endMission(true, 'cash'); }, { size: lang === 'en' ? 14 : 16, col: '#2f7a4a', hot: '#3fa061' });
+  btn(x + 240, y + 226, 190, 44, 'Continuar', () => { R.phase = 'hunt'; state = 'play'; nextWave(); }, { size: 16, col: '#a06a20', hot: '#c98a30' });
+}
 function playOverlay() {
+  if (state === 'cp') { drawCheckpoint(); return; }
   if (state === 'pause') {
     overlay('PAUSA', '#fff', []);
     btn(300, 215, 200, 44, 'Continuar', () => state = 'play', { size: 18, col: '#2f7a4a' });
     btn(300, 269, 200, 44, 'Opções', () => { optBack = 'pause'; state = 'options'; }, { size: 17 });
-    if (R.farm) btn(300, 323, 200, 44, 'Terminar farm (guardar)', () => { R.retire = true; endMission(true); }, { size: 15, col: '#2f7a4a' });
+    if (R.farm) { btn(300, 323, 200, 44, 'Sair do farm (só 30%)', () => { R.retire = true; endMission(true, 'quit'); }, { size: 15, col: '#8a3a2a', hot: '#b04a3a' }); txt('Sair a meio guarda só 30% do que ganhaste.', 400, 428, 11, '#f99', 'center'); }
     else btn(300, 323, 200, 44, 'Abandonar missão', () => goHub(), { size: 16, col: '#6a2a2a' });
     btn(300, 377, 200, 40, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 15, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   } else if (state === 'win') {
