@@ -1031,6 +1031,7 @@ Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the previous raid on this difficulty"});
 Object.assign(EN_DICT, {"Já existem 5 contas criadas a partir desta rede": "There are already 5 accounts created from this network", "Confirmar venda?": "Confirm sale?", "Item raro: pede confirmação": "Rare item: asks to confirm", "Pode ser melhor que o equipado": "May be better than equipped", "parecem melhores que o equipado": "look better than equipped", "● melhor  ● pior  ● igual (vs equipado)": "● better  ● worse  ● same (vs equipped)", "efetivo": "effective"});
 Object.assign(EN_DICT, {"Pedras de evolução:": "Evolution stones:", "Evoluir Nv": "Upgrade Lv", "Nível de item máximo": "Max item level", "Pedra": "Stone", "EVOLUÍDO! Nível": "UPGRADED! Level", "Diamantes insuficientes": "Not enough diamonds", "Refinar: +6% a todos os atributos por nível.": "Refine: +6% to all stats per level.", "Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.": "Enchant: rolls a special effect (costs gold and diamonds). Raid stones raise the item level.", "MÁX": "MAX"});
+Object.assign(EN_DICT, {"Evoluir exige Nv": "Upgrade needs Lv", "Requer nível": "Requires level", "A Bigorna só melhora a arma até ao nível do jogador ÷ 3. Sobe de nível para continuar.": "The Anvil only upgrades a weapon up to player level ÷ 3. Level up to continue."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1401,10 +1402,13 @@ function cmpItems(nw, old) {
   for (const k of new Set(Object.keys(A).concat(Object.keys(B)))) { const d = (A[k] || 0) - (B[k] || 0); if (Math.abs(d) < (k === 'hp' ? .5 : .05)) continue; const w = (CMP_W[k] || 1) / (AFF[k].b + AFF[k].p * 20); score += d * w; rows.push({ k, d, w: Math.abs(d * w) }); }
   rows.sort((p, q) => q.w - p.w); return { score, rows, verdict: !old || score > .06 ? 1 : score < -.06 ? -1 : 0 };
 }
-function equipFromBag(i) { const it = save.bag[i], old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = -1; persist(); SFX.buy(); }
+// limites por nivel do jogador: equipamento (nivel do item / 2), Bigorna (nivel / 3) e refino (nivel / 4)
+const itemReq = it => Math.ceil(it.il / 2), canWear = it => save.pl.lv >= itemReq(it);
+const anvCap = () => Math.min(ANV_MAX, Math.floor(save.pl.lv / 3)), refCap = () => Math.min(ENC_MAX, Math.floor(save.pl.lv / 4));
+function equipFromBag(i) { const it = save.bag[i], old = save.gear[it.slot]; if (!canWear(it)) { SFX.error(); return; } save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = -1; persist(); SFX.buy(); }
 function equipBest(sl) {
   const cur = save.gear[sl]; let bi = -1, bs = -1e9;
-  save.bag.forEach((it, i) => { if (it.slot !== sl) return; const c = cmpItems(it, cur); if (c.score > bs) { bs = c.score; bi = i; } });
+  save.bag.forEach((it, i) => { if (it.slot !== sl || !canWear(it)) return; const c = cmpItems(it, cur); if (c.score > bs) { bs = c.score; bi = i; } });
   if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; } else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
 }
 function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
@@ -1491,7 +1495,7 @@ function itemCard(it, x, y, w = 230) {
   slotIcon(it.slot, it.r, x + 20, y + 20, 3.4);
   lines.forEach((ln, i) => txtR(ln, x + 46, y + 14 + i * 14, sz, col, 'left', 'bold'));
   const ex = (lines.length - 1) * 14;
-  txt(`${RAR[it.r][0]} · Item Nv ${it.il}`, x + 46, y + 32 + ex, 12, '#aab');
+  { const t0 = `${RAR[it.r][0]} · Item Nv ${it.il}`; txt(t0, x + 46, y + 32 + ex, 12, '#aab'); txt(`· Req. Nv ${itemReq(it)}`, x + 46 + txtW(t0, 12) + 6, y + 32 + ex, 12, canWear(it) ? '#6c8' : '#f66', 'left', 'bold'); }
   let yy = y + 58 + ex; txt(statLine(it.main.k, ev(it.main.k, it.main.v, m)), x, yy, 14, '#fff', 'left', 'bold'); yy += 18;
   for (const a of it.aff) { txt(statLine(a.k, ev(a.k, a.v, m)), x, yy, 13, '#7cf'); yy += 16; }
   if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy, 13, '#ffd34a'); yy += 16; }
@@ -1655,7 +1659,7 @@ function hubBag() {
     txt(vt[0], 512, vy, 15, vt[1], 'left', 'bold'); if (cur) arrowTri(512 + txtW(vt[0], 15, 'bold') + 12, vy - 5, cm.verdict >= 0, vt[1]);
     const room = Math.max(0, Math.min(5, Math.floor((374 - (vy + 14)) / 14)));
     cm.rows.slice(0, room).forEach((r, i) => txt(`${r.d > 0 ? '+' : ''}${ev(r.k, r.d, 1)}${AFF[r.k].u} ${AFF[r.k].n}`, 512, vy + 15 + i * 14, 12, r.d > 0 ? '#6f6' : '#f77')); }
-  btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
+  btn(512, 380, 256, 28, canWear(it) ? 'Equipar' : `Requer Nv ${itemReq(it)}`, () => { if (!canWear(it)) { SFX.error(); return; } const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, off: !canWear(it), col: '#2f7a4a', hot: '#3fa061' });
   { const risky = it.r >= 3 || cmpItems(it, cur).verdict > 0 || it.ench >= 3 || (it.st || 0) > 0, armed = sellArm === it;
     btn(512, 412, 256, 28, armed ? 'Confirmar venda?' : `Vender ¢${sellValue(it)}`, () => { if (risky && !armed) { sellArm = it; SFX.click(); return; } sellArm = null; save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: armed ? '#b03a2a' : '#a06a20', hot: armed ? '#d04a3a' : '#c98a30' });
     if (risky && !armed) txt(it.r >= 3 ? 'Item raro: pede confirmação' : 'Pode ser melhor que o equipado', 640, 476, 10, '#f99', 'center'); }
@@ -1677,14 +1681,14 @@ function drawSellAsk() {
 }
 // ----- Encantamentos -----
 function doRefine() {
-  const it = enchItem; if (!it || enc.t > 0 || it.ench >= ENC_MAX) return; const c = refCost(it); if (save.gold < c) { SFX.error(); return; }
+  const it = enchItem; if (!it || enc.t > 0 || it.ench >= ENC_MAX) return; if (it.ench >= refCap()) { SFX.error(); return; } const c = refCost(it); if (save.gold < c) { SFX.error(); return; }
   save.gold -= c; const ok = Math.random() * 100 < ENC_CH[it.ench], down = !ok && it.ench >= 6 && Math.random() < .3;
   enc = { t: .9, res: { kind: 'ref', ok, down, it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
 }
 // pedras de evolucao: cada pedra da raridade da peca sobe +2 niveis de item (ate 120) e os bonus crescem com ele
 const MAIN_BASE = { head: il => 30 + 8 * il, chest: il => 50 + 12 * il, boots: il => 3 + .25 * il, amulet: il => 3 + .35 * il };
 function evolveItem(it) {
-  if (!it || enc.t > 0 || it.il >= 120 || !(save.stones[it.r] > 0)) { SFX.error(); return; }
+  if (!it || enc.t > 0 || it.il >= 120 || !(save.stones[it.r] > 0) || Math.ceil((it.il + 2) / 2) > save.pl.lv) { SFX.error(); return; }
   const il2 = Math.min(120, it.il + 2), fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
   it.main.v = fx(it.main.k, it.main.v, MAIN_BASE[it.slot](il2) / MAIN_BASE[it.slot](it.il));
   for (const a of it.aff) a.v = fx(a.k, a.v, fa(a.k));
@@ -1735,13 +1739,14 @@ function hubEnchant() {
   const max = it.ench >= ENC_MAX, rc = refCost(it), sc = specCost(it), ch = max ? 0 : ENC_CH[it.ench];
   if (max) txt('Nível máximo!', 600, 366, 16, '#ffd34a', 'center', 'bold');
   else { txt(`Chance: ${ch}%`, 432, 362, 14, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold'); bar(432, 368, 340, 8, ch / 100, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'); }
-  btn(432, 392, 165, 56, '', doRefine, { off: max || enc.t > 0 || save.gold < rc, col: '#a06a20', hot: '#c98a30' });
-  txt(max ? 'Nível máximo!' : `Refinar +${it.ench} > +${it.ench + 1}`, 514, 414, 14, '#fff', 'center', 'bold'); if (!max) txt(`¢${rc}`, 514, 435, 14, '#fd5', 'center', 'bold');
+  const rlock = !max && it.ench >= refCap();
+  btn(432, 392, 165, 56, '', doRefine, { off: max || rlock || enc.t > 0 || save.gold < rc, col: '#a06a20', hot: '#c98a30' });
+  txt(max ? 'Nível máximo!' : `Refinar +${it.ench} > +${it.ench + 1}`, 514, 414, 14, '#fff', 'center', 'bold'); if (!max) { if (rlock) txt(`Requer Nv ${4 * (it.ench + 1)}`, 514, 435, 13, '#f88', 'center', 'bold'); else txt(`¢${rc}`, 514, 435, 14, '#fd5', 'center', 'bold'); }
   const sg = specGems(it);
   btn(607, 392, 165, 56, '', doSpec, { off: enc.t > 0 || save.gold < sc || save.gems < sg, col: '#5a3a7a', hot: '#7a55a0' });
   txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
-  { const have = save.stones[it.r], capIl = it.il >= 120;
-    btn(432, 452, 340, 24, capIl ? 'Nível de item máximo' : `Evoluir Nv ${it.il} > ${Math.min(120, it.il + 2)}  ·  Pedra ${RAR[it.r][0]} (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || !have, size: 13, col: '#2a5a7a', hot: '#3a7aa0' }); }
+  { const have = save.stones[it.r], capIl = it.il >= 120, needLv = Math.ceil((it.il + 2) / 2), lvLock = !capIl && needLv > save.pl.lv;
+    btn(432, 452, 340, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir Nv ${it.il} > ${Math.min(120, it.il + 2)}  ·  Pedra ${RAR[it.r][0]} (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 13, col: '#2a5a7a', hot: '#3a7aa0' }); }
   if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 386, 12, '#f88', 'center'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 386, 12, '#f88', 'center');
 }
 
@@ -1872,12 +1877,13 @@ function drawAnvil(ax, ay, id, lv) {
 function hubAnvil() {
   const c = CLASSES[save.cls];
   c.weapons.forEach((w, i) => { const own = save.own[save.cls][i], x = 197 + i * 117, lv = save.wl[w.id] || 0; btn(x, 90, 110, 46, '', () => anvSel = i, { off: !own || anv.t > 0, col: anvSel === i ? '#a06a20' : '#2a2a48' }); if (own) { weaponIcon(w.id, x + 32, 113, 1.8); txt('+' + lv, x + 62, 119, 16, '#fff', 'left', 'bold'); } else drawIcon('lock', x + 55, 113, 2); });
-  const w = c.weapons[anvSel], lv = save.wl[w.id] || 0, max = lv >= ANV_MAX;
+  const w = c.weapons[anvSel], lv = save.wl[w.id] || 0, max = lv >= ANV_MAX, lcap = !max && lv >= anvCap();
   weaponIcon(w.id, 220, 158, 1.5); txt(w.n, 244, 165, 19, '#fff', 'left', 'bold');
   txt(`Nível +${lv}${max ? '  (MÁXIMO)' : ` > +${lv + 1}`}`, 205, 188, 16, '#f0c060', 'left', 'bold');
   const d0 = Math.round(w.dmg * 10 * wlm(lv)), d1 = Math.round(w.dmg * 10 * wlm(lv + 1));
   txt(max ? `Dano ${d0}` : `Dano ${d0} > ${d1}`, 205, 208, 14, '#9cf');
   if (max) txt('Nível máximo!', 205, 250, 18, '#ffd34a', 'left', 'bold');
+  else if (lcap) { txt(`Requer nível ${3 * (lv + 1)} para +${lv + 1}`, 205, 252, 16, '#f88', 'left', 'bold'); wrap('A Bigorna só melhora a arma até ao nível do jogador ÷ 3. Sobe de nível para continuar.', 205, 278, 215, 15, 12, '#9ab'); }
   else {
     if (anvLucky && !luckOk(lv, w.id)) anvLucky = false;
     const base = ANV_CH[lv], pity = Math.min(25, 5 * (save.pity[w.id] || 0)), lucky = anvLucky ? LUCKY_BONUS : 0, ch = Math.min(100, base + pity + lucky);
@@ -1905,6 +1911,7 @@ function hubAnvil() {
 function hammer(i) {
   const w = CLASSES[save.cls].weapons[i], lv = save.wl[w.id] || 0;
   if (anv.t > 0 || lv >= ANV_MAX) return;
+  if (lv >= anvCap()) { SFX.error(); return; }
   if (anvLucky && !luckOk(lv, w.id)) anvLucky = false;
   const useP = anvProt && lv >= 5, total = anvCost(lv) + (anvLucky ? luckyCost(lv) : 0) + (useP ? protCost(lv) : 0);
   if (save.gold < total) { SFX.error(); return; }
