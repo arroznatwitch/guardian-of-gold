@@ -998,6 +998,7 @@ Object.assign(EN_DICT, {"Chega à onda": "Reach wave", "na zona anterior": "in t
 Object.assign(EN_DICT, {"Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.": "Melee tank. Lots of health, heavy blows and 15% less damage taken."});
 Object.assign(EN_DICT, {"Conclui TODAS as raids da dificuldade anterior": "Clear ALL raids of the previous difficulty"});
 Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell all", "Sim, vender": "Yes, sell", "Os itens equipados não são vendidos.": "Equipped items are not sold."});
+Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1595,6 +1596,14 @@ function hubBag() {
     }
   }
   btn(197, 376, 120, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
+  // equipado: as 4 pecas que estas a usar (nao se vendem); a do tipo selecionado/filtrado fica destacada
+  { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 428, 12, '#f0c060', 'left', 'bold');
+    SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 49, y = 434, hl = ref === sl;
+      bevel(x, y, 45, 45, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
+      if (it) { slotIcon(sl, it.r, x + 22, y + 22, 3); if (it.ench) txt('+' + it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 7, y + 7); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 22, y + 22, 3); ctx.globalAlpha = 1; }
+      if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
+      ui.push({ x, y, w: 45, h: 45, fn: () => { bagFilter = sl; bagSel = -1; } }); });
+    if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 197 + 4 * 49 + 4, 462, 12, '#ffd34a', 'left', 'bold'); }
   btn(397, 376, 98, 28, 'Vender tudo', () => { if (save.bag.length) sellAsk = true; else SFX.error(); }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
   btn(322, 376, 70, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
   panel(500, 90, 280, 388, '#16162a');
