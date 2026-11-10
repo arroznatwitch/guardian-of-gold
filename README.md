@@ -2,7 +2,7 @@
 
 # Guardians of Gold
 
-**v1.2-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
+**v1.2.1-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
 
 <img src="docs/img/menu.jpg" width="640" alt="Menu do Guardians of Gold">
 
@@ -42,7 +42,7 @@ Todas as teclas podem ser mudadas em **Opções > Teclas**.
 
 # Wiki
 
-Índice: [Classes](#classes) · [Armas](#armas) · [Equipamento](#equipamento) · [Encantamentos](#encantamentos-e-bigorna) · [Fusão](#fusão-de-armas) · [Progressão](#progressão) · [Farm e Raids](#farm-e-raids) · [Mapas](#mapas) · [Inimigos e bosses](#inimigos-e-bosses) · [Skins](#skins) · [Recompensas](#recompensas-e-diamantes)
+Índice: [Classes](#classes) · [Armas](#armas) · [Equipamento](#equipamento) · [Encantamentos](#encantamentos-e-bigorna) · [Fusão](#fusão) · [Progressão](#progressão) · [Farm e Raids](#farm-e-raids) · [Mapas](#mapas) · [Inimigos e bosses](#inimigos-e-bosses) · [Skins](#skins) · [Recompensas](#recompensas-e-diamantes)
 
 ## Classes
 
@@ -90,22 +90,20 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 | <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
 | <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
-## Fusão de armas
+## Fusão
 
 <p align="center"><img src="docs/img/screen-fusion.jpg" width="48%" alt="Fusão"> <img src="docs/img/screen-rewards.jpg" width="48%" alt="Recompensas"></p>
 
-Armas repetidas caem de inimigos, bosses, raids e baús (ou compram-se no ecrã **Fusão**). Junta-as para as tornar mais fortes:
+A **Fusão** desbloqueia no **nível 10** da conta e funciona para armas e para equipamento. Em ambos, **5 iguais dão 1 com uma estrela a mais**, até ao máximo de **3★**.
 
-| Junta | Obténs |
-|---|---|
-| 5 armas base | 1 arma de **1★** |
-| 5 de 1★ | 1 de **2★** |
-| 5 de 2★ | 1 de **3★** |
-| 5 de 3★ | 1 de **4★** |
-| 5 de 4★ | 1 de **5★** |
-| 2 de 5★ | 1 **Ascendida** (MAX) |
+| Estrelas | Arma: dano | Arma: vel. de ataque | Equipamento: bónus |
+|---|---|---|---|
+| 1★ | ×1,40 | +3% | ×1,15 |
+| 2★ | ×1,90 | +6% | ×1,30 |
+| 3★ (MAX) | ×2,50 | +9% | ×1,50 |
 
-A estrela mais alta que tiveres define a força da arma: o dano (e o da habilidade) sobe de ×1,35 (1★) até ×4,20 (Ascendida), e cada estrela dá ainda +3% de velocidade de ataque.
+- **Armas:** as cópias caem de inimigos, bosses, raids e baús, ou compram-se no ecrã *Fusão* (de 1, 5 ou 10 de cada vez). Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
+- **Equipamento:** juntam-se 5 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
 
 ## Equipamento
 
