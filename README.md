@@ -94,7 +94,7 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 
 <p align="center"><img src="docs/img/screen-fusion.jpg" width="48%" alt="Fusão"> <img src="docs/img/screen-rewards.jpg" width="48%" alt="Recompensas"></p>
 
-A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para equipamento. Em ambos, **5 iguais dão 1 com uma estrela a mais**, até ao máximo de **3★**.
+A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para equipamento. Em ambos, **3 iguais dão 1 com uma estrela a mais**, até ao máximo de **3★**.
 
 | Estrelas | Arma: dano | Arma: vel. de ataque | Equipamento: bónus |
 |---|---|---|---|
@@ -103,7 +103,7 @@ A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para 
 | 3★ (MAX) | ×2,50 | +9% | ×1,50 |
 
 - **Armas:** as cópias caem de inimigos, bosses, raids e baús, ou compram-se no ecrã *Fusão* (de 1, 5 ou 10 de cada vez). Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
-- **Equipamento:** juntam-se 5 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
+- **Equipamento:** juntam-se 3 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
 
 ### Efeitos das estrelas nas habilidades (`E`)
 
