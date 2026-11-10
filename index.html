@@ -378,13 +378,13 @@ const THEMES = [
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1 };
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1 };
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
-  s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
+  s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {
     s.own = s.own || {}; s.eq = s.eq || {}; s.sk = s.sk || {}; s.skE = s.skE || {};
@@ -437,6 +437,7 @@ const K = a => !!keys[binds[a]];
 
 addEventListener('keydown', e => {
   initAudio();
+  if (state === 'hub' && tab === 'rank' && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   if (state === 'cheats') {
     e.preventDefault();
@@ -517,7 +518,7 @@ function endMission(win) {
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
-  R.lootN = R.loot.length; save.gold += g; R.earned = g; persist(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
+  R.lootN = R.loot.length; save.gold += g; R.earned = g; statsAdd(g); persist(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
 const GLOWW = { m_fire: '#ff7a1a', m_ice: '#6ad0ff', m_bolt: '#ffe14a', m_arcane: '#b06aff', m_dark: '#c030ff' };
@@ -819,7 +820,7 @@ function update(dt) {
     b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.y = Math.max(b.r, Math.min(H - b.r, b.y));
     if (d < b.r + 12 && !dead) hurt(b.st === 'charge' && b.mt > .7 ? 25 : 12);
     if (b.hp <= 0) {
-      burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.xp += 40 + 25 * R.m; R.tels = []; bossDown(b);
+      burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += 40 + 25 * R.m; R.tels = []; bossDown(b);
       for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE)) });
     }
   }
@@ -910,6 +911,7 @@ Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", 
 Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
 Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
 Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 investidas": "2 charges", "3 investidas": "3 charges", "4 investidas": "4 charges", "2 ondas de choque": "2 shockwaves", "3 ondas de choque": "3 shockwaves", "4 ondas de choque": "4 shockwaves", "3 lanças em leque": "3 spears in a fan", "5 lanças em leque": "5 spears in a fan", "7 lanças em leque": "7 spears in a fan", "6 raios": "6 lightning bolts", "8 raios": "8 lightning bolts", "12 raios": "12 lightning bolts", "8s de duração": "8s duration", "10s de duração": "10s duration", "12s de duração": "12s duration", "10 flechas": "10 arrows", "14 flechas": "14 arrows", "20 flechas": "20 arrows", "15 flechas no leque": "15 arrows in the fan", "19 flechas no leque": "19 arrows in the fan", "23 flechas no leque": "23 arrows in the fan", "2 virotes": "2 bolts", "3 virotes": "3 bolts", "5 virotes": "5 bolts", "explosão maior": "bigger explosion", "2 flechas de fogo": "2 fire arrows", "3 flechas, explosão enorme": "3 arrows, huge explosion", "2 armadilhas": "2 traps", "3 armadilhas": "3 traps", "5 armadilhas": "5 traps", "2 meteoros": "2 meteors", "3 meteoros": "3 meteors", "CHUVA DE METEOROS": "METEOR SHOWER", "área maior": "bigger area", "área e gelo maiores": "bigger area and freeze", "nova gigante (5s de gelo)": "giant nova (5s freeze)", "10 raios": "10 lightning bolts", "14 raios": "14 lightning bolts", "20 raios": "20 lightning bolts", "escudo de 5s": "5s shield", "escudo de 6s": "6s shield", "escudo de 8s": "8s shield", "orbes durante 8s": "orbs for 8s", "orbes durante 10s": "orbs for 10s", "orbes durante 13s": "orbs for 13s"});
+Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "Criar conta": "Create account", "Nick": "Nickname", "Palavra-passe": "Password", "Repetir palavra-passe": "Repeat password", "A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.": "Your password never leaves this device: only a cryptographic proof is sent. There is no password recovery, so keep it safe.", "Conectado como": "Logged in as", "Mobs mortos": "Mobs killed", "Ouro ganho": "Gold earned", "Enviar progresso": "Send progress", "Terminar sessão": "Log out", "Apagar conta: escreve a palavra-passe": "Delete account: type your password", "Apagar conta": "Delete account", "Mapa ": "Map ", "Maior nível": "Highest level", "Mais mobs mortos": "Most mobs killed", "Mais ouro ganho": "Most gold earned", "Mais bosses derrotados": "Most bosses defeated", "Mais raids vencidas": "Most raids won", "Recorde de waves:": "Wave record:", "A carregar...": "Loading...", "Ainda sem resultados.": "No results yet.", "Tu: #": "You: #", "Nick inválido: 3 a 16 letras, números ou _": "Invalid nickname: 3 to 16 letters, numbers or _", "A palavra-passe precisa de 8 a 64 caracteres": "The password needs 8 to 64 characters", "As palavras-passe não coincidem": "The passwords don't match", "A palavra-passe não pode ser igual ao nick": "The password can't be the same as the nickname", "Esse nick já está em uso": "That nickname is already taken", "Nick ou palavra-passe incorretos": "Wrong nickname or password", "Conta bloqueada por tentativas falhadas. Tenta daqui a": "Account locked after failed attempts. Try again in", "Muitos registos neste momento. Tenta daqui a uns minutos.": "Too many sign-ups right now. Try again in a few minutes.", "Sem ligação ao servidor": "Cannot reach the server", "O ranking online ainda não está ligado a um servidor.": "The online ranking is not connected to a server yet.", "O teu browser não permite criptografia aqui (usa https).": "Your browser doesn't allow cryptography here (use https).", "Erro do servidor, tenta mais tarde": "Server error, try again later", "Progresso recusado pelo servidor (valores inesperados)": "Progress rejected by the server (unexpected values)", "Sessão expirada. Entra outra vez.": "Session expired. Log in again.", "Pedido inválido": "Invalid request", "Dados inválidos": "Invalid data", "A ligar...": "Connecting...", "Sessão iniciada!": "Logged in!", "Progresso enviado!": "Progress sent!", "Conta apagada.": "Account deleted.", "Este save não pode entrar no ranking.": "This save cannot enter the ranking.", "Espera uns segundos e tenta outra vez.": "Wait a few seconds and try again."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1367,17 +1369,17 @@ function drawHub() {
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
-  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['skins', 'Skins'], ['rewards', 'Recompensas'], ['pets', 'Pets']];
+  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['skins', 'Skins'], ['rewards', 'Recompensas'], ['pets', 'Pets'], ['rank', 'Ranking']];
   const nChest = Math.max(0, save.pl.lv - save.chestDone);
   tabs.forEach((t, i) => {
-    const by = 78 + i * 31;
-    btn(20, by, 150, 28, t[1], () => { tab = t[0]; if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 14 });
-    if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 6, 12, 14); txt('!', 158, by + 17, 11, '#000', 'center', 'bold'); }
-    if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(134, by + 6, 30, 14); txt(nChest > 99 ? '99+' : String(nChest), 149, by + 17, 11, '#000', 'center', 'bold'); }
+    const by = 76 + i * 29;
+    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') rkLoad(false); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
+    if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(134, by + 5, 30, 14); txt(nChest > 99 ? '99+' : String(nChest), 149, by + 16, 11, '#000', 'center', 'bold'); }
   });
   btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
-  ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets })[tab]();
+  ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets, rank: hubRank })[tab]();
 }
 function hubFarm() {
   txt('Ondas infinitas · boss a cada 5 ondas · ouro, XP e equipamento', 450, 106, 13, '#aab', 'center');
@@ -1858,6 +1860,123 @@ function hubRewards() {
   for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`Cópia: ${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
   r.items.slice(0, 6).forEach(it => { slotIcon(it.slot, it.r, 546, y - 4, 1.6); txt(itemName(it), 566, y, 13, RAR[it.r][1], 'left', 'bold'); y += 22; });
   if (r.items.length > 6) txt(`+${r.items.length - 6} itens`, 534, y, 12, '#889');
+}
+
+/* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
+const ONLINE_URL = 'https://fnkjmykbjuxkagtjlyfn.supabase.co', ONLINE_KEY = 'sb_publishable_y_fMP0OBRbarUpDliORTdw_bfFYuwrx';   // preencher com o URL e a chave publica do teu projecto
+const ON_STORE = 'gog-online-v1';
+let on = { token: null, nick: null };
+try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick }; } catch (e) {}
+const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
+let rk = { mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+const RK_MSG = {
+  bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
+  nick_taken: 'Esse nick já está em uso', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
+  network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
+  implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
+};
+function rkSay(code, extra) { const good = code === 'welcome' || code === 'sent' || code === 'deleted' || code === 'working'; rk.msg = (RK_MSG[code] || code) + (extra ? ' ' + extra + 's' : ''); rk.col = good ? '#7fe8a0' : '#f88'; }
+async function rpc(fn, args) {
+  if (!ONLINE_URL || !ONLINE_KEY) return { ok: false, error: 'off' };
+  try {
+    const r = await fetch(`${ONLINE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args) });
+    const j = await r.json(); return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: 'server' };
+  } catch (e) { return { ok: false, error: 'network' }; }
+}
+// A palavra-passe nunca sai do dispositivo: envia-se apenas PBKDF2-SHA256 (210 000 iteracoes, sal = nick) em hexadecimal.
+async function mkProof(nick, pass) {
+  const enc = new TextEncoder(), key = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('gog1|' + nick.toLowerCase()), iterations: 210000 }, key, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function statsAdd(g) { const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; t.kills += R.kills | 0; t.gold += Math.max(0, g | 0); t.bosses += R.bossK | 0; onlineSubmit(); }
+function statPayload() {
+  const t = save.stats || { kills: 0, gold: 0, bosses: 0 }, f = save.farmBest || {}, o = { cls: save.cls, level: save.pl.lv, kills: Math.floor(t.kills), gold: Math.floor(t.gold), bosses: t.bosses | 0, raids: Object.values(save.raids || {}).reduce((a, v) => a + (v || []).reduce((x, y) => x + y, 0), 0) };
+  for (let i = 0; i < 6; i++) o['w' + i] = f[i] | 0; return o;
+}
+let subBusy = false;
+async function onlineSubmit() {
+  if (!on.token || !save || subBusy) return; if (save.cheat && save.cheat.used) return;
+  subBusy = true; const r = await rpc('gog_submit', { p_token: on.token, p: statPayload() }); subBusy = false;
+  if (r.error === 'auth') { on = { token: null, nick: null }; onSave(); rkSay('auth'); } else if (r.ok) { rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
+  return r;
+}
+async function rkLoad(force) {
+  const st = rk.stat; if (!ONLINE_URL || rk.loading || (!force && rk.at[st] && Date.now() - rk.at[st] < 20000)) return;
+  rk.loading = true; const r = await rpc('gog_board', { p_stat: st, p_limit: 14, p_token: on.token }); rk.loading = false;
+  if (r.ok && st === rk.stat) { rk.rows = r.rows || []; rk.me = r.me || null; rk.at[st] = Date.now(); } else if (!r.ok) rkSay(r.error);
+}
+async function rkAuth(register) {
+  if (rk.busy) return; const nick = rk.nick.trim();
+  if (!ONLINE_URL) return rkSay('off');
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(nick)) return rkSay('bad_nick');
+  if (rk.pass.length < 8 || rk.pass.length > 64) return rkSay('short_pass');
+  if (register && rk.pass !== rk.pass2) return rkSay('mismatch');
+  if (register && rk.pass.toLowerCase() === nick.toLowerCase()) return rkSay('same_pass');
+  rk.busy = true; rkSay('working'); let proof;
+  try { proof = await mkProof(nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
+  const r = await rpc(register ? 'gog_register' : 'gog_login', { p_nick: nick, p_proof: proof }); rk.busy = false;
+  if (r.ok) { on = { token: r.token, nick: r.nick }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; rkLoad(true); onlineSubmit(); } else rkSay(r.error, r.wait);
+}
+async function rkLogout() { const t = on.token; on = { token: null, nick: null }; onSave(); rk.me = null; rk.at = {}; rkSay('deleted'); rk.msg = ''; if (t) rpc('gog_logout', { p_token: t }); rkLoad(true); }
+async function rkDelete() {
+  if (rk.busy || !on.token) return; if (rk.pass.length < 8) return rkSay('short_pass');
+  rk.busy = true; rkSay('working'); let proof; try { proof = await mkProof(on.nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
+  const r = await rpc('gog_delete', { p_token: on.token, p_proof: proof }); rk.busy = false;
+  if (r.ok) { on = { token: null, nick: null }; onSave(); rk.pass = ''; rk.me = null; rk.at = {}; rkSay('deleted'); rkLoad(true); } else rkSay(r.error);
+}
+function rankKey(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey) return false;
+  const k = e.code, f = rk.focus;
+  if (k === 'Escape') { rk.focus = ''; return true; }
+  if (k === 'Tab') { e.preventDefault(); const order = on.token ? ['pass'] : rk.mode === 'register' ? ['nick', 'pass', 'pass2'] : ['nick', 'pass']; rk.focus = order[(order.indexOf(f) + 1) % order.length]; return true; }
+  if (k === 'Enter') { e.preventDefault(); if (!on.token) rkAuth(rk.mode === 'register'); return true; }
+  if (k === 'Backspace') { e.preventDefault(); rk[f] = rk[f].slice(0, -1); return true; }
+  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' ? /[A-Za-z0-9_]/.test(e.key) && rk.nick.length < 16 : rk[f].length < 64) rk[f] += e.key; return true; }
+  return false;
+}
+function rkField(x, y, w, label, key, mask) {
+  txt(label, x, y - 5, 12, '#9ab'); const foc = rk.focus === key;
+  btn(x, y, w, 28, '', () => { rk.focus = key; }, { col: foc ? '#26264a' : '#12121f', hot: '#1c1c34', sel: false });
+  const v = mask ? '•'.repeat(rk[key].length) : rk[key];
+  txt(v + (foc && Math.floor(T * 2) % 2 ? '_' : ''), x + 8, y + 20, 15, '#fff', 'left', 'bold');
+}
+const RK_STATS = () => [['level', 'Nível'], ['kills', 'Mobs'], ['gold', 'Ouro'], ['bosses', 'Bosses'], ['raids', 'Raids']].concat(MISSIONS.map((m, i) => ['wave' + i, 'Mapa ' + (i + 1)]));
+function hubRank() {
+  const cheat = save.cheat && save.cheat.used, conf = !!ONLINE_URL;
+  panel(197, 90, 225, 386, '#16162a');
+  if (!on.token) {
+    txt('Conta online', 309, 114, 16, '#f0c060', 'center', 'bold');
+    ['login', 'register'].forEach((m, i) => btn(207 + i * 103, 124, 100, 26, m === 'login' ? 'Entrar' : 'Criar conta', () => { rk.mode = m; rk.pass2 = ''; rk.msg = ''; }, { size: 13, col: rk.mode === m ? '#a8821f' : '#2a2a48' }));
+    rkField(207, 176, 205, 'Nick', 'nick', false); rkField(207, 226, 205, 'Palavra-passe', 'pass', true);
+    let y = 262; if (rk.mode === 'register') { rkField(207, 276, 205, 'Repetir palavra-passe', 'pass2', true); y = 312; }
+    btn(207, y + 4, 205, 34, rk.mode === 'register' ? 'Criar conta' : 'Entrar', () => rkAuth(rk.mode === 'register'), { size: 15, col: '#2f7a4a', hot: '#3fa061', off: rk.busy || !conf });
+    if (!conf) wrap(RK_MSG.off, 207, y + 54, 205, 14, 12, '#f88'); else if (rk.msg) wrap(rk.msg, 207, y + 54, 205, 14, 12, rk.col);
+    wrap('A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.', 207, 408, 205, 13, 10, '#778');
+  } else {
+    txt('Conectado como', 309, 112, 12, '#9ab', 'center'); txt(on.nick, 309, 136, 20, '#ffd34a', 'center', 'bold');
+    const t = save.stats || { kills: 0, gold: 0, bosses: 0 };
+    [['Nível', gfmt(save.pl.lv)], ['Mobs mortos', gfmt(t.kills | 0)], ['Ouro ganho', gfmt(t.gold | 0)], ['Bosses', gfmt(t.bosses | 0)]].forEach(([n, v], i) => { txt(n, 210, 170 + i * 20, 13, '#9ab'); txt(v, 410, 170 + i * 20, 13, '#fff', 'right', 'bold'); });
+    if (cheat) wrap(RK_MSG.cheat, 207, 262, 205, 14, 12, '#f88'); else btn(207, 252, 205, 32, 'Enviar progresso', async () => { rkSay('working'); const r = await onlineSubmit(); if (r && r.ok) rkSay('sent'); else if (r && r.error === 'slow') rkSay('Espera uns segundos e tenta outra vez.'); else if (r && r.error !== 'implausible' && r.error !== 'auth') rkSay(r.error); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
+    if (rk.msg) wrap(rk.msg, 207, 304, 205, 14, 12, rk.col);
+    btn(207, 346, 205, 28, 'Terminar sessão', rkLogout, { size: 13, col: '#3a2a3a' });
+    rkField(207, 400, 205, 'Apagar conta: escreve a palavra-passe', 'pass', true);
+    btn(207, 432, 205, 28, 'Apagar conta', rkDelete, { size: 13, col: '#6a2a2a', hot: '#8a3a3a', off: rk.busy || rk.pass.length < 8 });
+  }
+  // classificacao
+  panel(430, 90, 352, 386, '#16162a');
+  const st = RK_STATS(); st.forEach(([k, n], i) => btn(i < 5 ? 438 + i * 68 : 438 + (i - 5) * 56, i < 5 ? 98 : 124, i < 5 ? 64 : 52, 22, n, () => { rk.stat = k; rk.rows = []; rk.me = null; rkLoad(false); }, { size: 11, col: rk.stat === k ? '#a8821f' : '#2a2a48' }));
+  const idx = st.findIndex(q => q[0] === rk.stat), title = idx < 5 ? ['Maior nível', 'Mais mobs mortos', 'Mais ouro ganho', 'Mais bosses derrotados', 'Mais raids vencidas'][idx] : 'Recorde de waves: ' + MISSIONS[idx - 5].name;
+  txt(title, 606, 170, 15, '#f0c060', 'center', 'bold');
+  btn(738, 154, 40, 22, '↻', () => rkLoad(true), { size: 13, col: '#2a2a48', off: !conf });
+  if (!conf) { wrap(RK_MSG.off, 446, 240, 320, 16, 13, '#889'); return; }
+  if (!rk.rows.length) txt(rk.loading ? 'A carregar...' : 'Ainda sem resultados.', 606, 280, 14, '#778', 'center');
+  rk.rows.forEach((r, i) => {
+    const y = 186 + i * 20.5, mine = on.nick && r.nick.toLowerCase() === on.nick.toLowerCase(), col = i === 0 ? '#ffd34a' : i === 1 ? '#d8e0f0' : i === 2 ? '#e0a060' : '#fff';
+    if (mine) { ctx.fillStyle = '#2c2410'; ctx.fillRect(438, y - 13, 336, 19); }
+    txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 490, y, 14, mine ? '#ffd34a' : col, 'left', 'bold'); txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
+  });
+  if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 606, 468, 14, '#7fe8a0', 'center', 'bold');
 }
 
 /* ----- Pets (em breve) ----- */
