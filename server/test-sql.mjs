@@ -45,10 +45,19 @@ r = await q('select public.gog_board($1)', ['kills; drop table gog.players']); o
 r = await q('select public.gog_board($1)', ['wave0']); ok('board wave0', r.ok && r.rows[0].nick === 'Rui_99' && r.rows[0].value === 15, r);
 r = await q('select public.gog_logout($1)', [tok]); ok('logout', r.ok, r);
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok, S({})]); ok('token dead after logout', r.error === 'auth', r);
-r = await q('select public.gog_delete($1,$2)', [tok2, B]); ok('delete wrong proof', r.error === 'bad_login', r);
-r = await q('select public.gog_delete($1,$2)', [tok2, A]); ok('delete ok', r.ok, r);
-r = await q('select public.gog_login($1,$2)', ['rui_99', A]); ok('login after delete fails', !r.ok, r);
-r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick free again', r.free === true, r);
+let gone = false; try { await db.query("select public.gog_delete('x','y')"); } catch (e) { gone = true; } ok('gog_delete no longer exists', gone);
+{ // contas desativadas: so o administrador (role privilegiado) mexe
+  await db.exec('reset role'); await db.exec("select gog.set_active('rui_99', false)"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['rui_99', A]); ok('inactive account cannot log in', !r.ok && r.error === 'inactive', r);
+  r = await q('select public.gog_login($1,$2)', ['rui_99', B]); ok('inactive account with wrong password is just bad login', r.error === 'bad_login', r);
+  r = await q('select public.gog_save_get($1)', [tok2]); ok('old session of inactive account is dead', !r.ok, r);
+  r = await q('select public.gog_profile($1)', ['rui_99']); ok('inactive profile hidden', r.error === 'not_found', r);
+  r = await q('select public.gog_register($1,$2)', ['RUI_99', B]); ok('inactive nick stays reserved', r.error === 'nick_taken', r);
+  let d4 = false; try { await db.query("select gog.set_active('rui_99', true)"); } catch (e) { d4 = true; } ok('anon cannot call set_active', d4);
+  await db.exec('reset role'); await db.exec("select gog.set_active('rui_99', true)"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['rui_99', A]); ok('reactivated account logs in again', r.ok, r);
+}
+r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reserved after deactivation', r.free === false, r);
 // save na nuvem
 {
   r = await q('select public.gog_register($1,$2)', ['saver', A]); const T1 = r.token;
@@ -98,7 +107,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick free again'
   r = await q('select public.gog_register($1,$2)', ['ipuser8', B]); ok('forwarded-for last hop counts', !r.ok && r.error === 'ip_limit', r);
   await db.exec("select set_config('request.headers', '', false)");
   r = await q('select public.gog_register($1,$2)', ['ipuser9', B]); ok('no header means no ip limit', r.ok, r);
-  await db.exec('reset role'); const raw = (await db.query("select count(*)::int c from gog.players where reg_ip like '%203%'")).rows[0].c; ok('ip is stored hashed, not raw', raw === 0); await db.exec('set role anon');
+  await db.exec('reset role'); const raw = (await db.query("select count(*)::int c from gog.players where reg_ip like '%.%' or length(reg_ip) <> 64")).rows[0].c; ok('ip is stored hashed, not raw', raw === 0); await db.exec('set role anon');
   let d3 = false; try { await db.query('select * from gog.secrets'); } catch (e) { d3 = true; } ok('anon cannot read secrets', d3);
 }
 // throttle
