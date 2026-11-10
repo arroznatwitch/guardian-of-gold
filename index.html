@@ -1204,7 +1204,7 @@ function menuScene() {
 function heroMenu(name, x, y, k, flip) { const img = SPR[name].n; ctx.save(); ctx.translate(x, y); ctx.scale(flip ? -1 : 1, 1); ctx.drawImage(img, -img.width * k / 2, -img.height * k / 2, img.width * k, img.height * k); ctx.restore(); }
 function drawMenu() {
   menuScene();
-  { const mx0 = UW * .9, my0 = 62; ui.push({ x: mx0 - 40, y: my0 - 40, w: 80, h: 80, fn: toggleDay }); if ((mouse.x - UIOX - mx0) ** 2 + (mouse.y - my0) ** 2 < 1600) cv.style.cursor = 'pointer'; }
+  { const mx0 = UW * .9, my0 = 62; ui.push({ x: mx0 - 40, y: my0 - 40, w: 80, h: 80, fn: toggleDay }); if ((mouse.x - UIOX - mx0) ** 2 + (mouse.y - my0) ** 2 < 1600) cv.style.cursor = CUR.hand; }
   // titulo com brilho a passar
   const gx = UW / 2, bob = Math.sin(T * 1.5) * 3, pos = (T * .3) % 1.5 - .25, st = v => Math.max(0, Math.min(1, v));
   ctx.globalCompositeOperation = 'lighter'; const tg = ctx.createRadialGradient(gx, 100 + bob, 10, gx, 100 + bob, 230); tg.addColorStop(0, 'rgba(255,190,80,.16)'); tg.addColorStop(1, 'rgba(255,190,80,0)'); ctx.fillStyle = tg; ctx.fillRect(gx - 240, 0, 480, 220); ctx.globalCompositeOperation = 'source-over';
@@ -1454,11 +1454,11 @@ function bossDown(b) {
 }
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
-  const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(60, 8 + 2 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
+  const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(50, 6 + 1.6 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
   R.hpM = 1 + TUNE.wHP * (w - 1) + TUNE.wHP2 * (w - 1) * (w - 1); R.dmgM = 1 + TUNE.wDM * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9; R.bossDM = 1 + .05 * (w - 1) + .08 * R.m;   // os ataques do boss do Farm tambem crescem com a onda e a zona
-  R.capB = Math.min(10, Math.floor(w / 4)) + Math.min(10, 2 * Math.floor(w / 10));       // mais monstros em simultaneo, sempre a subir
+  R.capB = 3 + Math.min(10, Math.floor(w / 4)) + Math.min(10, 2 * Math.floor(w / 10));       // mais monstros em simultaneo, sempre a subir
   R.hordeB = h ? 6 + Math.min(10, Math.floor(w / 10)) : 0;                               // a horda aguenta ainda mais
-  R.spawnRate = Math.min(2.2, 1 + .02 * (w - 1)) * (h ? 1.8 : 1); R.packT = 5;
+  R.spawnRate = Math.min(3, 1.8 + .03 * (w - 1)) * (h ? 1.8 : 1); R.packT = 5;
 }
 function hordeBurst() {
   const n = 8 + Math.min(14, Math.floor(R.wave / 5)); for (let i = 0; i < n; i++) spawnEdge(MISSIONS[R.m].types[Math.floor(Math.random() * MISSIONS[R.m].types.length)]);
@@ -2633,11 +2633,23 @@ function playOverlay() {
 /* =====================================================================
    LOOP
    ===================================================================== */
+/* cursores em pixel art: seta dourada nos menus, mira durante o jogo */
+const CUR = (() => {
+  const mk = (w, h, draw, hx, hy) => { try { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d')); return `url(${c.toDataURL()}) ${hx} ${hy}, auto`; } catch (e) { return ''; } };
+  const ARROW = ['X...........', 'XX..........', 'XwX.........', 'XwwX........', 'XwwwX.......', 'XwwwwX......', 'XwwwwwX.....', 'XwwwwwwX....', 'XwwwwwwwX...', 'XwwwwwXXXX..', 'XwwXwwX.....', 'XwX.XwwX....', 'XX..XwwX....', 'X....XwwX...', '.....XwwX...', '......XX....'];
+  const arrow = (fill, line) => ctx2 => { ARROW.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === '.') return; ctx2.fillStyle = ch === 'X' ? line : fill; ctx2.fillRect(x * 2, y * 2, 2, 2); })); };
+  const aim = ctx2 => {
+    ctx2.fillStyle = '#1a1208'; ctx2.fillRect(14, 1, 5, 11); ctx2.fillRect(14, 21, 5, 11); ctx2.fillRect(1, 14, 11, 5); ctx2.fillRect(21, 14, 11, 5); ctx2.fillRect(13, 13, 7, 7);
+    ctx2.fillStyle = '#fff'; ctx2.fillRect(15, 2, 3, 9); ctx2.fillRect(15, 22, 3, 9); ctx2.fillRect(2, 15, 9, 3); ctx2.fillRect(22, 15, 9, 3);
+    ctx2.fillStyle = '#ffd34a'; ctx2.fillRect(15, 15, 3, 3);
+  };
+  return { arrow: mk(26, 34, arrow('#fff4c8', '#3a2a10'), 0, 0), hand: mk(26, 34, arrow('#ffd34a', '#3a2a10'), 0, 0), aim: mk(33, 33, aim, 16, 16) };
+})();
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
+  ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
   if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
