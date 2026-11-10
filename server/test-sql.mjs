@@ -49,6 +49,23 @@ r = await q('select public.gog_delete($1,$2)', [tok2, B]); ok('delete wrong proo
 r = await q('select public.gog_delete($1,$2)', [tok2, A]); ok('delete ok', r.ok, r);
 r = await q('select public.gog_login($1,$2)', ['rui_99', A]); ok('login after delete fails', !r.ok, r);
 r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick free again', r.free === true, r);
+// save na nuvem
+{
+  r = await q('select public.gog_register($1,$2)', ['saver', A]); const T1 = r.token;
+  const SAVE = JSON.stringify({ cls: 'knight', gold: 5, pl: { lv: 3 } });
+  r = await q('select public.gog_save_get($1)', [T1]); ok('save get empty', r.ok && r.save === null && r.rev === 0, r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [T1, SAVE, 'devA']); ok('save put', r.ok && r.rev === 1, r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', [T1, SAVE, 'devA']); ok('save put too fast', r.error === 'slow', r);
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [T1, SAVE, 'devB']); ok('save conflict on stale rev', r.error === 'conflict' && r.rev === 1 && r.dev === 'devA', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', [T1, '{"gold":1}', 'devA']); ok('save needs cls', r.error === 'bad_data', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', [T1, '[1,2]', 'devA']); ok('save must be object', r.error === 'bad_data', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', [T1, JSON.stringify({ cls: 'mage', pad: 'x'.repeat(700000) }), 'devA']); ok('save size limit', r.error === 'too_big', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', ['f'.repeat(64), SAVE, 'devA']); ok('save put needs auth', r.error === 'auth', r);
+  r = await q('select public.gog_save_get($1)', [T1]); ok('save get returns data', r.ok && r.save.gold === 5 && r.rev === 1, r);
+  r = await q('select public.gog_save_reset($1)', [T1]); ok('save reset', r.ok && r.rev === 2, r);
+  r = await q('select public.gog_save_get($1)', [T1]); ok('save empty after reset', r.save === null, r);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);

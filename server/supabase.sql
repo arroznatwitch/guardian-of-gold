@@ -12,6 +12,8 @@
 --   * Bloqueio progressivo de contas apos 5 tentativas falhadas e
 --     resposta com o mesmo custo quer o nick exista ou nao.
 --   * As pontuacoes so sobem e so aceitam aumentos plausiveis.
+--   * O save do jogo vive na conta (gog_save_get / gog_save_put), com controlo
+--     de versao para detetar uso em dois dispositivos ao mesmo tempo.
 -- =====================================================================
 
 create schema if not exists extensions;
@@ -254,5 +256,66 @@ begin
     'public.gog_submit(text,jsonb)', 'public.gog_board(text,int,text)', 'public.gog_nick_free(text)'] loop
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('grant execute on function %s to authenticated', f); end if;
+  end loop;
+end $$;
+
+-- ====================================================== save na nuvem (v2)
+-- Podes voltar a correr este ficheiro inteiro: tudo e idempotente.
+alter table gog.players add column if not exists save     jsonb;
+alter table gog.players add column if not exists save_rev int not null default 0;
+alter table gog.players add column if not exists save_at  timestamptz;
+alter table gog.players add column if not exists save_dev text;
+
+create or replace function public.gog_save_get(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; v gog.players;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  select * into v from gog.players where id = pid;
+  return jsonb_build_object('ok', true, 'rev', v.save_rev, 'save', v.save, 'dev', v.save_dev);
+end $$;
+
+create or replace function public.gog_save_put(p_token text, p_save jsonb, p_rev int, p_dev text default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; v gog.players; newrev int;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if p_save is null or jsonb_typeof(p_save) <> 'object' or not (p_save ? 'cls') or p_rev is null then
+    return jsonb_build_object('ok', false, 'error', 'bad_data');
+  end if;
+  if length(p_save::text) > 600000 then return jsonb_build_object('ok', false, 'error', 'too_big'); end if;
+  select * into v from gog.players where id = pid for update;
+  if p_rev <> v.save_rev then
+    return jsonb_build_object('ok', false, 'error', 'conflict', 'rev', v.save_rev, 'dev', v.save_dev);
+  end if;
+  if v.save_at is not null and v.save_at > now() - interval '3 seconds' then
+    return jsonb_build_object('ok', false, 'error', 'slow');
+  end if;
+  update gog.players set save = p_save, save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
+  return jsonb_build_object('ok', true, 'rev', newrev);
+end $$;
+
+-- apagar o progresso do jogo (mantem a conta); tambem limpa as pontuacoes do ranking
+create or replace function public.gog_save_reset(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; newrev int;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  update gog.players set save = null, save_rev = save_rev + 1, save_at = null, save_dev = null,
+    level = 0, kills = 0, gold = 0, bosses = 0, raids = 0, w0 = 0, w1 = 0, w2 = 0, w3 = 0, w4 = 0, w5 = 0, submitted_at = null, updated_at = now()
+  where id = pid returning save_rev into newrev;
+  return jsonb_build_object('ok', true, 'rev', newrev);
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['public.gog_save_get(text)', 'public.gog_save_put(text,jsonb,int,text)', 'public.gog_save_reset(text)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
   end loop;
 end $$;
