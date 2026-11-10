@@ -110,6 +110,20 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   await db.exec('reset role'); const raw = (await db.query("select count(*)::int c from gog.players where reg_ip like '%.%' or length(reg_ip) <> 64")).rows[0].c; ok('ip is stored hashed, not raw', raw === 0); await db.exec('set role anon');
   let d3 = false; try { await db.query('select * from gog.secrets'); } catch (e) { d3 = true; } ok('anon cannot read secrets', d3);
 }
+// sexo e pais
+{
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec("select set_config('request.headers', '', false)"); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2,$3,$4)', ['gc_one', B, 'f', 'PT']); ok('register with gender and country', r.ok && r.gender === 'f' && r.country === 'PT', r); const TG = r.token;
+  r = await q('select public.gog_register($1,$2,$3,$4)', ['gc_bad1', B, 'x', 'PT']); ok('bad gender rejected', r.error === 'bad_request', r);
+  r = await q('select public.gog_register($1,$2,$3,$4)', ['gc_bad2', B, 'm', "pt'; drop"]); ok('bad country rejected', r.error === 'bad_request', r);
+  r = await q('select public.gog_register($1,$2)', ['gc_two', B]); ok('register with defaults', r.ok && r.gender === 'm' && r.country === null, r);
+  r = await q('select public.gog_profile($1)', ['gc_one']); ok('profile shows gender and country', r.gender === 'f' && r.country === 'PT', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [TG, 'm', 'BR']); ok('set profile', r.ok && r.gender === 'm' && r.country === 'BR', r);
+  r = await q('select public.gog_profile($1)', ['gc_one']); ok('profile updated', r.gender === 'm' && r.country === 'BR', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', ['0'.repeat(64), 'm', 'BR']); ok('set profile needs a session', r.error === 'auth', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [TG, 'z', 'BR']); ok('set profile validates gender', r.error === 'bad_request', r);
+  r = await q('select public.gog_login($1,$2)', ['gc_one', B]); ok('login returns gender and country', r.ok && r.gender === 'm' && r.country === 'BR', r);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);

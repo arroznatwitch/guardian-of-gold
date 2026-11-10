@@ -46,6 +46,8 @@ create table if not exists gog.players (
   updated_at   timestamptz not null default now()
 );
 alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
+alter table gog.players add column if not exists gender text not null default 'm';   -- 'm' ou 'f' (so muda o aspeto)
+alter table gog.players add column if not exists country text;                       -- codigo ISO de 2 letras (bandeira)
 alter table gog.players add column if not exists active boolean not null default true;   -- false = conta desativada (so o administrador mexe nisto)
 alter table gog.players add column if not exists inactive_at timestamptz;
 alter table gog.players add column if not exists reg_ip text;   -- HMAC do IP de registo (nunca o IP em claro), so para limitar contas por rede
@@ -130,12 +132,14 @@ begin
 end $$;
 
 -- ------------------------------------------------------------ API publica
-create or replace function public.gog_register(p_nick text, p_proof text) returns jsonb
+drop function if exists public.gog_register(text, text);
+create or replace function public.gog_register(p_nick text, p_proof text, p_gender text default 'm', p_country text default null) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare pid bigint; cnt int; since timestamptz; hdr json; ip text; iph text;
 begin
   if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
   if p_proof is null or p_proof !~ '^[0-9a-f]{64}$' then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  if p_gender is null or p_gender not in ('m', 'f') or (p_country is not null and p_country !~ '^[A-Z]{2}$') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
   if lower(p_nick) in ('admin', 'administrator', 'moderator', 'mod', 'system', 'support', 'staff', 'null', 'undefined', 'guardiansofgold') then
     return jsonb_build_object('ok', false, 'error', 'nick_taken');
   end if;
@@ -155,13 +159,13 @@ begin
   if cnt > 30 then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
   if exists (select 1 from gog.players where nick_key = lower(p_nick)) then return jsonb_build_object('ok', false, 'error', 'nick_taken'); end if;
   begin
-    insert into gog.players (nick, nick_key, pass_hash, reg_ip)
-    values (p_nick, lower(p_nick), extensions.crypt(p_proof, extensions.gen_salt('bf', 12)), iph)
+    insert into gog.players (nick, nick_key, pass_hash, reg_ip, gender, country)
+    values (p_nick, lower(p_nick), extensions.crypt(p_proof, extensions.gen_salt('bf', 12)), iph, p_gender, p_country)
     returning id into pid;
   exception when unique_violation then
     return jsonb_build_object('ok', false, 'error', 'nick_taken');
   end;
-  return jsonb_build_object('ok', true, 'nick', p_nick, 'token', gog._new_session(pid));
+  return jsonb_build_object('ok', true, 'nick', p_nick, 'token', gog._new_session(pid), 'gender', p_gender, 'country', p_country);
 end $$;
 
 create or replace function public.gog_login(p_nick text, p_proof text) returns jsonb
@@ -184,7 +188,7 @@ begin
   if ok and not v.active then return jsonb_build_object('ok', false, 'error', 'inactive'); end if;
   if ok then
     update gog.players set failed = 0, locked_until = null where id = v.id;
-    return jsonb_build_object('ok', true, 'nick', v.nick, 'token', gog._new_session(v.id));
+    return jsonb_build_object('ok', true, 'nick', v.nick, 'token', gog._new_session(v.id), 'gender', v.gender, 'country', v.country);
   end if;
   wait := case when v.failed + 1 >= 5 then least(3600, 30 * (2 ^ least(v.failed + 1 - 5, 7))::int) else 0 end;
   update gog.players set failed = v.failed + 1, locked_until = case when wait > 0 then now() + make_interval(secs => wait) end where id = v.id;
@@ -270,8 +274,8 @@ begin
                      when 'wave0' then 'w0' when 'wave1' then 'w1' when 'wave2' then 'w2' when 'wave3' then 'w3' when 'wave4' then 'w4' when 'wave5' then 'w5' end;
   if col is null then return jsonb_build_object('ok', false, 'error', 'bad_stat'); end if;
   execute format($q$
-    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin) order by r), '[]'::jsonb) from (
-      select nick, cls, level as lv, coalesce((build->>'skin')::int, 0) as skin, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
+    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
+      select nick, cls, gender, country, level as lv, coalesce((build->>'skin')::int, 0) as skin, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
       from gog.players where active and %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
@@ -293,7 +297,7 @@ do $$
 declare f text;
 begin
   foreach f in array array[
-    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
+    'public.gog_register(text,text,text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
     'public.gog_submit(text,jsonb)', 'public.gog_board(text,int,text)', 'public.gog_nick_free(text)',
     'gog._new_session(bigint)', 'gog._auth(text)'] loop
     execute format('revoke all on function %s from public', f);
@@ -301,7 +305,7 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); end if;
   end loop;
   foreach f in array array[
-    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
+    'public.gog_register(text,text,text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
     'public.gog_submit(text,jsonb)', 'public.gog_board(text,int,text)', 'public.gog_nick_free(text)'] loop
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('grant execute on function %s to authenticated', f); end if;
@@ -370,6 +374,18 @@ begin
 end $$;
 
 -- ====================================================== perfil publico (v3)
+-- O nick nunca muda. So o sexo (aspeto) e o pais (bandeira) se podem editar.
+create or replace function public.gog_set_profile(p_token text, p_gender text, p_country text default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if p_gender is null or p_gender not in ('m', 'f') or (p_country is not null and p_country !~ '^[A-Z]{2}$') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  update gog.players set gender = p_gender, country = p_country where id = pid;
+  return jsonb_build_object('ok', true, 'gender', p_gender, 'country', p_country);
+end $$;
+
 create or replace function public.gog_profile(p_nick text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare v gog.players;
@@ -378,13 +394,13 @@ begin
   select * into v from gog.players where nick_key = lower(p_nick) and active;
   if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
   return jsonb_build_object('ok', true, 'nick', v.nick, 'cls', v.cls, 'level', v.level, 'kills', v.kills, 'gold', v.gold, 'bosses', v.bosses, 'raids', v.raids,
-    'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build);
+    'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build, 'gender', v.gender, 'country', v.country);
 end $$;
 
 do $$
 declare f text;
 begin
-  foreach f in array array['public.gog_profile(text)'] loop
+  foreach f in array array['public.gog_profile(text)', 'public.gog_set_profile(text,text,text)'] loop
     execute format('revoke all on function %s from public', f);
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
