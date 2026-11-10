@@ -2,7 +2,7 @@
 
 # Guardians of Gold
 
-**v1.0-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
+**v1.1-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
 
 <img src="docs/img/menu.jpg" width="640" alt="Menu do Guardians of Gold">
 
@@ -55,37 +55,39 @@ A classe é escolhida ao criar o personagem e **não pode ser trocada** (só apa
 
 ## Armas
 
-Cada classe tem 5 armas, compradas com ouro. Cada arma tem uma **habilidade própria** na tecla `E` e pode ser melhorada na **Bigorna** até +12.
+Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam com **nível** e depois de vencer certas **raids**. Cada arma tem uma **habilidade própria** na tecla `E` e pode ser melhorada na **Bigorna** até +12.
+
+<p align="center"><img src="docs/img/screen-weapons.jpg" width="60%" alt="Loja de armas"></p>
 
 ### Cavaleiro
 
-| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
-|---|---|---|---|---|---|
-| <img src="docs/img/weapon-k_sword.png" width="56" alt=""> | **Espada de Ferro**<br><sub>Rápida e equilibrada.</sub> | 10 | 2.9/s | **Investida** (6s): Lança-te em frente ferindo tudo no caminho. | inicial |
-| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 22 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢120 |
-| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 16 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢200 |
-| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 28 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢350 |
-| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 11 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢500 |
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
+|---|---|---|---|---|---|---|
+| <img src="docs/img/weapon-k_sword.png" width="56" alt=""> | **Espada de Ferro**<br><sub>Rápida e equilibrada.</sub> | 10 | 2.9/s | **Investida** (6s): Lança-te em frente ferindo tudo no caminho. | inicial | — |
+| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 22 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 16 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 28 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 11 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Arqueiro
 
-| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
-|---|---|---|---|---|---|
-| <img src="docs/img/weapon-a_bow.png" width="56" alt=""> | **Arco Curto**<br><sub>Flecha rápida e certeira.</sub> | 10 | 2.6/s | **Salva Rápida** (6s): 7 flechas em rápida sequência. | inicial |
-| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 8 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢120 |
-| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 30 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢200 |
-| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 11 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢350 |
-| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 9 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢500 |
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
+|---|---|---|---|---|---|---|
+| <img src="docs/img/weapon-a_bow.png" width="56" alt=""> | **Arco Curto**<br><sub>Flecha rápida e certeira.</sub> | 10 | 2.6/s | **Salva Rápida** (6s): 7 flechas em rápida sequência. | inicial | — |
+| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 8 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 30 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 11 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 9 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Mago
 
-| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
-|---|---|---|---|---|---|
-| <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 14 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial |
-| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 10 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢120 |
-| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 13 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢200 |
-| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢350 |
-| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢500 |
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
+|---|---|---|---|---|---|---|
+| <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 14 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial | — |
+| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 10 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 13 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ## Equipamento
 
