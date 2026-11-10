@@ -2426,9 +2426,11 @@ function drawHUD() {
   const p = R.p, M = MISSIONS[R.m], w = curW();
   ctx.globalAlpha = .85;
   drawIcon('heart', 20, 21, 2); bar(36, 12, 190, 16, p.hp / p.max, '#d33', '#0006'); txt(`${Math.ceil(p.hp)}/${p.max}`, 131, 25, 12, '#fff', 'center', 'bold');
-  txt(keyName(binds.dash).slice(0, 5), 8, 47, 10, '#6cf', 'left', 'bold'); bar(36, 38, 190, 7, 1 - Math.max(0, p.dashCd), '#4cf', '#0006');
-  weaponIcon(w.id, 18, 66, 1.1); txt(`${w.n}${wlvl() ? ' +' + wlvl() : ''}`, 36, 69, 12, '#fff');
-  txt(`Nv ${save.pl.lv}`, 8, 88, 11, '#6cf', 'left', 'bold'); bar(36, 81, 190, 6, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf', '#0006');
+  // bloco unico da arma (canto inferior direito): arma, dash e nivel/XP
+  const bx = W - 212, bt = H - 68; rr(bx - 8, bt - 8, 212, 64, 8); ctx.fillStyle = '#0005'; ctx.fill();
+  weaponIcon(w.id, bx + 8, bt + 7, 1.1); txt(`${w.n}${wlvl() ? ' +' + wlvl() : ''}`, bx + 26, bt + 11, 12, '#fff', 'left', 'bold');
+  txt(keyName(binds.dash).slice(0, 5), bx, bt + 31, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 24, 160, 7, 1 - Math.max(0, p.dashCd), '#4cf', '#0006');
+  txt(`Nv ${save.pl.lv}`, bx, bt + 48, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 42, 160, 7, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf', '#0006');
   ctx.globalAlpha = 1;
   const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
   txt(autoAtk ? `AUTO-ATAQUE (${keyName(binds.auto)})` : '', W - 12, 70, 12, '#7f7', 'right', 'bold');
