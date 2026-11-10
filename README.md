@@ -101,7 +101,7 @@ A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para 
 | 2★ | ×1,90 | +6% | ×1,30 |
 | 3★ (MAX) | ×2,50 | +9% | ×1,50 |
 
-- **Armas:** as cópias caem de inimigos, bosses, raids e baús, ou compram-se no ecrã *Fusão* (de 1, 5 ou 10 de cada vez). Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
+- **Armas:** as cópias caem de inimigos, bosses, raids e baús. Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
 - **Equipamento:** juntam-se 5 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
 
 ### Efeitos das estrelas nas habilidades (`E`)
@@ -174,10 +174,10 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 
 **Encantar (equipamento)** — ecrã *Encantar*:
 
-- **Refinar** até +10: cada nível dá **+8%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
+- **Refinar** até +10: cada nível dá **+6%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
 - **Encantar especial:** sorteia um efeito (Ígneo, Gélido, Vampírico, Letal, Próspero, Sábio, Protetor, Poderoso). Podes voltar a sortear, com custo crescente.
 
-**Bigorna (armas)** — melhora uma arma até **+12** (+12% de dano por nível, na arma e na habilidade). Podes usar o *Amuleto da Sorte* (+15% de chance, só quando a chance for inferior a 85%) e o *Pergaminho de Proteção* (a partir de +5). Falhas seguidas dão bónus de azar.
+**Bigorna (armas)** — melhora uma arma até **+12** (o dano sobe mais a cada nível: ×3,6 no +12, na arma e na habilidade). Podes usar o *Amuleto da Sorte* (+15% de chance, só quando a chance for inferior a 85%) e o *Pergaminho de Proteção* (a partir de +5). Falhas seguidas dão bónus de azar.
 
 Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% · +7: 50% · +8: 40% · +9: 30% · +10: 22% · +11: 15% · +12: 10%. Marcos: **+5** brilho, **+10** faíscas, **+12** aura lendária.
 
@@ -193,6 +193,7 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 
 - **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
 - Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
+- Cada atributo rende por inteiro até **40 pontos**; dos 40 aos 100 cada ponto rende **metade**, e acima de 100 **um quarto**.
 - Podes redistribuir os pontos por ouro (50 × o teu nível). Mantém o botão **+** premido para gastar pontos mais depressa.
 - **Desbloqueios:** **Raids** no nível 10, **Encantar** e **Bigorna** no nível 15, **Fusão** no nível 20 e **Pets** no nível 30; as armas mais fortes pedem nível (e raids). O que está bloqueado aparece com um cadeado grande, a descrição, os níveis em falta e, ao desbloquear, há uma animação.
 - **Inimigos:** ficam mais fortes com o teu nível (vida e dano), para o desafio acompanhar a tua evolução.
@@ -207,15 +208,15 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 ## Farm e Raids
 
 - **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas e uma **horda** a cada 10 (muito mais monstros ao mesmo tempo, mais mortes para completar, mais ouro e um item no fim). Os inimigos ficam mais fortes (e dão mais ouro) a cada onda, aparecem mais depressa e em maior número, e cada zona seguinte abre quando chegas a uma onda mínima na anterior (10, 10, 20, 20 e 30). Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
-- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid, e quem vai muito acima do nível recomendado encontra monstros mais fortes.
 
 | Dificuldade | Vida | Dano | Ouro |
 |---|---|---|---|
-| **Fácil** | ×8 | ×2.3 | ×1 |
-| **Normal** | ×14 | ×3.1 | ×2 |
-| **Difícil** | ×24 | ×4.1 | ×4 |
-| **Pesadelo** | ×40 | ×5.5 | ×8 |
-| **Inferno** | ×65 | ×7.5 | ×15 |
+| **Fácil** | ×3.2 | ×0.4 | ×1 |
+| **Normal** | ×14 | ×1.1 | ×2 |
+| **Difícil** | ×34 | ×1.9 | ×4 |
+| **Pesadelo** | ×100 | ×8 | ×8 |
+| **Inferno** | ×170 | ×8.5 | ×15 |
 
 > A velocidade do jogo pode ser posta a **x2** nos ecrãs de Farm e Raids, na pausa ou com a tecla `G`.
 

@@ -46,6 +46,10 @@ create table if not exists gog.players (
   updated_at   timestamptz not null default now()
 );
 alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
+alter table gog.players add column if not exists reg_ip text;   -- HMAC do IP de registo (nunca o IP em claro), so para limitar contas por rede
+create table if not exists gog.secrets (k text primary key, v text not null);
+insert into gog.secrets (k, v) values ('ip_salt', encode(extensions.gen_random_bytes(24), 'hex')) on conflict do nothing;
+create index if not exists players_reg_ip_idx on gog.players (reg_ip);
 create table if not exists gog.sessions (
   token_hash bytea primary key,
   player_id  bigint not null references gog.players(id) on delete cascade,
@@ -126,12 +130,19 @@ end $$;
 -- ------------------------------------------------------------ API publica
 create or replace function public.gog_register(p_nick text, p_proof text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare pid bigint; cnt int; since timestamptz;
+declare pid bigint; cnt int; since timestamptz; hdr json; ip text; iph text;
 begin
   if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
   if p_proof is null or p_proof !~ '^[0-9a-f]{64}$' then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
   if lower(p_nick) in ('admin', 'administrator', 'moderator', 'mod', 'system', 'support', 'staff', 'null', 'undefined', 'guardiansofgold') then
     return jsonb_build_object('ok', false, 'error', 'nick_taken');
+  end if;
+  -- no maximo 5 contas por rede (IP): usa o cabecalho do Cloudflare/Supabase, so guarda um HMAC
+  begin hdr := nullif(current_setting('request.headers', true), '')::json; exception when others then hdr := null; end;
+  ip := btrim(coalesce(nullif(hdr->>'cf-connecting-ip', ''), nullif(split_part(coalesce(hdr->>'x-forwarded-for', ''), ',', -1), ''), nullif(hdr->>'x-real-ip', ''), ''));
+  if ip <> '' then
+    iph := encode(extensions.hmac(ip, (select v from gog.secrets where k = 'ip_salt'), 'sha256'), 'hex');
+    if (select count(*) from gog.players where reg_ip = iph) >= 5 then return jsonb_build_object('ok', false, 'error', 'ip_limit'); end if;
   end if;
   -- limite global de registos: 30 por 10 minutos (trava criacao em massa)
   insert into gog.throttle as t (bucket, n, since) values ('register', 1, now())
@@ -142,8 +153,8 @@ begin
   if cnt > 30 then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
   if exists (select 1 from gog.players where nick_key = lower(p_nick)) then return jsonb_build_object('ok', false, 'error', 'nick_taken'); end if;
   begin
-    insert into gog.players (nick, nick_key, pass_hash)
-    values (p_nick, lower(p_nick), extensions.crypt(p_proof, extensions.gen_salt('bf', 12)))
+    insert into gog.players (nick, nick_key, pass_hash, reg_ip)
+    values (p_nick, lower(p_nick), extensions.crypt(p_proof, extensions.gen_salt('bf', 12)), iph)
     returning id into pid;
   exception when unique_violation then
     return jsonb_build_object('ok', false, 'error', 'nick_taken');

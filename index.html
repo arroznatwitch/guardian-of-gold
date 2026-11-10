@@ -49,8 +49,9 @@ function initAudio() {
   ac = new AC(); master = ac.createGain(); master.gain.value = .5; master.connect(ac.destination);
   sfxBus = ac.createGain(); musBus = ac.createGain(); sfxBus.connect(master); musBus.connect(master); applyVol(); musicLoop();
 }
+let sfxQuiet = false;   // no x2 o segundo passo de simulacao fica em silencio
 function tone(f, d, type = 'square', vol = .12, slide = 0, delay = 0, bus = null) {
-  if (!ac || muted) return;
+  if (!ac || muted || sfxQuiet) return;
   const o = ac.createOscillator(), g = ac.createGain(), s = ac.currentTime + delay;
   o.type = type; o.frequency.setValueAtTime(f, s);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), s + d);
@@ -58,7 +59,7 @@ function tone(f, d, type = 'square', vol = .12, slide = 0, delay = 0, bus = null
   o.connect(g); g.connect(bus || sfxBus); o.start(s); o.stop(s + d + .02);
 }
 function noise(d, vol = .2, freq = 1500) {
-  if (!ac || muted) return;
+  if (!ac || muted || sfxQuiet) return;
   const n = Math.floor(ac.sampleRate * d), b = ac.createBuffer(1, n, ac.sampleRate), a = b.getChannelData(0);
   for (let i = 0; i < n; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / n);
   const s = ac.createBufferSource(); s.buffer = b;
@@ -250,6 +251,11 @@ function mkStaffHead(kind, tier) {
   return g.map(r => r.join(''));
 }
 for (const k of ['fire', 'ice', 'bolt', 'arcane', 'dark']) WSHAPES['staff_' + k] = { ax: 3, rows: mkStaffHead(k, 1) };
+/* arcos com formas proprias: triplo (3 flechas em leque), ignea (chamas nas pontas) e sombrio (cornos e olho) */
+const padRows = rows => { const w = Math.max(...rows.map(r => r.length)); return rows.map(r => r.padEnd(w, '.')); };
+WSHAPES.bow_triple = { ax: 4, rows: padRows(['..ww.........', '..sww.....t..', '..s.ww...q...', '..s..w..q....', '..s..w.q.....', '..s..wqqqqqqt', '..s..w.q.....', '..s..w..q....', '..s.ww...q...', '..sww.....t..', '..ww.........']) };
+WSHAPES.bow_fire = { ax: 4, rows: padRows(['.ff.......', '.fofw.....', '..sfow....', '..s.fww...', '..s..fw...', '..s..wh...', '..s..woo..', '..s..wh...', '..s..fw...', '..s.fww...', '..sfow....', '.fofw.....', '.ff.......']) };
+WSHAPES.bow_dark = { ax: 4, rows: padRows(['.d..d.....', '.dd.dd....', '.dsww.d...', '..s.wwd...', '..s..wwd..', '..s..wwe..', '..s...wee.', '..s..wwe..', '..s..wwd..', '..s.wwd...', '.dsww.d...', '.dd.dd....', '.d..d.....']) };
 const WDEF = {
   k_sword:  { shape: 'sword',  pal: { p:'#8a6a2a', h:'#6b4a22', g:'#e8c060', b:'#d0d8e8' } },
   k_axe:    { shape: 'axe',    pal: { h:'#6b4a22', a:'#9aa4b8', A:'#e0e6f4' } },
@@ -257,10 +263,10 @@ const WDEF = {
   k_hammer: { shape: 'hammer', pal: { s:'#6b4a22', m:'#5a6378', M:'#9aa4b8' } },
   k_blade:  { shape: 'dagger', pal: { p:'#802030', h:'#401018', g:'#a02030', r:'#ff4060' } },
   a_bow:    { shape: 'bow',    pal: { w:'#a06a30', s:'#e8e8e8' } },
-  a_triple: { shape: 'bow',    pal: { w:'#3fa050', s:'#e8e8e8' } },
+  a_triple: { shape: 'bow_triple', pal: { w:'#3fa050', s:'#e8e8e8', q:'#8a6a3a', t:'#f0f0f0' } },
   a_cross:  { shape: 'cross',  pal: { h:'#6b4a22', w:'#9aa4b8', b:'#e8e8e8' } },
-  a_fire:   { shape: 'bow',    pal: { w:'#e0602a', s:'#ffd080' } },
-  a_dark:   { shape: 'bow',    pal: { w:'#5a2a8a', s:'#d0a0ff' } },
+  a_fire:   { shape: 'bow_fire', pal: { w:'#e0602a', s:'#ffd080', f:'#ff5a1a', o:'#ffb030', h:'#ffe9a0' } },
+  a_dark:   { shape: 'bow_dark', pal: { w:'#5a2a8a', s:'#d0a0ff', d:'#2a1040', e:'#ff40c0' } },
   m_fire:   { shape: 'staff_fire',  pal: { s:'#6b4a22', o:'#ff7a1a', h:'#ffe066' } },
   m_ice:    { shape: 'staff_ice',  pal: { s:'#6b4a22', o:'#6ad0ff', h:'#ffffff' } },
   m_bolt:   { shape: 'staff_bolt',  pal: { s:'#6b4a22', o:'#ffe14a', h:'#ffffff' } },
@@ -293,6 +299,10 @@ const TIER_ART = {
            3: { ax: 3, h: ['..........G..G..G.', '..........GOOOOOG..', '.........GOLLLLLOG.', '.........OLJJJJJLOO', 'HHHHHHHHJGOOJWJOOOG'] } },
 };
 for (const k of ['fire', 'ice', 'bolt', 'arcane', 'dark']) TIER_ART['staff_' + k] = { 2: { ax: 3, rows: mkStaffHead(k, 2) }, 3: { ax: 3, rows: mkStaffHead(k, 3) } };
+for (const k of ['bow_triple', 'bow_fire', 'bow_dark']) {
+  const base = WSHAPES[k].rows, mid = base.length >> 1, mk = t => base.map((r, j) => { let q = r.replace(/w/g, 'M').replace(/s/g, 'S'); if (j === mid) q = q.replace('M', 'J'); if (t === 3 && (j === 0 || j === base.length - 1)) q = q.replace('S', 'G'); if (t === 3 && (j === mid - 1 || j === mid + 1)) q = q.replace('S', 'G'); return q; });
+  TIER_ART[k] = { 2: { ax: 4, rows: mk(2) }, 3: { ax: 4, rows: mk(3) } };
+}
 function tierSprite(id, tier) {
   const shp = WDEF[id].shape, art = TIER_ART[shp][tier], pal = WDEF[id].pal, acc = WCOL[id] || '#ffe14a', up = c => tier === 3 ? mixC(c, '#ffffff', .22) : c;
   let R2;
@@ -301,7 +311,7 @@ function tierSprite(id, tier) {
   else if (shp === 'spear') R2 = { M: pal.t, H: pal.h };
   else if (shp === 'hammer') R2 = { M: pal.M, m: pal.m, H: pal.s };
   else if (shp === 'dagger') R2 = { M: pal.r, H: pal.h, p: pal.p };
-  else if (shp === 'bow') R2 = { M: pal.w, S: pal.s };
+  else if (shp.startsWith('bow')) { R2 = { M: pal.w, S: pal.s }; for (const k in pal) if (k !== 'w' && k !== 's') R2[k] = pal[k]; }
   else if (shp === 'cross') R2 = { M: pal.w, H: pal.h, L: pal.b };
   else R2 = { H: pal.s, O: pal.o, L: pal.h };
   const base = R2.M || R2.O, C = { D: '#15101f', W: '#ffffff', J: acc, G: tier === 3 ? '#ffe27a' : '#e0b030', L: mixC(base, '#ffffff', .55), m: mixC(base, '#000000', .3) };
@@ -395,7 +405,7 @@ const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
-const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: 1.5, wHP: .18, wHP2: .008, wDM: .11, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
+const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
@@ -407,7 +417,13 @@ const RAID_D = [
   { n: 'Inferno',  col: '#c040ff', hp: 65,  dmg: 7.5, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
-const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.4, .5, .65, .85, 1, 1.1];   // as primeiras raids pesam menos; as ultimas muito mais
+// nivel recomendado de cada raid: de 8 (1a Facil) ate 118 (ultima Inferno); a forca dos monstros segue esse nivel
+const raidRec = (i, d) => 8 + 6 * i + 20 * d;
+// vida e dano dos monstros: base por dificuldade, crescendo ao longo das 6 raids (nas dificuldades altas a subida por raid e menor)
+const RAID_H0 = [3.2, 14, 34, 100, 170], RAID_HZ = [7, 2.2, 1.4, .6, .1], RAID_M0 = [.43, 1.1, 1.9, 8, 8.5], RAID_MZ = [1.7, 1.1, .8, -.5, -.35];
+const raidHP = (i, d) => RAID_H0[d] * (1 + RAID_HZ[d] * i / 5), raidDM = (i, d) => RAID_M0[d] * (1 + RAID_MZ[d] * i / 5);
+RAID_D.forEach((d, j) => { d.hp = +raidHP(0, j).toFixed(1); d.dmg = +raidDM(0, j).toFixed(1); });   // valores da primeira raid (so para mostrar)
+const RAID_OVER = { hp: .3, dmg: .12 };
 const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
 const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
@@ -484,16 +500,18 @@ function keyName(c) {
   const m = { Space: 'Espaço', ShiftLeft: 'Shift', ShiftRight: 'Shift (dir.)', ControlLeft: 'Ctrl', ControlRight: 'Ctrl (dir.)', AltLeft: 'Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Escape: 'Esc', Enter: 'Enter', Tab: 'Tab', Backspace: '⌫' };
   if (m[c]) return m[c]; if (c.startsWith('Key')) return c.slice(3); if (c.startsWith('Digit')) return c.slice(5); return c;
 }
+const attrEff = n => n <= 40 ? n : n <= 100 ? 40 + (n - 40) * .5 : 70 + (n - 100) * .25;   // depois de 40 pontos num atributo, cada ponto rende metade (e um quarto depois de 100)
 const stats = () => {
-  const c = CLASSES[save.cls], a = save.attr, g = gearStats(), L = save.pl.lv;
+  const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, a = { vit: attrEff(save.attr.vit), str: attrEff(save.attr.str), agi: attrEff(save.attr.agi), per: attrEff(save.attr.per) };
   return { hp: Math.round(c.hp + a.vit * 14 + 4 * (L - 1) + g.hp), spd: c.spd * (1 + (a.agi * 1.2 + g.spd) / 100), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .02) * (1 + g.dmg / 100), cdm: Math.max(.3, 1 - a.per * .012 - g.cdr / 100) };
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .5 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
-const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
+const wlm = l => 1 + .15 * l + .006 * l * l;   // bonus de dano do nivel da Bigorna (+12 = x3,6)
+const DM = () => stats().dm * wlm(wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
 const heroSpr = () => save.cls + save.skE[save.cls];
 
 /* =====================================================================
@@ -501,6 +519,7 @@ const heroSpr = () => save.cls + save.skE[save.cls];
    ===================================================================== */
 const keys = {}; let mouse = { x: W / 2, y: H / 2 }, mdown = false;
 let state = 'menu', tab = 'farm', ui = [], R = null, T = 0, capture = null, keysBack = 'menu', optBack = 'menu', menuConfirm = false, anvSel = 0;
+const BASE_SPD = 1.12;   // o jogo normal corre um pouco mais depressa
 let gameSpeed = 1; try { gameSpeed = localStorage.getItem('bladehunter_speed') === '2' ? 2 : 1; } catch (e) {}
 function toggleSpeed() { gameSpeed = gameSpeed === 1 ? 2 : 1; try { localStorage.setItem('bladehunter_speed', String(gameSpeed)); } catch (e) {} SFX.click(); }
 let autoAtk = false; try { autoAtk = localStorage.getItem('bladehunter_auto') === '1'; } catch (e) {}
@@ -577,7 +596,8 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .12 * (6 * i + 4 * rd);
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = raidHP(i, rd) * RAID_MINI.hp; R.bossM = raidHP(i, rd) * .8; R.dmgM = raidDM(i, rd) * RAID_MINI.dmg; R.goldM = D.gold;
+    { const ov = Math.max(0, (save.pl.lv || 1) - raidRec(i, rd)); R.hpM *= 1 + RAID_OVER.hp * ov; R.bossM *= 1 + RAID_OVER.hp * ov; R.dmgM *= 1 + RAID_OVER.dmg * ov; }   // quem vai muito acima do nivel recomendado encontra monstros mais fortes R.spdM = D.spd; R.bossDM = 1 + .07 * (raidRec(i, rd) - 8);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
@@ -585,7 +605,7 @@ function startMission(i, rd, farm) {
   state = 'play'; setMusic('battle'); mdown = false;
 }
 function endMission(win) {
-  const M = MISSIONS[R.m]; let g = R.gold, xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100);
+  const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100);
   if (R.farm) { if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave; if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }
   else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
@@ -609,7 +629,7 @@ function dmgE(e, d, ang, kb, quiet) {
   let crit = false; const g = R.G;
   if (g && !quiet) {
     if (Math.random() * 100 < Math.min(75, g.crit)) { d *= 1.75; crit = true; }
-    if (g.ls) heal(d * 10 * g.ls / 100);
+    if (g.ls) heal(Math.min(R.p.max * .008, d * 10 * g.ls / 100 * .4));   // 40% do valor, no maximo 0,8% da vida por golpe
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);
   }
@@ -622,7 +642,7 @@ function hurt(n) {
   const p = R.p;
   if (save.cheat && save.cheat.god) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -990,7 +1010,7 @@ Object.assign(EN_DICT, {"Guardião Dourado": "Golden Guardian", "Cavernas Dourad
 Object.assign(EN_DICT, {"Ativo": "Active", "Código aceite.": "Code accepted.", "Código removido.": "Code removed."});
 Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", "Cópia:": "Copy:"});
 Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
-Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
+Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests."});
 Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 investidas": "2 charges", "3 investidas": "3 charges", "4 investidas": "4 charges", "2 ondas de choque": "2 shockwaves", "3 ondas de choque": "3 shockwaves", "4 ondas de choque": "4 shockwaves", "3 lanças em leque": "3 spears in a fan", "5 lanças em leque": "5 spears in a fan", "7 lanças em leque": "7 spears in a fan", "6 raios": "6 lightning bolts", "8 raios": "8 lightning bolts", "12 raios": "12 lightning bolts", "8s de duração": "8s duration", "10s de duração": "10s duration", "12s de duração": "12s duration", "10 flechas": "10 arrows", "14 flechas": "14 arrows", "20 flechas": "20 arrows", "15 flechas no leque": "15 arrows in the fan", "19 flechas no leque": "19 arrows in the fan", "23 flechas no leque": "23 arrows in the fan", "2 virotes": "2 bolts", "3 virotes": "3 bolts", "5 virotes": "5 bolts", "explosão maior": "bigger explosion", "2 flechas de fogo": "2 fire arrows", "3 flechas, explosão enorme": "3 arrows, huge explosion", "2 armadilhas": "2 traps", "3 armadilhas": "3 traps", "5 armadilhas": "5 traps", "2 meteoros": "2 meteors", "3 meteoros": "3 meteors", "CHUVA DE METEOROS": "METEOR SHOWER", "área maior": "bigger area", "área e gelo maiores": "bigger area and freeze", "nova gigante (5s de gelo)": "giant nova (5s freeze)", "10 raios": "10 lightning bolts", "14 raios": "14 lightning bolts", "20 raios": "20 lightning bolts", "escudo de 5s": "5s shield", "escudo de 6s": "6s shield", "escudo de 8s": "8s shield", "orbes durante 8s": "orbs for 8s", "orbes durante 10s": "orbs for 10s", "orbes durante 13s": "orbs for 13s"});
 Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "Criar conta": "Create account", "Nick": "Nickname", "Palavra-passe": "Password", "Repetir palavra-passe": "Repeat password", "A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.": "Your password never leaves this device: only a cryptographic proof is sent. There is no password recovery, so keep it safe.", "Conectado como": "Logged in as", "Mobs mortos": "Mobs killed", "Ouro ganho": "Gold earned", "Enviar progresso": "Send progress", "Terminar sessão": "Log out", "Apagar conta: escreve a palavra-passe": "Delete account: type your password", "Apagar conta": "Delete account", "Mapa ": "Map ", "Maior nível": "Highest level", "Mais mobs mortos": "Most mobs killed", "Mais ouro ganho": "Most gold earned", "Mais bosses derrotados": "Most bosses defeated", "Mais raids vencidas": "Most raids won", "Recorde de waves:": "Wave record:", "A carregar...": "Loading...", "Ainda sem resultados.": "No results yet.", "Tu: #": "You: #", "Nick inválido: 3 a 16 letras, números ou _": "Invalid nickname: 3 to 16 letters, numbers or _", "A palavra-passe precisa de 8 a 64 caracteres": "The password needs 8 to 64 characters", "As palavras-passe não coincidem": "The passwords don't match", "A palavra-passe não pode ser igual ao nick": "The password can't be the same as the nickname", "Esse nick já está em uso": "That nickname is already taken", "Nick ou palavra-passe incorretos": "Wrong nickname or password", "Conta bloqueada por tentativas falhadas. Tenta daqui a": "Account locked after failed attempts. Try again in", "Muitos registos neste momento. Tenta daqui a uns minutos.": "Too many sign-ups right now. Try again in a few minutes.", "Sem ligação ao servidor": "Cannot reach the server", "O ranking online ainda não está ligado a um servidor.": "The online ranking is not connected to a server yet.", "O teu browser não permite criptografia aqui (usa https).": "Your browser doesn't allow cryptography here (use https).", "Erro do servidor, tenta mais tarde": "Server error, try again later", "Progresso recusado pelo servidor (valores inesperados)": "Progress rejected by the server (unexpected values)", "Sessão expirada. Entra outra vez.": "Session expired. Log in again.", "Pedido inválido": "Invalid request", "Dados inválidos": "Invalid data", "A ligar...": "Connecting...", "Sessão iniciada!": "Logged in!", "Progresso enviado!": "Progress sent!", "Conta apagada.": "Account deleted.", "Este save não pode entrar no ranking.": "This save cannot enter the ranking.", "Espera uns segundos e tenta outra vez.": "Wait a few seconds and try again."});
 Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A aguardar a primeira sincronização...": "Waiting for the first sync...", "Última: agora mesmo": "Last: just now", "Última: há": "Last:"});
@@ -1007,6 +1027,7 @@ Object.assign(EN_DICT, {"Conclui TODAS as raids da dificuldade anterior": "Clear
 Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell all", "Sim, vender": "Yes, sell", "Os itens equipados não são vendidos.": "Equipped items are not sold."});
 Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the previous raid on this difficulty"});
+Object.assign(EN_DICT, {"Já existem 5 contas criadas a partir desta rede": "There are already 5 accounts created from this network", "Confirmar venda?": "Confirm sale?", "Item raro: pede confirmação": "Rare item: asks to confirm", "Pode ser melhor que o equipado": "May be better than equipped", "parecem melhores que o equipado": "look better than equipped", "● melhor  ● pior  ● igual (vs equipado)": "● better  ● worse  ● same (vs equipped)", "efetivo": "effective"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1371,7 +1392,7 @@ const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}`
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
 const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
 const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
-function itemStats(it) { const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
+function itemStats(it) { const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
   const A = itemStats(nw), B = old ? itemStats(old) : {}, rows = []; let score = 0;
   for (const k of new Set(Object.keys(A).concat(Object.keys(B)))) { const d = (A[k] || 0) - (B[k] || 0); if (Math.abs(d) < (k === 'hp' ? .5 : .05)) continue; const w = (CMP_W[k] || 1) / (AFF[k].b + AFF[k].p * 20); score += d * w; rows.push({ k, d, w: Math.abs(d * w) }); }
@@ -1384,18 +1405,18 @@ function equipBest(sl) {
   if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; } else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
 }
 function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
-const wpnDps = w => w.dmg * (w.count || 1) * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
+const wpnDps = w => w.dmg * (w.count || 1) * 10 * wlm(save.wl[w.id] || 0) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
-  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .3 * r));
-  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .3 * r));
-  if (slot === 'boots') return +((3 + .25 * il) * (1 + .25 * r)).toFixed(1);
-  return +((3 + .35 * il) * (1 + .25 * r)).toFixed(1);
+  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
+  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
+  if (slot === 'boots') return +((3 + .25 * il) * (1 + .2 * r) * (r === 4 ? MYTH_F : 1)).toFixed(1);
+  return +((3 + .35 * il) * (1 + .2 * r) * GEAR_F.dmg * (r === 4 ? MYTH_F : 1)).toFixed(1);
 }
-function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .12 * r); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
+function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1) * (r === 4 ? MYTH_F : 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
 function rollSpec(it, avoid) {
   let c; do { c = SPEC_POOL[Math.floor(Math.random() * SPEC_POOL.length)]; } while (avoid && c[0] === avoid);
-  const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : 60; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
+  const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
 }
 function genItem(slot, r, il) {
   const it = { slot, r, il, ench: 0, rr: 0, main: { k: SLOT_MAIN[slot], v: mainVal(slot, r, il) }, aff: [], spec: null };
@@ -1407,7 +1428,8 @@ function genItem(slot, r, il) {
 function gearStats() {
   const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
   if (!save || !save.gear) return g;
-  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(6, g.ls);   // tetos   // XP extra tem teto
   return g;
 }
 function rollRarity(boost = 0, min = 0) {
@@ -1433,7 +1455,7 @@ function bossDown(b) {
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
   const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(60, 8 + 2 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
-  R.hpM = 1 + TUNE.wHP * (w - 1) + TUNE.wHP2 * (w - 1) * (w - 1); R.dmgM = 1 + TUNE.wDM * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9;
+  R.hpM = 1 + TUNE.wHP * (w - 1) + TUNE.wHP2 * (w - 1) * (w - 1); R.dmgM = 1 + TUNE.wDM * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9; R.bossDM = 1 + .05 * (w - 1) + .08 * R.m;   // os ataques do boss do Farm tambem crescem com a onda e a zona
   R.capB = Math.min(10, Math.floor(w / 4)) + Math.min(10, 2 * Math.floor(w / 10));       // mais monstros em simultaneo, sempre a subir
   R.hordeB = h ? 6 + Math.min(10, Math.floor(w / 10)) : 0;                               // a horda aguenta ainda mais
   R.spawnRate = Math.min(2.2, 1 + .02 * (w - 1)) * (h ? 1.8 : 1); R.packT = 5;
@@ -1457,7 +1479,7 @@ function endLines(win) {
 function miniStars(n, x, y) { for (let q = 0; q < n; q++) drawIcon('star', x + q * 8, y, .9); }
 function slotIcon(slot, r, cx, cy, k) { const im = SLOT_SPR[slot][r]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
 function itemCard(it, x, y, w = 230) {
-  const col = RAR[it.r][1], m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
+  const col = RAR[it.r][1], m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
   if (txtW(nm, sz, 'bold') > avail) {
     sz = 13;
     if (txtW(nm, sz, 'bold') > avail) { const words = nm.split(' '); let a = '', b = ''; for (const wd of words) { const t = (a + ' ' + wd).trim(); if (!b && txtW(t, sz, 'bold') <= avail) a = t; else b = (b + ' ' + wd).trim(); } lines = b ? [a, b] : [a]; }
@@ -1482,7 +1504,8 @@ let enc = { t: 0, res: null, msg: '', msgT: 0, col: '#fff', sparks: [] };
 function drawHub() {
   menuBg(); const c = CLASSES[save.cls], L = save.pl.lv;
   panel(10, 8, 780, 60, '#17172a'); drawSprBig(heroSpr(), 44, 40, 1.3);
-  txt(c.name, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(c.name, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold');
+  const pn = on && on.nick ? on.nick : c.name;   // no menu aparece o nome do jogador
+  txt(pn, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold');
   bar(76, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 76, 61, 11, '#8ab');
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
@@ -1515,10 +1538,10 @@ function hubFarm() {
 function hubRaids() {
   const d = RAID_D[raidD];
   RAID_D.forEach((r, i) => { btn(197 + i * 117, 90, 110, 38, r.n, () => raidD = i, { size: 15, col: raidD === i ? r.col : '#2a2a48', hot: r.col }); if (!diffOpen(i)) drawIcon('lock', 197 + i * 117 + 94, 109, 1.3); });
-  txt(`Vida ×${d.hp} · Dano ×${d.dmg} · Ouro ×${d.gold} · +XP`, 440, 150, 14, d.col, 'center', 'bold');
+  txt(`Vida ×${raidHP(0, raidD).toFixed(0)}–${raidHP(5, raidD).toFixed(0)} · Dano ×${raidDM(0, raidD).toFixed(1)}–${raidDM(5, raidD).toFixed(1)} · Ouro ×${d.gold} · +XP`, 440, 150, 14, d.col, 'center', 'bold');
   btn(684, 136, 96, 22, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 11, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   MISSIONS.forEach((m, i) => {
-    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [])[raidD] | 0) > 0, unl = open && diffOpen(raidD), rec = 8 + i * 6 + raidD * 4;
+    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [])[raidD] | 0) > 0, unl = open && diffOpen(raidD), rec = raidRec(i, raidD);
     panel(x, y, w, h, open ? '#232342' : '#1a1a22', open ? d.col : '#2a2a3a');
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 36, 36); drawSprBig(m.boss.pal, x + 24, y + 24, .46); if (!open) drawIcon('lock', x + 24, y + 24, 2);
     txt(`Raid: ${m.name}`, x + 54, y + 20, 16, open ? '#fff' : '#667', 'left', 'bold');
@@ -1575,12 +1598,13 @@ function hubChar() {
   if (hubToast.t > 0) { ctx.globalAlpha = Math.min(1, hubToast.t); txt(hubToast.s, 337, 424, 13, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1; }
   // painel direito
   panel(490, 88, 295, 390, '#16162a', '#3a3a5a');
-  txt(c.name, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(c.name, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
+  const pn = on && on.nick ? on.nick : c.name;
+  txt(pn, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(pn, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
   bar(504, 122, 267, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 771, 144, 11, '#8ab', 'right');
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
-    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
+    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, a[key] > 40 ? '#ff9a4a' : '#f0c060', 'right', 'bold'); if (a[key] > 40) txt(`efetivo ${Math.round(attrEff(a[key]))}`, 690, y + 31, 9, '#c98a4a', 'right');
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
@@ -1599,12 +1623,14 @@ function hubBag() {
     bevel(x, y, 45, 45, '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
     if (o) {
       slotIcon(o.it.slot, o.it.r, x + 22, y + 22, 3); if (o.it.ench) txt('+' + o.it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 7, y + 7);
+      { const v = cmpItems(o.it, save.gear[o.it.slot]).verdict, c = v > 0 ? '#4cf06a' : v < 0 ? '#ff4a4a' : '#ffd34a'; ctx.fillStyle = '#05050a'; ctx.fillRect(x + 3, y + 35, 9, 9); ctx.fillStyle = c; ctx.fillRect(x + 4, y + 36, 7, 7); }   // verde = melhor que o equipado, vermelho = pior, amarelo = parecido
       if (bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
       const idx = o.i; ui.push({ x, y, w: 45, h: 45, fn: () => bagSel = idx });
     }
   }
   btn(197, 376, 120, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
   // equipado: as 4 pecas que estas a usar (nao se vendem); a do tipo selecionado/filtrado fica destacada
+  [['#4cf06a', lang === 'en' ? 'better' : 'melhor', 197], ['#ff4a4a', lang === 'en' ? 'worse' : 'pior', 252], ['#ffd34a', lang === 'en' ? 'same' : 'igual', 292]].forEach(([c, t, lx]) => { ctx.fillStyle = c; ctx.fillRect(lx, 410, 7, 7); txt(t, lx + 11, 417, 10, '#99a'); }); txt(lang === 'en' ? '(vs equipped)' : '(vs equipado)', 330, 417, 10, '#667');
   { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 428, 12, '#f0c060', 'left', 'bold');
     SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 49, y = 434, hl = ref === sl;
       bevel(x, y, 45, 45, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
@@ -1624,20 +1650,22 @@ function hubBag() {
     const room = Math.max(0, Math.min(5, Math.floor((374 - (vy + 14)) / 14)));
     cm.rows.slice(0, room).forEach((r, i) => txt(`${r.d > 0 ? '+' : ''}${ev(r.k, r.d, 1)}${AFF[r.k].u} ${AFF[r.k].n}`, 512, vy + 15 + i * 14, 12, r.d > 0 ? '#6f6' : '#f77')); }
   btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
-  btn(512, 412, 256, 28, `Vender ¢${sellValue(it)}`, () => { save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: '#a06a20', hot: '#c98a30' });
+  { const risky = it.r >= 3 || cmpItems(it, cur).verdict > 0 || it.ench >= 3 || (it.st || 0) > 0, armed = sellArm === it;
+    btn(512, 412, 256, 28, armed ? 'Confirmar venda?' : `Vender ¢${sellValue(it)}`, () => { if (risky && !armed) { sellArm = it; SFX.click(); return; } sellArm = null; save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: armed ? '#b03a2a' : '#a06a20', hot: armed ? '#d04a3a' : '#c98a30' });
+    if (risky && !armed) txt(it.r >= 3 ? 'Item raro: pede confirmação' : 'Pode ser melhor que o equipado', 640, 476, 10, '#f99', 'center'); }
   btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });
 }
-let sellAsk = false;
+let sellAsk = false, sellArm = null;
 function sellAll() { let g = 0; for (const it of save.bag) g += sellValue(it); save.gold = Math.min(999999, save.gold + g); save.bag = []; enchItem = null; bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
 function drawSellAsk() {
   if (state !== 'hub' || tab !== 'bag' || !sellAsk) return;
   if (!save.bag.length) { sellAsk = false; return; }
-  let g = 0; for (const it of save.bag) g += sellValue(it); const hi = save.bag.filter(it => it.r >= 3).length;
+  let g = 0; for (const it of save.bag) g += sellValue(it); const hi = save.bag.filter(it => it.r >= 3).length, up = save.bag.filter(it => cmpItems(it, save.gear[it.slot]).verdict > 0).length;
   ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => {} });
   const x = 250, y = 170, w = 300, h = 170; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
   txt('Vender tudo?', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold');
   txt(`${save.bag.length} itens da Mochila por ¢${gfmt(g)}`, x + w / 2, y + 62, 14, '#fff', 'center');
-  txt(hi ? `Inclui ${hi} item(ns) Épico/Lendário!` : 'Os itens equipados não são vendidos.', x + w / 2, y + 84, 12, hi ? '#f88' : '#9ab', 'center');
+  txt(hi ? `Inclui ${hi} item(ns) Épico/Lendário/Mítico!` : 'Os itens equipados não são vendidos.', x + w / 2, y + 82, 12, hi ? '#f88' : '#9ab', 'center'); if (up) txt(`${up} parecem melhores que o equipado`, x + w / 2, y + 98, 11, '#fd5', 'center');
   btn(x + 20, y + 112, 125, 38, 'Sim, vender', sellAll, { size: 15, col: '#8a3a2a', hot: '#b04a3a' });
   btn(x + 155, y + 112, 125, 38, 'Cancelar', () => { sellAsk = false; }, { size: 15, col: '#2a2a48' });
 }
@@ -1801,7 +1829,7 @@ function hubWeapons() {
     const nm = locked ? 'Arma bloqueada' : w.n + (lv ? `  +${lv}` : '');
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
     const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
-    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
+    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * wlm(lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
     if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
     if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
@@ -1826,7 +1854,7 @@ function hubAnvil() {
   const w = c.weapons[anvSel], lv = save.wl[w.id] || 0, max = lv >= ANV_MAX;
   weaponIcon(w.id, 220, 158, 1.5); txt(w.n, 244, 165, 19, '#fff', 'left', 'bold');
   txt(`Nível +${lv}${max ? '  (MÁXIMO)' : ` > +${lv + 1}`}`, 205, 188, 16, '#f0c060', 'left', 'bold');
-  const d0 = Math.round(w.dmg * 10 * (1 + .12 * lv)), d1 = Math.round(w.dmg * 10 * (1 + .12 * (lv + 1)));
+  const d0 = Math.round(w.dmg * 10 * wlm(lv)), d1 = Math.round(w.dmg * 10 * wlm(lv + 1));
   txt(max ? `Dano ${d0}` : `Dano ${d0} > ${d1}`, 205, 208, 14, '#9cf');
   if (max) txt('Nível máximo!', 205, 250, 18, '#ffd34a', 'left', 'bold');
   else {
@@ -1943,8 +1971,6 @@ function hubFuse() {
     txt('Efeito da habilidade (E):', 212, 378, 13, '#f0c060', 'left', 'bold');
     for (let q = 1; q <= STAR_MAX; q++) txt(`${q}★ ${STAR_FX[w.id][q - 1]}`, 212, 380 + q * 17, 13, st >= q ? '#6f6' : '#778');
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
-    txt(rq.ok ? `Comprar cópia · ¢${gfmt(cp)}` : 'Bloqueada', 665, 308, 13, rq.ok ? '#fd5' : '#f88', 'center', 'bold');
-    [1, 5, 10].forEach((n, k) => { const cost = cp * n, can = rq.ok && save.gold >= cost; btn(560 + k * 72, 316, 66, 32, 'x' + n, () => { if (can) { save.gold -= cost; a[0] += n; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' }); });
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {
@@ -2036,7 +2062,7 @@ const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.s
 let rk = { mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 const RK_MSG = {
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
-  nick_taken: 'Esse nick já está em uso', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
+  nick_taken: 'Esse nick já está em uso', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
   network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
   implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
 };
@@ -2303,7 +2329,14 @@ function markUnl(sv) {
   for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => { const r = WEAPON_REQ[i]; if (sv.pl.lv >= r.lv && !(r.raid !== undefined && !((sv.raids[r.raid] || [0])[0] > 0))) sv.unl[w.id] = 1; });
   for (const t of LOCK_TABS) if (sv.pl.lv >= tabLv(t)) sv.unl['t_' + t] = 1;
 }
+function nerfGear(sv) {
+  const f = it => { if (!it || !it.main) return; const sc = o => { if (o && GEAR_F[o.k]) o.v = it.main === o && o.k === 'hp' ? Math.round(o.v * GEAR_F[o.k]) : +(o.v * GEAR_F[o.k]).toFixed(1); }; sc(it.main); (it.aff || []).forEach(sc); sc(it.spec); };
+  const g3 = it => { if (!it || !it.main) return; const sc = o => { if (!o) return; const m = (it.r === 4 ? MYTH_F : 1) * (o.k === 'ls' ? GEAR_F.ls : 1); if (m !== 1) o.v = o.k === 'hp' ? Math.round(o.v * m) : +(o.v * m).toFixed(1); }; sc(it.main); (it.aff || []).forEach(sc); sc(it.spec); };
+  if ((sv.gv | 0) < 2) { for (const sl of SLOTS) f(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(f); sv.gv = 2; }
+  if (sv.gv < 3) { for (const sl of SLOTS) g3(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(g3); sv.gv = 3; }
+}
 function checkUnlocks() {
+  if (save && (save.gv | 0) < 3) { nerfGear(save); persist(); }
   if (!save || ua) return; if (!save.unl) { markUnl(save); persist(); return; }
   let q = null; CLASSES[save.cls].weapons.forEach((w, i) => { if (!q && weaponReq(i).ok && !save.unl[w.id]) q = { key: w.id, name: w.n, w: w.id }; });
   for (const t of LOCK_TABS) { if (!tabOpen(t) && save.unl['t_' + t]) delete save.unl['t_' + t]; if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: TAB_INFO[t][0] }; }
@@ -2605,7 +2638,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
-  if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
+  if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
   if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
