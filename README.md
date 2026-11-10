@@ -15,7 +15,7 @@ Escolhe um herói, farma ondas infinitas, enfrenta raids muito difíceis, equipa
 - **Localmente:** descarrega o repositório e abre o `index.html` no Chrome, Edge ou Firefox.
 - **Online:** se o GitHub Pages estiver ativo, em <https://arroznatwitch.github.io/guardian-of-gold/>.
 - **Wiki com pesquisa:** abre o `wiki.html` (ou <https://arroznatwitch.github.io/guardian-of-gold/wiki.html>).
-- O progresso fica guardado **no teu browser** (não limpes os dados do site se quiseres manter o save).
+- O progresso fica guardado **na tua conta online** (nick + palavra-passe). Se o servidor não estiver configurado, fica no teu browser.
 - Português (Portugal) e English (UK), em **Opções**.
 
 > Versão beta: podem existir bugs e o equilíbrio ainda vai mudar. Feedback bem-vindo nas *Issues*.
@@ -277,7 +277,7 @@ Cosméticos que mudam o aspeto do herói. A skin inicial é grátis, a 1.ª extr
 
 ## Ranking online
 
-O separador **Ranking** tem classificações de **nível, mobs mortos, ouro ganho, bosses, raids** e **recorde de waves por mapa**. A conta só precisa de **nick + palavra-passe** (a palavra-passe nunca sai do teu dispositivo). Precisa de um pequeno servidor Supabase: vê o [guia de configuração](docs/ONLINE.md).
+O separador **Ranking** tem classificações de **nível, mobs mortos, ouro ganho, bosses, raids** e **recorde de waves por mapa**. A conta só precisa de **nick + palavra-passe** (a palavra-passe nunca sai do teu dispositivo), e o **save fica guardado na conta**: podes jogar noutro dispositivo e, ao terminar sessão, o save local é apagado. Precisa de um pequeno servidor Supabase: vê o [guia de configuração](docs/ONLINE.md).
 
 ---
 

@@ -399,7 +399,7 @@ function normalize(s) {
 }
 let save = null;
 try { const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('bladehunter_v2'); if (raw) save = normalize(JSON.parse(raw)); } catch (e) { save = null; }
-function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} cloudMark(); }
 
 const DEF_BINDS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', attack: 'Space', special: 'KeyQ', skill: 'KeyE', dash: 'ShiftLeft', auto: 'KeyT', speed: 'KeyG', pause: 'Escape' };
 const BIND_LABELS = [['up', 'Mover para cima'], ['down', 'Mover para baixo'], ['left', 'Mover para a esquerda'], ['right', 'Mover para a direita'],
@@ -437,7 +437,7 @@ const K = a => !!keys[binds[a]];
 
 addEventListener('keydown', e => {
   initAudio();
-  if (state === 'hub' && tab === 'rank' && rk.focus && !capture && rankKey(e)) return;
+  if ((state === 'login' || (state === 'hub' && tab === 'rank')) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   if (state === 'cheats') {
     e.preventDefault();
@@ -518,7 +518,7 @@ function endMission(win) {
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
-  R.lootN = R.loot.length; save.gold += g; R.earned = g; statsAdd(g); persist(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
+  R.lootN = R.loot.length; save.gold += g; R.earned = g; statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
 const GLOWW = { m_fire: '#ff7a1a', m_ice: '#6ad0ff', m_bolt: '#ffe14a', m_arcane: '#b06aff', m_dark: '#c030ff' };
@@ -912,6 +912,8 @@ Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 
 Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
 Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 investidas": "2 charges", "3 investidas": "3 charges", "4 investidas": "4 charges", "2 ondas de choque": "2 shockwaves", "3 ondas de choque": "3 shockwaves", "4 ondas de choque": "4 shockwaves", "3 lanças em leque": "3 spears in a fan", "5 lanças em leque": "5 spears in a fan", "7 lanças em leque": "7 spears in a fan", "6 raios": "6 lightning bolts", "8 raios": "8 lightning bolts", "12 raios": "12 lightning bolts", "8s de duração": "8s duration", "10s de duração": "10s duration", "12s de duração": "12s duration", "10 flechas": "10 arrows", "14 flechas": "14 arrows", "20 flechas": "20 arrows", "15 flechas no leque": "15 arrows in the fan", "19 flechas no leque": "19 arrows in the fan", "23 flechas no leque": "23 arrows in the fan", "2 virotes": "2 bolts", "3 virotes": "3 bolts", "5 virotes": "5 bolts", "explosão maior": "bigger explosion", "2 flechas de fogo": "2 fire arrows", "3 flechas, explosão enorme": "3 arrows, huge explosion", "2 armadilhas": "2 traps", "3 armadilhas": "3 traps", "5 armadilhas": "5 traps", "2 meteoros": "2 meteors", "3 meteoros": "3 meteors", "CHUVA DE METEOROS": "METEOR SHOWER", "área maior": "bigger area", "área e gelo maiores": "bigger area and freeze", "nova gigante (5s de gelo)": "giant nova (5s freeze)", "10 raios": "10 lightning bolts", "14 raios": "14 lightning bolts", "20 raios": "20 lightning bolts", "escudo de 5s": "5s shield", "escudo de 6s": "6s shield", "escudo de 8s": "8s shield", "orbes durante 8s": "orbs for 8s", "orbes durante 10s": "orbs for 10s", "orbes durante 13s": "orbs for 13s"});
 Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "Criar conta": "Create account", "Nick": "Nickname", "Palavra-passe": "Password", "Repetir palavra-passe": "Repeat password", "A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.": "Your password never leaves this device: only a cryptographic proof is sent. There is no password recovery, so keep it safe.", "Conectado como": "Logged in as", "Mobs mortos": "Mobs killed", "Ouro ganho": "Gold earned", "Enviar progresso": "Send progress", "Terminar sessão": "Log out", "Apagar conta: escreve a palavra-passe": "Delete account: type your password", "Apagar conta": "Delete account", "Mapa ": "Map ", "Maior nível": "Highest level", "Mais mobs mortos": "Most mobs killed", "Mais ouro ganho": "Most gold earned", "Mais bosses derrotados": "Most bosses defeated", "Mais raids vencidas": "Most raids won", "Recorde de waves:": "Wave record:", "A carregar...": "Loading...", "Ainda sem resultados.": "No results yet.", "Tu: #": "You: #", "Nick inválido: 3 a 16 letras, números ou _": "Invalid nickname: 3 to 16 letters, numbers or _", "A palavra-passe precisa de 8 a 64 caracteres": "The password needs 8 to 64 characters", "As palavras-passe não coincidem": "The passwords don't match", "A palavra-passe não pode ser igual ao nick": "The password can't be the same as the nickname", "Esse nick já está em uso": "That nickname is already taken", "Nick ou palavra-passe incorretos": "Wrong nickname or password", "Conta bloqueada por tentativas falhadas. Tenta daqui a": "Account locked after failed attempts. Try again in", "Muitos registos neste momento. Tenta daqui a uns minutos.": "Too many sign-ups right now. Try again in a few minutes.", "Sem ligação ao servidor": "Cannot reach the server", "O ranking online ainda não está ligado a um servidor.": "The online ranking is not connected to a server yet.", "O teu browser não permite criptografia aqui (usa https).": "Your browser doesn't allow cryptography here (use https).", "Erro do servidor, tenta mais tarde": "Server error, try again later", "Progresso recusado pelo servidor (valores inesperados)": "Progress rejected by the server (unexpected values)", "Sessão expirada. Entra outra vez.": "Session expired. Log in again.", "Pedido inválido": "Invalid request", "Dados inválidos": "Invalid data", "A ligar...": "Connecting...", "Sessão iniciada!": "Logged in!", "Progresso enviado!": "Progress sent!", "Conta apagada.": "Account deleted.", "Este save não pode entrar no ranking.": "This save cannot enter the ranking.", "Espera uns segundos e tenta outra vez.": "Wait a few seconds and try again."});
+Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A aguardar a primeira sincronização...": "Waiting for the first sync...", "Última: agora mesmo": "Last: just now", "Última: há": "Last:"});
+Object.assign(EN_DICT, {"Entra na tua conta para jogar": "Log in to your account to play", "A carregar o teu save": "Loading your save", "Sem ligação ao servidor": "Cannot reach the server", "O jogo precisa de internet para carregar a tua conta.": "The game needs internet to load your account.", "Tentar outra vez": "Try again", "Que save queres usar?": "Which save do you want to use?", "Já tens um save guardado na conta e outro neste dispositivo.": "You already have a save on the account and another on this device.", "Esta conta foi usada noutro dispositivo desde a última vez.": "This account was used on another device since last time.", "Save da conta": "Account save", "Save deste dispositivo": "Save from this device", "Save desta janela": "Save from this window", "Usar este": "Use this", "O save que não escolheres deixa de existir. O da conta fica guardado online.": "The save you don't pick will be lost. The account save stays online.", "Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.": "Pick the account save to load what was stored, or this window's to replace it.", "Sair sem guardar?": "Log out without saving?", "Sair:": "Log out:", "Farm: onda": "Farm: wave", "Não foi possível guardar o progresso recente. Clica outra vez para sair mesmo assim.": "Couldn't save your recent progress. Click again to log out anyway."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1166,7 +1168,7 @@ function drawOptions() {
   btn(215, 366, 370, 28, 'Cheat Codes', () => { state = 'cheats'; cheatText = ''; cheatMsgT = 0; }, { size: 15, col: '#5a3a7a' });
   btn(215, 400, 370, 28, delConfirm ? 'Tens a certeza? Clica para apagar' : 'Apagar progresso', () => {
     if (!save) return; if (!delConfirm) { delConfirm = true; return; }
-    delConfirm = false; try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('bladehunter_v2'); } catch (e) {} save = null; state = 'menu';
+    delConfirm = false; try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('bladehunter_v2'); } catch (e) {} save = null; state = 'menu'; cloudReset();
   }, { size: 14, col: delConfirm ? '#a03a3a' : '#6a2a2a', off: !save });
   btn(300, 448, 200, 34, '< Voltar', () => { delConfirm = false; state = optBack; }, { size: 15 });
 }
@@ -1373,7 +1375,7 @@ function drawHub() {
   const nChest = Math.max(0, save.pl.lv - save.chestDone);
   tabs.forEach((t, i) => {
     const by = 76 + i * 29;
-    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') rkLoad(false); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
     if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(134, by + 5, 30, 14); txt(nChest > 99 ? '99+' : String(nChest), 149, by + 16, 11, '#000', 'center', 'bold'); }
   });
@@ -1895,10 +1897,12 @@ function statPayload() {
   for (let i = 0; i < 6; i++) o['w' + i] = f[i] | 0; return o;
 }
 let subBusy = false;
+function autoSync() { if (on.token && save && state !== 'play' && !(save.cheat && save.cheat.used) && JSON.stringify(statPayload()) !== rk.sentHash) onlineSubmit(); }
+setInterval(autoSync, 30000);
 async function onlineSubmit() {
   if (!on.token || !save || subBusy) return; if (save.cheat && save.cheat.used) return;
   subBusy = true; const r = await rpc('gog_submit', { p_token: on.token, p: statPayload() }); subBusy = false;
-  if (r.error === 'auth') { on = { token: null, nick: null }; onSave(); rkSay('auth'); } else if (r.ok) { rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
+  if (r.error === 'auth') { dropSession(false); rkSay('auth'); } else if (r.ok) { rk.sentHash = JSON.stringify(statPayload()); rk.lastSub = Date.now(); rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
   return r;
 }
 async function rkLoad(force) {
@@ -1916,14 +1920,20 @@ async function rkAuth(register) {
   rk.busy = true; rkSay('working'); let proof;
   try { proof = await mkProof(nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
   const r = await rpc(register ? 'gog_register' : 'gog_login', { p_nick: nick, p_proof: proof }); rk.busy = false;
-  if (r.ok) { on = { token: r.token, nick: r.nick }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; rkLoad(true); onlineSubmit(); } else rkSay(r.error, r.wait);
+  if (r.ok) { on = { token: r.token, nick: r.nick }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; cloudStart(); } else rkSay(r.error, r.wait);
 }
-async function rkLogout() { const t = on.token; on = { token: null, nick: null }; onSave(); rk.me = null; rk.at = {}; rkSay('deleted'); rk.msg = ''; if (t) rpc('gog_logout', { p_token: t }); rkLoad(true); }
+async function rkLogout() {
+  if (ONLINE_URL && cloud.ready && (cloud.dirty || cloud.timer || cloud.busy)) {
+    const ok = await cloudFlush();
+    if (!ok && !cloud.confirmOut) { cloud.confirmOut = true; rkSay('Não foi possível guardar o progresso recente. Clica outra vez para sair mesmo assim.'); return; }
+  }
+  const t = on.token; dropSession(true); if (t) rpc('gog_logout', { p_token: t });
+}
 async function rkDelete() {
   if (rk.busy || !on.token) return; if (rk.pass.length < 8) return rkSay('short_pass');
   rk.busy = true; rkSay('working'); let proof; try { proof = await mkProof(on.nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
   const r = await rpc('gog_delete', { p_token: on.token, p_proof: proof }); rk.busy = false;
-  if (r.ok) { on = { token: null, nick: null }; onSave(); rk.pass = ''; rk.me = null; rk.at = {}; rkSay('deleted'); rkLoad(true); } else rkSay(r.error);
+  if (r.ok) { dropSession(true); rkSay('deleted'); } else rkSay(r.error);
 }
 function rankKey(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
@@ -1957,7 +1967,7 @@ function hubRank() {
     txt('Conectado como', 309, 112, 12, '#9ab', 'center'); txt(on.nick, 309, 136, 20, '#ffd34a', 'center', 'bold');
     const t = save.stats || { kills: 0, gold: 0, bosses: 0 };
     [['Nível', gfmt(save.pl.lv)], ['Mobs mortos', gfmt(t.kills | 0)], ['Ouro ganho', gfmt(t.gold | 0)], ['Bosses', gfmt(t.bosses | 0)]].forEach(([n, v], i) => { txt(n, 210, 170 + i * 20, 13, '#9ab'); txt(v, 410, 170 + i * 20, 13, '#fff', 'right', 'bold'); });
-    if (cheat) wrap(RK_MSG.cheat, 207, 262, 205, 14, 12, '#f88'); else btn(207, 252, 205, 32, 'Enviar progresso', async () => { rkSay('working'); const r = await onlineSubmit(); if (r && r.ok) rkSay('sent'); else if (r && r.error === 'slow') rkSay('Espera uns segundos e tenta outra vez.'); else if (r && r.error !== 'implausible' && r.error !== 'auth') rkSay(r.error); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
+    if (cheat) wrap(RK_MSG.cheat, 207, 262, 205, 14, 12, '#f88'); else { const ago = rk.lastSub ? Math.floor((Date.now() - rk.lastSub) / 1000) : -1; txt('Sincronização automática', 309, 270, 13, '#7fe8a0', 'center', 'bold'); txt(ago < 0 ? 'A aguardar a primeira sincronização...' : ago < 60 ? 'Última: agora mesmo' : `Última: há ${Math.floor(ago / 60)} min`, 309, 290, 12, '#9ab', 'center'); }
     if (rk.msg) wrap(rk.msg, 207, 304, 205, 14, 12, rk.col);
     btn(207, 346, 205, 28, 'Terminar sessão', rkLogout, { size: 13, col: '#3a2a3a' });
     rkField(207, 400, 205, 'Apagar conta: escreve a palavra-passe', 'pass', true);
@@ -1977,6 +1987,109 @@ function hubRank() {
     txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 490, y, 14, mine ? '#ffd34a' : col, 'left', 'bold'); txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
   });
   if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 606, 468, 14, '#7fe8a0', 'center', 'bold');
+}
+
+/* ----- Save na nuvem: com o servidor configurado o login e obrigatorio e o save vive na conta ----- */
+const OWNER_KEY = 'bladehunter_owner';
+const DEV_ID = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false });
+let cloud = cloudNew(), cf = null;
+function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
+function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 8000); }
+async function cloudFlush() {
+  clearTimeout(cloud.timer); cloud.timer = null;
+  if (!cloud.dirty || cloud.busy || !on.token || !cloud.ready || !save) return !cloud.dirty;
+  cloud.busy = true; cloud.dirty = false;
+  const r = await rpc('gog_save_put', { p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }); cloud.busy = false;
+  if (r.ok) { cloud.rev = r.rev; cloud.err = ''; lsSync(!cloud.dirty); if (cloud.dirty) cloudMark(); return true; }
+  cloud.dirty = true;
+  if (r.error === 'conflict') {
+    if (r.dev === DEV_ID) { cloud.rev = r.rev; cloud.timer = setTimeout(() => cloudFlush(), 500); return false; }   // foi esta mesma janela (ex.: envio ao fechar)
+    cloudConflict(); return false;
+  }
+  if (r.error === 'auth') { dropSession(false); return false; }
+  cloud.err = r.error; cloud.timer = setTimeout(() => cloudFlush(), r.error === 'slow' ? 4000 : 15000); return false;
+}
+function cloudApply(sv, upload) {
+  save = sv; try { localStorage.setItem(OWNER_KEY, on.nick); if (sv) localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } catch (e) {}
+  cloud.ready = true; cloud.dirty = false; cloud.confirmOut = false; cf = null; rk.at = {};
+  if (upload && sv) { cloud.dirty = true; lsSync(false); cloudFlush(); } else lsSync(true);
+  if (state === 'sync' || state === 'conflict' || state === 'syncerr') state = 'menu';
+  onlineSubmit();
+}
+async function cloudConflict() {
+  if (state === 'play') { cloud.timer = setTimeout(cloudConflict, 20000); return; }
+  cloud.ready = false; const r = await rpc('gog_save_get', { p_token: on.token });
+  if (!r.ok || !r.save) { cloud.ready = true; cloud.timer = setTimeout(() => cloudFlush(), 15000); return; }
+  cloud.rev = r.rev; const cl = normalize(r.save), lo = save;
+  cf = { cloud: cl, local: lo, reason: 'dev', done: u => cloudApply(u ? lo : cl, u) }; state = 'conflict';
+}
+async function cloudStart() {
+  state = 'sync'; cloud.ready = false; cloud.err = '';
+  const r = await rpc('gog_save_get', { p_token: on.token });
+  if (r.error === 'auth') { dropSession(false); return; }
+  if (!r.ok) { cloud.err = r.error; state = 'syncerr'; return; }
+  cloud.rev = r.rev;
+  let local = null, owner = null, uns = false, srev = -1;
+  try {
+    owner = localStorage.getItem(OWNER_KEY); const raw = localStorage.getItem(SAVE_KEY) || (owner ? null : localStorage.getItem('bladehunter_v2'));
+    if (raw && (!owner || owner === on.nick)) local = normalize(JSON.parse(raw));
+    uns = localStorage.getItem('bladehunter_unsynced') === '1'; const sr = localStorage.getItem('bladehunter_rev'); srev = sr === null ? -1 : +sr;
+  } catch (e) { local = null; }
+  const legacy = local && !owner, mine = local && owner === on.nick;
+  if (r.save) {
+    let cl; try { cl = normalize(r.save); } catch (e) { cloud.err = 'bad_data'; state = 'syncerr'; return; }
+    if (legacy || (mine && uns && srev !== r.rev)) { cf = { cloud: cl, local, reason: legacy ? 'legacy' : 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
+    if (mine && uns) return cloudApply(local, true);
+    return cloudApply(cl, false);
+  }
+  if (local) return cloudApply(local, true);   // conta nova: o progresso deste dispositivo passa para a conta
+  cloudApply(null, false);
+}
+async function cloudReset() {
+  if (!ONLINE_URL || !on.token) return; clearTimeout(cloud.timer); cloud.timer = null; cloud.dirty = false;
+  const r = await rpc('gog_save_reset', { p_token: on.token }); if (r.ok) { cloud.rev = r.rev; lsSync(true); rk.at = {}; }
+}
+function dropSession(wipe) {
+  on = { token: null, nick: null }; onSave(); clearTimeout(cloud.timer); cloud = cloudNew(); cf = null; rk.me = null; rk.rows = []; rk.at = {}; rk.pass = rk.pass2 = ''; rk.focus = ''; rk.focusSet = false; rk.msg = '';
+  if (wipe) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('bladehunter_v2'); localStorage.removeItem(OWNER_KEY); localStorage.removeItem('bladehunter_unsynced'); localStorage.removeItem('bladehunter_rev'); } catch (e) {} save = null; }
+  if (state !== 'play') state = 'login';
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) cloudFlush(); });
+addEventListener('pagehide', () => {
+  if (ONLINE_URL && cloud.dirty && on.token && cloud.ready && save) fetch(`${ONLINE_URL}/rest/v1/rpc/gog_save_put`, { method: 'POST', keepalive: true, headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }) }).catch(() => {});
+});
+function menuAccount() { if (ONLINE_URL && on.token) btn(8, 8, 176, 24, cloud.confirmOut ? 'Sair sem guardar?' : 'Sair: ' + on.nick, rkLogout, { size: 12, col: cloud.confirmOut ? '#a03a3a' : '#3a2a3a' }); }
+function sumSave(sv) { let w = 0; for (const k in (sv.farmBest || {})) w = Math.max(w, sv.farmBest[k] | 0); return [`${CLASSES[sv.cls].name} · Nv ${sv.pl.lv}`, '¢' + gfmt(sv.gold | 0) + '   ◆' + (sv.gems | 0), 'Farm: onda ' + w]; }
+function drawLogin() {
+  menuScene(); if (!rk.focusSet) { rk.focus = 'nick'; rk.focusSet = true; }
+  const gx = UW / 2; txt('GUARDIANS OF GOLD', gx, 62, 36, '#f0c060', 'center', 'bold'); txt('Entra na tua conta para jogar', gx, 88, 15, '#cdd6f0', 'center');
+  panel(235, 108, 330, 372, '#16162aee');
+  ['login', 'register'].forEach((m, i) => btn(247 + i * 158, 120, 154, 28, m === 'login' ? 'Entrar' : 'Criar conta', () => { rk.mode = m; rk.pass2 = ''; rk.msg = ''; }, { size: 14, col: rk.mode === m ? '#a8821f' : '#2a2a48' }));
+  rkField(247, 176, 306, 'Nick', 'nick', false); rkField(247, 232, 306, 'Palavra-passe', 'pass', true);
+  let y = 270; if (rk.mode === 'register') { rkField(247, 288, 306, 'Repetir palavra-passe', 'pass2', true); y = 326; }
+  btn(247, y + 4, 306, 38, rk.mode === 'register' ? 'Criar conta' : 'Entrar', () => rkAuth(rk.mode === 'register'), { size: 17, col: '#2f7a4a', hot: '#3fa061', off: rk.busy });
+  if (rk.msg) wrap(rk.msg, 247, y + 62, 306, 15, 13, rk.col);
+  wrap('A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.', 247, 420, 306, 13, 11, '#778');
+  btn(8, 8, 60, 24, lang === 'en' ? 'EN' : 'PT', () => setLang(lang === 'en' ? 'pt' : 'en'), { size: 12, col: '#2a2a48' });
+}
+function drawSync() {
+  menuScene(); const gx = UW / 2; panel(225, 170, 350, 150, '#16162aee');
+  if (state === 'sync') { txt('A carregar o teu save' + '.'.repeat(1 + Math.floor(T * 2) % 3), gx, 245, 18, '#fff', 'center', 'bold'); return; }
+  txt('Sem ligação ao servidor', gx, 214, 18, '#f88', 'center', 'bold'); txt('O jogo precisa de internet para carregar a tua conta.', gx, 238, 12, '#9ab', 'center');
+  btn(250, 256, 140, 34, 'Tentar outra vez', cloudStart, { size: 14, col: '#2f7a4a', hot: '#3fa061' }); btn(410, 256, 140, 34, 'Terminar sessão', () => { const t = on.token; dropSession(true); if (t) rpc('gog_logout', { p_token: t }); }, { size: 14, col: '#3a2a3a' });
+}
+function drawConflict() {
+  menuScene(); const gx = UW / 2; if (!cf) { state = 'menu'; return; }
+  txt('Que save queres usar?', gx, 62, 28, '#f0c060', 'center', 'bold');
+  txt(cf.reason === 'legacy' ? 'Já tens um save guardado na conta e outro neste dispositivo.' : 'Esta conta foi usada noutro dispositivo desde a última vez.', gx, 90, 13, '#cdd6f0', 'center');
+  [['Save da conta', cf.cloud, false, '#2f7a4a'], [cf.reason === 'legacy' ? 'Save deste dispositivo' : 'Save desta janela', cf.local, true, '#a06a20']].forEach(([h, sv, u, col], i) => {
+    const x = 120 + i * 300, y = 120; panel(x, y, 280, 250, '#16162aee'); txt(h, x + 140, y + 30, 18, '#fff', 'center', 'bold');
+    drawSprBig(sv.cls + (sv.skE[sv.cls] | 0), x + 140, y + 100, 3);
+    sumSave(sv).forEach((t, k) => txt(t, x + 140, y + 160 + k * 20, k ? 13 : 15, k ? '#bcd' : '#ffd34a', 'center', k ? 'normal' : 'bold'));
+    btn(x + 30, y + 206, 220, 34, 'Usar este', () => cf.done(u), { size: 15, col, hot: '#c98a30' });
+  });
+  wrap(cf.reason === 'legacy' ? 'O save que não escolheres deixa de existir. O da conta fica guardado online.' : 'Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.', 150, 392, 500, 15, 13, '#9ab');
 }
 
 /* ----- Pets (em breve) ----- */
@@ -2205,11 +2318,13 @@ function frame(now) {
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
-  if (state === 'menu' || state === 'class' || state === 'keys' || state === 'hub' || state === 'options' || state === 'cheats') { ctx.save(); ctx.translate(UIOX, 0); ({ menu: drawMenu, class: drawClass, keys: drawKeys, hub: drawHub, options: drawOptions, cheats: drawCheats })[state](); ctx.restore(); }
+  if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
+  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: drawHub, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);
 }
+if (ONLINE_URL && on.token) cloudStart();
 requestAnimationFrame(frame);
 </script>
 </body>
