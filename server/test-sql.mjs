@@ -66,6 +66,26 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick free again'
   r = await q('select public.gog_save_reset($1)', [T1]); ok('save reset', r.ok && r.rev === 2, r);
   r = await q('select public.gog_save_get($1)', [T1]); ok('save empty after reset', r.save === null, r);
 }
+// build publica e perfil
+{
+  r = await q('select public.gog_register($1,$2)', ['builder', A]); const TB = r.token;
+  const BUILD = { skin: 2, weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
+    gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, junk: 'x'.repeat(50) };
+  const SB = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: BUILD });
+  r = await q('select public.gog_submit($1,$2::jsonb)', [TB, SB]); ok('submit with build', r.ok, r);
+  r = await q('select public.gog_profile($1)', ['BUILDER']); const bd = r.build;
+  ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && bd.attr.str === 99999 && !('evil' in bd.attr) && !('junk' in bd), r);
+  ok('gear slots whitelisted and clamped', Object.keys(bd.gear).sort().join() === 'chest,head' && bd.gear.chest.r === 4 && bd.gear.chest.e === 0 && bd.gear.head.sp === 'Ígneoscript', bd);
+  r = await q('select public.gog_board($1,5,null)', ['level']); const row = r.rows.find(x => x.nick === 'builder'); ok('board rows carry class, level and skin', row && row.cls === 'mage' && row.lv === 10 && row.skin === 2, r);
+  await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
+  const EVIL = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 1, weapon: { id: "x';drop table gog.players;--" } } });
+  r = await q('select public.gog_submit($1,$2::jsonb)', [TB, EVIL]);
+  r = await q('select public.gog_profile($1)', ['builder']); ok('invalid weapon id is dropped, skin updates', r.build.skin === 1 && !r.build.weapon, r);
+  r = await q('select public.gog_profile($1)', ['nobody_here']); ok('profile of unknown nick', r.error === 'not_found', r);
+  r = await q('select public.gog_profile($1)', ["a'; drop"]); ok('profile rejects bad nick', r.error === 'bad_nick', r);
+  let d2 = false; try { await db.query("select gog._clean_build('{}'::jsonb)"); } catch (e) { d2 = true; } ok('anon cannot call _clean_build', d2);
+  r = await q('select public.gog_save_reset($1)', [TB]); r = await q('select public.gog_profile($1)', ['builder']); ok('reset clears the build', r.build === null && r.level === 0, r);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);
