@@ -101,7 +101,7 @@ A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para 
 | 2★ | ×1,90 | +6% | ×1,30 |
 | 3★ (MAX) | ×2,50 | +9% | ×1,50 |
 
-- **Armas:** as cópias caem de inimigos, bosses, raids e baús, ou compram-se no ecrã *Fusão* (de 1, 5 ou 10 de cada vez). Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
+- **Armas:** as cópias caem de inimigos, bosses, raids e baús. Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
 - **Equipamento:** juntam-se 5 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
 
 ### Efeitos das estrelas nas habilidades (`E`)
@@ -174,7 +174,7 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 
 **Encantar (equipamento)** — ecrã *Encantar*:
 
-- **Refinar** até +10: cada nível dá **+8%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
+- **Refinar** até +10: cada nível dá **+6%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
 - **Encantar especial:** sorteia um efeito (Ígneo, Gélido, Vampírico, Letal, Próspero, Sábio, Protetor, Poderoso). Podes voltar a sortear, com custo crescente.
 
 **Bigorna (armas)** — melhora uma arma até **+12** (+12% de dano por nível, na arma e na habilidade). Podes usar o *Amuleto da Sorte* (+15% de chance, só quando a chance for inferior a 85%) e o *Pergaminho de Proteção* (a partir de +5). Falhas seguidas dão bónus de azar.

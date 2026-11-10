@@ -395,7 +395,7 @@ const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
-const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: 1.5, wHP: .18, wHP2: .008, wDM: .11, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
+const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: 1.2, wHP: .18, wHP2: .008, wDM: .09, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
@@ -407,7 +407,7 @@ const RAID_D = [
   { n: 'Inferno',  col: '#c040ff', hp: 65,  dmg: 7.5, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
-const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.4, .5, .65, .85, 1, 1.1];   // as primeiras raids pesam menos; as ultimas muito mais
+const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.22, .28, .36, .47, .55, .6];   // as primeiras raids pesam menos; as ultimas muito mais
 const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
 const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
@@ -490,7 +490,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5 }, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
@@ -577,7 +577,7 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .12 * (6 * i + 4 * rd);
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .09 * (6 * i + 4 * rd);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
@@ -585,7 +585,7 @@ function startMission(i, rd, farm) {
   state = 'play'; setMusic('battle'); mdown = false;
 }
 function endMission(win) {
-  const M = MISSIONS[R.m]; let g = R.gold, xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100);
+  const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100);
   if (R.farm) { if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave; if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }
   else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
@@ -622,7 +622,7 @@ function hurt(n) {
   const p = R.p;
   if (save.cheat && save.cheat.god) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -990,7 +990,7 @@ Object.assign(EN_DICT, {"Guardião Dourado": "Golden Guardian", "Cavernas Dourad
 Object.assign(EN_DICT, {"Ativo": "Active", "Código aceite.": "Code accepted.", "Código removido.": "Code removed."});
 Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", "Cópia:": "Copy:"});
 Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
-Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
+Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests."});
 Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 investidas": "2 charges", "3 investidas": "3 charges", "4 investidas": "4 charges", "2 ondas de choque": "2 shockwaves", "3 ondas de choque": "3 shockwaves", "4 ondas de choque": "4 shockwaves", "3 lanças em leque": "3 spears in a fan", "5 lanças em leque": "5 spears in a fan", "7 lanças em leque": "7 spears in a fan", "6 raios": "6 lightning bolts", "8 raios": "8 lightning bolts", "12 raios": "12 lightning bolts", "8s de duração": "8s duration", "10s de duração": "10s duration", "12s de duração": "12s duration", "10 flechas": "10 arrows", "14 flechas": "14 arrows", "20 flechas": "20 arrows", "15 flechas no leque": "15 arrows in the fan", "19 flechas no leque": "19 arrows in the fan", "23 flechas no leque": "23 arrows in the fan", "2 virotes": "2 bolts", "3 virotes": "3 bolts", "5 virotes": "5 bolts", "explosão maior": "bigger explosion", "2 flechas de fogo": "2 fire arrows", "3 flechas, explosão enorme": "3 arrows, huge explosion", "2 armadilhas": "2 traps", "3 armadilhas": "3 traps", "5 armadilhas": "5 traps", "2 meteoros": "2 meteors", "3 meteoros": "3 meteors", "CHUVA DE METEOROS": "METEOR SHOWER", "área maior": "bigger area", "área e gelo maiores": "bigger area and freeze", "nova gigante (5s de gelo)": "giant nova (5s freeze)", "10 raios": "10 lightning bolts", "14 raios": "14 lightning bolts", "20 raios": "20 lightning bolts", "escudo de 5s": "5s shield", "escudo de 6s": "6s shield", "escudo de 8s": "8s shield", "orbes durante 8s": "orbs for 8s", "orbes durante 10s": "orbs for 10s", "orbes durante 13s": "orbs for 13s"});
 Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "Criar conta": "Create account", "Nick": "Nickname", "Palavra-passe": "Password", "Repetir palavra-passe": "Repeat password", "A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.": "Your password never leaves this device: only a cryptographic proof is sent. There is no password recovery, so keep it safe.", "Conectado como": "Logged in as", "Mobs mortos": "Mobs killed", "Ouro ganho": "Gold earned", "Enviar progresso": "Send progress", "Terminar sessão": "Log out", "Apagar conta: escreve a palavra-passe": "Delete account: type your password", "Apagar conta": "Delete account", "Mapa ": "Map ", "Maior nível": "Highest level", "Mais mobs mortos": "Most mobs killed", "Mais ouro ganho": "Most gold earned", "Mais bosses derrotados": "Most bosses defeated", "Mais raids vencidas": "Most raids won", "Recorde de waves:": "Wave record:", "A carregar...": "Loading...", "Ainda sem resultados.": "No results yet.", "Tu: #": "You: #", "Nick inválido: 3 a 16 letras, números ou _": "Invalid nickname: 3 to 16 letters, numbers or _", "A palavra-passe precisa de 8 a 64 caracteres": "The password needs 8 to 64 characters", "As palavras-passe não coincidem": "The passwords don't match", "A palavra-passe não pode ser igual ao nick": "The password can't be the same as the nickname", "Esse nick já está em uso": "That nickname is already taken", "Nick ou palavra-passe incorretos": "Wrong nickname or password", "Conta bloqueada por tentativas falhadas. Tenta daqui a": "Account locked after failed attempts. Try again in", "Muitos registos neste momento. Tenta daqui a uns minutos.": "Too many sign-ups right now. Try again in a few minutes.", "Sem ligação ao servidor": "Cannot reach the server", "O ranking online ainda não está ligado a um servidor.": "The online ranking is not connected to a server yet.", "O teu browser não permite criptografia aqui (usa https).": "Your browser doesn't allow cryptography here (use https).", "Erro do servidor, tenta mais tarde": "Server error, try again later", "Progresso recusado pelo servidor (valores inesperados)": "Progress rejected by the server (unexpected values)", "Sessão expirada. Entra outra vez.": "Session expired. Log in again.", "Pedido inválido": "Invalid request", "Dados inválidos": "Invalid data", "A ligar...": "Connecting...", "Sessão iniciada!": "Logged in!", "Progresso enviado!": "Progress sent!", "Conta apagada.": "Account deleted.", "Este save não pode entrar no ranking.": "This save cannot enter the ranking.", "Espera uns segundos e tenta outra vez.": "Wait a few seconds and try again."});
 Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A aguardar a primeira sincronização...": "Waiting for the first sync...", "Última: agora mesmo": "Last: just now", "Última: há": "Last:"});
@@ -1371,7 +1371,7 @@ const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}`
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
 const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
 const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
-function itemStats(it) { const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
+function itemStats(it) { const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
   const A = itemStats(nw), B = old ? itemStats(old) : {}, rows = []; let score = 0;
   for (const k of new Set(Object.keys(A).concat(Object.keys(B)))) { const d = (A[k] || 0) - (B[k] || 0); if (Math.abs(d) < (k === 'hp' ? .5 : .05)) continue; const w = (CMP_W[k] || 1) / (AFF[k].b + AFF[k].p * 20); score += d * w; rows.push({ k, d, w: Math.abs(d * w) }); }
@@ -1387,15 +1387,15 @@ function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up)
 const wpnDps = w => w.dmg * (w.count || 1) * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
-  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .3 * r));
-  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .3 * r));
-  if (slot === 'boots') return +((3 + .25 * il) * (1 + .25 * r)).toFixed(1);
-  return +((3 + .35 * il) * (1 + .25 * r)).toFixed(1);
+  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp);
+  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .24 * r) * GEAR_F.hp);
+  if (slot === 'boots') return +((3 + .25 * il) * (1 + .2 * r)).toFixed(1);
+  return +((3 + .35 * il) * (1 + .2 * r) * GEAR_F.dmg).toFixed(1);
 }
-function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .12 * r); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
+function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
 function rollSpec(it, avoid) {
   let c; do { c = SPEC_POOL[Math.floor(Math.random() * SPEC_POOL.length)]; } while (avoid && c[0] === avoid);
-  const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : 60; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
+  const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
 }
 function genItem(slot, r, il) {
   const it = { slot, r, il, ench: 0, rr: 0, main: { k: SLOT_MAIN[slot], v: mainVal(slot, r, il) }, aff: [], spec: null };
@@ -1407,7 +1407,8 @@ function genItem(slot, r, il) {
 function gearStats() {
   const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
   if (!save || !save.gear) return g;
-  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  g.xpb = Math.min(25, g.xpb);   // XP extra tem teto
   return g;
 }
 function rollRarity(boost = 0, min = 0) {
@@ -1457,7 +1458,7 @@ function endLines(win) {
 function miniStars(n, x, y) { for (let q = 0; q < n; q++) drawIcon('star', x + q * 8, y, .9); }
 function slotIcon(slot, r, cx, cy, k) { const im = SLOT_SPR[slot][r]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
 function itemCard(it, x, y, w = 230) {
-  const col = RAR[it.r][1], m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
+  const col = RAR[it.r][1], m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
   if (txtW(nm, sz, 'bold') > avail) {
     sz = 13;
     if (txtW(nm, sz, 'bold') > avail) { const words = nm.split(' '); let a = '', b = ''; for (const wd of words) { const t = (a + ' ' + wd).trim(); if (!b && txtW(t, sz, 'bold') <= avail) a = t; else b = (b + ' ' + wd).trim(); } lines = b ? [a, b] : [a]; }
@@ -1943,8 +1944,6 @@ function hubFuse() {
     txt('Efeito da habilidade (E):', 212, 378, 13, '#f0c060', 'left', 'bold');
     for (let q = 1; q <= STAR_MAX; q++) txt(`${q}★ ${STAR_FX[w.id][q - 1]}`, 212, 380 + q * 17, 13, st >= q ? '#6f6' : '#778');
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
-    txt(rq.ok ? `Comprar cópia · ¢${gfmt(cp)}` : 'Bloqueada', 665, 308, 13, rq.ok ? '#fd5' : '#f88', 'center', 'bold');
-    [1, 5, 10].forEach((n, k) => { const cost = cp * n, can = rq.ok && save.gold >= cost; btn(560 + k * 72, 316, 66, 32, 'x' + n, () => { if (can) { save.gold -= cost; a[0] += n; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' }); });
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {
@@ -2303,7 +2302,12 @@ function markUnl(sv) {
   for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => { const r = WEAPON_REQ[i]; if (sv.pl.lv >= r.lv && !(r.raid !== undefined && !((sv.raids[r.raid] || [0])[0] > 0))) sv.unl[w.id] = 1; });
   for (const t of LOCK_TABS) if (sv.pl.lv >= tabLv(t)) sv.unl['t_' + t] = 1;
 }
+function nerfGear(sv) {
+  const f = it => { if (!it || !it.main) return; const sc = o => { if (o && GEAR_F[o.k]) o.v = it.main === o && o.k === 'hp' ? Math.round(o.v * GEAR_F[o.k]) : +(o.v * GEAR_F[o.k]).toFixed(1); }; sc(it.main); (it.aff || []).forEach(sc); sc(it.spec); };
+  for (const sl of SLOTS) f(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(f); sv.gv = 2;
+}
 function checkUnlocks() {
+  if (save && (save.gv | 0) < 2) { nerfGear(save); persist(); }
   if (!save || ua) return; if (!save.unl) { markUnl(save); persist(); return; }
   let q = null; CLASSES[save.cls].weapons.forEach((w, i) => { if (!q && weaponReq(i).ok && !save.unl[w.id]) q = { key: w.id, name: w.n, w: w.id }; });
   for (const t of LOCK_TABS) { if (!tabOpen(t) && save.unl['t_' + t]) delete save.unl['t_' + t]; if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: TAB_INFO[t][0] }; }
