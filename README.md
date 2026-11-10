@@ -207,15 +207,15 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 ## Farm e Raids
 
 - **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas e uma **horda** a cada 10 (muito mais monstros ao mesmo tempo, mais mortes para completar, mais ouro e um item no fim). Os inimigos ficam mais fortes (e dão mais ouro) a cada onda, aparecem mais depressa e em maior número, e cada zona seguinte abre quando chegas a uma onda mínima na anterior (10, 10, 20, 20 e 30). Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
-- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da dificuldade anterior.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid.
 
 | Dificuldade | Vida | Dano | Ouro |
 |---|---|---|---|
-| **Fácil** | ×2.5 | ×1.6 | ×1 |
-| **Normal** | ×4.2 | ×2.2 | ×2 |
-| **Difícil** | ×7 | ×3 | ×4 |
-| **Pesadelo** | ×11.5 | ×4.2 | ×8 |
-| **Inferno** | ×18 | ×6 | ×15 |
+| **Fácil** | ×8 | ×2.3 | ×1 |
+| **Normal** | ×14 | ×3.1 | ×2 |
+| **Difícil** | ×24 | ×4.1 | ×4 |
+| **Pesadelo** | ×40 | ×5.5 | ×8 |
+| **Inferno** | ×65 | ×7.5 | ×15 |
 
 > A velocidade do jogo pode ser posta a **x2** nos ecrãs de Farm e Raids, na pausa ou com a tecla `G`.
 
