@@ -5,7 +5,7 @@
 // Os parametros de equilibrio estao no objeto TUNE do index.html.
 // Simulador de equilibrio: um bot joga o Farm; mede ondas atingidas e segundos por morte.
 window.__e = []; addEventListener('error', e => __e.push(e.message)); localStorage.clear();
-window.REQ = [1, 6, 12, 20, 28];
+window.REQ = [1, 6, 12, 30, 50];
 window.avg = a => a.reduce((x, y) => x + y, 0) / a.length;
 window.setDmg = function (table) { for (const c in CLASSES) CLASSES[c].weapons.forEach(w => { if (table[w.id] !== undefined) w.dmg = table[w.id]; }); };
 window.PTS = [[1, 0], [7, 1], [10, 1], [13, 2], [19, 3], [25, 4], [31, 5]];
