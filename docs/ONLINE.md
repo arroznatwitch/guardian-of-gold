@@ -57,6 +57,15 @@ Ao criar a conta escolhe-se o **sexo** (Masculino ou Feminino) e o **país**. O 
 
 Os dois podem ser alterados em **Editar perfil** (clicando no boneco, no canto do acampamento). O **nick nunca muda**. A primeira bandeira é grátis; **mudar de bandeira custa 100 diamantes** (cobrados no jogo, como o resto da progressão). O servidor valida os valores (`m` ou `f`; código de país com 2 letras) e a função `gog_set_profile` só funciona com sessão válida.
 
+## Vários personagens por conta (um por classe)
+
+Uma conta pode ter **até 3 personagens, um por classe** (Cavaleiro, Arqueiro e Mago), cada um com **o seu nick, o seu save e o seu lugar no ranking**. O primeiro personagem é o principal e define a palavra-passe da conta: os outros entram com essa mesma palavra-passe (também se pode entrar com o nick de qualquer um deles).
+
+- Cria-se e troca-se de personagem no separador **Perfil** do acampamento (ou no botão "Personagens" do menu).
+- A **classe de um personagem fica fixa** a partir do primeiro save. O servidor recusa um save de outra classe (`wrong_class`) e recusa uma classe que a conta já usa (`class_taken`).
+- O **sexo e o país** valem para a conta toda. Desativar um nick (`gog.set_active`) desativa a conta inteira, com todos os personagens.
+- **Segurança do save:** antes de trocar, o personagem atual é guardado na nuvem (se falhar, a troca não acontece). O save do browser só é usado se pertencer ao personagem que entrou (id do personagem); o de outro personagem fica de lado e nunca passa para outro.
+
 ## O save local pertence a uma conta
 
 O save guardado no browser fica ligado ao **id da conta** (`uid`), não ao nick. Se entrares com **outra conta** (ou criares uma conta nova, mesmo com o mesmo nick depois de a base de dados ser limpa), o save antigo **não é usado**: fica guardado à parte (`bladehunter_orphan`) e a conta nova começa com um personagem novo. Além disso, o servidor só aceita como primeiro save de uma conta um **personagem novo** (nível 1 ou 2, com muito pouco ouro). Assim ninguém leva o progresso de uma conta para outra.

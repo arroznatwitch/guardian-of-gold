@@ -140,6 +140,44 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_save_reset($1)', [TF]); r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 90000), r.rev, 'dev']); ok('after a reset the account is new again', r.error === 'not_new', r);
   r = await q('select public.gog_register($1,$2)', ['fresh_two', B]); const TF2 = r.token; r = await q('select public.gog_save_get($1)', [TF2]); ok('each account has its own uid', r.uid && r.uid !== uid1, r);
 }
+// varios personagens por conta (um por classe)
+{
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec('set role anon');
+  const SVC = (c) => JSON.stringify({ cls: c, pl: { lv: 1, xp: 0 }, gold: 0, gems: 0 });
+  r = await q('select public.gog_register($1,$2)', ['mc_main', B]); const TM = r.token;
+  r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [TM, SVC('knight'), 'd']); ok('main character locks its class on the first save', r.ok, r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TM, SVC('mage'), 1, 'd']); ok('class cannot change afterwards', r.error === 'wrong_class' || r.error === 'slow', r);
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TM, SVC('mage'), 1, 'd']); ok('class cannot change afterwards (no throttle)', r.error === 'wrong_class', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TM, 'knight', 'mc_knight2']); ok('cannot create a second knight', r.error === 'class_taken', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TM, 'archer', 'mc_main']); ok('nick must be unique', r.error === 'nick_taken', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TM, 'archer', 'a b']); ok('nick is validated', r.error === 'bad_nick', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TM, 'wizard', 'mc_wiz']); ok('class is validated', r.error === 'bad_request', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', ['0'.repeat(64), 'archer', 'mc_arch']); ok('create needs a session', r.error === 'auth', r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TM, 'archer', 'mc_arch']); ok('create an archer', r.ok && r.cls === 'archer' && r.token.length === 64, r); const TA = r.token;
+  r = await q('select public.gog_save_get($1)', [TA]); ok('new character has its own empty save and uid', r.ok && r.save === null && r.cls === 'archer' && r.taken.includes('knight'), r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [TA, SVC('knight'), 'd']); ok('archer cannot save a knight', r.error === 'wrong_class', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [TA, SVC('archer'), 'd']); ok('archer saves as archer', r.ok, r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [TA, 'mage', 'mc_mage']); ok('create a mage from another character', r.ok, r); const TMG = r.token;
+  r = await q('select public.gog_char_create($1,$2,$3)', [TA, 'knight', 'mc_fourth']); ok('at most three characters per account', r.error === 'too_many' || r.error === 'class_taken', r);
+  r = await q('select public.gog_chars($1)', [TA]); ok('list shows the three characters', r.ok && r.chars.length === 3 && r.chars.filter(c => c.current).length === 1 && r.chars.find(c => c.main).nick === 'mc_main', r);
+  r = await q('select public.gog_char_switch($1,$2)', [TA, 'mc_main']); ok('switch to the main character', r.ok && r.nick === 'mc_main' && r.token.length === 64 && r.cls === 'knight', r); const TM2 = r.token;
+  r = await q('select public.gog_save_get($1)', [TM2]); ok('main save is untouched after switching', r.ok && r.save && r.save.cls === 'knight', r);
+  r = await q('select public.gog_char_switch($1,$2)', [TM2, 'rui_99']); ok('cannot switch to a stranger', r.error === 'not_found', r);
+  r = await q('select public.gog_login($1,$2)', ['mc_arch', B]); ok('an extra character logs in with the account password', r.ok && r.nick === 'mc_arch', r);
+  r = await q('select public.gog_login($1,$2)', ['mc_arch', A]); ok('wrong password is refused on an extra character', !r.ok, r);
+  for (let i = 0; i < 4; i++) await q('select public.gog_login($1,$2)', ['mc_arch', A]);
+  r = await q('select public.gog_login($1,$2)', ['mc_main', B]); ok('lockout is shared by the whole account', r.error === 'locked', r);
+  await db.exec('reset role'); await db.exec("update gog.players set locked_until = null, failed = 0"); await db.exec('set role anon');
+  r = await q('select public.gog_set_profile($1,$2,$3)', [TM2, 'f', 'BR']); ok('profile change applies to every character', r.ok, r);
+  r = await q('select public.gog_profile($1)', ['mc_mage']); ok('other characters share gender and country', r.gender === 'f' && r.country === 'BR', r);
+  r = await q('select public.gog_board($1,50,null)', ['level']); ok('board lists characters separately by nick', Array.isArray(r.rows), r);
+  await db.exec('reset role'); await db.exec("select gog.set_active('mc_arch', false)"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['mc_main', B]); ok('deactivating one nick deactivates the whole account', r.error === 'inactive', r);
+  r = await q('select public.gog_save_get($1)', [TMG]); ok('sessions of every character are killed', !r.ok, r);
+  await db.exec('reset role'); await db.exec("select gog.set_active('mc_main', true)"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['mc_mage', B]); ok('reactivation restores every character', r.ok, r);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);

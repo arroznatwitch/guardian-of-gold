@@ -561,7 +561,7 @@ const K = a => !!keys[binds[a]];
 addEventListener('keydown', e => {
   initAudio();
   if (state === 'hub' && tab === 'rank' && rk.prof && e.code === 'Escape') { rk.prof = null; return; }
-  if ((state === 'login' || (state === 'hub' && tab === 'rank')) && rk.focus && !capture && rankKey(e)) return;
+  if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile'))) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   keys[e.code] = true;
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
@@ -1079,6 +1079,8 @@ Object.assign(EN_DICT, {"GUARDIÃO DOURADO": "GOLDEN GUARDIAN", "Guardião Doura
 Object.assign(EN_DICT, {"Queres sair agora e guardar tudo o que ganhaste?": "Do you want to leave now and keep everything you earned?", "Se continuares e morreres, perdes tudo (ouro, XP e itens). Sair com Esc a meio deixa só 30%.": "If you continue and die, you lose everything (gold, XP and items). Quitting with Esc keeps only 30%.", "Sair e guardar tudo": "Leave and keep all", "Sair do farm (só 30%)": "Leave farm (only 30%)", "Sair a meio guarda só 30% do que ganhaste.": "Leaving midway keeps only 30% of what you earned.", "FARM GUARDADO": "FARM SAVED", "SAÍSTE DO FARM": "YOU LEFT THE FARM", "Perdeste tudo: sem ouro, XP nem itens.": "You lost everything: no gold, XP or items.", "Saíste a meio: ficaste com 30%": "You left midway: you kept 30%", "Guardaste tudo:": "You kept everything:", "Próxima:": "Next:", "Todas desbloqueadas": "All unlocked", "que o equipado": "than equipped"});
 Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "Entra numa conta para editar o perfil.": "Log in to edit your profile.", "Perfil guardado": "Profile saved", "1. Escolhe o grupo   2. Marca 5 itens   3. Clica num item marcado para o manter": "1. Pick a group   2. Mark 5 items   3. Click a marked item to keep it", "pode juntar": "ready to merge", "Itens do grupo": "Items in the group", "Fica este": "This one stays", "Os outros": "The other", "itens desaparecem.": "items disappear.", "Marca itens para ver o resultado.": "Mark items to see the result.", "Só podes marcar 5 itens: desmarca um primeiro": "You can only mark 5 items: unmark one first"});
 Object.assign(EN_DICT, {"Perfil": "Profile"});
+Object.assign(EN_DICT, {"Personagens": "Characters", "Personagem atual": "Current character", "Entrar com este": "Play this one", "Criar personagem": "Create character", "Nick do personagem": "Character nickname", "Ainda não tens": "You do not have one yet", "A carregar...": "Loading...", "principal": "main", "Perfil da conta": "Account profile", "O sexo e o país valem para todos os teus personagens.": "Gender and country apply to all your characters.", "Cada personagem tem um nick diferente e uma classe fixa. Entras com a mesma palavra-passe.": "Each character has a different nickname and a fixed class. You log in with the same password.", "Entra numa conta para ver o perfil e os personagens.": "Log in to see your profile and characters.", "A guardar o personagem atual...": "Saving the current character...", "Não foi possível guardar o personagem atual. Espera uns segundos e tenta outra vez.": "Could not save the current character. Wait a few seconds and try again.", "Não foi possível guardar o personagem atual. Tenta outra vez.": "Could not save the current character. Try again.", "Já tens um personagem com esta classe": "You already have a character of this class", "Já tens os 3 personagens": "You already have all 3 characters", "Personagem não encontrado": "Character not found", "Este personagem é de outra classe.": "This character is of another class.", "Já tens um personagem com esta classe.": "You already have a character of this class.", "Indisponível": "Unavailable", "Cada personagem tem uma classe fixa e a conta só pode ter uma de cada.": "Each character has a fixed class and an account can only have one of each.", "A escolha é permanente para este personagem. Mais tarde podes criar outros, um por classe.": "The choice is permanent for this character. Later you can create others, one per class."});
+Object.assign(EN_DICT, {"1. Escolhe o grupo (mesma peça, raridade, estrelas e faixa de nível)   2. Marca 5 itens   3. Clica num marcado para o manter": "1. Pick a group (same piece, rarity, stars and level band)   2. Mark 5 items   3. Click a marked one to keep it", "Nível do item": "Item level", "média dos 5": "average of the 5"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1295,7 +1297,7 @@ function drawMenu() {
 }
 function drawClass() {
   menuBg(); txt('Escolhe a tua classe', UW / 2, 52, 34, '#f0c060', 'center', 'bold');
-  txt('A escolha é permanente: só podes mudar de classe apagando o progresso.', UW / 2, 76, 13, '#e8a0a0', 'center');
+  txt(cloud.cls || cloud.taken.length ? 'Cada personagem tem uma classe fixa e a conta só pode ter uma de cada.' : 'A escolha é permanente para este personagem. Mais tarde podes criar outros, um por classe.', UW / 2, 76, 13, '#e8a0a0', 'center');
   Object.keys(CLASSES).forEach((k, i) => {
     const c = CLASSES[k], x = 40 + i * 245, y = 92, w = 230, h = 384;
     panel(x, y, w, h);
@@ -1306,7 +1308,9 @@ function drawClass() {
     txt('Especial:', x + 18, y + 208, 13, '#f0c060', 'left', 'bold'); txt(c.sp, x + 18, y + 226, 15, '#fff', 'left', 'bold');
     wrap(c.spDesc, x + 18, y + 245, w - 36, 17, 13, '#bbb');
     wrap(c.desc, x + 18, y + 293, w - 36, 17, 13, '#9ab');
-    btn(x + 20, y + h - 46, w - 40, 36, 'Escolher', () => cloudNewGame(k), { col: '#2f7a4a', hot: '#3fa061' });
+    const lockedOut = cloud.cls ? k !== cloud.cls : cloud.taken.includes(k);
+    if (lockedOut) { ctx.fillStyle = '#000a'; ctx.fillRect(x + 1, y + 1, w - 2, h - 2); wrap(cloud.cls ? 'Este personagem é de outra classe.' : 'Já tens um personagem com esta classe.', x + 18, y + h - 90, w - 36, 16, 13, '#f99'); }
+    btn(x + 20, y + h - 46, w - 40, 36, lockedOut ? 'Indisponível' : 'Escolher', () => cloudNewGame(k), { col: '#2f7a4a', hot: '#3fa061', off: lockedOut });
   });
   btn(20, 14, 90, 32, '< Voltar', () => state = 'menu', { size: 14 });
 }
@@ -1566,7 +1570,7 @@ let enc = { t: 0, res: null, msg: '', msgT: 0, col: '#fff', sparks: [] };
 function drawHub() {
   menuBg(); const c = CLASSES[save.cls], L = save.pl.lv;
   panel(10, 8, 780, 60, '#17172a'); drawSprBig(heroSpr(), 44, 40, 1.3);
-  { const hv = mouse.x - UIOX >= 14 && mouse.x - UIOX <= 76 && mouse.y >= 12 && mouse.y <= 64; if (on.token) { ui.push({ x: 14, y: 12, w: 62, h: 52, fn: () => { tab = 'profile'; } }); if (hv) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(14, 12, 62, 52); } ctx.fillStyle = hv ? '#ffd34a' : '#2a2a48'; ctx.fillRect(60, 50, 16, 14); ctx.fillStyle = '#05050a'; ctx.fillRect(59, 49, 18, 1); ctx.fillRect(59, 49, 1, 16); ctx.fillStyle = hv ? '#3a2a08' : '#cdd6f0'; ctx.fillRect(63, 59, 8, 2); ctx.fillRect(65, 55, 2, 6); ctx.fillRect(67, 53, 2, 2); } }
+  { const hv = mouse.x - UIOX >= 14 && mouse.x - UIOX <= 76 && mouse.y >= 12 && mouse.y <= 64; if (on.token) { ui.push({ x: 14, y: 12, w: 62, h: 52, fn: () => { tab = 'profile'; chList = null; editProf = null; } }); if (hv) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(14, 12, 62, 52); } ctx.fillStyle = '#05050a'; ctx.fillRect(61, 13, 15, 15); ctx.fillStyle = hv ? '#ffd34a' : '#3a3a5a'; ctx.fillRect(62, 14, 13, 13); ctx.fillStyle = hv ? '#3a2a08' : '#fff'; ctx.fillRect(70, 16, 3, 3); ctx.fillRect(68, 18, 3, 3); ctx.fillRect(66, 20, 3, 3); ctx.fillRect(64, 22, 3, 3); ctx.fillRect(64, 24, 2, 2); } }
   const pn = on && on.nick ? on.nick : c.name;   // no menu aparece o nome do jogador
   txt(pn, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold'); if (on.token) drawFlag(on.country || 'ZZ', 76 + txtW(pn, 20, 'bold') + 12 + txtW(`Nv ${L}`, 15, 'bold') + 10, 17, 20, 13);
   bar(76, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 76, 61, 11, '#8ab');
@@ -1781,6 +1785,13 @@ function reforgeItem(it) {
   for (let i = 0; i < it.r; i++) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; it.aff.push({ k, v: affVal(k, it.r, it.il) }); }
   enc.msg = 'REFORJADO!'; enc.col = '#ffb070'; enc.msgT = 2.5; SFX.special();
   for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#ffb070' }); persist();
+}
+function setItemLevel(it, il2) {
+  const fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
+  it.main.v = fx(it.main.k, it.main.v, MAIN_BASE[it.slot](il2) / MAIN_BASE[it.slot](it.il));
+  for (const a of it.aff) a.v = fx(a.k, a.v, fa(a.k));
+  if (it.spec) { const cap = (it.spec.k === 'burn' || it.spec.k === 'slow') ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
+  it.il = il2;
 }
 function evolveItem(it) {
   if (!it || enc.t > 0 || it.il >= 120 || !(save.stones[it.r] > 0) || Math.ceil((it.il + 2) / 2) > save.pl.lv) { SFX.error(); return; }
@@ -2057,15 +2068,18 @@ function doFuse(id, t, all) {
   if (!n) { SFX.error(); return; }
   const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
 }
+const itemBand = it => Math.floor((Math.max(1, it.il) - 1) / 10), bandName = b => `${b * 10 + 1}–${b * 10 + 10}`;   // faixas de nivel de item
+const fuseKeyOf = it => it.slot + '|' + it.r + '|' + gSt(it) + '|' + itemBand(it);
+const fuseNewIl = pick => Math.round(pick.reduce((a, q) => a + q.il, 0) / Math.max(1, pick.length));   // o nivel final e a media dos itens usados
 function gearGroups() {
-  const m = {}; save.bag.forEach(it => { if (gSt(it) >= STAR_MAX) return; (m[it.slot + '|' + it.r + '|' + gSt(it)] = m[it.slot + '|' + it.r + '|' + gSt(it)] || []).push(it); });
+  const m = {}; save.bag.forEach(it => { if (gSt(it) >= STAR_MAX) return; (m[fuseKeyOf(it)] = m[fuseKeyOf(it)] || []).push(it); });
   return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
 }
 let fuseGrp = null, fusePick = null, fuseKeep = null;
 function fuseGear(pick, keep) {
   if (save.pl.lv < FUSE_LV || !pick || pick.length < FUSE_N || !keep || !pick.includes(keep)) { SFX.error(); return; }
   const gone = pick.filter(it => it !== keep), fee = gFuseFee(keep); if (save.gold < fee) { SFX.error(); return; } save.gold -= fee;
-  save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1; fusePick = null; fuseKeep = null;
+  const il2 = Math.max(1, Math.min(120, fuseNewIl(pick))); save.bag = save.bag.filter(it => !gone.includes(it)); if (il2 !== keep.il) setItemLevel(keep, il2); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1; fusePick = null; fuseKeep = null;
   fxBurst(keep.st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${keep.st}★`, keep.st >= STAR_MAX ? '#ffd34a' : '#9fe');
 }
 function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
@@ -2101,18 +2115,18 @@ function hubFuse() {
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {
-    const gs = gearGroups(), key = g => g[0].slot + '|' + g[0].r + '|' + gSt(g[0]);
+    const gs = gearGroups(), key = g => fuseKeyOf(g[0]);
     if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 250, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 272, 13, '#667', 'center'); }
     else {
       if (!fuseGrp || !gs.some(g => key(g) === fuseGrp)) { fuseGrp = key(gs[0]); fusePick = null; }
       const grp = gs.find(g => key(g) === fuseGrp), items = grp.slice().sort((p, q) => (q.ench || 0) - (p.ench || 0) || q.il - p.il).slice(0, 12);
       if (!fusePick || fusePick.some(it => !save.bag.includes(it))) { fusePick = items.slice(0, FUSE_N); fuseKeep = fusePick[0] || null; }
       if (!fusePick.includes(fuseKeep)) fuseKeep = fusePick[0] || null;
-      txt('1. Escolhe o grupo   2. Marca 5 itens   3. Clica num item marcado para o manter', 487, 134, 11, '#aab', 'center');
+      txt('1. Escolhe o grupo (mesma peça, raridade, estrelas e faixa de nível)   2. Marca 5 itens   3. Clica num marcado para o manter', 487, 134, 10, '#aab', 'center');
       gs.slice(0, 5).forEach((g, i) => {
         const y = 142 + i * 28, it = g[0], st = gSt(it), nm = ITEM_NAMES[it.slot][it.r], sel = key(g) === fuseGrp;
         btn(197, y, 585, 26, '', () => { fuseGrp = key(g); fusePick = null; }, { col: sel ? '#2c2410' : '#12121f', hot: '#2a2a48' }); ctx.fillStyle = RAR[it.r][1]; ctx.fillRect(197, y, 3, 26);
-        slotIcon(it.slot, it.r, 222, y + 13, 1.8); txt(nm, 246, y + 18, 13, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 246 + txtW(nm, 13, 'bold') + 12 + q * 10, y + 13, 1.1);
+        slotIcon(it.slot, it.r, 222, y + 13, 1.8); txt(nm, 246, y + 18, 13, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 246 + txtW(nm, 13, 'bold') + 12 + q * 10, y + 13, 1.1); txt('Nv ' + bandName(itemBand(it)), 520, y + 18, 12, '#9cf', 'left', 'bold');
         txt(`${Math.min(g.length, 99)} ${lang === 'en' ? 'items' : 'itens'}`, 640, y + 18, 13, g.length >= FUSE_N ? '#6f6' : '#fff', 'right', 'bold'); txt(g.length >= FUSE_N ? (lang === 'en' ? 'ready to merge' : 'pode juntar') : (lang === 'en' ? 'missing ' : 'faltam ') + (FUSE_N - g.length), 770, y + 18, 11, g.length >= FUSE_N ? '#6f6' : '#a88', 'right');
       });
       const cy0 = 142 + Math.min(gs.length, 5) * 28 + 20; if (gs.length > 5) txt(`+${gs.length - 5} ${lang === 'en' ? 'groups' : 'grupos'}`, 487, cy0 - 12, 11, '#889', 'center');
@@ -2134,7 +2148,7 @@ function hubFuse() {
       const rx = 500, ry = cy0 - 10, rw = 282, rh = 172; panel(rx, ry, rw, rh, '#16162a', '#3a3a5a'); txt(lang === 'en' ? 'Result' : 'Resultado', rx + 12, ry + 20, 13, '#f0c060', 'left', 'bold');
       if (fuseKeep) {
         const k = fuseKeep, m0 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[gSt(k)], m1 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[Math.min(STAR_MAX, gSt(k) + 1)], col = RAR[k.r][1];
-        slotIcon(k.slot, k.r, rx + 26, ry + 48, 2.2); txt(ITEM_NAMES[k.slot][k.r] + (k.ench ? ' +' + k.ench : ''), rx + 50, ry + 44, 12, col, 'left', 'bold'); txt(`Fica este · ${gSt(k)}★ > ${gSt(k) + 1}★ · ${lang === 'en' ? 'bonus' : 'bónus'} ×${m0.toFixed(2)} > ×${m1.toFixed(2)}`, rx + 50, ry + 60, 10, '#9cf');
+        slotIcon(k.slot, k.r, rx + 26, ry + 48, 2.2); txt(ITEM_NAMES[k.slot][k.r] + (k.ench ? ' +' + k.ench : ''), rx + 50, ry + 44, 12, col, 'left', 'bold'); txt(`Fica este · ${gSt(k)}★ > ${gSt(k) + 1}★ · ${lang === 'en' ? 'bonus' : 'bónus'} ×${m0.toFixed(2)} > ×${m1.toFixed(2)}`, rx + 50, ry + 60, 10, '#9cf'); txt(`${lang === 'en' ? 'Item level' : 'Nível do item'}: ${k.il} > ${fuseNewIl(fusePick)} (${lang === 'en' ? 'average of the 5' : 'média dos 5'})`, rx + 50, ry + 73, 10, '#fd5');
         const lines = [[k.main.k, k.main.v]].concat(k.aff.map(a => [a.k, a.v])); lines.slice(0, 4).forEach(([kk, v], i) => txt(`${statLine(kk, ev(kk, v, m0))}  >  ${statLine(kk, ev(kk, v, m1))}`, rx + 14, ry + 84 + i * 15, 11, i ? '#7cf' : '#fff'));
         txt(`Os outros ${Math.max(0, fusePick.length - 1)} itens desaparecem.`, rx + 14, ry + 150, 10, '#f99');
       } else txt('Marca itens para ver o resultado.', rx + rw / 2, ry + 90, 12, '#667', 'center');
@@ -2208,7 +2222,7 @@ function rewardTokens(r) {
 }
 function hubRewards() {
   const avail = Math.max(0, save.pl.lv - save.chestDone), next = save.chestDone + 1, g5 = next % 10 === 0, sp = CHEST_SPR[g5 ? 1 : 0];
-  txt(g5 ? `Baú dourado: nível ${next}` : `Baú do nível ${next}`, 350, 118, 18, g5 ? '#ffd34a' : '#fff', 'center', 'bold');
+  txt(g5 ? `Baú dourado: nível ${next}` : `Baú do nível ${next}`, 350, 128, 16, g5 ? '#ffd34a' : '#fff', 'center', 'bold');
   const k = 7, bx = 350 - 6 * k, by = 252, el = chestAnim > 0 ? 3.2 - chestAnim : 9, open = chestAnim > 0 ? Math.max(0, Math.min(1, (el - .5) * 3, chestAnim * 1.2)) : 0, pop = (el - .95) / .28;
   const best = lastRw ? Math.max(-1, ...lastRw.items.map(i => i.r), lastRw.gems ? 1 : -1) : -1, rc = best >= 0 ? RAR[Math.min(4, best)][1] : '#ffd34a';
   if (open > 0 && el < 8) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createRadialGradient(350, by, 5, 350, by, 150); gr.addColorStop(0, `rgba(255,220,120,${.55 * open})`); gr.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gr; ctx.fillRect(200, by - 150, 300, 300);
@@ -2297,27 +2311,44 @@ async function saveEditProfile() {
   if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
 function profileTabs() {
-  [['profile', 'Perfil'], ['skins', 'Skins'], ['rewards', 'Recompensas']].forEach(([k, l], i) => btn(197 + i * 102, 83, 98, 18, l, () => { tab = k; }, { size: 11, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' }));
+  [['profile', 'Perfil'], ['skins', 'Skins'], ['rewards', 'Recompensas']].forEach(([k, l], i) => btn(197 + i * 104, 87, 100, 20, l, () => { tab = k; }, { size: 12, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' }));
 }
 function hubProfile() {
   profileTabs();
-  if (!on.token) { txt('Entra numa conta para editar o perfil.', 487, 270, 15, '#778', 'center'); return; }
+  if (!on.token) { txt('Entra numa conta para ver o perfil e os personagens.', 487, 270, 15, '#778', 'center'); return; }
+  if (!chList && !chBusy) { chBusy = true; loadChars().then(() => { chBusy = false; }); }
   if (!editProf) openEditProfile(); const e = editProf; if (!e) return;
-  const x = 260, y = 112, w = 460, h = 340; panel(x, y, w, h, '#16162a', '#3a3a5a');
-  txt('Editar perfil', x + w / 2, y + 36, 22, '#ffd34a', 'center', 'bold');
-  txt('Nick', x + 24, y + 70, 12, '#8a9ab8'); bevel(x + 24, y + 78, w - 48, 30, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 36, y + 99, 15, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 44, y + 93, 1.2);
-  txt('O nick não pode ser alterado.', x + 24, y + 124, 11, '#778');
-  txt('Sexo', x + 24, y + 152, 12, '#8a9ab8');
-  [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => {
-    const bx = x + 24 + i * 204, bw = 196; btn(bx, y + 160, bw, 62, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
-    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 34, y + 192, 1.1); txt(n, bx + 72, y + 196, 14, '#fff', 'left', 'bold');
+  // coluna da esquerda: um personagem por classe
+  const lx = 197, lw = 284; txt('Personagens', lx, 128, 15, '#f0c060', 'left', 'bold'); ctx.fillStyle = '#3a3a5a'; ctx.fillRect(lx, 134, lw, 1);
+  Object.keys(CLASSES).forEach((k, i) => {
+    const y = 144 + i * 108, ch = chList ? chList.find(q => q.cls === k) : null, cur = ch && ch.current;
+    bevel(lx, y, lw, 100, cur ? '#2c2410' : '#12121f', cur ? '#d8b030' : '#33334a', '#05050a');
+    ctx.fillStyle = '#0c0c18'; ctx.fillRect(lx + 8, y + 8, 76, 84); drawSprBig(hk(k, cur ? save.skE[k] : 0, myG()), lx + 46, y + 52 + Math.sin(T * 2 + i) * 1.5, 2);
+    txt(CLASSES[k].name, lx + 96, y + 26, 15, '#fff', 'left', 'bold');
+    if (ch) {
+      txt(ch.nick, lx + 96, y + 46, 13, cur ? '#ffd34a' : '#cdd6f0', 'left', 'bold'); txt(`Nv ${ch.level | 0}` + (ch.main ? ' · principal' : ''), lx + 96, y + 63, 11, '#8a9ab8');
+      btn(lx + 96, y + 70, 178, 22, cur ? 'Personagem atual' : 'Entrar com este', () => switchChar(ch.nick), { size: 12, col: cur ? '#26262f' : '#2f7a4a', hot: '#3fa061', off: cur || chBusy });
+    } else {
+      txt(chList ? 'Ainda não tens' : 'A carregar...', lx + 96, y + 48, 12, '#778');
+      btn(lx + 96, y + 70, 178, 22, 'Criar personagem', () => { chNew = k; chMsg = ''; rk.cnick = ''; rk.focus = 'cnick'; }, { size: 12, col: '#a06a20', hot: '#c98a30', off: chBusy || !chList });
+    }
   });
-  txt('País', x + 24, y + 248, 12, '#8a9ab8');
-  btn(x + 24, y + 256, w - 48, 34, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 38, y + 266, 26, 17); txt(cName(e.country), x + 76, y + 279, 14, '#fff', 'left', 'bold'); txt('▾', x + w - 40, y + 280, 14, '#aab', 'center');
-  { const c = flagCost(e); if (!e.msg) txt(c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis'), x + w / 2, y + 308, 12, c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
-  if (e.msg) txt(e.msg, x + w / 2, y + 308, 12, e.col, 'center');
+  if (chMsg && !chNew) txt(chMsg, lx + lw / 2, 470, 11, chBusy ? '#9ab' : '#f88', 'center');
+  // coluna da direita: editar perfil
+  const x = 497, w = 285; txt('Perfil da conta', x, 128, 15, '#f0c060', 'left', 'bold'); ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x, 134, w, 1);
+  txt('Nick', x, 156, 11, '#8a9ab8'); bevel(x, 162, w, 28, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 10, 182, 14, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 18, 176, 1.1);
+  txt('O nick não pode ser alterado.', x, 204, 10, '#778');
+  txt('Sexo', x, 228, 11, '#8a9ab8');
+  [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => {
+    const bx = x + i * 145, bw = 140; btn(bx, 234, bw, 58, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
+    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 28, 264, .9); txt(n, bx + 54, 268, 12, '#fff', 'left', 'bold');
+  });
+  txt('País', x, 316, 11, '#8a9ab8');
+  btn(x, 322, w, 32, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 10, 330, 24, 16); txt(cName(e.country), x + 44, 343, 13, '#fff', 'left', 'bold'); txt('▾', x + w - 16, 343, 13, '#aab', 'center');
+  { const c = flagCost(e); txt(e.msg || (c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis')), x + w / 2, 376, 11, e.msg ? e.col : c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
   const changed = e.gender !== myG() || e.country !== (on.country || 'ZZ');
-  btn(x + 24, y + 316, w - 48, 20, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 13, col: '#2f7a4a', hot: '#3fa061', off: e.busy || !changed || save.gems < flagCost(e) });
+  btn(x, 390, w, 32, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy || !changed || save.gems < flagCost(e) });
+  wrap('O sexo e o país valem para todos os teus personagens.', x, 442, w, 13, 10, '#778');
 }
 
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
@@ -2326,11 +2357,11 @@ const ON_STORE = 'gog-online-v1';
 let on = { token: null, nick: null, gender: 'm', country: null };
 try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick, gender: o.gender === 'f' ? 'f' : 'm', country: /^[A-Z]{2}$/.test(o.country || '') ? o.country : null }; } catch (e) {}
 const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
-let rk = { gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+let rk = { cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 rk.country = guessCountry();
 const RK_MSG = {
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
-  nick_taken: 'Esse nick já está em uso', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
+  nick_taken: 'Esse nick já está em uso', class_taken: 'Já tens um personagem com esta classe', too_many: 'Já tens os 3 personagens', not_found: 'Personagem não encontrado', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
   network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
   implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
 };
@@ -2404,9 +2435,9 @@ function rankKey(e) {
   const k = e.code, f = rk.focus;
   if (k === 'Escape') { rk.focus = ''; return true; }
   if (k === 'Tab') { e.preventDefault(); const order = on.token ? ['pass'] : rk.mode === 'register' ? ['nick', 'pass', 'pass2'] : ['nick', 'pass']; rk.focus = order[(order.indexOf(f) + 1) % order.length]; return true; }
-  if (k === 'Enter') { e.preventDefault(); if (!on.token) rkAuth(rk.mode === 'register'); return true; }
+  if (k === 'Enter') { e.preventDefault(); if (f === 'cnick' && chNew) createChar(chNew); else if (!on.token) rkAuth(rk.mode === 'register'); return true; }
   if (k === 'Backspace') { e.preventDefault(); rk[f] = rk[f].slice(0, -1); return true; }
-  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' ? /[A-Za-z0-9_]/.test(e.key) && rk.nick.length < 16 : rk[f].length < 64) rk[f] += e.key; return true; }
+  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' || f === 'cnick' ? /[A-Za-z0-9_]/.test(e.key) && rk[f].length < 16 : rk[f].length < 64) rk[f] += e.key; return true; }
   return false;
 }
 function rkField(x, y, w, label, key, mask) {
@@ -2461,7 +2492,7 @@ function hubRank() {
 /* ----- Save na nuvem: com o servidor configurado o login e obrigatorio e o save vive na conta ----- */
 const OWNER_KEY = 'bladehunter_owner';
 const DEV_ID = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
-const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false, uid: null });
+const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false, uid: null, cls: null, taken: [] });
 let cloud = cloudNew(), cf = null;
 function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
 function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 8000); }
@@ -2477,7 +2508,7 @@ async function cloudFlush() {
     cloudConflict(); return false;
   }
   if (r.error === 'auth') { dropSession(false); return false; }
-  if (r.error === 'not_new') {   // o servidor so aceita um personagem novo numa conta nova: o save local nao pertence a esta conta
+  if (r.error === 'not_new' || r.error === 'wrong_class' || r.error === 'class_taken') {   // o servidor so aceita um personagem novo numa conta nova: o save local nao pertence a esta conta
     try { const raw = localStorage.getItem(SAVE_KEY); if (raw) localStorage.setItem('bladehunter_orphan', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
     save = null; cloud.dirty = false; cloud.timer = null; lsSync(true); if (state !== 'play') state = 'menu'; return false;
   }
@@ -2502,7 +2533,7 @@ async function cloudStart() {
   const r = await rpc('gog_save_get', { p_token: on.token });
   if (r.error === 'auth') { dropSession(false); return; }
   if (!r.ok) { cloud.err = r.error; state = 'syncerr'; return; }
-  cloud.rev = r.rev; cloud.uid = r.uid || null;
+  cloud.rev = r.rev; cloud.uid = r.uid || null; cloud.cls = r.cls || null; cloud.taken = Array.isArray(r.taken) ? r.taken : [];
   // o save deste dispositivo so e usado se pertencer a ESTA conta (id da conta, nao o nick): evita levar o progresso de uma conta para outra
   let local = null, owner = null, uns = false, srev = -1;
   try {
@@ -2529,6 +2560,45 @@ async function cloudReset() {
   if (!ONLINE_URL || !on.token) return; clearTimeout(cloud.timer); cloud.timer = null; cloud.dirty = false;
   const r = await rpc('gog_save_reset', { p_token: on.token }); if (r.ok) { cloud.rev = r.rev; lsSync(true); rk.at = {}; }
 }
+// varios personagens por conta (um por classe): cada um tem o seu nick, save e ranking. A nuvem e a fonte de verdade:
+// antes de trocar guarda-se o personagem atual, e o save local de outro personagem nunca e reutilizado (ver cloudStart).
+let chList = null, chBusy = false, chMsg = '', chNew = null;
+async function loadChars() { if (!on.token) return; const r = await rpc('gog_chars', { p_token: on.token }); if (r.ok) chList = r.chars; }
+async function cloudSettle() {
+  const wait = async () => { for (let i = 0; i < 60 && cloud.busy; i++) await new Promise(r => setTimeout(r, 100)); };
+  await wait(); if (cloud.ready && (cloud.dirty || cloud.timer)) await cloudFlush(); await wait();
+  return !cloud.dirty && !cloud.busy;
+}
+function activateChar(r) {
+  const old = on.token; on = { token: r.token, nick: r.nick, gender: r.gender === 'f' ? 'f' : 'm', country: r.country || null }; onSave();
+  clearTimeout(cloud.timer); cloud = cloudNew(); save = null; rk.at = {}; chList = null; editProf = null; chNew = null; rk.cnick = ''; rk.focus = ''; rk.prof = null; rk.me = null; tab = 'farm'; bagPage = 0; bagMulti = false; bagPick.clear(); bagSel = -1; enchItem = null;
+  state = 'sync'; if (old) rpc('gog_logout', { p_token: old }); cloudStart();
+}
+async function switchChar(nick) {
+  if (chBusy || !nick || nick.toLowerCase() === (on.nick || '').toLowerCase()) return; chBusy = true; chMsg = 'A guardar o personagem atual...';
+  if (!(await cloudSettle())) { chBusy = false; chMsg = 'Não foi possível guardar o personagem atual. Espera uns segundos e tenta outra vez.'; return; }
+  const r = await rpc('gog_char_switch', { p_token: on.token, p_nick: nick }); chBusy = false;
+  if (!r.ok) { chMsg = RK_MSG[r.error] || 'Erro, tenta outra vez'; return; } chMsg = ''; activateChar(r);
+}
+async function createChar(cls) {
+  if (chBusy) return; const nick = rk.cnick.trim();
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(nick)) { chMsg = RK_MSG.bad_nick; return; }
+  chBusy = true; chMsg = 'A criar...';
+  if (!(await cloudSettle())) { chBusy = false; chMsg = 'Não foi possível guardar o personagem atual. Tenta outra vez.'; return; }
+  const r = await rpc('gog_char_create', { p_token: on.token, p_cls: cls, p_nick: nick }); chBusy = false;
+  if (!r.ok) { chMsg = RK_MSG[r.error] || 'Erro, tenta outra vez'; return; } chMsg = ''; SFX.buy(); activateChar(r);
+}
+function drawCharCreate() {
+  if (!chNew || state !== 'hub' || tab !== 'profile') return;
+  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { if (!chBusy) chNew = null; } });
+  const x = 220, y = 120, w = 360, h = 230; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt('Criar personagem', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold'); txt(CLASSES[chNew].name, x + w / 2, y + 58, 15, '#9cf', 'center', 'bold');
+  rkField(x + 24, y + 86, w - 48, 'Nick do personagem', 'cnick', false);
+  wrap('Cada personagem tem um nick diferente e uma classe fixa. Entras com a mesma palavra-passe.', x + 24, y + 134, w - 48, 14, 11, '#778');
+  if (chMsg) txt(chMsg, x + w / 2, y + 176, 12, chBusy ? '#9ab' : '#f88', 'center');
+  btn(x + 24, y + 186, 150, 30, 'Criar', () => createChar(chNew), { size: 14, col: '#2f7a4a', hot: '#3fa061', off: chBusy || rk.cnick.length < 3 });
+  btn(x + 186, y + 186, 150, 30, 'Cancelar', () => { if (!chBusy) { chNew = null; chMsg = ''; } }, { size: 14, col: '#3a2a3a' });
+}
 function dropSession(wipe) {
   on = { token: null, nick: null }; onSave(); clearTimeout(cloud.timer); cloud = cloudNew(); cf = null; rk.prof = null; rk.me = null; rk.rows = []; rk.at = {}; rk.pass = rk.pass2 = ''; rk.focus = ''; rk.focusSet = false; rk.msg = '';
   if (wipe) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('bladehunter_v2'); localStorage.removeItem(OWNER_KEY); localStorage.removeItem('bladehunter_unsynced'); localStorage.removeItem('bladehunter_rev'); } catch (e) {} save = null; }
@@ -2538,7 +2608,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cloud
 addEventListener('pagehide', () => {
   if (ONLINE_URL && cloud.dirty && on.token && cloud.ready && save) fetch(`${ONLINE_URL}/rest/v1/rpc/gog_save_put`, { method: 'POST', keepalive: true, headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }) }).catch(() => {});
 });
-function menuAccount() { if (ONLINE_URL && on.token) btn(8, 8, 176, 24, cloud.confirmOut ? 'Sair sem guardar?' : 'Sair: ' + on.nick, rkLogout, { size: 12, col: cloud.confirmOut ? '#a03a3a' : '#3a2a3a' }); }
+function menuAccount() { if (ONLINE_URL && on.token) btn(190, 8, 150, 24, 'Personagens', () => { state = 'hub'; tab = 'profile'; chList = null; editProf = null; }, { size: 12, col: '#2a3a5a', off: !save }); if (ONLINE_URL && on.token) btn(8, 8, 176, 24, cloud.confirmOut ? 'Sair sem guardar?' : 'Sair: ' + on.nick, rkLogout, { size: 12, col: cloud.confirmOut ? '#a03a3a' : '#3a2a3a' }); }
 function sumSave(sv) { let w = 0; for (const k in (sv.farmBest || {})) w = Math.max(w, sv.farmBest[k] | 0); return [`${CLASSES[sv.cls].name} · Nv ${sv.pl.lv}`, '¢' + gfmt(sv.gold | 0) + '   ◆' + (sv.gems | 0), 'Farm: onda ' + w]; }
 function drawLogin() {
   menuScene(); if (!rk.focusSet) { rk.focus = 'nick'; rk.focusSet = true; }
@@ -2980,7 +3050,7 @@ function frame(now) {
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawBagBuy(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);

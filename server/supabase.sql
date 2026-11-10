@@ -47,6 +47,9 @@ create table if not exists gog.players (
 );
 alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
 alter table gog.players add column if not exists uid uuid not null default gen_random_uuid();   -- identidade da conta: o save local fica ligado a este id (nao ao nick)
+alter table gog.players add column if not exists owner bigint references gog.players(id) on delete cascade;   -- personagem extra: aponta para o personagem principal da conta
+alter table gog.players add column if not exists char_cls text check (char_cls in ('knight', 'archer', 'mage'));   -- classe do personagem (uma por conta; fixa depois do 1.o save)
+create index if not exists players_owner_idx on gog.players (owner);
 alter table gog.players add column if not exists gender text not null default 'm';   -- 'm' ou 'f' (so muda o aspeto)
 alter table gog.players add column if not exists country text;                       -- codigo ISO de 2 letras (bandeira)
 alter table gog.players add column if not exists active boolean not null default true;   -- false = conta desativada (so o administrador mexe nisto)
@@ -171,7 +174,7 @@ end $$;
 
 create or replace function public.gog_login(p_nick text, p_proof text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare v gog.players; ok boolean; wait int;
+declare v gog.players; a gog.players; ok boolean; wait int;
 begin
   if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' or p_proof is null or p_proof !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('ok', false, 'error', 'bad_login');
@@ -181,18 +184,20 @@ begin
     perform extensions.crypt(p_proof, extensions.gen_salt('bf', 12));   -- mesmo custo: nao revela se o nick existe
     return jsonb_build_object('ok', false, 'error', 'bad_login');
   end if;
-  if v.locked_until is not null and v.locked_until > now() then
+  -- a conta e o personagem principal: a palavra-passe e o bloqueio por tentativas vivem nele
+  if v.owner is not null then select * into a from gog.players where id = v.owner for update; else a := v; end if;
+  if a.locked_until is not null and a.locked_until > now() then
     perform extensions.crypt(p_proof, extensions.gen_salt('bf', 12));
-    return jsonb_build_object('ok', false, 'error', 'locked', 'wait', ceil(extract(epoch from v.locked_until - now()))::int);
+    return jsonb_build_object('ok', false, 'error', 'locked', 'wait', ceil(extract(epoch from a.locked_until - now()))::int);
   end if;
-  ok := extensions.crypt(p_proof, v.pass_hash) = v.pass_hash;
-  if ok and not v.active then return jsonb_build_object('ok', false, 'error', 'inactive'); end if;
+  ok := extensions.crypt(p_proof, a.pass_hash) = a.pass_hash;
+  if ok and (not v.active or not a.active) then return jsonb_build_object('ok', false, 'error', 'inactive'); end if;
   if ok then
-    update gog.players set failed = 0, locked_until = null where id = v.id;
+    update gog.players set failed = 0, locked_until = null where id = a.id;
     return jsonb_build_object('ok', true, 'nick', v.nick, 'token', gog._new_session(v.id), 'gender', v.gender, 'country', v.country);
   end if;
-  wait := case when v.failed + 1 >= 5 then least(3600, 30 * (2 ^ least(v.failed + 1 - 5, 7))::int) else 0 end;
-  update gog.players set failed = v.failed + 1, locked_until = case when wait > 0 then now() + make_interval(secs => wait) end where id = v.id;
+  wait := case when a.failed + 1 >= 5 then least(3600, 30 * (2 ^ least(a.failed + 1 - 5, 7))::int) else 0 end;
+  update gog.players set failed = a.failed + 1, locked_until = case when wait > 0 then now() + make_interval(secs => wait) end where id = a.id;
   return jsonb_build_object('ok', false, 'error', 'bad_login');
 end $$;
 
@@ -211,9 +216,10 @@ create or replace function gog.set_active(p_nick text, p_active boolean) returns
 language plpgsql security definer set search_path = '' as $$
 declare pid bigint;
 begin
-  update gog.players set active = p_active, inactive_at = case when p_active then null else now() end where nick_key = lower(p_nick) returning id into pid;
+  select coalesce(owner, id) into pid from gog.players where nick_key = lower(p_nick);
   if pid is null then return 'not_found'; end if;
-  if not p_active then delete from gog.sessions where player_id = pid; end if;
+  update gog.players set active = p_active, inactive_at = case when p_active then null else now() end where coalesce(owner, id) = pid;   -- a conta inteira (todos os personagens)
+  if not p_active then delete from gog.sessions where player_id in (select id from gog.players where coalesce(owner, id) = pid); end if;
   return case when p_active then 'reactivated' else 'deactivated' end;
 end $$;
 revoke all on function gog.set_active(text, boolean) from public;
@@ -327,12 +333,13 @@ begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
   select * into v from gog.players where id = pid;
-  return jsonb_build_object('ok', true, 'rev', v.save_rev, 'save', v.save, 'dev', v.save_dev, 'uid', v.uid);
+  return jsonb_build_object('ok', true, 'rev', v.save_rev, 'save', v.save, 'dev', v.save_dev, 'uid', v.uid, 'cls', v.char_cls,
+    'taken', coalesce((select jsonb_agg(o.char_cls) from gog.players o where coalesce(o.owner, o.id) = coalesce(v.owner, v.id) and o.id <> v.id and o.char_cls is not null), '[]'::jsonb));
 end $$;
 
 create or replace function public.gog_save_put(p_token text, p_save jsonb, p_rev int, p_dev text default null) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare pid bigint; v gog.players; newrev int;
+declare pid bigint; v gog.players; newrev int; c text;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
@@ -351,7 +358,17 @@ begin
   if v.save is null and ((p_save->'pl'->>'lv') !~ '^[0-9]{1,6}$' or (p_save->'pl'->>'lv')::int > 2 or coalesce(p_save->>'gold', '0') !~ '^[0-9]{1,9}$' or coalesce(p_save->>'gold', '0')::bigint > 2000) then
     return jsonb_build_object('ok', false, 'error', 'not_new');
   end if;
-  update gog.players set save = p_save, save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
+  -- cada personagem tem uma classe fixa e a conta so pode ter uma de cada classe
+  c := p_save->>'cls';
+  if c is null or c not in ('knight', 'archer', 'mage') then return jsonb_build_object('ok', false, 'error', 'bad_data'); end if;
+  if v.char_cls is null then
+    if exists (select 1 from gog.players o where coalesce(o.owner, o.id) = coalesce(v.owner, v.id) and o.id <> v.id and o.char_cls = c) then
+      return jsonb_build_object('ok', false, 'error', 'class_taken');
+    end if;
+  elsif v.char_cls <> c then
+    return jsonb_build_object('ok', false, 'error', 'wrong_class', 'cls', v.char_cls);
+  end if;
+  update gog.players set save = p_save, char_cls = coalesce(char_cls, c), save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
   return jsonb_build_object('ok', true, 'rev', newrev);
 end $$;
 
@@ -387,7 +404,7 @@ begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
   if p_gender is null or p_gender not in ('m', 'f') or (p_country is not null and p_country !~ '^[A-Z]{2}$') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
-  update gog.players set gender = p_gender, country = p_country where id = pid;
+  update gog.players set gender = p_gender, country = p_country where coalesce(owner, id) = (select coalesce(owner, id) from gog.players where id = pid);
   return jsonb_build_object('ok', true, 'gender', p_gender, 'country', p_country);
 end $$;
 
@@ -414,3 +431,64 @@ begin
   if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke all on function gog._clean_build(jsonb) from anon'; end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke all on function gog._clean_build(jsonb) from authenticated'; end if;
 end $$;
+
+-- ====================================================== varios personagens por conta (um por classe)
+create or replace function public.gog_chars(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; root bigint; rows jsonb;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  select coalesce(owner, id) into root from gog.players where id = pid;
+  select coalesce(jsonb_agg(jsonb_build_object('nick', nick, 'cls', char_cls, 'level', level, 'current', id = pid, 'main', id = root) order by id), '[]'::jsonb)
+    into rows from gog.players where coalesce(owner, id) = root;
+  return jsonb_build_object('ok', true, 'chars', rows);
+end $$;
+
+create or replace function public.gog_char_create(p_token text, p_cls text, p_nick text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; r gog.players; nid bigint; n int;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if p_cls is null or p_cls not in ('knight', 'archer', 'mage') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
+  if lower(p_nick) in ('admin', 'administrator', 'moderator', 'mod', 'system', 'support', 'staff', 'null', 'undefined', 'guardiansofgold') then return jsonb_build_object('ok', false, 'error', 'nick_taken'); end if;
+  select * into r from gog.players where id = (select coalesce(owner, id) from gog.players where id = pid) for update;
+  select count(*) into n from gog.players where coalesce(owner, id) = r.id;
+  if n >= 3 then return jsonb_build_object('ok', false, 'error', 'too_many'); end if;
+  if exists (select 1 from gog.players where coalesce(owner, id) = r.id and char_cls = p_cls) then return jsonb_build_object('ok', false, 'error', 'class_taken'); end if;
+  if exists (select 1 from gog.players where nick_key = lower(p_nick)) then return jsonb_build_object('ok', false, 'error', 'nick_taken'); end if;
+  begin
+    insert into gog.players (nick, nick_key, pass_hash, owner, char_cls, cls, gender, country)
+    values (p_nick, lower(p_nick), r.pass_hash, r.id, p_cls, p_cls, r.gender, r.country) returning id into nid;
+  exception when unique_violation then
+    return jsonb_build_object('ok', false, 'error', 'nick_taken');
+  end;
+  return jsonb_build_object('ok', true, 'nick', p_nick, 'token', gog._new_session(nid), 'gender', r.gender, 'country', r.country, 'cls', p_cls);
+end $$;
+
+create or replace function public.gog_char_switch(p_token text, p_nick text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; t gog.players;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
+  select * into t from gog.players where nick_key = lower(p_nick) and coalesce(owner, id) = (select coalesce(owner, id) from gog.players where id = pid) and active;
+  if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
+  return jsonb_build_object('ok', true, 'nick', t.nick, 'token', gog._new_session(t.id), 'gender', t.gender, 'country', t.country, 'cls', t.char_cls);
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['public.gog_chars(text)', 'public.gog_char_create(text,text,text)', 'public.gog_char_switch(text,text)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
+  end loop;
+end $$;
+
+-- personagens que ja existiam: a classe passa a ficar fixa
+update gog.players set char_cls = save->>'cls' where char_cls is null and save is not null and save->>'cls' in ('knight', 'archer', 'mage');
