@@ -1056,6 +1056,7 @@ Object.assign(EN_DICT, {"Reforjar": "Reforge", "REFORJADO!": "REFORGED!", "Para 
 Object.assign(EN_DICT, {"Cão": "Dog", "GRÁTIS": "FREE", "Um companheiro leal que corre ao teu lado. Não causa dano, mas dá-te energia enquanto estiver perto de ti.": "A loyal companion that runs by your side. It deals no damage but gives you energy while it is near you.", "velocidade de movimento": "movement speed", "velocidade de ataque": "attack speed", "Se te afastares depressa (esquiva), o bónus pára até ele te alcançar.": "If you move away fast (dash), the bonus stops until it catches up.", "Obter (grátis)": "Get (free)", "Equipado ✓": "Equipped ✓", "Mais companheiros em breve": "More companions soon", "Companheiros que te seguem e te dão bónus enquanto estiverem perto.": "Companions that follow you and give you bonuses while they are near."});
 Object.assign(EN_DICT, {"CONQUISTA": "ACHIEVEMENT", "Conclui uma raid Inferno": "Clear an Inferno raid", "Mata 10 000 monstros": "Kill 10,000 monsters", "Chega à onda 40 no Farm": "Reach wave 40 in Farm", "Skin desbloqueada:": "Skin unlocked:", "Campeão Inferno": "Inferno Champion", "Caçador Lendário": "Legendary Hunter", "Arquimago Rubro": "Crimson Archmage"});
 Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "O nick não pode ser alterado.": "Your nickname can never be changed.", "Sexo": "Gender", "Masculino": "Male", "Feminino": "Female", "País": "Country", "Escolhe o teu país": "Choose your country", "Guardar": "Save", "Cancelar": "Cancel", "A guardar...": "Saving...", "Outro / Mundo": "Other / World", "Portugal": "Portugal", "Brasil": "Brazil", "Espanha": "Spain", "França": "France", "Alemanha": "Germany", "Reino Unido": "United Kingdom", "Irlanda": "Ireland", "Itália": "Italy", "Países Baixos": "Netherlands", "Bélgica": "Belgium", "Luxemburgo": "Luxembourg", "Suíça": "Switzerland", "Áustria": "Austria", "Polónia": "Poland", "Suécia": "Sweden", "Noruega": "Norway", "Dinamarca": "Denmark", "Finlândia": "Finland", "Ucrânia": "Ukraine", "Rússia": "Russia", "Turquia": "Turkey", "EUA": "USA", "Canadá": "Canada", "México": "Mexico", "Colômbia": "Colombia", "Japão": "Japan",  "Moçambique": "Mozambique", "Cabo Verde": "Cape Verde"});
+Object.assign(EN_DICT, {"Mudar de bandeira custa ◆": "Changing flag costs ◆", "Podes mudar de bandeira por ◆": "You can change your flag for ◆", "A primeira bandeira é grátis": "Your first flag is free", "Precisas de": "You need", "diamantes para mudar de bandeira": "diamonds to change flag"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -2166,12 +2167,15 @@ function drawCountryPicker() {
   });
 }
 // editar perfil: so o sexo e o pais; o nick nunca muda
+const FLAG_COST = 100;   // mudar de bandeira custa diamantes; escolher a primeira e gratis
+const flagCost = e => (on.country && on.country !== 'ZZ' && e.country !== (on.country || 'ZZ')) ? FLAG_COST : 0;
 let editProf = null;
 function openEditProfile() { if (!on.token) return; editProf = { gender: myG(), country: on.country || 'ZZ', busy: false, msg: '', col: '#f88' }; }
 async function saveEditProfile() {
-  const e = editProf; if (!e || e.busy) return; e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab';
+  const e = editProf; if (!e || e.busy) return; const cost = flagCost(e); if (save.gems < cost) { e.msg = `Precisas de ${cost} diamantes para mudar de bandeira`; e.col = '#f88'; SFX.error(); return; }
+  e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab';
   const r = await rpc('gog_set_profile', { p_token: on.token, p_gender: e.gender, p_country: e.country === 'ZZ' ? null : e.country }); e.busy = false;
-  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); SFX.buy(); editProf = null; rk.at = {}; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
+  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
 function drawEditProfile() {
   if (!editProf || state !== 'hub') return; const e = editProf;
@@ -2187,8 +2191,9 @@ function drawEditProfile() {
   });
   txt('País', x + 24, y + 250, 12, '#8a9ab8');
   btn(x + 24, y + 258, w - 48, 34, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 38, y + 268, 26, 17); txt(cName(e.country), x + 76, y + 281, 14, '#fff', 'left', 'bold'); txt('▾', x + w - 40, y + 282, 14, '#aab', 'center');
+  { const c = flagCost(e); if (!e.msg) txt(c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis'), x + w / 2, y + 314, 12, c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
   if (e.msg) txt(e.msg, x + w / 2, y + 314, 12, e.col, 'center');
-  btn(x + 24, y + 322, 172, 28, 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy }); btn(x + 204, y + 322, 172, 28, 'Cancelar', () => { if (!e.busy) editProf = null; }, { size: 14, col: '#3a2a3a' });
+  btn(x + 24, y + 322, 172, 28, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy || save.gems < flagCost(e) }); btn(x + 204, y + 322, 172, 28, 'Cancelar', () => { if (!e.busy) editProf = null; }, { size: 14, col: '#3a2a3a' });
 }
 
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
