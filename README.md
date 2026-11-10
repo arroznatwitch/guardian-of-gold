@@ -207,7 +207,7 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 ## Farm e Raids
 
 - **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas e uma **horda** a cada 10 (muito mais monstros ao mesmo tempo, mais mortes para completar, mais ouro e um item no fim). Os inimigos ficam mais fortes (e dão mais ouro) a cada onda, aparecem mais depressa e em maior número, e cada zona seguinte abre quando chegas a uma onda mínima na anterior (10, 10, 20, 20 e 30). Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
-- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid, e quem vai muito acima do nível recomendado encontra monstros mais fortes.
 
 | Dificuldade | Vida | Dano | Ouro |
 |---|---|---|---|
