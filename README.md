@@ -107,7 +107,7 @@ A **Fusão** desbloqueia no **nível 10** da conta e funciona para armas e para 
 
 ### Efeitos das estrelas nas habilidades (`E`)
 
-As armas também mudam de aspeto: **1★** brilho suave, **2★** brilho e cintilação com partículas, **3★** aura arco-íris. Além do dano, cada estrela melhora a habilidade da arma (por exemplo, o Cajado de Fogo passa de 1 meteoro para 2, 3 e, a 3★, uma **chuva de meteoros**).
+As armas também mudam de aspeto: **1★** brilho suave, **2★** novo desenho (contorno, gema e punho dourado) com cintilação, **3★** desenho radiante, maior, com contorno luminoso e aura arco-íris. Além do dano, cada estrela melhora a habilidade da arma (por exemplo, o Cajado de Fogo passa de 1 meteoro para 2, 3 e, a 3★, uma **chuva de meteoros**).
 
 **Cavaleiro**
 
@@ -183,7 +183,7 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 
 - **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
 - Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
-- Podes redistribuir os pontos por ouro (50 × o teu nível).
+- Podes redistribuir os pontos por ouro (50 × o teu nível). Mantém o botão **+** premido para gastar pontos mais depressa.
 
 | Atributo | Efeito por ponto |
 |---|---|
