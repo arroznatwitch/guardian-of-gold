@@ -53,6 +53,9 @@ cd server && npm i @electric-sql/pglite && node test-sql.mjs
 
 ## 4. Limites que convém saber
 
+- **Contas por rede:** no máximo **5 contas por IP**. O servidor usa o cabeçalho `cf-connecting-ip` (ou o último `x-forwarded-for`) e guarda apenas um HMAC do IP, nunca o IP em claro. Apagar uma conta liberta a vaga. Quem está atrás da mesma rede (casa, escola) partilha o limite.
+- **Backups:** ver `docs/BACKUP.md`.
+
 - **"Impossível de hackear" não existe.** Esta combinação protege bem contra os ataques comuns, mas a segurança final depende também de palavras-passe fortes. O jogo exige 8 a 64 caracteres.
 - **Não há recuperação de palavra-passe** (não guardamos emails). Quem a perder cria outra conta.
 - **Batota:** o jogo corre no browser do jogador. O save na nuvem é o que o browser envia, por isso quem souber mexer em pedidos pode alterar o próprio save. O ranking tem limites de plausibilidade, mas só um servidor que corresse o jogo todo evitava a batota por completo.

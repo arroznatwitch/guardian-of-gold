@@ -1,0 +1,49 @@
+# Backup diario (encriptado) da base de dados do Supabase.
+# Precisa de dois "secrets" no repositorio (Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL     - endereco "Session pooler" do projeto (Supabase > Connect), com a palavra-passe da base de dados
+#   BACKUP_PASSPHRASE   - uma frase longa so tua; sem ela o backup nao se consegue abrir
+# O ficheiro fica guardado 30 dias em "Actions > Backup > Artifacts" e nunca sai em claro (contem hashes de palavras-passe).
+name: Backup
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PASS" ]; then echo "Faltam os secrets SUPABASE_DB_URL e/ou BACKUP_PASSPHRASE (ver docs/BACKUP.md)"; exit 1; fi
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+      - name: Dump and encrypt
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" --schema=gog --no-owner --no-privileges -Fc -f gog.dump
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:PASS -in gog.dump -out "gog-$(date -u +%Y%m%d).dump.enc"
+          rm gog.dump
+          ls -l
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: gog-backup
+          path: gog-*.dump.enc
+          retention-days: 30
+          if-no-files-found: error
