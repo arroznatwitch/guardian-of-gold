@@ -46,6 +46,7 @@ create table if not exists gog.players (
   updated_at   timestamptz not null default now()
 );
 alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
+alter table gog.players add column if not exists uid uuid not null default gen_random_uuid();   -- identidade da conta: o save local fica ligado a este id (nao ao nick)
 alter table gog.players add column if not exists gender text not null default 'm';   -- 'm' ou 'f' (so muda o aspeto)
 alter table gog.players add column if not exists country text;                       -- codigo ISO de 2 letras (bandeira)
 alter table gog.players add column if not exists active boolean not null default true;   -- false = conta desativada (so o administrador mexe nisto)
@@ -326,7 +327,7 @@ begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
   select * into v from gog.players where id = pid;
-  return jsonb_build_object('ok', true, 'rev', v.save_rev, 'save', v.save, 'dev', v.save_dev);
+  return jsonb_build_object('ok', true, 'rev', v.save_rev, 'save', v.save, 'dev', v.save_dev, 'uid', v.uid);
 end $$;
 
 create or replace function public.gog_save_put(p_token text, p_save jsonb, p_rev int, p_dev text default null) returns jsonb
@@ -345,6 +346,10 @@ begin
   end if;
   if v.save_at is not null and v.save_at > now() - interval '3 seconds' then
     return jsonb_build_object('ok', false, 'error', 'slow');
+  end if;
+  -- uma conta sem save so pode comecar com um personagem novo (nivel 1 ou 2, quase sem ouro): impede levar o progresso de outra conta
+  if v.save is null and ((p_save->'pl'->>'lv') !~ '^[0-9]{1,6}$' or (p_save->'pl'->>'lv')::int > 2 or coalesce(p_save->>'gold', '0') !~ '^[0-9]{1,9}$' or coalesce(p_save->>'gold', '0')::bigint > 2000) then
+    return jsonb_build_object('ok', false, 'error', 'not_new');
   end if;
   update gog.players set save = p_save, save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
   return jsonb_build_object('ok', true, 'rev', newrev);

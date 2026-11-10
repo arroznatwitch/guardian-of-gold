@@ -2413,7 +2413,7 @@ function hubRank() {
 /* ----- Save na nuvem: com o servidor configurado o login e obrigatorio e o save vive na conta ----- */
 const OWNER_KEY = 'bladehunter_owner';
 const DEV_ID = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
-const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false });
+const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false, uid: null });
 let cloud = cloudNew(), cf = null;
 function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
 function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 8000); }
@@ -2429,10 +2429,14 @@ async function cloudFlush() {
     cloudConflict(); return false;
   }
   if (r.error === 'auth') { dropSession(false); return false; }
+  if (r.error === 'not_new') {   // o servidor so aceita um personagem novo numa conta nova: o save local nao pertence a esta conta
+    try { const raw = localStorage.getItem(SAVE_KEY); if (raw) localStorage.setItem('bladehunter_orphan', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    save = null; cloud.dirty = false; cloud.timer = null; lsSync(true); if (state !== 'play') state = 'menu'; return false;
+  }
   cloud.err = r.error; cloud.timer = setTimeout(() => cloudFlush(), r.error === 'slow' ? 4000 : 15000); return false;
 }
 function cloudApply(sv, upload) {
-  save = sv; try { localStorage.setItem(OWNER_KEY, on.nick); if (sv) localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } catch (e) {}
+  save = sv; try { localStorage.setItem(OWNER_KEY, cloud.uid || on.nick); if (sv) localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } catch (e) {}
   cloud.ready = true; cloud.dirty = false; cloud.confirmOut = false; cf = null; rk.at = {};
   if (upload && sv) { cloud.dirty = true; lsSync(false); cloudFlush(); } else lsSync(true);
   if (state === 'sync' || state === 'conflict' || state === 'syncerr') state = 'menu';
@@ -2450,22 +2454,24 @@ async function cloudStart() {
   const r = await rpc('gog_save_get', { p_token: on.token });
   if (r.error === 'auth') { dropSession(false); return; }
   if (!r.ok) { cloud.err = r.error; state = 'syncerr'; return; }
-  cloud.rev = r.rev;
+  cloud.rev = r.rev; cloud.uid = r.uid || null;
+  // o save deste dispositivo so e usado se pertencer a ESTA conta (id da conta, nao o nick): evita levar o progresso de uma conta para outra
   let local = null, owner = null, uns = false, srev = -1;
   try {
-    owner = localStorage.getItem(OWNER_KEY); const raw = localStorage.getItem(SAVE_KEY) || (owner ? null : localStorage.getItem('bladehunter_v2'));
-    if (raw && (!owner || owner === on.nick)) local = normalize(JSON.parse(raw));
+    owner = localStorage.getItem(OWNER_KEY); const raw = localStorage.getItem(SAVE_KEY);
+    const trusted = !!owner && (owner === r.uid || (!r.uid && owner === on.nick) || (owner === on.nick && !!r.save));   // dono antigo (nick) so vale se a conta ja tem save na nuvem
+    if (raw && trusted) local = normalize(JSON.parse(raw)); else if (raw) localStorage.setItem('bladehunter_orphan', raw);   // fica guardado de lado e nunca passa para outra conta
     uns = localStorage.getItem('bladehunter_unsynced') === '1'; const sr = localStorage.getItem('bladehunter_rev'); srev = sr === null ? -1 : +sr;
   } catch (e) { local = null; }
-  const legacy = local && !owner, mine = local && owner === on.nick;
+  const mine = !!local;
   if (r.save) {
     let cl; try { cl = normalize(r.save); } catch (e) { cloud.err = 'bad_data'; state = 'syncerr'; return; }
-    if (legacy || (mine && uns && srev !== r.rev)) { cf = { cloud: cl, local, reason: legacy ? 'legacy' : 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
+    if (mine && uns && srev !== r.rev) { cf = { cloud: cl, local, reason: 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
     if (mine && uns) return cloudApply(local, true);
     return cloudApply(cl, false);
   }
-  if (local) return cloudApply(local, true);   // conta nova: o progresso deste dispositivo passa para a conta
-  cloudApply(null, false);
+  if (mine) return cloudApply(local, true);   // personagem novo desta conta ainda por enviar
+  cloudApply(null, false);                   // conta nova: comeca sempre com um personagem novo
 }
 async function cloudNewGame(k) {
   if (ONLINE_URL && on.token && cloud.ready) await cloudReset();   // personagem novo = ranking novo
