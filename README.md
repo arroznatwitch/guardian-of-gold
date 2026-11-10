@@ -1,0 +1,219 @@
+<div align="center">
+
+# Guardians of Gold
+
+**v1.0-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
+
+<img src="docs/img/menu.jpg" width="640" alt="Menu do Guardians of Gold">
+
+</div>
+
+Escolhe um herói, farma ondas infinitas, enfrenta raids muito difíceis, equipa e encanta o teu guerreiro e sobe de nível. Tudo num único ficheiro HTML, sem instalação.
+
+## Jogar
+
+- **Localmente:** descarrega o repositório e abre o `index.html` no Chrome, Edge ou Firefox.
+- **Online:** se o GitHub Pages estiver ativo, em <https://arroznatwitch.github.io/guardian-of-gold/>.
+- O progresso fica guardado **no teu browser** (não limpes os dados do site se quiseres manter o save).
+- Português (Portugal) e English (UK), em **Opções**.
+
+> Versão beta: podem existir bugs e o equilíbrio ainda vai mudar. Feedback bem-vindo nas *Issues*.
+
+## Como jogar
+
+| Ação | Tecla |
+|---|---|
+| Mover | `W` `A` `S` `D` ou setas |
+| Atacar | rato (esquerdo) ou `Espaço` |
+| Especial da classe | `Q` ou botão direito |
+| Habilidade da arma | `E` |
+| Esquiva | `Shift` |
+| Auto-ataque | `T` |
+| Velocidade x2 | `G` |
+| Pausa | `Esc` |
+| Som / Ecrã inteiro | `M` / `F` |
+
+Todas as teclas podem ser mudadas em **Opções > Teclas**.
+
+<p align="center"><img src="docs/img/screen-character.jpg" width="48%" alt="Personagem"> <img src="docs/img/screen-enchant.jpg" width="48%" alt="Encantamentos"></p>
+
+---
+
+# Wiki
+
+Índice: [Classes](#classes) · [Armas](#armas) · [Equipamento](#equipamento) · [Encantamentos](#encantamentos-e-bigorna) · [Progressão](#progressão) · [Farm e Raids](#farm-e-raids) · [Mapas](#mapas) · [Inimigos e bosses](#inimigos-e-bosses) · [Skins](#skins)
+
+## Classes
+
+A classe é escolhida ao criar o personagem e **não pode ser trocada** (só apagando o progresso).
+
+| | Classe | Vida | Veloc. | Especial (`Q`) | Estilo |
+|---|---|---|---|---|---|
+| <img src="docs/img/skin-knight-0.png" width="56" alt=""> | **Cavaleiro** | 140 | 165 | **Redemoinho**: Gira a lâmina e fere tudo à volta. | Tanque corpo-a-corpo. Muita vida e golpes pesados. |
+| <img src="docs/img/skin-archer-0.png" width="56" alt=""> | **Arqueiro** | 95 | 195 | **Chuva de Flechas**: Dispara 14 flechas em todas as direções. | Ataca de longe. Rápido mas frágil. |
+| <img src="docs/img/skin-mage-0.png" width="56" alt=""> | **Mago** | 80 | 175 | **Nova Gélida**: Explosão de gelo que fere e atrasa todos. | Magia à distância com efeitos especiais. |
+
+## Armas
+
+Cada classe tem 5 armas, compradas com ouro. Cada arma tem uma **habilidade própria** na tecla `E` e pode ser melhorada na **Bigorna** até +12.
+
+### Cavaleiro
+
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
+|---|---|---|---|---|---|
+| <img src="docs/img/weapon-k_sword.png" width="56" alt=""> | **Espada de Ferro**<br><sub>Rápida e equilibrada.</sub> | 10 | 2.9/s | **Investida** (6s): Lança-te em frente ferindo tudo no caminho. | inicial |
+| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 22 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢120 |
+| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 16 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢200 |
+| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 28 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢350 |
+| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 11 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢500 |
+
+### Arqueiro
+
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
+|---|---|---|---|---|---|
+| <img src="docs/img/weapon-a_bow.png" width="56" alt=""> | **Arco Curto**<br><sub>Flecha rápida e certeira.</sub> | 10 | 2.6/s | **Salva Rápida** (6s): 7 flechas em rápida sequência. | inicial |
+| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 8 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢120 |
+| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 30 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢200 |
+| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 11 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢350 |
+| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 9 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢500 |
+
+### Mago
+
+| | Arma | Dano | Cadência | Habilidade (`E`) | Preço |
+|---|---|---|---|---|---|
+| <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 14 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial |
+| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 10 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢120 |
+| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 13 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢200 |
+| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢350 |
+| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢500 |
+
+## Equipamento
+
+Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a raridade é melhor). Guardam-se na **Mochila** (30 lugares) e equipam-se no ecrã **Personagem**.
+
+| Peça | Comum | Raro | Épico | Lendário | Mítico |
+|---|---|---|---|---|---|
+| **Capacete** | <img src="docs/img/gear-head-0.png" width="44" alt=""><br><sub>Capuz de Couro</sub> | <img src="docs/img/gear-head-1.png" width="44" alt=""><br><sub>Elmo de Ferro</sub> | <img src="docs/img/gear-head-2.png" width="44" alt=""><br><sub>Elmo Rúnico</sub> | <img src="docs/img/gear-head-3.png" width="44" alt=""><br><sub>Coroa Ancestral</sub> | <img src="docs/img/gear-head-4.png" width="44" alt=""><br><sub>Coroa Divina</sub> |
+| **Armadura** | <img src="docs/img/gear-chest-0.png" width="44" alt=""><br><sub>Túnica Simples</sub> | <img src="docs/img/gear-chest-1.png" width="44" alt=""><br><sub>Peitoral de Aço</sub> | <img src="docs/img/gear-chest-2.png" width="44" alt=""><br><sub>Armadura Rúnica</sub> | <img src="docs/img/gear-chest-3.png" width="44" alt=""><br><sub>Armadura Ancestral</sub> | <img src="docs/img/gear-chest-4.png" width="44" alt=""><br><sub>Armadura Divina</sub> |
+| **Botas** | <img src="docs/img/gear-boots-0.png" width="44" alt=""><br><sub>Sapatos Gastos</sub> | <img src="docs/img/gear-boots-1.png" width="44" alt=""><br><sub>Botas de Couro</sub> | <img src="docs/img/gear-boots-2.png" width="44" alt=""><br><sub>Botas Rúnicas</sub> | <img src="docs/img/gear-boots-3.png" width="44" alt=""><br><sub>Botas Ancestrais</sub> | <img src="docs/img/gear-boots-4.png" width="44" alt=""><br><sub>Botas Divinas</sub> |
+| **Amuleto** | <img src="docs/img/gear-amulet-0.png" width="44" alt=""><br><sub>Amuleto de Osso</sub> | <img src="docs/img/gear-amulet-1.png" width="44" alt=""><br><sub>Colar de Prata</sub> | <img src="docs/img/gear-amulet-2.png" width="44" alt=""><br><sub>Talismã Rúnico</sub> | <img src="docs/img/gear-amulet-3.png" width="44" alt=""><br><sub>Talismã Ancestral</sub> | <img src="docs/img/gear-amulet-4.png" width="44" alt=""><br><sub>Talismã Divino</sub> |
+
+- **Atributo principal:** Capacete e Armadura dão *Vida*, Botas dão *Velocidade*, Amuleto dá *Dano*.
+- **Raridade:** cada nível de raridade acrescenta mais um bónus aleatório (Mítico tem 4). Lendário e Mítico podem trazer um **efeito especial**.
+- **Venda:** itens que não queiras podem ser vendidos por ouro (há botão para vender todos os Comuns).
+
+| Bónus possível | Descrição |
+|---|---|
+| Vida | valor fixo |
+| Dano | percentagem |
+| Velocidade | percentagem |
+| Vel. de ataque | percentagem |
+| Crítico | percentagem |
+| Roubo de vida | percentagem |
+| Redução de dano | percentagem |
+| Ouro extra | percentagem |
+| XP extra | percentagem |
+| Chance de queimar | só em efeitos especiais |
+| Chance de abrandar | só em efeitos especiais |
+
+## Encantamentos e Bigorna
+
+**Encantar (equipamento)** — ecrã *Encantar*:
+
+- **Refinar** até +10: cada nível dá **+8%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
+- **Encantar especial:** sorteia um efeito (Ígneo, Gélido, Vampírico, Letal, Próspero, Sábio, Protetor, Poderoso). Podes voltar a sortear, com custo crescente.
+
+**Bigorna (armas)** — melhora uma arma até **+12** (+12% de dano por nível, na arma e na habilidade). Podes usar o *Amuleto da Sorte* (+15% de chance) e o *Pergaminho de Proteção* (a partir de +5). Falhas seguidas dão bónus de azar.
+
+Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% · +7: 50% · +8: 40% · +9: 30% · +10: 22% · +11: 15% · +12: 10%. Marcos: **+5** brilho, **+10** faíscas, **+12** aura lendária.
+
+## Progressão
+
+- Nível máximo **40**. Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis).
+- Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
+- Podes redistribuir os pontos por ouro (50 × o teu nível).
+
+| Atributo | Efeito por ponto |
+|---|---|
+| Vitalidade | +14 vida |
+| Força | +2% dano |
+| Agilidade | +1.2% velocidade |
+| Perícia | +1.2% velocidade de ataque |
+
+## Farm e Raids
+
+- **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas, os inimigos ficam mais fortes (e dão mais ouro) a cada onda, e a zona seguinte abre ao chegares à onda 10 na anterior. Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade ao vencer a anterior nessa raid.
+
+| Dificuldade | Vida | Dano | Ouro |
+|---|---|---|---|
+| **Fácil** | ×2 | ×1.4 | ×2 |
+| **Normal** | ×3 | ×1.8 | ×4 |
+| **Difícil** | ×4.5 | ×2.4 | ×8 |
+| **Pesadelo** | ×7 | ×3.2 | ×16 |
+| **Inferno** | ×11 | ×4.5 | ×30 |
+
+> A velocidade do jogo pode ser posta a **x2** nos ecrãs de Farm e Raids, na pausa ou com a tecla `G`.
+
+## Mapas
+
+| Zona | Mapa | Nível rec. (Farm) | Boss |
+|---|---|---|---|
+| **Floresta Sombria**<br><sub>Limpa a floresta e enfrenta o Ceifador.</sub> | <img src="docs/img/map-0.jpg" width="260" alt="Floresta Sombria"> | 1 | O Ceifador |
+| **Cavernas Douradas**<br><sub>Esqueletos e lobos guardam o Golem.</sub> | <img src="docs/img/map-1.jpg" width="260" alt="Cavernas Douradas"> | 7 | Golem de Pedra |
+| **Castelo Maldito**<br><sub>O covil do Dragão Rubro.</sub> | <img src="docs/img/map-2.jpg" width="260" alt="Castelo Maldito"> | 13 | Dragão Rubro |
+| **Pântano Tóxico**<br><sub>Fantasmas e lobos servem a Rainha.</sub> | <img src="docs/img/map-3.jpg" width="260" alt="Pântano Tóxico"> | 19 | Rainha do Pântano |
+| **Deserto Ardente**<br><sub>O Faraó desperta das areias.</sub> | <img src="docs/img/map-4.jpg" width="260" alt="Deserto Ardente"> | 25 | Faraó Eterno |
+| **Abismo Final**<br><sub>O Rei Demónio espera no fundo.</sub> | <img src="docs/img/map-5.jpg" width="260" alt="Abismo Final"> | 31 | Rei Demónio |
+
+## Inimigos e bosses
+
+### Inimigos
+
+| | Inimigo | Comportamento | Vida base | Ouro |
+|---|---|---|---|---|
+| <img src="docs/img/enemy-slime.png" width="48" alt=""> | **Slime** | persegue | 3 | ¢3 |
+| <img src="docs/img/enemy-bat.png" width="48" alt=""> | **Morcego** | voo errático, rápido | 2 | ¢4 |
+| <img src="docs/img/enemy-skel.png" width="48" alt=""> | **Esqueleto arqueiro** | mantém distância e dispara | 4 | ¢6 |
+| <img src="docs/img/enemy-brute.png" width="48" alt=""> | **Bruto** | lento, muita vida e muito dano | 11 | ¢12 |
+| <img src="docs/img/enemy-wolf.png" width="48" alt=""> | **Lobo** | muito rápido | 3 | ¢5 |
+| <img src="docs/img/enemy-ghost.png" width="48" alt=""> | **Fantasma** | mantém distância e dispara orbes | 4 | ¢7 |
+
+### Bosses
+
+| | Boss | Zona | Ataques |
+|---|---|---|---|
+| <img src="docs/img/boss-reaper.png" width="80" alt=""> | **O Ceifador** | Floresta Sombria | anel de projéteis, investida, leque de tiros |
+| <img src="docs/img/boss-golem.png" width="80" alt=""> | **Golem de Pedra** | Cavernas Douradas | pancada em área, anel de projéteis, investida |
+| <img src="docs/img/boss-dragon.png" width="80" alt=""> | **Dragão Rubro** | Castelo Maldito | sopro em cone, chuva de meteoros, investida |
+| <img src="docs/img/boss-queen.png" width="80" alt=""> | **Rainha do Pântano** | Pântano Tóxico | leque de tiros, invoca lacaios, espiral de tiros, investida |
+| <img src="docs/img/boss-pharaoh.png" width="80" alt=""> | **Faraó Eterno** | Deserto Ardente | chuva de meteoros, espiral de tiros, pancada em área, sopro em cone |
+| <img src="docs/img/boss-demon.png" width="80" alt=""> | **Rei Demónio** | Abismo Final | teletransporte, espiral de tiros, chuva de meteoros, investida, invoca lacaios, pancada em área |
+
+A meio da vida os bosses ficam furiosos (atacam mais depressa e invocam lacaios).
+
+## Skins
+
+Cosméticos que mudam o aspeto do herói (preço promocional de lançamento: **¢1**).
+
+**Cavaleiro**
+
+|  |  |  |  |  |
+|---|---|---|---|---|
+| <img src="docs/img/skin-knight-0.png" width="64" alt=""><br><sub>Clássico</sub> | <img src="docs/img/skin-knight-1.png" width="64" alt=""><br><sub>Paladino Dourado</sub> | <img src="docs/img/skin-knight-2.png" width="64" alt=""><br><sub>Cavaleiro Sombrio</sub> | <img src="docs/img/skin-knight-3.png" width="64" alt=""><br><sub>Lorde Carmesim</sub> | <img src="docs/img/skin-knight-4.png" width="64" alt=""><br><sub>Guardião Dourado</sub> |
+
+**Arqueiro**
+
+|  |  |  |  |
+|---|---|---|---|
+| <img src="docs/img/skin-archer-0.png" width="64" alt=""><br><sub>Clássico</sub> | <img src="docs/img/skin-archer-1.png" width="64" alt=""><br><sub>Caçador da Neve</sub> | <img src="docs/img/skin-archer-2.png" width="64" alt=""><br><sub>Sombra</sub> | <img src="docs/img/skin-archer-3.png" width="64" alt=""><br><sub>Ranger Ígneo</sub> |
+
+**Mago**
+
+|  |  |  |  |
+|---|---|---|---|
+| <img src="docs/img/skin-mage-0.png" width="64" alt=""><br><sub>Clássico</sub> | <img src="docs/img/skin-mage-1.png" width="64" alt=""><br><sub>Piromante</sub> | <img src="docs/img/skin-mage-2.png" width="64" alt=""><br><sub>Criomante</sub> | <img src="docs/img/skin-mage-3.png" width="64" alt=""><br><sub>Feiticeiro da Noite</sub> |
+
+---
+
+Feito com carinho em HTML, CSS e JavaScript puros (canvas). Sem dependências.
