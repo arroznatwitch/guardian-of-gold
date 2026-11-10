@@ -395,18 +395,19 @@ const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
-const TUNE = { lvDmg: .04, eHP: 1.3, eDmg: 1.2, wHP: .10, wHP2: .003, wDM: .06, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.9, archer: 1, mage: .72 } };
+const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: 1.5, wHP: .18, wHP2: .008, wDM: .11, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
-  { n: 'Fácil',    col: '#4cc46a', hp: 2.5, dmg: 1.6, gold: 1,  spd: 1.05 },
-  { n: 'Normal',   col: '#4a9aff', hp: 4.2, dmg: 2.2, gold: 2,  spd: 1.1 },
-  { n: 'Difícil',  col: '#ff9a2a', hp: 7,   dmg: 3, gold: 4,  spd: 1.15 },
-  { n: 'Pesadelo', col: '#ff4a4a', hp: 11.5, dmg: 4.2, gold: 8,  spd: 1.2 },
-  { n: 'Inferno',  col: '#c040ff', hp: 18,  dmg: 6, gold: 15, spd: 1.25 },
+  { n: 'Fácil',    col: '#4cc46a', hp: 8,   dmg: 2.3, gold: 1,  spd: 1.05 },
+  { n: 'Normal',   col: '#4a9aff', hp: 14,  dmg: 3.1, gold: 2,  spd: 1.1 },
+  { n: 'Difícil',  col: '#ff9a2a', hp: 24,  dmg: 4.1, gold: 4,  spd: 1.15 },
+  { n: 'Pesadelo', col: '#ff4a4a', hp: 40,  dmg: 5.5, gold: 8,  spd: 1.2 },
+  { n: 'Inferno',  col: '#c040ff', hp: 65,  dmg: 7.5, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
+const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.4, .5, .65, .85, 1, 1.1];   // as primeiras raids pesam menos; as ultimas muito mais
 const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
 const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
@@ -576,7 +577,7 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_MINI.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd;
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .12 * (6 * i + 4 * rd);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
@@ -772,6 +773,12 @@ function bossBegin(b, mv, rage) {
   else if (mv === 'summon') { const M = MISSIONS[R.m]; for (let i = 0; i < 3; i++) spawnE(M.types[Math.floor(Math.random() * M.types.length)], b.x + (i - 1) * 60, b.y + 55); SFX.boss(); }
   else if (mv === 'blink') SFX.dash();
 }
+// nas raids os ataques do boss crescem com o nivel recomendado (boss de raid dificil bate a serio)
+function bossScaled(fn) {
+  const np = R.projs.length, nt = R.tels.length; fn(); const k = R.bossDM || 1; if (k === 1) return;
+  for (let i = np; i < R.projs.length; i++) if (R.projs[i].from === 'e') R.projs[i].dmg *= k;
+  for (let i = nt; i < R.tels.length; i++) if (R.tels[i].from === 'e') R.tels[i].dmg *= k;
+}
 function bossTick(b, dt, rage, sl) {
   const p = R.p, ang = Math.atan2(p.y - b.y, p.x - b.x), d = Math.hypot(p.x - b.x, p.y - b.y) || 1;
   b.mt += dt;
@@ -889,10 +896,10 @@ function update(dt) {
     if (rage && !b.summoned) { b.summoned = true; for (let i = 0; i < 3; i++) spawnE('slime', b.x + (i - 1) * 50, b.y + 50); R.toast = 'O Boss está furioso!'; R.toastT = 2; R.shake = 10; }
     if (b.st === 'walk') {
       b.x += dx / d * b.spd * (rage ? 1.35 : 1) * sl * dt; b.y += dy / d * b.spd * (rage ? 1.35 : 1) * sl * dt; b.t -= dt;
-      if (b.t <= 0 && !dead) bossBegin(b, b.pattern[b.pi++ % b.pattern.length], rage);
-    } else { bossTick(b, dt, rage, sl); b.t -= dt; if (b.t <= 0) { b.st = 'walk'; b.t = (rage ? 1.1 : 1.9) * (R.raid ? .7 : 1); } }
+      if (b.t <= 0 && !dead) bossScaled(() => bossBegin(b, b.pattern[b.pi++ % b.pattern.length], rage));
+    } else { bossScaled(() => bossTick(b, dt, rage, sl)); b.t -= dt; if (b.t <= 0) { b.st = 'walk'; b.t = (rage ? 1.1 : 1.9) * (R.raid ? .7 : 1); } }
     b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.y = Math.max(b.r, Math.min(H - b.r, b.y));
-    if (d < b.r + 12 && !dead) hurt(b.st === 'charge' && b.mt > .7 ? 25 : 12);
+    if (d < b.r + 12 && !dead) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1));
     if (b.hp <= 0) {
       burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += 40 + 25 * R.m; R.tels = []; bossDown(b);
       for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE)) });
@@ -999,6 +1006,7 @@ Object.assign(EN_DICT, {"Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% 
 Object.assign(EN_DICT, {"Conclui TODAS as raids da dificuldade anterior": "Clear ALL raids of the previous difficulty"});
 Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell all", "Sim, vender": "Yes, sell", "Os itens equipados não são vendidos.": "Equipped items are not sold."});
 Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
+Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the previous raid on this difficulty"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1510,12 +1518,12 @@ function hubRaids() {
   txt(`Vida ×${d.hp} · Dano ×${d.dmg} · Ouro ×${d.gold} · +XP`, 440, 150, 14, d.col, 'center', 'bold');
   btn(684, 136, 96, 22, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 11, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   MISSIONS.forEach((m, i) => {
-    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [0])[0] > 0), unl = open && diffOpen(raidD), rec = 8 + i * 6 + raidD * 4;
+    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [])[raidD] | 0) > 0, unl = open && diffOpen(raidD), rec = 8 + i * 6 + raidD * 4;
     panel(x, y, w, h, open ? '#232342' : '#1a1a22', open ? d.col : '#2a2a3a');
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 36, 36); drawSprBig(m.boss.pal, x + 24, y + 24, .46); if (!open) drawIcon('lock', x + 24, y + 24, 2);
     txt(`Raid: ${m.name}`, x + 54, y + 20, 16, open ? '#fff' : '#667', 'left', 'bold');
     if (open && unl) { txt(`Conclusões: ${cl[raidD]} · Recompensa: ¢${Math.round(m.reward * d.gold * 1.5)} + ${2 + raidD} itens`, x + 54, y + 38, 12, '#9cf'); txt(`Nv rec. ${rec}`, x + w - 124, y + 28, 12, save.pl.lv >= rec ? '#6f6' : '#f66', 'right', 'bold'); }
-    else txt(!open ? 'Conclui a raid anterior' : 'Conclui TODAS as raids da dificuldade anterior', x + 54, y + 38, 12, '#a77');
+    else txt(!open ? 'Conclui a raid anterior nesta dificuldade' : 'Conclui TODAS as raids da dificuldade anterior', x + 54, y + 38, 12, '#a77');
     btn(x + w - 112, y + 7, 100, 34, unl ? 'Entrar' : 'Bloqueada', () => unl ? startMission(i, raidD) : lockClick('r' + i), { col: unl ? d.col : '#26262f', hot: unl ? d.col : '#33333f', size: 14 });
   });
 }
