@@ -400,14 +400,15 @@ const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
-  { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 1,  spd: 1.05 },
-  { n: 'Normal',   col: '#4a9aff', hp: 3,   dmg: 1.8, gold: 2,  spd: 1.1 },
-  { n: 'Difícil',  col: '#ff9a2a', hp: 4.5, dmg: 2.4, gold: 4,  spd: 1.15 },
-  { n: 'Pesadelo', col: '#ff4a4a', hp: 7,   dmg: 3.2, gold: 8,  spd: 1.2 },
-  { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 15, spd: 1.25 },
+  { n: 'Fácil',    col: '#4cc46a', hp: 2.5, dmg: 1.6, gold: 1,  spd: 1.05 },
+  { n: 'Normal',   col: '#4a9aff', hp: 4.2, dmg: 2.2, gold: 2,  spd: 1.1 },
+  { n: 'Difícil',  col: '#ff9a2a', hp: 7,   dmg: 3, gold: 4,  spd: 1.15 },
+  { n: 'Pesadelo', col: '#ff4a4a', hp: 11.5, dmg: 4.2, gold: 8,  spd: 1.2 },
+  { n: 'Inferno',  col: '#c040ff', hp: 18,  dmg: 6, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
-const RAID_MINI = { hp: 1.4, dmg: 1.25, cap: 4, capD: 2, rate: 1.5, burst: 5 };
+const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
+const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
 const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15, LUCKY_MAX = 85;
 const luckOk = (lv, id) => ANV_CH[lv] + Math.min(25, 5 * ((save.pity && save.pity[id]) || 0)) < LUCKY_MAX;   // o amuleto so ajuda se a chance for inferior a 85%
@@ -995,6 +996,8 @@ Object.assign(EN_DICT, {"Perfil indisponível": "Profile unavailable", "A carreg
 Object.assign(EN_DICT, {"HORDA!": "HORDE!", "HORDA DERROTADA!": "HORDE DEFEATED!"});
 Object.assign(EN_DICT, {"Chega à onda": "Reach wave", "na zona anterior": "in the previous zone"});
 Object.assign(EN_DICT, {"Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.": "Melee tank. Lots of health, heavy blows and 15% less damage taken."});
+Object.assign(EN_DICT, {"Conclui TODAS as raids da dificuldade anterior": "Clear ALL raids of the previous difficulty"});
+Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell all", "Sim, vender": "Yes, sell", "Os itens equipados não são vendidos.": "Equipped items are not sold."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1502,16 +1505,16 @@ function hubFarm() {
 }
 function hubRaids() {
   const d = RAID_D[raidD];
-  RAID_D.forEach((r, i) => btn(197 + i * 117, 90, 110, 38, r.n, () => raidD = i, { size: 15, col: raidD === i ? r.col : '#2a2a48', hot: r.col }));
+  RAID_D.forEach((r, i) => { btn(197 + i * 117, 90, 110, 38, r.n, () => raidD = i, { size: 15, col: raidD === i ? r.col : '#2a2a48', hot: r.col }); if (!diffOpen(i)) drawIcon('lock', 197 + i * 117 + 94, 109, 1.3); });
   txt(`Vida ×${d.hp} · Dano ×${d.dmg} · Ouro ×${d.gold} · +XP`, 440, 150, 14, d.col, 'center', 'bold');
   btn(684, 136, 96, 22, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 11, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   MISSIONS.forEach((m, i) => {
-    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [0])[0] > 0), unl = open && (raidD === 0 || cl[raidD - 1] > 0), rec = 8 + i * 6 + raidD * 4;
+    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [0])[0] > 0), unl = open && diffOpen(raidD), rec = 8 + i * 6 + raidD * 4;
     panel(x, y, w, h, open ? '#232342' : '#1a1a22', open ? d.col : '#2a2a3a');
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 36, 36); drawSprBig(m.boss.pal, x + 24, y + 24, .46); if (!open) drawIcon('lock', x + 24, y + 24, 2);
     txt(`Raid: ${m.name}`, x + 54, y + 20, 16, open ? '#fff' : '#667', 'left', 'bold');
     if (open && unl) { txt(`Conclusões: ${cl[raidD]} · Recompensa: ¢${Math.round(m.reward * d.gold * 1.5)} + ${2 + raidD} itens`, x + 54, y + 38, 12, '#9cf'); txt(`Nv rec. ${rec}`, x + w - 124, y + 28, 12, save.pl.lv >= rec ? '#6f6' : '#f66', 'right', 'bold'); }
-    else txt(!open ? 'Conclui a raid anterior' : 'Conclui a dificuldade anterior', x + 54, y + 38, 12, '#a77');
+    else txt(!open ? 'Conclui a raid anterior' : 'Conclui TODAS as raids da dificuldade anterior', x + 54, y + 38, 12, '#a77');
     btn(x + w - 112, y + 7, 100, 34, unl ? 'Entrar' : 'Bloqueada', () => unl ? startMission(i, raidD) : lockClick('r' + i), { col: unl ? d.col : '#26262f', hot: unl ? d.col : '#33333f', size: 14 });
   });
 }
@@ -1591,8 +1594,9 @@ function hubBag() {
       const idx = o.i; ui.push({ x, y, w: 45, h: 45, fn: () => bagSel = idx });
     }
   }
-  btn(197, 376, 150, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
-  btn(355, 376, 100, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
+  btn(197, 376, 120, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
+  btn(397, 376, 98, 28, 'Vender tudo', () => { if (save.bag.length) sellAsk = true; else SFX.error(); }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
+  btn(322, 376, 70, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
   panel(500, 90, 280, 388, '#16162a');
   const it = save.bag[bagSel];
   if (!it) { txt('Seleciona um item', 640, 270, 15, '#667', 'center'); return; }
@@ -1605,6 +1609,20 @@ function hubBag() {
   btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
   btn(512, 412, 256, 28, `Vender ¢${sellValue(it)}`, () => { save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: '#a06a20', hot: '#c98a30' });
   btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });
+}
+let sellAsk = false;
+function sellAll() { let g = 0; for (const it of save.bag) g += sellValue(it); save.gold = Math.min(999999, save.gold + g); save.bag = []; enchItem = null; bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
+function drawSellAsk() {
+  if (state !== 'hub' || tab !== 'bag' || !sellAsk) return;
+  if (!save.bag.length) { sellAsk = false; return; }
+  let g = 0; for (const it of save.bag) g += sellValue(it); const hi = save.bag.filter(it => it.r >= 3).length;
+  ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => {} });
+  const x = 250, y = 170, w = 300, h = 170; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt('Vender tudo?', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold');
+  txt(`${save.bag.length} itens da Mochila por ¢${gfmt(g)}`, x + w / 2, y + 62, 14, '#fff', 'center');
+  txt(hi ? `Inclui ${hi} item(ns) Épico/Lendário!` : 'Os itens equipados não são vendidos.', x + w / 2, y + 84, 12, hi ? '#f88' : '#9ab', 'center');
+  btn(x + 20, y + 112, 125, 38, 'Sim, vender', sellAll, { size: 15, col: '#8a3a2a', hot: '#b04a3a' });
+  btn(x + 155, y + 112, 125, 38, 'Cancelar', () => { sellAsk = false; }, { size: 15, col: '#2a2a48' });
 }
 // ----- Encantamentos -----
 function doRefine() {
@@ -2572,7 +2590,7 @@ function frame(now) {
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);
