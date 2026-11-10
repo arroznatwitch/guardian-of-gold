@@ -2040,10 +2040,14 @@ async function onlineSubmit() {
   if (r.error === 'auth') { dropSession(false); rkSay('auth'); } else if (r.ok) { rk.sentHash = JSON.stringify(statPayload()); rk.lastSub = Date.now(); rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
   return r;
 }
+// rk.at guarda a classificacao de cada categoria (rows, me, hora); limpar rk.at forca nova leitura
+let rkSeq = 0;
 async function rkLoad(force) {
-  const st = rk.stat; if (!ONLINE_URL || rk.loading || (!force && rk.at[st] && Date.now() - rk.at[st] < 20000)) return;
-  rk.loading = true; const r = await rpc('gog_board', { p_stat: st, p_limit: 14, p_token: on.token }); rk.loading = false;
-  if (r.ok && st === rk.stat) { rk.rows = r.rows || []; rk.me = r.me || null; rk.at[st] = Date.now(); } else if (!r.ok) rkSay(r.error);
+  const st = rk.stat; if (!ONLINE_URL) return;
+  const c = rk.at[st]; rk.rows = c ? c.rows : []; rk.me = c ? c.me : null;                  // mostra logo o que ja temos desta categoria
+  if (!force && c && Date.now() - c.t < 15000) return;
+  const my = ++rkSeq; rk.loading = true; const r = await rpc('gog_board', { p_stat: st, p_limit: 14, p_token: on.token }); if (my === rkSeq) rk.loading = false;
+  if (r.ok) { rk.at[st] = { rows: r.rows || [], me: r.me || null, t: Date.now() }; if (st === rk.stat) { rk.rows = rk.at[st].rows; rk.me = rk.at[st].me; } } else if (st === rk.stat) rkSay(r.error);
 }
 async function rkAuth(register) {
   if (rk.busy) return; const nick = rk.nick.trim();
@@ -2110,7 +2114,7 @@ function hubRank() {
   }
   // classificacao
   panel(430, 90, 352, 386, '#16162a');
-  const st = RK_STATS(); st.forEach(([k, n], i) => btn(i < 5 ? 438 + i * 68 : 438 + (i - 5) * 56, i < 5 ? 98 : 124, i < 5 ? 64 : 52, 22, n, () => { rk.stat = k; rk.rows = []; rk.me = null; rkLoad(false); }, { size: 11, col: rk.stat === k ? '#a8821f' : '#2a2a48' }));
+  const st = RK_STATS(); st.forEach(([k, n], i) => btn(i < 5 ? 438 + i * 68 : 438 + (i - 5) * 56, i < 5 ? 98 : 124, i < 5 ? 64 : 52, 22, n, () => { rk.stat = k; rkLoad(false); }, { size: 11, col: rk.stat === k ? '#a8821f' : '#2a2a48' }));
   const idx = st.findIndex(q => q[0] === rk.stat), title = idx < 5 ? ['Maior nível', 'Mais mobs mortos', 'Mais ouro ganho', 'Mais bosses derrotados', 'Mais raids vencidas'][idx] : 'Recorde de waves: ' + MISSIONS[idx - 5].name;
   txt(title, 606, 170, 15, '#f0c060', 'center', 'bold');
   btn(738, 154, 40, 22, '↻', () => rkLoad(true), { size: 13, col: '#2a2a48', off: !conf });
