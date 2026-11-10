@@ -55,7 +55,7 @@ cd server && npm i @electric-sql/pglite && node test-sql.mjs
 
 Ao criar a conta escolhe-se o **sexo** (Masculino ou Feminino) e o **país**. O sexo só muda o aspeto: cada skin tem uma versão feminina. O país aparece como **bandeira** no ranking, no perfil público e no cabeçalho do acampamento.
 
-Os dois podem ser alterados em **Editar perfil** (clicando no boneco, no canto do acampamento). O **nick nunca muda**. O servidor valida os valores (`m` ou `f`; código de país com 2 letras) e a função `gog_set_profile` só funciona com sessão válida.
+Os dois podem ser alterados em **Editar perfil** (clicando no boneco, no canto do acampamento). O **nick nunca muda**. A primeira bandeira é grátis; **mudar de bandeira custa 100 diamantes** (cobrados no jogo, como o resto da progressão). O servidor valida os valores (`m` ou `f`; código de país com 2 letras) e a função `gog_set_profile` só funciona com sessão válida.
 
 ## Desativar e reativar contas (administrador)
 
