@@ -1863,7 +1863,7 @@ function hubRewards() {
 }
 
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
-const ONLINE_URL = '', ONLINE_KEY = '';   // preencher com o URL e a chave publica do teu projecto
+const ONLINE_URL = 'https://fnkjmykbjuxkagtjlyfn.supabase.co', ONLINE_KEY = 'sb_publishable_y_fMP0OBRbarUpDliORTdw_bfFYuwrx';   // preencher com o URL e a chave publica do teu projecto
 const ON_STORE = 'gog-online-v1';
 let on = { token: null, nick: null };
 try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick }; } catch (e) {}
