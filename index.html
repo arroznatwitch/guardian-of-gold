@@ -358,27 +358,27 @@ function drawSprBig(name, x, y, k) { const img = SPR[name].n; ctx.drawImage(img,
    DADOS
    ===================================================================== */
 const CLASSES = {
-  knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Redemoinho', desc: 'Tanque corpo-a-corpo. Muita vida e golpes pesados.', spDesc: 'Gira a lâmina e fere tudo à volta.',
+  knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Redemoinho', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Gira a lâmina e fere tudo à volta.',
     weapons: [
       { id: 'k_sword',  n: 'Espada de Ferro',    price: 0,   t: 'melee', dmg: 1,   cd: .35, range: 70,  arc: .45, kb: 240, info: 'Rápida e equilibrada.', sk: { n: 'Investida', cd: 6, d: 'Lança-te em frente ferindo tudo no caminho.' } },
-      { id: 'k_axe',    n: 'Machado de Guerra',  price: 400, t: 'melee', dmg: 2.2, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
-      { id: 'k_spear',  n: 'Lança do Caçador',   price: 1800, t: 'melee', dmg: 1.6, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
-      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 7000, t: 'melee', dmg: 2.8, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
-      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 20000, t: 'melee', dmg: 1.1, cd: .26, range: 66,  arc: .45, kb: 150, leech: .4, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
+      { id: 'k_axe',    n: 'Machado de Guerra',  price: 400, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
+      { id: 'k_spear',  n: 'Lança do Caçador',   price: 1800, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
+      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 7000, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
+      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 20000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
   archer: { name: 'Arqueiro', hp: 95, spd: 195, sp: 'Chuva de Flechas', desc: 'Ataca de longe. Rápido mas frágil.', spDesc: 'Dispara 14 flechas em todas as direções.',
     weapons: [
       { id: 'a_bow',    n: 'Arco Curto',   price: 0,   t: 'arrow', dmg: 1,  cd: .38, count: 1, spread: 0,  spd: 560, pierce: 0, info: 'Flecha rápida e certeira.', sk: { n: 'Salva Rápida', cd: 6, d: '7 flechas em rápida sequência.' } },
-      { id: 'a_triple', n: 'Arco Triplo',  price: 400, t: 'arrow', dmg: .8, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
-      { id: 'a_cross',  n: 'Besta Pesada', price: 1800, t: 'arrow', dmg: 3,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
-      { id: 'a_fire',   n: 'Arco Ígneo',   price: 7000, t: 'arrow', dmg: 1.1, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
-      { id: 'a_dark',   n: 'Arco Sombrio', price: 20000, t: 'arrow', dmg: .9, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
+      { id: 'a_triple', n: 'Arco Triplo',  price: 400, t: 'arrow', dmg: 0.9, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
+      { id: 'a_cross',  n: 'Besta Pesada', price: 1800, t: 'arrow', dmg: 3.6,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
+      { id: 'a_fire',   n: 'Arco Ígneo',   price: 7000, t: 'arrow', dmg: 3, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
+      { id: 'a_dark',   n: 'Arco Sombrio', price: 20000, t: 'arrow', dmg: 1.4, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
   mage: { name: 'Mago', hp: 80, spd: 175, sp: 'Nova Gélida', desc: 'Magia à distância com efeitos especiais.', spDesc: 'Explosão de gelo que fere e atrasa todos.',
     weapons: [
-      { id: 'm_fire',   n: 'Cajado de Fogo',  price: 0,   t: 'bolt', kind: 'fire', dmg: 1.4, cd: .6, spd: 380, aoe: 55, info: 'Bola de fogo explosiva que deixa chamas no chão.', sk: { n: 'Meteoro', cd: 8, d: 'Chama um meteoro que incendeia o chão.' } },
-      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 400, t: 'bolt', kind: 'ice',  dmg: 1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
-      { id: 'm_bolt',   n: 'Cajado de Raios', price: 1800, t: 'zap',  dmg: 1.3, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
-      { id: 'm_arcane', n: 'Cajado Arcano',   price: 7000, t: 'bolt', kind: 'arcane', dmg: 1.1, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
-      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 20000, t: 'bolt', kind: 'dark', dmg: 1.3, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
+      { id: 'm_fire',   n: 'Cajado de Fogo',  price: 0,   t: 'bolt', kind: 'fire', dmg: 1.75, cd: .6, spd: 380, aoe: 55, info: 'Bola de fogo explosiva que deixa chamas no chão.', sk: { n: 'Meteoro', cd: 8, d: 'Chama um meteoro que incendeia o chão.' } },
+      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 400, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
+      { id: 'm_bolt',   n: 'Cajado de Raios', price: 1800, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
+      { id: 'm_arcane', n: 'Cajado Arcano',   price: 7000, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
+      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 20000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
 const UPGRADES = [
   { k: 'hp',  n: 'Vitalidade', icon: 'heart', per: 20, sign: '+', unit: '', label: ' vida máxima' },
@@ -394,8 +394,10 @@ const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40)
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
-const COIN_RATE = .3, ENEMY_HP = 1.3, ENEMY_DMG = 1.2;
-const lvHP = () => 1 + .05 * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + .02 * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
+// parametros de equilibrio (testados com o simulador)
+const TUNE = { lvDmg: .04, eHP: 1.3, eDmg: 1.2, wHP: .10, wHP2: .003, wDM: .06, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.9, archer: 1, mage: .72 } };
+const COIN_RATE = .3;
+const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
   { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 2,  spd: 1.05 },
@@ -414,17 +416,17 @@ const EN = {
   slime: { spr: 'slime', hp: 3,  spd: 55,  r: 12, dmg: 8,  gold: 3,  ai: 'chase' },
   bat:   { spr: 'bat',   hp: 2,  spd: 125, r: 10, dmg: 6,  gold: 4,  ai: 'bat' },
   skel:  { spr: 'skel',  hp: 4,  spd: 55,  r: 12, dmg: 8,  gold: 6,  ai: 'shoot', shot: 'earrow' },
-  brute: { spr: 'brute', hp: 11, spd: 48,  r: 18, dmg: 18, gold: 12, ai: 'chase' },
+  brute: { spr: 'brute', hp: 10, spd: 48,  r: 18, dmg: 18, gold: 12, ai: 'chase' },
   wolf:  { spr: 'wolf',  hp: 3,  spd: 150, r: 11, dmg: 9,  gold: 5,  ai: 'chase' },
   ghost: { spr: 'ghost', hp: 4,  spd: 50,  r: 11, dmg: 7,  gold: 7,  ai: 'shoot', shot: 'orb' },
   imp:    { spr: 'imp',    hp: 5,  spd: 95,  r: 11, dmg: 9,  gold: 8,  ai: 'shoot', shot: 'orb', col: '#ff6a2a', pspd: 280, rate: 1.4 },
-  beetle: { spr: 'beetle', hp: 16, spd: 62,  r: 14, dmg: 15, gold: 14, ai: 'charge' },
-  shroom: { spr: 'shroom', hp: 9,  spd: 42,  r: 12, dmg: 6,  gold: 9,  ai: 'chase', boom: true },
+  beetle: { spr: 'beetle', hp: 9, spd: 62,  r: 14, dmg: 15, gold: 14, ai: 'charge' },
+  shroom: { spr: 'shroom', hp: 8,  spd: 42,  r: 12, dmg: 6,  gold: 9,  ai: 'chase', boom: true },
 };
 const MISSIONS = [
   { name: 'Floresta Sombria', desc: 'Limpa a floresta e enfrenta o Ceifador.', kills: 10, types: ['slime','slime','bat'],
     boss: { name: 'O Ceifador', hp: 50, pal: 'reaper', r: 34, spd: 55, ring: 8, charge: 380, col: '#c6f', pattern: ['ring','charge','spread'] }, reward: 60, theme: 0, cap: 5 },
-  { name: 'Cavernas Douradas', desc: 'Esqueletos e lobos guardam o Golem.', kills: 16, types: ['slime','bat','skel','skel','wolf','beetle'],
+  { name: 'Cavernas Douradas', desc: 'Esqueletos e lobos guardam o Golem.', kills: 16, types: ['slime','bat','skel','wolf','slime','beetle'],
     boss: { name: 'Golem de Pedra', hp: 85, pal: 'golem', r: 38, spd: 45, ring: 10, charge: 340, col: '#9ef', pattern: ['slam','ring','charge','slam'] }, reward: 120, theme: 1, cap: 6 },
   { name: 'Castelo Maldito', desc: 'O covil do Dragão Rubro.', kills: 22, types: ['slime','bat','skel','brute','imp','imp'],
     boss: { name: 'Dragão Rubro', hp: 120, pal: 'dragon', r: 40, spd: 65, ring: 12, charge: 460, col: '#f93', pattern: ['cone','meteors','charge','cone'] }, reward: 200, theme: 2, cap: 7 },
@@ -480,14 +482,14 @@ function keyName(c) {
 }
 const stats = () => {
   const c = CLASSES[save.cls], a = save.attr, g = gearStats(), L = save.pl.lv;
-  return { hp: Math.round(c.hp + a.vit * 14 + 4 * (L - 1) + g.hp), spd: c.spd * (1 + (a.agi * 1.2 + g.spd) / 100), dm: (1 + .01 * (L - 1) + a.str * .02) * (1 + g.dmg / 100), cdm: Math.max(.3, 1 - a.per * .012 - g.cdr / 100) };
+  return { hp: Math.round(c.hp + a.vit * 14 + 4 * (L - 1) + g.hp), spd: c.spd * (1 + (a.agi * 1.2 + g.spd) / 100), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .02) * (1 + g.dmg / 100), cdm: Math.max(.3, 1 - a.per * .012 - g.cdr / 100) };
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
 const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
-const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
+const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
 const heroSpr = () => save.cls + save.skE[save.cls];
 
 /* =====================================================================
@@ -616,7 +618,7 @@ function hurt(n) {
   const p = R.p;
   if (save.cheat && save.cheat.god) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * ENEMY_DMG * lvDM() * (1 - Math.min(60, R.G ? R.G.dr : 0) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -676,7 +678,7 @@ function areaDmg(x, y, r, dmg, o = {}) {
 
 /* ---- Q: especial da classe ---- */
 function special() {
-  const p = R.p, dm = stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
+  const p = R.p, dm = DM();
   if (p.sp > 0 || R.endT !== undefined) return;
   p.sp = 8; SFX.special(); R.shake = 7;
   if (save.cls === 'knight') { areaDmg(p.x, p.y, 105, 3 * dm, { kb: 450 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 105, t: .35, max: .35, col: '#fff' }); }
@@ -743,8 +745,8 @@ function dash() {
 
 /* ---- inimigos & bosses ---- */
 function spawnE(type, x, y) {
-  const d = EN[type], k = (1 + .2 * R.m) * (R.hpM || 1);
-  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k * ENEMY_HP * lvHP(), max: d.hp * k * ENEMY_HP * lvHP(), spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
+  const d = EN[type], k = (1 + TUNE.zHP * R.m) * (R.hpM || 1);
+  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k * TUNE.eHP * lvHP(), max: d.hp * k * TUNE.eHP * lvHP(), spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
 }
 function spawnEdge(type) {
   const s = Math.floor(Math.random() * 4); let x, y;
@@ -753,7 +755,7 @@ function spawnEdge(type) {
 }
 function spawnBoss() {
   const b = MISSIONS[R.m].boss;
-  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: b.hp * (R.bossM || 1) * 1.2 * lvHP(), max: b.hp * (R.bossM || 1) * 1.2 * lvHP(), spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
+  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: TUNE.boss[R.m] * (R.bossM || 1) * 1.2 * lvHP(), max: TUNE.boss[R.m] * (R.bossM || 1) * 1.2 * lvHP(), spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
   R.enemies = []; R.phase = 'boss'; R.toast = '! ' + b.name + ' apareceu!'; R.toastT = 3; R.shake = 14; SFX.boss();
 }
 function eProj(x, y, a, spd, dmg, kind, col) { R.projs.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, a, r: kind === 'orb' ? 7 : 4, dmg, from: 'e', kind, life: 4, col }); }
@@ -990,6 +992,7 @@ Object.assign(EN_DICT, {"Sorte indisponível (85%+)": "Luck unavailable (85%+)"}
 Object.assign(EN_DICT, {"Perfil indisponível": "Profile unavailable", "A carregar perfil...": "Loading profile...", "Ainda sem build partilhada": "No build shared yet", "Clica num jogador para ver o perfil": "Click a player to see the profile", "Recorde de waves": "Wave record"});
 Object.assign(EN_DICT, {"HORDA!": "HORDE!", "HORDA DERROTADA!": "HORDE DEFEATED!"});
 Object.assign(EN_DICT, {"Chega à onda": "Reach wave", "na zona anterior": "in the previous zone"});
+Object.assign(EN_DICT, {"Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.": "Melee tank. Lots of health, heavy blows and 15% less damage taken."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1367,7 +1370,7 @@ function equipBest(sl) {
   if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; } else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
 }
 function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
-const wpnDps = w => w.dmg * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
+const wpnDps = w => w.dmg * (w.count || 1) * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
   if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .3 * r));
@@ -1416,7 +1419,7 @@ function bossDown(b) {
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
   const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(60, 8 + 2 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
-  R.hpM = 1 + .16 * (w - 1); R.dmgM = 1 + .06 * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9;
+  R.hpM = 1 + TUNE.wHP * (w - 1) + TUNE.wHP2 * (w - 1) * (w - 1); R.dmgM = 1 + TUNE.wDM * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1)); R.bossM = R.hpM * .9;
   R.capB = Math.min(10, Math.floor(w / 4)) + Math.min(10, 2 * Math.floor(w / 10));       // mais monstros em simultaneo, sempre a subir
   R.hordeB = h ? 6 + Math.min(10, Math.floor(w / 10)) : 0;                               // a horda aguenta ainda mais
   R.spawnRate = Math.min(2.2, 1 + .02 * (w - 1)) * (h ? 1.8 : 1); R.packT = 5;
@@ -1761,7 +1764,7 @@ function hubWeapons() {
     const nm = locked ? 'Arma bloqueada' : w.n + (lv ? `  +${lv}` : '');
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
     const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
-    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
+    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
     if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
     if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });

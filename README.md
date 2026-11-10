@@ -50,7 +50,7 @@ A classe é escolhida ao criar o personagem e **não pode ser trocada** (só apa
 
 | | Classe | Vida | Veloc. | Especial (`Q`) | Estilo |
 |---|---|---|---|---|---|
-| <img src="docs/img/skin-knight-0.png" width="56" alt=""> | **Cavaleiro** | 140 | 165 | **Redemoinho**: Gira a lâmina e fere tudo à volta. | Tanque corpo-a-corpo. Muita vida e golpes pesados. |
+| <img src="docs/img/skin-knight-0.png" width="56" alt=""> | **Cavaleiro** | 140 | 165 | **Redemoinho**: Gira a lâmina e fere tudo à volta. | Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido. |
 | <img src="docs/img/skin-archer-0.png" width="56" alt=""> | **Arqueiro** | 95 | 195 | **Chuva de Flechas**: Dispara 14 flechas em todas as direções. | Ataca de longe. Rápido mas frágil. |
 | <img src="docs/img/skin-mage-0.png" width="56" alt=""> | **Mago** | 80 | 175 | **Nova Gélida**: Explosão de gelo que fere e atrasa todos. | Magia à distância com efeitos especiais. |
 
@@ -65,30 +65,30 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
 | <img src="docs/img/weapon-k_sword.png" width="56" alt=""> | **Espada de Ferro**<br><sub>Rápida e equilibrada.</sub> | 10 | 2.9/s | **Investida** (6s): Lança-te em frente ferindo tudo no caminho. | inicial | — |
-| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 22 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 16 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 28 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 11 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 34 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 20 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 49 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 34 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Arqueiro
 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
 | <img src="docs/img/weapon-a_bow.png" width="56" alt=""> | **Arco Curto**<br><sub>Flecha rápida e certeira.</sub> | 10 | 2.6/s | **Salva Rápida** (6s): 7 flechas em rápida sequência. | inicial | — |
-| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 8 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 30 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 11 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 9 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 9 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 36 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 30 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 14 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Mago
 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
-| <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 14 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial | — |
-| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 10 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 13 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 11 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 13 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 18 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial | — |
+| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 21 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢400 | Nv 6 |
+| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 17 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 30 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 46 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
 
 ## Fusão
 
@@ -182,6 +182,14 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 
 Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% · +7: 50% · +8: 40% · +9: 30% · +10: 22% · +11: 15% · +12: 10%. Marcos: **+5** brilho, **+10** faíscas, **+12** aura lendária.
 
+## Equilíbrio
+
+O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade subir de forma gradual:
+
+- Cada arma é claramente mais forte do que a anterior, e o dano de cada classe está compensado (o **Cavaleiro** tem mais dano e **15% menos dano recebido**; o **Mago** compensa o alcance e a área com menos dano).
+- Os inimigos ganham vida por onda, por zona e com o teu nível; as zonas e os bosses sobem de dificuldade de forma suave, sem saltos bruscos.
+- A cada 10 ondas vem uma **horda**.
+
 ## Progressão
 
 - **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
@@ -232,12 +240,12 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 | <img src="docs/img/enemy-slime.png" width="48" alt=""> | **Slime** | persegue | 3 | ¢3 |
 | <img src="docs/img/enemy-bat.png" width="48" alt=""> | **Morcego** | voo errático, rápido | 2 | ¢4 |
 | <img src="docs/img/enemy-skel.png" width="48" alt=""> | **Esqueleto arqueiro** | mantém distância e dispara | 4 | ¢6 |
-| <img src="docs/img/enemy-brute.png" width="48" alt=""> | **Bruto** | lento, muita vida e muito dano | 11 | ¢12 |
+| <img src="docs/img/enemy-brute.png" width="48" alt=""> | **Bruto** | lento, muita vida e muito dano | 10 | ¢12 |
 | <img src="docs/img/enemy-wolf.png" width="48" alt=""> | **Lobo** | muito rápido | 3 | ¢5 |
 | <img src="docs/img/enemy-ghost.png" width="48" alt=""> | **Fantasma** | mantém distância e dispara orbes | 4 | ¢7 |
 | <img src="docs/img/enemy-imp.png" width="48" alt=""> | **Diabrete** | atira bolas de fogo rápidas | 5 | ¢8 |
-| <img src="docs/img/enemy-beetle.png" width="48" alt=""> | **Escaravelho** | prepara-se (!) e investe em linha reta | 16 | ¢14 |
-| <img src="docs/img/enemy-shroom.png" width="48" alt=""> | **Cogumelo** | explode ao morrer, deixando uma área tóxica | 9 | ¢9 |
+| <img src="docs/img/enemy-beetle.png" width="48" alt=""> | **Escaravelho** | prepara-se (!) e investe em linha reta | 9 | ¢14 |
+| <img src="docs/img/enemy-shroom.png" width="48" alt=""> | **Cogumelo** | explode ao morrer, deixando uma área tóxica | 8 | ¢9 |
 
 ### Bosses
 
