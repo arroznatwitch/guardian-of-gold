@@ -175,7 +175,7 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 **Encantar (equipamento)** — ecrã *Encantar*:
 
 - **Refinar** até +10: cada nível dá **+6%** a todos os bónus da peça. Chances de sucesso: +1: 100% · +2: 90% · +3: 80% · +4: 70% · +5: 60% · +6: 50% · +7: 40% · +8: 30% · +9: 22% · +10: 15%. A partir de +6, uma falha pode fazer a peça descer um nível.
-- **Encantar especial:** sorteia um efeito (Ígneo, Gélido, Vampírico, Letal, Próspero, Sábio, Protetor, Poderoso). Podes voltar a sortear, com custo crescente.
+- **Encantar especial:** sorteia um efeito (Ígneo, Gélido, Vampírico, Letal, Próspero, Sábio, Protetor, Poderoso). Podes voltar a sortear, com custo crescente em ouro **e diamantes** (de 1 a 5 diamantes, conforme a raridade e o número de repetições). As **pedras de evolução** que as raids dão (a raridade segue a dificuldade) sobem o nível de uma peça da mesma raridade em +2 por pedra, até ao nível 120.
 
 **Bigorna (armas)** — melhora uma arma até **+12** (o dano sobe mais a cada nível: ×3,6 no +12, na arma e na habilidade). Podes usar o *Amuleto da Sorte* (+15% de chance, só quando a chance for inferior a 85%) e o *Pergaminho de Proteção* (a partir de +5). Falhas seguidas dão bónus de azar.
 
@@ -208,7 +208,7 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 ## Farm e Raids
 
 - **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas e uma **horda** a cada 10 (muito mais monstros ao mesmo tempo, mais mortes para completar, mais ouro e um item no fim). Os inimigos ficam mais fortes (e dão mais ouro) a cada onda, aparecem mais depressa e em maior número, e cada zona seguinte abre quando chegas a uma onda mínima na anterior (10, 10, 20, 20 e 30). Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
-- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Os ataques do boss ficam mais fortes com o nível recomendado da raid, e quem vai muito acima do nível recomendado encontra monstros mais fortes.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da anterior. Dentro de cada dificuldade as raids abrem **uma a uma**. Cada raid vencida dá também **pedras de evolução**. Os ataques do boss ficam mais fortes com o nível recomendado da raid, e quem vai muito acima do nível recomendado encontra monstros mais fortes.
 
 | Dificuldade | Vida | Dano | Ouro |
 |---|---|---|---|

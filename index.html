@@ -467,12 +467,13 @@ const THEMES = [
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1 };
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0] };
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
+  s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0);
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {
@@ -612,6 +613,7 @@ function endMission(win) {
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
+  if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; } }   // pedras de evolucao: a raridade segue a dificuldade
   R.lootN = R.loot.length; save.gold += g; R.earned = g; statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
@@ -1028,6 +1030,7 @@ Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell
 Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the previous raid on this difficulty"});
 Object.assign(EN_DICT, {"Já existem 5 contas criadas a partir desta rede": "There are already 5 accounts created from this network", "Confirmar venda?": "Confirm sale?", "Item raro: pede confirmação": "Rare item: asks to confirm", "Pode ser melhor que o equipado": "May be better than equipped", "parecem melhores que o equipado": "look better than equipped", "● melhor  ● pior  ● igual (vs equipado)": "● better  ● worse  ● same (vs equipped)", "efetivo": "effective"});
+Object.assign(EN_DICT, {"Pedras de evolução:": "Evolution stones:", "Evoluir Nv": "Upgrade Lv", "Nível de item máximo": "Max item level", "Pedra": "Stone", "EVOLUÍDO! Nível": "UPGRADED! Level", "Diamantes insuficientes": "Not enough diamonds", "Refinar: +6% a todos os atributos por nível.": "Refine: +6% to all stats per level.", "Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.": "Enchant: rolls a special effect (costs gold and diamonds). Raid stones raise the item level.", "MÁX": "MAX"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1474,6 +1477,7 @@ function endLines(win) {
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
   if (R.lvUp) a.push(`Subiste para o nível ${R.lvUp}! (+${R.ptsGain} pontos)`);
   if (R.gemGain) a.push(`+${R.gemGain} ◆ Diamantes`);
+  if (R.stoneGain && R.stoneGain.some(Boolean)) a.push('Pedras de evolução: ' + R.stoneGain.map((n, r) => n ? `${n}× ${RAR[r][0]}` : '').filter(Boolean).join(', '));
   return a;
 }
 function miniStars(n, x, y) { for (let q = 0; q < n; q++) drawIcon('star', x + q * 8, y, .9); }
@@ -1605,7 +1609,9 @@ function hubChar() {
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
     txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, a[key] > 40 ? '#ff9a4a' : '#f0c060', 'right', 'bold'); if (a[key] > 40) txt(`efetivo ${Math.round(attrEff(a[key]))}`, 690, y + 31, 9, '#c98a4a', 'right');
-    btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
+    const capped = key === 'per' && stats().cdm <= .3001;   // a velocidade de ataque tem limite de +70%: mais pontos seriam desperdicados
+    if (capped) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
+    btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
   btn(504, 314, 267, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { save.gold -= rc; save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 13, off: used === 0, col: '#6a3a2a' });
@@ -1675,9 +1681,21 @@ function doRefine() {
   save.gold -= c; const ok = Math.random() * 100 < ENC_CH[it.ench], down = !ok && it.ench >= 6 && Math.random() < .3;
   enc = { t: .9, res: { kind: 'ref', ok, down, it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
 }
+// pedras de evolucao: cada pedra da raridade da peca sobe +2 niveis de item (ate 120) e os bonus crescem com ele
+const MAIN_BASE = { head: il => 30 + 8 * il, chest: il => 50 + 12 * il, boots: il => 3 + .25 * il, amulet: il => 3 + .35 * il };
+function evolveItem(it) {
+  if (!it || enc.t > 0 || it.il >= 120 || !(save.stones[it.r] > 0)) { SFX.error(); return; }
+  const il2 = Math.min(120, it.il + 2), fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
+  it.main.v = fx(it.main.k, it.main.v, MAIN_BASE[it.slot](il2) / MAIN_BASE[it.slot](it.il));
+  for (const a of it.aff) a.v = fx(a.k, a.v, fa(a.k));
+  if (it.spec) { const cap = (it.spec.k === 'burn' || it.spec.k === 'slow') ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
+  it.il = il2; save.stones[it.r]--; enc.msg = `EVOLUÍDO! Nível ${il2}`; enc.col = '#7fe8ff'; enc.msgT = 2.5; SFX.special();
+  for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#7fe8ff' }); persist();
+}
+const specGems = it => 1 + it.r + Math.floor((it.rr || 0) / 2);   // encantar especial custa diamantes: sobem com a raridade e com cada repeticao
 function doSpec() {
-  const it = enchItem; if (!it || enc.t > 0) return; const c = specCost(it); if (save.gold < c) { SFX.error(); return; }
-  save.gold -= c; enc = { t: .9, res: { kind: 'spec', it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
+  const it = enchItem; if (!it || enc.t > 0) return; const c = specCost(it), gm = specGems(it); if (save.gold < c || save.gems < gm) { SFX.error(); return; }
+  save.gold -= c; save.gems -= gm; enc = { t: .9, res: { kind: 'spec', it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
 }
 function updateEnchant(dt) {
   for (const q of enc.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 260 * dt; q.l -= dt; } enc.sparks = enc.sparks.filter(q => q.l > 0);
@@ -1713,15 +1731,18 @@ function hubEnchant() {
   slotIcon(it.slot, it.r, sx, sy + Math.sin(T * 2) * 2, 6.4);
   for (const q of enc.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
   if (enc.msgT > 0) { ctx.globalAlpha = Math.min(1, enc.msgT); txt(enc.msg, sx, 328, 22, enc.col, 'center', 'bold'); ctx.globalAlpha = 1; }
-  wrap('Refinar: +8% a todos os atributos por nível.', 205, 360, 225, 16, 12, '#9ab'); wrap('Encantar: sorteia um efeito especial (podes repetir).', 205, 402, 225, 16, 12, '#9ab');
+  wrap('Refinar: +6% a todos os atributos por nível.', 205, 360, 225, 16, 12, '#9ab'); wrap('Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.', 205, 392, 225, 15, 12, '#9ab');
   const max = it.ench >= ENC_MAX, rc = refCost(it), sc = specCost(it), ch = max ? 0 : ENC_CH[it.ench];
   if (max) txt('Nível máximo!', 600, 366, 16, '#ffd34a', 'center', 'bold');
   else { txt(`Chance: ${ch}%`, 432, 362, 14, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold'); bar(432, 368, 340, 8, ch / 100, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'); }
   btn(432, 392, 165, 56, '', doRefine, { off: max || enc.t > 0 || save.gold < rc, col: '#a06a20', hot: '#c98a30' });
   txt(max ? 'Nível máximo!' : `Refinar +${it.ench} > +${it.ench + 1}`, 514, 414, 14, '#fff', 'center', 'bold'); if (!max) txt(`¢${rc}`, 514, 435, 14, '#fd5', 'center', 'bold');
-  btn(607, 392, 165, 56, '', doSpec, { off: enc.t > 0 || save.gold < sc, col: '#5a3a7a', hot: '#7a55a0' });
-  txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 689, 435, 14, '#fd5', 'center', 'bold');
-  if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 468, 12, '#f88', 'center');
+  const sg = specGems(it);
+  btn(607, 392, 165, 56, '', doSpec, { off: enc.t > 0 || save.gold < sc || save.gems < sg, col: '#5a3a7a', hot: '#7a55a0' });
+  txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
+  { const have = save.stones[it.r], capIl = it.il >= 120;
+    btn(432, 452, 340, 24, capIl ? 'Nível de item máximo' : `Evoluir Nv ${it.il} > ${Math.min(120, it.il + 2)}  ·  Pedra ${RAR[it.r][0]} (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || !have, size: 13, col: '#2a5a7a', hot: '#3a7aa0' }); }
+  if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 386, 12, '#f88', 'center'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 386, 12, '#f88', 'center');
 }
 
 const fr = v => v - Math.floor(v), rn = k => fr(Math.sin(k * 127.1 + 311.7) * 43758.5453);
