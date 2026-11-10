@@ -2212,11 +2212,19 @@ const tabLv = t => TAB_LV[t] || 0;
 const tabOpen = t => !save || save.pl.lv >= tabLv(t);
 function lockClick(key) { lkShake[key] = .35; SFX.locked(); }
 function lkOff(key) { return lkShake[key] > 0 ? Math.sin(T * 70) * 3 * lkShake[key] / .35 : 0; }
+const LOCK_ROWS = [
+  '......DDDDDD......', '.....DSSSSSSD.....', '....DSSDDDDSSD....', '...DSSD....DSSD...', '...DSD......DSD...', '...DSD......DSD...', '...DSD......DSD...', '...DSD......DSD...',
+  '.DDDDDDDDDDDDDDDD.', '.DHHHHHHHHHHHHHHD.', '.DHBBBBBBBBBBBBbD.', '.DBBBBBBBBBBBBBbD.', '.DBBBBBBKKBBBBBbD.', '.DBBBBBKKKKBBBBbD.', '.DBBBBBKKKKBBBBbD.', '.DBBBBBBKKBBBBBbD.',
+  '.DBBBBBBKKBBBBBbD.', '.DBBBBBKKKKBBBBbD.', '.DbbbbbbbbbbbbbbD.', '.DDDDDDDDDDDDDDDD.',
+];
+const LOCK_PAL = { D: '#15101f', S: '#d0d4e4', s: '#8a90a8', B: '#c9962a', b: '#8a6418', H: '#f0c860', K: '#2a1a08' };
+let LOCK_SPR = null;
+// cadeado em pixel-art (o = 0 fechado ... 1 aberto: a argola sobe e desloca-se)
 function drawLockBig(cx, cy, k, o) {
-  ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); const bw = 30 * k, bh = 24 * k, top = -bh / 2 - 8 * k - o * 4 * k;
-  ctx.strokeStyle = '#d0d4e4'; ctx.lineWidth = Math.max(2, 5 * k); ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(9 * k, -bh / 2 + 2 * k); ctx.lineTo(9 * k, top); ctx.arc(0, top, 9 * k, 0, Math.PI, true); ctx.lineTo(-9 * k, -bh / 2 + 2 * k - o * 12 * k); ctx.stroke();
-  ctx.fillStyle = '#8a6418'; ctx.fillRect(-bw / 2, -bh / 2, bw, bh); ctx.fillStyle = '#c9962a'; ctx.fillRect(-bw / 2 + k, -bh / 2 + k, bw - 2 * k, bh - 3 * k); ctx.fillStyle = '#f0c860'; ctx.fillRect(-bw / 2 + k, -bh / 2 + k, bw - 2 * k, 3 * k);
-  ctx.fillStyle = '#2a1a08'; ctx.beginPath(); ctx.arc(0, -2 * k, 3 * k, 0, 7); ctx.fill(); ctx.fillRect(-1.2 * k, -2 * k, 2.4 * k, 7 * k); ctx.restore();
+  if (!LOCK_SPR) LOCK_SPR = { sh: makeSprite(LOCK_ROWS.slice(0, 8), LOCK_PAL, 1, false), body: makeSprite(LOCK_ROWS.slice(8), LOCK_PAL, 1, false) };
+  const p = Math.max(1, Math.round(k * 1.8)), x0 = Math.round(cx - 9 * p), y0 = Math.round(cy - 10 * p), lift = Math.round(o * 5) * p, dx = Math.round(Math.max(0, o - .5) * 4) * p;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(LOCK_SPR.sh, x0 + dx, y0 - lift, 18 * p, 8 * p); ctx.drawImage(LOCK_SPR.body, x0, y0 + 8 * p, 18 * p, 12 * p);
 }
 function markUnl(sv) {
   sv.unl = sv.unl || {};
@@ -2259,7 +2267,7 @@ function wrapC(str, cx, y, maxW, lh, size, col) {
 }
 function drawTabLock(t) {
   const lv = tabLv(t), [nm, ds] = TAB_INFO[t], cur = save.pl.lv, left = Math.max(0, lv - cur), need = xpNeed(cur), cx = 487;
-  drawLockBig(cx + lkOff(t), 186, 3, 0);
+  drawLockBig(cx + lkOff(t), 178, 3, 0);
   txt(nm, cx, 260, 30, '#fff', 'center', 'bold');
   const n = wrapC(ds, cx, 286, 400, 17, 14, '#b8c4e0'), y0 = 286 + n * 17 + 12;
   txt(`Desbloqueia no Nível ${lv}`, cx, y0 + 12, 22, '#ffd34a', 'center', 'bold');
