@@ -210,23 +210,47 @@ for (const id in WDEF) { const sh = WSHAPES[WDEF[id].shape]; WSPR[id] = { img: m
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
 const mixC = (a, b, t) => { const A = hexRGB(a), B = hexRGB(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
 const WTIER = {};
+/* desenhos novos por forma e por nivel (metade de cima, a ultima linha e a do meio; a de baixo e o espelho com sombra) */
+const TIER_ART = {
+  sword: { 2: { ax: 3, h: ['....G.............', '....GG............', '..H.GGLLLLLLLLM...', 'pHHHJGMMMMMMMMMMMW'] },
+           3: { ax: 3, h: ['..G.G.............', '..GGG.............', '...GGMLLLLLLLLM....', '..H.GMLLLLLLLLLLM..', 'pHHHJGMMMMMMMMMMMMMW'] } },
+  axe: { 2: { ax: 3, h: ['..........MM.....', '........MMMMM....', '......GMMLLLMMM..', '....HGGMLLLLLMMM.', 'HHHHHJGGMMMMMMMMM'] },
+           3: { ax: 3, h: ['..........M..M.....', '........MMMMMMM....', '......GMMLLLLLMMM..', '....GGGMLLLLLLLMMM.', '..H.GJGMMLLLLLLMMMM', 'HHHHHJGGGMMMMMMMMMW'] } },
+  spear: { 2: { ax: 4, h: ['........MM.........', '.......GMLLMM.......', 'HHHHHHHGJMMMMMMMMMMW'] },
+           3: { ax: 4, h: ['......J.............', '......GMM...........', '.....GGMLLMM........', 'HHHHHHJGMMMMMMMMMMMMW'] } },
+  hammer: { 2: { ax: 3, h: ['.......GGGGGGGGG.', '.......GMLLLLLMMG', '.......GMLJJLLMMG', '..H....GMMMMMMMMG', 'HHHHHHHHGGGGGGGGG'] },
+            3: { ax: 3, h: ['......G.G.G.G.G.G.', '.......GGGGGGGGGG.', '.......GMLLLLLLMMG', '.......GMLJJJJLMMG', '..H....GMMMMMMMMMG', 'HHHHHHHHGJGGGGGGJG'] } },
+  dagger: { 2: { ax: 3, h: ['...G..........', '..HGGMLLLLLM..', 'pHHJGMMMMMMMMM'] },
+           3: { ax: 3, h: ['..G..G.........', '..GGGG.MM......', '..HGGMLLLLMM...', 'pHHJGMMMMMMMMMW'] } },
+  bow: { 2: { ax: 3, h: ['..SMM.....', '..SGMM....', '..S.MM....', '..S..MM...', '..S..GM...', '..S...MM..', '..SJ..MM..'] },
+           3: { ax: 3, h: ['..SGMM......', '..SGGMM.....', '..S.GMMM....', '..S..GMMM...', '..S..LGMMM..', '..S...GMMM..', '..SJ..GMMMM.', '.WSJJ..MMMMM'] } },
+  cross: { 2: { ax: 3, h: ['........M.......', '.......MM.......', '......MMG.......', '......MG........', 'HHHHHHJGLLLLLLLW'] },
+           3: { ax: 3, h: ['..........M.......', '.........MM.......', '........MMG.......', '.......MMG........', '..H...MMGG.LLLL...', 'HHHHHHJJGGLLLLLLLW'] } },
+  staff: { 2: { ax: 3, h: ['..........GOOG..', '.........GOLLOG.', '.........OLJJLOO', 'HHHHHHHHGOOJJOOO'] },
+           3: { ax: 3, h: ['..........G..G..G.', '..........GOOOOOG..', '.........GOLLLLLOG.', '.........OLJJJJJLOO', 'HHHHHHHHJGOOJWJOOOG'] } },
+};
 function tierSprite(id, tier) {
-  const sh = WSHAPES[WDEF[id].shape], pal = WDEF[id].pal, acc = WCOL[id] || '#ffe14a', rows = sh.rows, w0 = rows[0].length, h0 = rows.length, W = w0 + 2, H = h0 + 2;
-  const P = {}; for (const k in pal) P[k] = tier === 3 ? mixC(pal[k], '#ffffff', .28) : mixC(pal[k], '#ffffff', .15);
-  const g = []; for (let y = 0; y < H; y++) { g.push(new Array(W).fill(null)); }
-  rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch !== '.') g[j + 1][i + 1] = P[ch]; }));
-  const f = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x];
-  const rim = g.map(r => r.slice());
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y][x]) { if (!f(x, y - 1)) rim[y][x] = mixC(g[y][x], '#ffffff', tier === 3 ? .7 : .5); else if (!f(x, y + 1)) rim[y][x] = mixC(g[y][x], '#000000', .22); }
-  // cabo dourado e gema no punho
-  let gy = 0, gx = 99, gc = 0; for (let y = 0; y < H; y++) { let fx = -1, c = 0; for (let x = 0; x < W; x++) if (g[y][x]) { if (fx < 0) fx = x; c++; } if (fx >= 0 && (fx < gx || (fx === gx && c > gc))) { gx = fx; gy = y; gc = c; } }
-  if (WDEF[id].shape !== 'bow') { for (let x = gx + 1; x < gx + 1 + Math.min(6, sh.ax); x++) if (g[gy][x] && (x - gx) % 2 === 0) rim[gy][x] = '#ffd34a'; rim[gy][gx] = tier === 3 ? '#ffffff' : acc; if (tier === 3 && g[gy][gx + 1]) rim[gy][gx + 1] = acc; }
-  const ol = tier === 3 ? mixC(acc, '#ffffff', .15) : '#15101f';
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!g[y][x] && (f(x - 1, y) || f(x + 1, y) || f(x, y - 1) || f(x, y + 1))) rim[y][x] = ol;
-  if (tier === 3) for (const [x, y] of [[W - 1, 0], [W - 4, H - 1], [sh.ax + 5, 0], [0, H - 1]]) if (!rim[y][x]) rim[y][x] = '#ffffff';
+  const shp = WDEF[id].shape, art = TIER_ART[shp][tier], pal = WDEF[id].pal, acc = WCOL[id] || '#ffe14a', up = c => tier === 3 ? mixC(c, '#ffffff', .22) : c;
+  let R2;
+  if (shp === 'sword') R2 = { M: pal.b, H: pal.h, p: pal.p };
+  else if (shp === 'axe') R2 = { M: pal.a, L: pal.A, H: pal.h };
+  else if (shp === 'spear') R2 = { M: pal.t, H: pal.h };
+  else if (shp === 'hammer') R2 = { M: pal.M, m: pal.m, H: pal.s };
+  else if (shp === 'dagger') R2 = { M: pal.r, H: pal.h, p: pal.p };
+  else if (shp === 'bow') R2 = { M: pal.w, S: pal.s };
+  else if (shp === 'cross') R2 = { M: pal.w, H: pal.h, L: pal.b };
+  else R2 = { H: pal.s, O: pal.o, L: pal.h };
+  const base = R2.M || R2.O, C = { D: '#15101f', W: '#ffffff', J: acc, G: tier === 3 ? '#ffe27a' : '#e0b030', L: mixC(base, '#ffffff', .55), m: mixC(base, '#000000', .3) };
+  for (const k in R2) C[k] = up(R2[k]); if (R2.L) C.L = tier === 3 ? mixC(R2.L, '#ffffff', .5) : R2.L; if (!R2.m) C.m = mixC(C[R2.M ? 'M' : 'O'], '#000000', .3); if (!C.p) C.p = C.G; if (!C.H) C.H = '#6b4a22'; if (!C.S) C.S = '#e8e8e8'; if (!C.O) C.O = C.M;
+  const top = art.h, low = top.slice(0, -1).reverse().map(r => r.replace(/L/g, 'm')), rows = top.concat(low), w0 = Math.max(...rows.map(r => r.length)), h0 = rows.length, W = w0 + 2, H = h0 + 2;
+  const g = []; for (let y = 0; y < H; y++) g.push(new Array(W).fill(null));
+  rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch !== '.' && C[ch]) g[j + 1][i + 1] = C[ch]; }));
+  const f = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x], ol = tier === 3 ? mixC(acc, '#ffffff', .15) : '#15101f', o = g.map(r => r.slice());
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!g[y][x] && (f(x - 1, y) || f(x + 1, y) || f(x, y - 1) || f(x, y + 1))) o[y][x] = ol;
+  if (tier === 3) for (const [x, y] of [[W - 1, 0], [W - 4, H - 1], [8, 0], [0, H - 1]]) if (!o[y][x]) o[y][x] = '#ffffff';
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x2 = c.getContext('2d');
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (rim[y][x]) { x2.fillStyle = rim[y][x]; x2.fillRect(x, y, 1, 1); }
-  return { img: c, ax: sh.ax + 1, w: W, h: H, s: tier === 3 ? 1.25 : 1.1 };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (o[y][x]) { x2.fillStyle = o[y][x]; x2.fillRect(x, y, 1, 1); }
+  return { img: c, ax: art.ax + 1, w: W, h: H, s: 1 };
 }
 function wSp(id) { const st = STAR_OV >= 0 ? STAR_OV : wStar(id); if (st < 2) return WSPR[id]; const k = id + st; return WTIER[k] || (WTIER[k] = tierSprite(id, st >= 3 ? 3 : 2)); }
 let STAR_OV = -1;
@@ -438,13 +462,18 @@ addEventListener('keydown', e => {
   }
 });
 addEventListener('keyup', e => keys[e.code] = false);
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; mdown = false; holdBtn = null; if (state === 'play') state = 'pause'; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; mdown = false; stopHold(); if (state === 'play') state = 'pause'; });
 function setBind(a, code) {
   for (const o in binds) if (o !== a && binds[o] === code) binds[o] = binds[a];
   binds[a] = code; saveBinds();
 }
 function toLocal(e) { const r = cv.getBoundingClientRect(); mouse.x = (e.clientX - r.left) * W / r.width; mouse.y = (e.clientY - r.top) * H / r.height; }
-let activeDrag = null, holdBtn = null;
+let activeDrag = null, holdBtn = null, holdTimer = null;
+function stopHold() { if (holdTimer) { clearTimeout(holdTimer); clearInterval(holdTimer); holdTimer = null; } holdBtn = null; }
+function startHold(b) {
+  stopHold(); holdBtn = b;
+  holdTimer = setTimeout(() => { holdTimer = setInterval(() => { const q = holdBtn; if (!q || state !== 'hub' || mouse.x - UIOX < q.x || mouse.x - UIOX > q.x + q.w || mouse.y < q.y || mouse.y > q.y + q.h) { stopHold(); return; } q.fn(); }, 45); }, 380);
+}
 cv.addEventListener('mousemove', e => { toLocal(e); if (activeDrag) activeDrag.fn(); });
 cv.addEventListener('contextmenu', e => e.preventDefault());
 cv.addEventListener('mousedown', e => {
@@ -453,10 +482,10 @@ cv.addEventListener('mousedown', e => {
   if (capture) { capture = null; return; }
   for (let i = ui.length - 1; i >= 0; i--) {
     const b = ui[i];
-    if (mouse.x - UIOX >= b.x && mouse.x - UIOX <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) { if (b.drag) activeDrag = b; else SFX.click(); if (b.rep) holdBtn = { b, t: .4 }; b.fn(); return; }
+    if (mouse.x - UIOX >= b.x && mouse.x - UIOX <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) { if (b.drag) activeDrag = b; else SFX.click(); b.fn(); if (b.rep) startHold(b); return; }
   }
 });
-addEventListener('mouseup', () => { mdown = false; holdBtn = null; if (activeDrag) { if (activeDrag.rel) activeDrag.rel(); activeDrag = null; } });
+addEventListener('mouseup', () => { mdown = false; stopHold(); if (activeDrag) { if (activeDrag.rel) activeDrag.rel(); activeDrag = null; } });
 function goHub() { state = 'hub'; tab = 'farm'; setMusic('calm'); }
 
 /* =====================================================================
@@ -2055,7 +2084,6 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  if (holdBtn) { const b = holdBtn.b; if (state === 'hub' && mouse.x - UIOX >= b.x && mouse.x - UIOX <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) { holdBtn.t -= dt; while (holdBtn.t <= 0) { b.fn(); holdBtn.t += .045; } } else holdBtn = null; }
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
   if (state === 'menu' || state === 'class' || state === 'keys' || state === 'hub' || state === 'options' || state === 'cheats') { ctx.save(); ctx.translate(UIOX, 0); ({ menu: drawMenu, class: drawClass, keys: drawKeys, hub: drawHub, options: drawOptions, cheats: drawCheats })[state](); ctx.restore(); }
