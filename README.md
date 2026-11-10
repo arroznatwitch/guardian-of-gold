@@ -275,6 +275,10 @@ Cosméticos que mudam o aspeto do herói. A skin inicial é grátis, a 1.ª extr
 - **Diamantes ◆:** ganhas **+10 a cada 10 níveis** e gastas nas skins.
 - **Pets:** ecrã já presente, mas marcado como *Ainda por vir*.
 
+## Ranking online
+
+O separador **Ranking** tem classificações de **nível, mobs mortos, ouro ganho, bosses, raids** e **recorde de waves por mapa**. A conta só precisa de **nick + palavra-passe** (a palavra-passe nunca sai do teu dispositivo). Precisa de um pequeno servidor Supabase: vê o [guia de configuração](docs/ONLINE.md).
+
 ---
 
 Feito com carinho em HTML, CSS e JavaScript puros (canvas). Sem dependências.
