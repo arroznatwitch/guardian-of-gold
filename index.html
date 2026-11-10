@@ -361,24 +361,24 @@ const CLASSES = {
   knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Redemoinho', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Gira a lâmina e fere tudo à volta.',
     weapons: [
       { id: 'k_sword',  n: 'Espada de Ferro',    price: 0,   t: 'melee', dmg: 1,   cd: .35, range: 70,  arc: .45, kb: 240, info: 'Rápida e equilibrada.', sk: { n: 'Investida', cd: 6, d: 'Lança-te em frente ferindo tudo no caminho.' } },
-      { id: 'k_axe',    n: 'Machado de Guerra',  price: 400, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
-      { id: 'k_spear',  n: 'Lança do Caçador',   price: 1800, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
-      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 7000, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
-      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 20000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
+      { id: 'k_axe',    n: 'Machado de Guerra',  price: 600, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
+      { id: 'k_spear',  n: 'Lança do Caçador',   price: 2700, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
+      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 10500, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
+      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 30000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
   archer: { name: 'Arqueiro', hp: 95, spd: 195, sp: 'Chuva de Flechas', desc: 'Ataca de longe. Rápido mas frágil.', spDesc: 'Dispara 14 flechas em todas as direções.',
     weapons: [
       { id: 'a_bow',    n: 'Arco Curto',   price: 0,   t: 'arrow', dmg: 1,  cd: .38, count: 1, spread: 0,  spd: 560, pierce: 0, info: 'Flecha rápida e certeira.', sk: { n: 'Salva Rápida', cd: 6, d: '7 flechas em rápida sequência.' } },
-      { id: 'a_triple', n: 'Arco Triplo',  price: 400, t: 'arrow', dmg: 0.9, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
-      { id: 'a_cross',  n: 'Besta Pesada', price: 1800, t: 'arrow', dmg: 3.6,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
-      { id: 'a_fire',   n: 'Arco Ígneo',   price: 7000, t: 'arrow', dmg: 3, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
-      { id: 'a_dark',   n: 'Arco Sombrio', price: 20000, t: 'arrow', dmg: 1.4, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
+      { id: 'a_triple', n: 'Arco Triplo',  price: 600, t: 'arrow', dmg: 0.9, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
+      { id: 'a_cross',  n: 'Besta Pesada', price: 2700, t: 'arrow', dmg: 3.6,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
+      { id: 'a_fire',   n: 'Arco Ígneo',   price: 10500, t: 'arrow', dmg: 3, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
+      { id: 'a_dark',   n: 'Arco Sombrio', price: 30000, t: 'arrow', dmg: 1.4, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
   mage: { name: 'Mago', hp: 80, spd: 175, sp: 'Nova Gélida', desc: 'Magia à distância com efeitos especiais.', spDesc: 'Explosão de gelo que fere e atrasa todos.',
     weapons: [
       { id: 'm_fire',   n: 'Cajado de Fogo',  price: 0,   t: 'bolt', kind: 'fire', dmg: 1.75, cd: .6, spd: 380, aoe: 55, info: 'Bola de fogo explosiva que deixa chamas no chão.', sk: { n: 'Meteoro', cd: 8, d: 'Chama um meteoro que incendeia o chão.' } },
-      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 400, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
-      { id: 'm_bolt',   n: 'Cajado de Raios', price: 1800, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
-      { id: 'm_arcane', n: 'Cajado Arcano',   price: 7000, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
-      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 20000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
+      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 600, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
+      { id: 'm_bolt',   n: 'Cajado de Raios', price: 2700, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
+      { id: 'm_arcane', n: 'Cajado Arcano',   price: 10500, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
+      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 30000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
 const UPGRADES = [
   { k: 'hp',  n: 'Vitalidade', icon: 'heart', per: 20, sign: '+', unit: '', label: ' vida máxima' },
@@ -396,20 +396,23 @@ function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.3, eDmg: 1.2, wHP: .10, wHP2: .003, wDM: .06, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.9, archer: 1, mage: .72 } };
-const COIN_RATE = .3;
+const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
-  { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 2,  spd: 1.05 },
-  { n: 'Normal',   col: '#4a9aff', hp: 3,   dmg: 1.8, gold: 4,  spd: 1.1 },
-  { n: 'Difícil',  col: '#ff9a2a', hp: 4.5, dmg: 2.4, gold: 8,  spd: 1.15 },
-  { n: 'Pesadelo', col: '#ff4a4a', hp: 7,   dmg: 3.2, gold: 16, spd: 1.2 },
-  { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 30, spd: 1.25 },
+  { n: 'Fácil',    col: '#4cc46a', hp: 2.5, dmg: 1.6, gold: 1,  spd: 1.05 },
+  { n: 'Normal',   col: '#4a9aff', hp: 4.2, dmg: 2.2, gold: 2,  spd: 1.1 },
+  { n: 'Difícil',  col: '#ff9a2a', hp: 7,   dmg: 3, gold: 4,  spd: 1.15 },
+  { n: 'Pesadelo', col: '#ff4a4a', hp: 11.5, dmg: 4.2, gold: 8,  spd: 1.2 },
+  { n: 'Inferno',  col: '#c040ff', hp: 18,  dmg: 6, gold: 15, spd: 1.25 },
 ];
+// nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
+const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
+const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
 const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15, LUCKY_MAX = 85;
 const luckOk = (lv, id) => ANV_CH[lv] + Math.min(25, 5 * ((save.pity && save.pity[id]) || 0)) < LUCKY_MAX;   // o amuleto so ajuda se a chance for inferior a 85%
-const anvCost = l => 40 * (l + 1) + (l >= 8 ? 100 * (l - 7) : 0), luckyCost = l => 30 + 15 * l, protCost = l => 60 + 30 * l;
+const anvCost = l => 60 * (l + 1) + (l >= 8 ? 150 * (l - 7) : 0), luckyCost = l => 30 + 15 * l, protCost = l => 60 + 30 * l;
 const auraCol = l => l >= 12 ? '#ffd34a' : l >= 10 ? '#ff6a6a' : l >= 5 ? '#7fd0ff' : null;
 
 const EN = {
@@ -486,7 +489,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
@@ -573,8 +576,8 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg; R.goldM = D.gold; R.spdM = D.spd;
-    R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_MINI.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd;
+    R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
   if (farm) { R.wave = 1; applyWave(); R.toast = `Farm: ${M.name}`; R.toastT = 3; }
@@ -834,7 +837,7 @@ function update(dt) {
   // spawn
   if (R.phase === 'hunt' && !dead) {
     R.spawnT -= dt;
-    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB + (R.hordeB || 0)) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / ((1 + .1 * (R.raid ? R.raid.d : 0)) * (R.spawnRate || 1)); }
+    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB + (R.hordeB || 0)) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / ((1 + .1 * (R.raid ? R.raid.d : 0)) * (R.spawnRate || 1) * (R.raid ? RAID_MINI.rate : 1)); }
     if (R.farm && R.hordeB) { R.packT -= dt; if (R.packT <= 0) { R.packT = 6; const n = 3 + Math.min(5, Math.floor(R.wave / 10)); for (let i = 0; i < n; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); } }
   }
 
@@ -870,7 +873,7 @@ function update(dt) {
   R.enemies = R.enemies.filter(e => e.hp > 0);
   if (R.raid && R.phase === 'hunt' && !dead) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
-    if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < 3 + R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
+    if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < RAID_MINI.burst + 2 * R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
   }
   if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (isHorde(R.wave)) { giveLoot(R.p.x, R.p.y - 24, 1); R.toast = 'HORDA DERROTADA!'; R.toastT = 2.2; } if (R.wave % 5 === 0) spawnBoss(); else nextWave(); } }
   else if (R.phase === 'hunt' && R.kills >= R.need && !dead) spawnBoss();
@@ -993,6 +996,9 @@ Object.assign(EN_DICT, {"Perfil indisponível": "Profile unavailable", "A carreg
 Object.assign(EN_DICT, {"HORDA!": "HORDE!", "HORDA DERROTADA!": "HORDE DEFEATED!"});
 Object.assign(EN_DICT, {"Chega à onda": "Reach wave", "na zona anterior": "in the previous zone"});
 Object.assign(EN_DICT, {"Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.": "Melee tank. Lots of health, heavy blows and 15% less damage taken."});
+Object.assign(EN_DICT, {"Conclui TODAS as raids da dificuldade anterior": "Clear ALL raids of the previous difficulty"});
+Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell all", "Sim, vender": "Yes, sell", "Os itens equipados não são vendidos.": "Equipped items are not sold."});
+Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1350,12 +1356,12 @@ const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico']
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
 const ATTRS = [['vit', 'Vitalidade', '+14 vida'], ['str', 'Força', '+2% dano'], ['agi', 'Agilidade', '+1.2% velocidade'], ['per', 'Perícia', '+1.2% vel. de ataque']];
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
-const refCost = it => Math.round(30 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1));
+const refCost = it => Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1));
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15));
 const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
-const sellValue = it => Math.round((6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
+const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
 const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
 function itemStats(it) { const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
@@ -1413,7 +1419,7 @@ function giveLoot(x, y, minR = 0) {
 function bossDown(b) {
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(4, 1 + (R.raid.d >= 2 ? 1 : 0) + (R.raid.d >= 4 ? 1 : 0)) : 1;
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
-  for (let i = 0; i < (R.raid ? 1 + R.raid.d : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
+  for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
   if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
 }
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
@@ -1500,16 +1506,16 @@ function hubFarm() {
 }
 function hubRaids() {
   const d = RAID_D[raidD];
-  RAID_D.forEach((r, i) => btn(197 + i * 117, 90, 110, 38, r.n, () => raidD = i, { size: 15, col: raidD === i ? r.col : '#2a2a48', hot: r.col }));
+  RAID_D.forEach((r, i) => { btn(197 + i * 117, 90, 110, 38, r.n, () => raidD = i, { size: 15, col: raidD === i ? r.col : '#2a2a48', hot: r.col }); if (!diffOpen(i)) drawIcon('lock', 197 + i * 117 + 94, 109, 1.3); });
   txt(`Vida ×${d.hp} · Dano ×${d.dmg} · Ouro ×${d.gold} · +XP`, 440, 150, 14, d.col, 'center', 'bold');
   btn(684, 136, 96, 22, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 11, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   MISSIONS.forEach((m, i) => {
-    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [0])[0] > 0), unl = open && (raidD === 0 || cl[raidD - 1] > 0), rec = 8 + i * 6 + raidD * 4;
+    const x = 195, y = 162 + i * 53, w = 585, h = 48, cl = save.raids[i] || [0, 0, 0, 0, 0], open = i === 0 || ((save.raids[i - 1] || [0])[0] > 0), unl = open && diffOpen(raidD), rec = 8 + i * 6 + raidD * 4;
     panel(x, y, w, h, open ? '#232342' : '#1a1a22', open ? d.col : '#2a2a3a');
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 36, 36); drawSprBig(m.boss.pal, x + 24, y + 24, .46); if (!open) drawIcon('lock', x + 24, y + 24, 2);
     txt(`Raid: ${m.name}`, x + 54, y + 20, 16, open ? '#fff' : '#667', 'left', 'bold');
     if (open && unl) { txt(`Conclusões: ${cl[raidD]} · Recompensa: ¢${Math.round(m.reward * d.gold * 1.5)} + ${2 + raidD} itens`, x + 54, y + 38, 12, '#9cf'); txt(`Nv rec. ${rec}`, x + w - 124, y + 28, 12, save.pl.lv >= rec ? '#6f6' : '#f66', 'right', 'bold'); }
-    else txt(!open ? 'Conclui a raid anterior' : 'Conclui a dificuldade anterior', x + 54, y + 38, 12, '#a77');
+    else txt(!open ? 'Conclui a raid anterior' : 'Conclui TODAS as raids da dificuldade anterior', x + 54, y + 38, 12, '#a77');
     btn(x + w - 112, y + 7, 100, 34, unl ? 'Entrar' : 'Bloqueada', () => unl ? startMission(i, raidD) : lockClick('r' + i), { col: unl ? d.col : '#26262f', hot: unl ? d.col : '#33333f', size: 14 });
   });
 }
@@ -1589,8 +1595,17 @@ function hubBag() {
       const idx = o.i; ui.push({ x, y, w: 45, h: 45, fn: () => bagSel = idx });
     }
   }
-  btn(197, 376, 150, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
-  btn(355, 376, 100, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
+  btn(197, 376, 120, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
+  // equipado: as 4 pecas que estas a usar (nao se vendem); a do tipo selecionado/filtrado fica destacada
+  { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 428, 12, '#f0c060', 'left', 'bold');
+    SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 49, y = 434, hl = ref === sl;
+      bevel(x, y, 45, 45, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
+      if (it) { slotIcon(sl, it.r, x + 22, y + 22, 3); if (it.ench) txt('+' + it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 7, y + 7); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 22, y + 22, 3); ctx.globalAlpha = 1; }
+      if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
+      ui.push({ x, y, w: 45, h: 45, fn: () => { bagFilter = sl; bagSel = -1; } }); });
+    if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 197 + 4 * 49 + 4, 462, 12, '#ffd34a', 'left', 'bold'); }
+  btn(397, 376, 98, 28, 'Vender tudo', () => { if (save.bag.length) sellAsk = true; else SFX.error(); }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
+  btn(322, 376, 70, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
   panel(500, 90, 280, 388, '#16162a');
   const it = save.bag[bagSel];
   if (!it) { txt('Seleciona um item', 640, 270, 15, '#667', 'center'); return; }
@@ -1603,6 +1618,20 @@ function hubBag() {
   btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
   btn(512, 412, 256, 28, `Vender ¢${sellValue(it)}`, () => { save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: '#a06a20', hot: '#c98a30' });
   btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });
+}
+let sellAsk = false;
+function sellAll() { let g = 0; for (const it of save.bag) g += sellValue(it); save.gold = Math.min(999999, save.gold + g); save.bag = []; enchItem = null; bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
+function drawSellAsk() {
+  if (state !== 'hub' || tab !== 'bag' || !sellAsk) return;
+  if (!save.bag.length) { sellAsk = false; return; }
+  let g = 0; for (const it of save.bag) g += sellValue(it); const hi = save.bag.filter(it => it.r >= 3).length;
+  ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => {} });
+  const x = 250, y = 170, w = 300, h = 170; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt('Vender tudo?', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold');
+  txt(`${save.bag.length} itens da Mochila por ¢${gfmt(g)}`, x + w / 2, y + 62, 14, '#fff', 'center');
+  txt(hi ? `Inclui ${hi} item(ns) Épico/Lendário!` : 'Os itens equipados não são vendidos.', x + w / 2, y + 84, 12, hi ? '#f88' : '#9ab', 'center');
+  btn(x + 20, y + 112, 125, 38, 'Sim, vender', sellAll, { size: 15, col: '#8a3a2a', hot: '#b04a3a' });
+  btn(x + 155, y + 112, 125, 38, 'Cancelar', () => { sellAsk = false; }, { size: 15, col: '#2a2a48' });
 }
 // ----- Encantamentos -----
 function doRefine() {
@@ -1850,7 +1879,7 @@ function updateAnvil(dt) {
 }
 /* ----- Fusão (armas e equipamento) ----- */
 let fuseSel = 0, fuseMode = 'w', fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
-const copyPrice = i => Math.max(100, Math.round(CLASSES[save.cls].weapons[i].price * .4));
+const copyPrice = i => Math.max(300, CLASSES[save.cls].weapons[i].price);   // cada copia custa o preco da arma
 const gSt = it => it.st || 0;
 function starIcons(n, cx, cy, k) { for (let q = 0; q < n; q++) drawIcon('star', cx + (q - (n - 1) / 2) * 9 * k, cy, k); }
 function fxBurst(msg, col) {
@@ -1861,7 +1890,7 @@ function fxBurst(msg, col) {
 function doFuse(id, t, all) {
   if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
   const a = save.wst[id]; let n = 0;
-  const step = tt => { if (tt < STAR_MAX && a[tt] >= 5) { a[tt] -= 5; a[tt + 1]++; n++; return true; } return false; };
+  const step = tt => { if (tt < STAR_MAX && a[tt] >= FUSE_N) { a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
   if (all) { for (let tt = 0; tt < STAR_MAX; tt++) while (step(tt)); } else step(t);
   if (!n) { SFX.error(); return; }
   const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
@@ -1871,8 +1900,8 @@ function gearGroups() {
   return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
 }
 function fuseGear(g) {
-  if (save.pl.lv < FUSE_LV || g.length < 5) { SFX.error(); return; }
-  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, 5);
+  if (save.pl.lv < FUSE_LV || g.length < FUSE_N) { SFX.error(); return; }
+  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, FUSE_N);
   save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1;
   fxBurst(keep.st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${keep.st}★`, keep.st >= STAR_MAX ? '#ffd34a' : '#9fe');
 }
@@ -1897,7 +1926,7 @@ function hubFuse() {
       if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
       ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
       txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-      if (t < STAR_MAX) btn(x, y + 90, 140, 22, '5 > 1', () => doFuse(w.id, t, false), { size: 13, off: lock || a[t] < 5, col: '#2f7a4a', hot: '#3fa061' });
+      if (t < STAR_MAX) btn(x, y + 90, 140, 22, FUSE_N + ' > 1', () => doFuse(w.id, t, false), { size: 13, off: lock || a[t] < FUSE_N, col: '#2f7a4a', hot: '#3fa061' });
     }
     panel(197, 284, 585, 192, '#16162a');
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
@@ -1915,12 +1944,12 @@ function hubFuse() {
     txt('Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.', 487, 138, 11, '#aab', 'center');
     if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 270, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 292, 13, '#667', 'center'); }
     gs.slice(0, 7).forEach((g, i) => {
-      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= 5, nm = ITEM_NAMES[it.slot][it.r];
+      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= FUSE_N, nm = ITEM_NAMES[it.slot][it.r];
       bevel(197, y, 585, 36, '#12121f', RAR[it.r][1], '#05050a'); slotIcon(it.slot, it.r, 222, y + 18, 2.2);
       txt(nm, 250, y + 23, 14, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 250 + txtW(nm, 14, 'bold') + 14 + q * 10, y + 17, 1.2);
-      txt(`${g.length}/5`, 600, y + 23, 15, g.length >= 5 ? '#6f6' : '#fff', 'center', 'bold');
+      txt(`${Math.min(g.length, 99)}/${FUSE_N}`, 600, y + 23, 15, g.length >= FUSE_N ? '#6f6' : '#fff', 'center', 'bold');
       txt(`>`, 640, y + 23, 15, '#889', 'center'); drawIcon('star', 668, y + 17, 1.2); txt(String(st + 1), 680, y + 23, 13, '#ffd34a', 'left', 'bold');
-      btn(698, y + 4, 78, 28, '5 > 1', () => fuseGear(g), { size: 13, off: !can, col: '#2f7a4a', hot: '#3fa061' });
+      btn(698, y + 4, 78, 28, FUSE_N + ' > 1', () => fuseGear(g), { size: 13, off: !can, col: '#2f7a4a', hot: '#3fa061' });
     });
     if (gs.length > 7) txt(`+${gs.length - 7}`, 487, 436, 12, '#889', 'center');
     txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 487, 466, 13, '#9cf', 'center');
@@ -2570,7 +2599,7 @@ function frame(now) {
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);

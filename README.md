@@ -14,8 +14,7 @@ Escolhe um herói, farma ondas infinitas, enfrenta raids muito difíceis, equipa
 
 - **Localmente:** descarrega o repositório e abre o `index.html` no Chrome, Edge ou Firefox.
 - **Online:** se o GitHub Pages estiver ativo, em <https://arroznatwitch.github.io/guardian-of-gold/>.
-- **Wiki com pesquisa:** abre o `wiki.html` (ou <https://arroznatwitch.github.io/guardian-of-gold/wiki.html>).
-- O progresso fica guardado **na tua conta online** (nick + palavra-passe). Se o servidor não estiver configurado, fica no teu browser.
+- O progresso fica guardado **no teu browser** (não limpes os dados do site se quiseres manter o save).
 - Português (Portugal) e English (UK), em **Opções**.
 
 > Versão beta: podem existir bugs e o equilíbrio ainda vai mudar. Feedback bem-vindo nas *Issues*.
@@ -65,30 +64,30 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
 | <img src="docs/img/weapon-k_sword.png" width="56" alt=""> | **Espada de Ferro**<br><sub>Rápida e equilibrada.</sub> | 10 | 2.9/s | **Investida** (6s): Lança-te em frente ferindo tudo no caminho. | inicial | — |
-| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 34 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 20 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 49 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 34 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-k_axe.png" width="56" alt=""> | **Machado de Guerra**<br><sub>Lento, arco enorme.</sub> | 34 | 1.4/s | **Terremoto** (8s): Abala o chão: dano em área e atordoa. | ¢600 | Nv 6 |
+| <img src="docs/img/weapon-k_spear.png" width="56" alt=""> | **Lança do Caçador**<br><sub>Alcance muito longo.</sub> | 20 | 2.4/s | **Lança Arremessada** (5s): Atira a lança, atravessa tudo. | ¢2700 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-k_hammer.png" width="56" alt=""> | **Martelo do Trovão**<br><sub>Pesadíssimo, grande recuo.</sub> | 49 | 1.1/s | **Trovão** (9s): Raios caem nos 4 inimigos mais próximos. | ¢10500 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-k_blade.png" width="56" alt=""> | **Lâmina Vampírica**<br><sub>Muito rápida, rouba vida.</sub> | 34 | 3.8/s | **Sede de Sangue** (12s): 6s: ataques +60% rápidos e roubo de vida. | ¢30000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Arqueiro
 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
 | <img src="docs/img/weapon-a_bow.png" width="56" alt=""> | **Arco Curto**<br><sub>Flecha rápida e certeira.</sub> | 10 | 2.6/s | **Salva Rápida** (6s): 7 flechas em rápida sequência. | inicial | — |
-| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 9 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 36 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 30 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 14 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-a_triple.png" width="56" alt=""> | **Arco Triplo**<br><sub>3 flechas em leque.</sub> | 9 | 1.8/s | **Leque** (7s): 11 flechas num leque gigante. | ¢600 | Nv 6 |
+| <img src="docs/img/weapon-a_cross.png" width="56" alt=""> | **Besta Pesada**<br><sub>Lenta, atravessa inimigos.</sub> | 36 | 1.1/s | **Virote Perfurante** (7s): Virote enorme que atravessa tudo. | ¢2700 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-a_fire.png" width="56" alt=""> | **Arco Ígneo**<br><sub>Flechas que queimam.</sub> | 30 | 2.4/s | **Flecha Explosiva** (8s): Explode em área e incendeia. | ¢10500 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-a_dark.png" width="56" alt=""> | **Arco Sombrio**<br><sub>Duas flechas, cadência alta.</sub> | 14 | 3.3/s | **Armadilha** (9s): Coloca uma armadilha no cursor. | ¢30000 | Nv 28 + raid *Castelo Maldito* |
 
 ### Mago
 
 | | Arma | Dano | Cadência | Habilidade (`E`) | Preço | Requisitos |
 |---|---|---|---|---|---|---|
 | <img src="docs/img/weapon-m_fire.png" width="56" alt=""> | **Cajado de Fogo**<br><sub>Bola de fogo explosiva que deixa chamas no chão.</sub> | 18 | 1.7/s | **Meteoro** (8s): Chama um meteoro que incendeia o chão. | inicial | — |
-| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 21 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢400 | Nv 6 |
-| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 17 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢1800 | Nv 12 + raid *Floresta Sombria* |
-| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 30 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢7000 | Nv 20 + raid *Cavernas Douradas* |
-| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 46 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢20000 | Nv 28 + raid *Castelo Maldito* |
+| <img src="docs/img/weapon-m_ice.png" width="56" alt=""> | **Cajado de Gelo**<br><sub>Congela e deixa um rasto gelado.</sub> | 21 | 2.5/s | **Prisão de Gelo** (9s): Prende tudo em cristais de gelo. | ¢600 | Nv 6 |
+| <img src="docs/img/weapon-m_bolt.png" width="56" alt=""> | **Cajado de Raios**<br><sub>Raio com faíscas que salta entre inimigos.</sub> | 17 | 2.0/s | **Tempestade** (10s): 7 raios caem sobre os inimigos. | ¢2700 | Nv 12 + raid *Floresta Sombria* |
+| <img src="docs/img/weapon-m_arcane.png" width="56" alt=""> | **Cajado Arcano**<br><sub>Orbes estelares que perseguem o alvo.</sub> | 30 | 2.9/s | **Escudo Arcano** (12s): 4s de invulnerabilidade. | ¢10500 | Nv 20 + raid *Cavernas Douradas* |
+| <img src="docs/img/weapon-m_dark.png" width="56" alt=""> | **Cajado Sombrio**<br><sub>Atravessa, rouba vida e liberta almas.</sub> | 46 | 2.0/s | **Orbes Sombrios** (11s): 6s: orbes giram e bloqueiam tiros. | ¢30000 | Nv 28 + raid *Castelo Maldito* |
 
 ## Fusão
 
@@ -208,15 +207,15 @@ O jogo foi afinado com um simulador (um bot que joga o Farm) para a dificuldade 
 ## Farm e Raids
 
 - **Farm:** ondas infinitas numa zona à escolha. Há um boss a cada 5 ondas e uma **horda** a cada 10 (muito mais monstros ao mesmo tempo, mais mortes para completar, mais ouro e um item no fim). Os inimigos ficam mais fortes (e dão mais ouro) a cada onda, aparecem mais depressa e em maior número, e cada zona seguinte abre quando chegas a uma onda mínima na anterior (10, 10, 20, 20 e 30). Podes sair a qualquer momento pelo menu de pausa e guardar tudo; se morreres, ficas com metade do ouro e do XP e com os itens.
-- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade ao vencer a anterior nessa raid.
+- **Raids:** combates contra bosses com 4 ondas antes. São **muito difíceis** e dão muito ouro, XP e itens garantidos. Cada raid abre ao vencer a anterior, e cada dificuldade só abre depois de concluíres **todas as raids** da dificuldade anterior.
 
 | Dificuldade | Vida | Dano | Ouro |
 |---|---|---|---|
-| **Fácil** | ×2 | ×1.4 | ×2 |
-| **Normal** | ×3 | ×1.8 | ×4 |
-| **Difícil** | ×4.5 | ×2.4 | ×8 |
-| **Pesadelo** | ×7 | ×3.2 | ×16 |
-| **Inferno** | ×11 | ×4.5 | ×30 |
+| **Fácil** | ×2.5 | ×1.6 | ×1 |
+| **Normal** | ×4.2 | ×2.2 | ×2 |
+| **Difícil** | ×7 | ×3 | ×4 |
+| **Pesadelo** | ×11.5 | ×4.2 | ×8 |
+| **Inferno** | ×18 | ×6 | ×15 |
 
 > A velocidade do jogo pode ser posta a **x2** nos ecrãs de Farm e Raids, na pausa ou com a tecla `G`.
 
