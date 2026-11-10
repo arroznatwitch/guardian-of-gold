@@ -482,7 +482,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 10;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
@@ -981,6 +981,7 @@ Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A agua
 Object.assign(EN_DICT, {"Entra na tua conta para jogar": "Log in to your account to play", "A carregar o teu save": "Loading your save", "Sem ligação ao servidor": "Cannot reach the server", "O jogo precisa de internet para carregar a tua conta.": "The game needs internet to load your account.", "Tentar outra vez": "Try again", "Que save queres usar?": "Which save do you want to use?", "Já tens um save guardado na conta e outro neste dispositivo.": "You already have a save on the account and another on this device.", "Esta conta foi usada noutro dispositivo desde a última vez.": "This account was used on another device since last time.", "Save da conta": "Account save", "Save deste dispositivo": "Save from this device", "Save desta janela": "Save from this window", "Usar este": "Use this", "O save que não escolheres deixa de existir. O da conta fica guardado online.": "The save you don't pick will be lost. The account save stays online.", "Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.": "Pick the account save to load what was stored, or this window's to replace it.", "Sair sem guardar?": "Log out without saving?", "Sair:": "Log out:", "Farm: onda": "Farm: wave", "Não foi possível guardar o progresso recente. Clica outra vez para sair mesmo assim.": "Couldn't save your recent progress. Click again to log out anyway."});
 Object.assign(EN_DICT, {"MELHOR": "BETTER", "PIOR": "WORSE", "SIMILAR": "SIMILAR", "Slot vazio": "Empty slot", "igual à equipada": "same as equipped", "% vs equipada": "% vs equipped"});
 Object.assign(EN_DICT, {"Arma bloqueada": "Locked weapon", "DESBLOQUEADO!": "UNLOCKED!", "O teu nível:": "Your level:", "Mochila ·": "Backpack ·", "Nenhum item para este slot": "No items for this slot", "Shift+clique: melhor": "Shift+click: best", "Nada melhor na mochila": "Nothing better in the backpack", "PRONTO": "READY"});
+Object.assign(EN_DICT, {"Raids": "Raids", "Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.": "Very hard boss fights, with lots of gold and guaranteed rare items.", "Melhora as tuas armas até +12, com amuletos de sorte e pergaminhos de proteção.": "Upgrade your weapons up to +12, with luck charms and protection scrolls.", "Refina o equipamento até +10 e sorteia encantamentos especiais.": "Refine your gear up to +10 and roll special enchantments.", "Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.": "Merge 5 identical weapons or pieces to gain stars, more power and improved skills.", "Falta": "Only", "Faltam": "Only", "níveis para desbloquear": "levels to go", "nível para desbloquear": "level to go", "Próximo nível:": "Next level:", "Joga no Farm para ganhar XP e subir de nível.": "Play Farm to earn XP and level up."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -2201,7 +2202,8 @@ function drawConflict() {
 
 /* ----- cadeados, desbloqueios e animacao ----- */
 let ua = null, lkShake = {}, hubToast = { t: 0, s: '', col: '#fff' }, charStrip = null;
-const tabLv = t => t === 'ench' ? 15 : t === 'fuse' ? FUSE_LV : 0;
+const TAB_LV = { raids: 10, ench: 15, anvil: 15, fuse: FUSE_LV, pets: 30 }, LOCK_TABS = Object.keys(TAB_LV);
+const tabLv = t => TAB_LV[t] || 0;
 const tabOpen = t => !save || save.pl.lv >= tabLv(t);
 function lockClick(key) { lkShake[key] = .35; SFX.locked(); }
 function lkOff(key) { return lkShake[key] > 0 ? Math.sin(T * 70) * 3 * lkShake[key] / .35 : 0; }
@@ -2214,12 +2216,12 @@ function drawLockBig(cx, cy, k, o) {
 function markUnl(sv) {
   sv.unl = sv.unl || {};
   for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => { const r = WEAPON_REQ[i]; if (sv.pl.lv >= r.lv && !(r.raid !== undefined && !((sv.raids[r.raid] || [0])[0] > 0))) sv.unl[w.id] = 1; });
-  for (const t of ['ench', 'fuse']) if (sv.pl.lv >= tabLv(t)) sv.unl['t_' + t] = 1;
+  for (const t of LOCK_TABS) if (sv.pl.lv >= tabLv(t)) sv.unl['t_' + t] = 1;
 }
 function checkUnlocks() {
   if (!save || ua) return; if (!save.unl) { markUnl(save); persist(); return; }
   let q = null; CLASSES[save.cls].weapons.forEach((w, i) => { if (!q && weaponReq(i).ok && !save.unl[w.id]) q = { key: w.id, name: w.n, w: w.id }; });
-  for (const t of ['ench', 'fuse']) if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: t === 'ench' ? 'Encantar' : 'Fusão' };
+  for (const t of LOCK_TABS) { if (!tabOpen(t) && save.unl['t_' + t]) delete save.unl['t_' + t]; if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: TAB_INFO[t][0] }; }
   if (q) { save.unl[q.key] = 1; persist(); ua = Object.assign({ t: 0, sp: [], fx: false }, q); }
 }
 function updateUnlock(dt) {
@@ -2238,10 +2240,28 @@ function drawUnlock() {
   if (ua.t > .7) { const a = Math.min(1, (ua.t - .7) * 3); ctx.globalAlpha = a; txt('DESBLOQUEADO!', UW / 2, 300, 38, '#ffd34a', 'center', 'bold'); txt(ua.name, UW / 2, 336, 24, '#fff', 'center', 'bold'); if (ua.w) weaponIcon(ua.w, UW / 2, 392, 4); ctx.globalAlpha = 1; }
   ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { if (ua && ua.t > .9) ua = null; } });
 }
+const TAB_INFO = {
+  raids: ['Raids', 'Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.'],
+  anvil: ['Bigorna', 'Melhora as tuas armas até +12, com amuletos de sorte e pergaminhos de proteção.'],
+  ench: ['Encantar', 'Refina o equipamento até +10 e sorteia encantamentos especiais.'],
+  fuse: ['Fusão', 'Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.'],
+  pets: ['Pets', 'Companheiros que te seguem e lutam ao teu lado.'],
+};
+function wrapC(str, cx, y, maxW, lh, size, col) {
+  let line = ''; const out = []; str = L(str);
+  for (const w of str.split(' ')) { const t = line ? line + ' ' + w : w; if (line && txtW(t, size) > maxW) { out.push(line); line = w; } else line = t; } if (line) out.push(line);
+  out.forEach((l, i) => txt(l, cx, y + i * lh, size, col, 'center')); return out.length;
+}
 function drawTabLock(t) {
-  const lv = tabLv(t), nm = t === 'ench' ? 'Encantar' : 'Fusão';
-  drawLockBig(487 + lkOff(t), 220, 5, 0); txt(nm, 487, 330, 26, '#fff', 'center', 'bold'); txt(`Desbloqueia no Nível ${lv}`, 487, 364, 20, '#f88', 'center', 'bold');
-  txt(`O teu nível: ${save.pl.lv}`, 487, 390, 14, '#9ab', 'center'); bar(387, 402, 200, 8, Math.min(1, save.pl.lv / lv), '#a8821f');
+  const lv = tabLv(t), [nm, ds] = TAB_INFO[t], cur = save.pl.lv, left = Math.max(0, lv - cur), need = xpNeed(cur), cx = 487;
+  drawLockBig(cx + lkOff(t), 172, 3.4, 0);
+  txt(nm, cx, 262, 30, '#fff', 'center', 'bold');
+  const n = wrapC(ds, cx, 288, 400, 17, 14, '#b8c4e0'), y0 = 288 + n * 17 + 14;
+  txt(`Desbloqueia no Nível ${lv}`, cx, y0 + 12, 22, '#ffd34a', 'center', 'bold');
+  bar(cx - 160, y0 + 28, 320, 12, Math.min(1, (cur - 1) / Math.max(1, lv - 1)), '#a8821f'); txt(`Nv ${cur}`, cx - 160, y0 + 56, 12, '#9ab', 'left', 'bold'); txt(`Nv ${lv}`, cx + 160, y0 + 56, 12, '#ffd34a', 'right', 'bold');
+  txt(`${left === 1 ? 'Falta' : 'Faltam'} ${left} ${left === 1 ? 'nível' : 'níveis'} para desbloquear`, cx, y0 + 82, 16, '#f88', 'center', 'bold');
+  txt(`Próximo nível: ${save.pl.xp}/${need} XP`, cx, y0 + 102, 12, '#9ab', 'center');
+  txt('Joga no Farm para ganhar XP e subir de nível.', cx, y0 + 120, 12, '#778', 'center');
   ui.push({ x: 197, y: 90, w: 585, h: 385, fn: () => lockClick(t) });
 }
 /* ----- Pets (em breve) ----- */

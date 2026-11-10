@@ -94,7 +94,7 @@ Cada classe tem 5 armas, compradas com ouro. As mais fortes só se desbloqueiam 
 
 <p align="center"><img src="docs/img/screen-fusion.jpg" width="48%" alt="Fusão"> <img src="docs/img/screen-rewards.jpg" width="48%" alt="Recompensas"></p>
 
-A **Fusão** desbloqueia no **nível 10** da conta e funciona para armas e para equipamento. Em ambos, **5 iguais dão 1 com uma estrela a mais**, até ao máximo de **3★**.
+A **Fusão** desbloqueia no **nível 20** da conta e funciona para armas e para equipamento. Em ambos, **5 iguais dão 1 com uma estrela a mais**, até ao máximo de **3★**.
 
 | Estrelas | Arma: dano | Arma: vel. de ataque | Equipamento: bónus |
 |---|---|---|---|
@@ -187,7 +187,7 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 - **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
 - Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
 - Podes redistribuir os pontos por ouro (50 × o teu nível). Mantém o botão **+** premido para gastar pontos mais depressa.
-- **Desbloqueios:** a **Fusão** abre no nível 10 e o **Encantar** no nível 15; as armas mais fortes pedem nível (e raids). O que está bloqueado aparece com um cadeado e, ao desbloquear, há uma animação.
+- **Desbloqueios:** **Raids** no nível 10, **Encantar** e **Bigorna** no nível 15, **Fusão** no nível 20 e **Pets** no nível 30; as armas mais fortes pedem nível (e raids). O que está bloqueado aparece com um cadeado grande, a descrição, os níveis em falta e, ao desbloquear, há uma animação.
 - **Inimigos:** ficam mais fortes com o teu nível (vida e dano), para o desafio acompanhar a tua evolução.
 
 | Atributo | Efeito por ponto |
