@@ -57,6 +57,10 @@ Ao criar a conta escolhe-se o **sexo** (Masculino ou Feminino) e o **país**. O 
 
 Os dois podem ser alterados em **Editar perfil** (clicando no boneco, no canto do acampamento). O **nick nunca muda**. A primeira bandeira é grátis; **mudar de bandeira custa 100 diamantes** (cobrados no jogo, como o resto da progressão). O servidor valida os valores (`m` ou `f`; código de país com 2 letras) e a função `gog_set_profile` só funciona com sessão válida.
 
+## O save local pertence a uma conta
+
+O save guardado no browser fica ligado ao **id da conta** (`uid`), não ao nick. Se entrares com **outra conta** (ou criares uma conta nova, mesmo com o mesmo nick depois de a base de dados ser limpa), o save antigo **não é usado**: fica guardado à parte (`bladehunter_orphan`) e a conta nova começa com um personagem novo. Além disso, o servidor só aceita como primeiro save de uma conta um **personagem novo** (nível 1 ou 2, com muito pouco ouro). Assim ninguém leva o progresso de uma conta para outra.
+
 ## Desativar e reativar contas (administrador)
 
 Os jogadores **não podem apagar a conta**. Uma conta nunca é eliminada: fica **inativa** e pode ser reativada. Uma conta inativa não consegue entrar (mesmo com a palavra-passe certa), as sessões abertas deixam de valer, desaparece do ranking e dos perfis e o nick continua reservado.

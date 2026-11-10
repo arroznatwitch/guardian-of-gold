@@ -61,7 +61,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
 // save na nuvem
 {
   r = await q('select public.gog_register($1,$2)', ['saver', A]); const T1 = r.token;
-  const SAVE = JSON.stringify({ cls: 'knight', gold: 5, pl: { lv: 3 } });
+  const SAVE = JSON.stringify({ cls: 'knight', gold: 5, pl: { lv: 2 } });
   r = await q('select public.gog_save_get($1)', [T1]); ok('save get empty', r.ok && r.save === null && r.rev === 0, r);
   r = await q('select public.gog_save_put($1,$2::jsonb,0,$3)', [T1, SAVE, 'devA']); ok('save put', r.ok && r.rev === 1, r);
   r = await q('select public.gog_save_put($1,$2::jsonb,1,$3)', [T1, SAVE, 'devA']); ok('save put too fast', r.error === 'slow', r);
@@ -123,6 +123,22 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_set_profile($1,$2,$3)', ['0'.repeat(64), 'm', 'BR']); ok('set profile needs a session', r.error === 'auth', r);
   r = await q('select public.gog_set_profile($1,$2,$3)', [TG, 'z', 'BR']); ok('set profile validates gender', r.error === 'bad_request', r);
   r = await q('select public.gog_login($1,$2)', ['gc_one', B]); ok('login returns gender and country', r.ok && r.gender === 'm' && r.country === 'BR', r);
+}
+// uma conta nova so comeca com personagem novo
+{
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2)', ['fresh_one', B]); const TF = r.token;
+  const SV = (lv, gold) => JSON.stringify({ cls: 'knight', pl: { lv, xp: 0 }, gold, gems: 0 });
+  r = await q('select public.gog_save_get($1)', [TF]); ok('save_get returns the account uid', /^[0-9a-f-]{36}$/.test(r.uid || ''), r); const uid1 = r.uid;
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 5000), 0, 'dev']); ok('new account refuses a level 30 save', r.error === 'not_new', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(5, 100), 0, 'dev']); ok('new account refuses a level 5 save', r.error === 'not_new', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(1, 5000), 0, 'dev']); ok('new account refuses lots of gold', r.error === 'not_new', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, JSON.stringify({ cls: 'knight', pl: { lv: 'x' } }), 0, 'dev']); ok('new account refuses a malformed level', r.error === 'not_new', r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(1, 0), 0, 'dev']); ok('new account accepts a fresh character', r.ok, r);
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 90000), 1, 'dev']); ok('an account that already has a save can progress', r.ok, r);
+  r = await q('select public.gog_save_reset($1)', [TF]); r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 90000), r.rev, 'dev']); ok('after a reset the account is new again', r.error === 'not_new', r);
+  r = await q('select public.gog_register($1,$2)', ['fresh_two', B]); const TF2 = r.token; r = await q('select public.gog_save_get($1)', [TF2]); ok('each account has its own uid', r.uid && r.uid !== uid1, r);
 }
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
