@@ -198,6 +198,7 @@ const FEM_ROWS = {
 const femify = rows => rows.map(r => { const a = [...r], fi = a.indexOf('f'), li = a.lastIndexOf('f'); if (fi > 0 && a[fi - 1] === '.') a[fi - 1] = 'b'; if (li >= 0 && li < a.length - 1 && a[li + 1] === '.') a[li + 1] = 'b'; return a.join(''); });
 for (const c in HERO_ROWS) SKINS[c].forEach((s, i) => { defSprite(c + i, s.rows || HERO_ROWS[c], Object.assign({}, BASE_PAL[c], s.o), 3); defSprite(c + i + 'f', s.rows ? femify(s.rows) : FEM_ROWS[c], Object.assign({ b: '#8a5a2a' }, BASE_PAL[c], s.o), 3); });
 
+defSprite('gguard', ['......HH......', '.....GLLG.....', '....GGEEGG....', '....GEKKEG....', '....GGLLGG....', '..H.HGGGGH.H..', '.GGHNNNNNNHGG.', 'GLGNNEEEENNGLG', 'GGGNNNEENNNGGG', '.G.GGNNNNGG.G.', '.G..GNNNNG..G.', '....KGGGGK....', '...KK....KK...', '..GGG....GGG..'], { G: '#f5c542', H: '#c9951c', L: '#ffe58a', K: '#241e16', N: '#3a2e1c', E: '#ff8a1a' }, 8);
 defSprite('slime', ['........','..gggg..','.gggggg.','.gkggkg.','gggggggg','gGgggGgg','GGGGGGGG'], {g:'#4caf50',G:'#2e7d32',k:'#111'}, 3);
 defSprite('bat', ['p......p','pp.pp.pp','pppppppp','.ppkkpp.','..prrp..','...pp...'], {p:'#7a4aa0',k:'#111',r:'#ff4040'}, 3);
 defSprite('skel', ['..wwww..','.wwwwww.','.wkwwkw.','..wwww..','...ww...','.wwwwww.','b.wwww..','b..ww...','..w..w..','.ww..ww.'], {w:'#ececec',k:'#111',b:'#8a6a3a'}, 3);
@@ -491,13 +492,13 @@ const THEMES = [
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '' } };
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '' }, bagSlots: 1 };
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
-  s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0);
+  s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0); s.bagSlots = Math.max(1, Math.min(5, s.bagSlots | 0 || 1));
   s.pets = s.pets && typeof s.pets === 'object' ? s.pets : {}; s.pets.own = s.pets.own || {}; s.pets.eq = s.pets.eq || '';
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
@@ -649,6 +650,7 @@ const targets = () => R.boss ? R.enemies.concat([R.boss]) : R.enemies;
 function stunE(e, t) { if (e.boss) e.slow = Math.max(e.slow, t * .6); else e.stun = Math.max(e.stun || 0, t); }
 function heal(n) { const p = R.p; p.hp = Math.min(p.max, p.hp + n); }
 function dmgE(e, d, ang, kb, quiet) {
+  if (e.air) return;   // o Guardiao esta no ar durante o salto
   let crit = false; const g = R.G;
   if (g && !quiet) {
     if (Math.random() * 100 < Math.min(75, g.crit)) { d *= 1.75; crit = true; }
@@ -806,7 +808,7 @@ function spawnBoss(mini) {
 }
 function eProj(x, y, a, spd, dmg, kind, col) { R.projs.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, a, r: kind === 'orb' ? 7 : 4, dmg, from: 'e', kind, life: 4, col }); }
 function ringShots(b, n, off = Math.random() * 6) { for (let i = 0; i < n; i++) eProj(b.x, b.y, off + i / n * 6.283, 190, 10, 'orb', b.col); }
-const BOSS_DUR = { ring: .7, spread: 1.2, spiral: 2.4, charge: 1.4, slam: 1.5, meteors: 2.6, cone: 1.6, summon: 1.1, blink: 1.4 };
+const BOSS_DUR = { leap: 1.7, spin: 2.6, ring: .7, spread: 1.2, spiral: 2.4, charge: 1.4, slam: 1.5, meteors: 2.6, cone: 1.6, summon: 1.1, blink: 1.4 };
 function bossBegin(b, mv, rage) {
   const p = R.p; b.st = mv; b.mt = 0; b.f = 0; b.t = BOSS_DUR[mv];
   if (mv === 'ring') { ringShots(b, b.ring + (rage ? 4 : 0)); SFX.fire(); }
@@ -814,6 +816,8 @@ function bossBegin(b, mv, rage) {
   else if (mv === 'meteors') { const n = rage ? 9 : 6; for (let i = 0; i < n; i++) R.tels.push({ x: Math.max(40, Math.min(W - 40, p.x + (Math.random() - .5) * 300)), y: Math.max(40, Math.min(H - 40, p.y + (Math.random() - .5) * 260)), r: 55, t: .9 + i * .16, max: .9 + i * .16, dmg: 18, from: 'e', col: '#f93' }); SFX.boss(); }
   else if (mv === 'summon') { const M = MISSIONS[R.m]; for (let i = 0; i < 3; i++) spawnE(M.types[Math.floor(Math.random() * M.types.length)], b.x + (i - 1) * 60, b.y + 55); SFX.boss(); }
   else if (mv === 'blink') SFX.dash();
+  else if (mv === 'leap') { b.lx = Math.max(60, Math.min(W - 60, p.x)); b.ly = Math.max(60, Math.min(H - 60, p.y)); b.z = 0; b.air = false; R.tels.push({ x: b.lx, y: b.ly, r: 105, t: 1.5, max: 1.5, dmg: 34, from: 'e', col: '#ffd34a', ring: true }); SFX.dash(); }
+  else if (mv === 'spin') { b.spinT = 0; SFX.boss(); }
 }
 // nas raids os ataques do boss crescem com o nivel recomendado (boss de raid dificil bate a serio)
 function bossScaled(fn) {
@@ -834,6 +838,11 @@ function bossTick(b, dt, rage, sl) {
       else { if (b.f === 0) { b.f = 1; SFX.dash(); } b.x += b.dx * b.chg * sl * dt; b.y += b.dy * b.chg * sl * dt; } break;
     case 'cone':
       if (b.mt < 1.2 && b.mt > b.f * .06) { b.f++; eProj(b.x, b.y, ang + (Math.random() - .5) * .7, 260 + Math.random() * 60, 6, 'orb', b.col); if (b.f % 5 === 0) SFX.fire(); } break;
+    case 'leap':
+      if (b.mt >= .4 && b.mt < 1.5) { const k = (b.mt - .4) / 1.1; b.air = true; b.x += (b.lx - b.x) * Math.min(1, dt * 6); b.y += (b.ly - b.y) * Math.min(1, dt * 6); b.z = Math.sin(k * Math.PI) * 130; }
+      else if (b.mt >= 1.5 && b.air) { b.air = false; b.z = 0; b.x = b.lx; b.y = b.ly; R.shake = 24; burst(b.x, b.y, '#ffd34a', 46); burst(b.x, b.y, '#fff', 20); SFX.boss(); } break;
+    case 'spin':
+      b.spinT += dt; if (b.mt > .5) { b.x += (p.x - b.x) / d * 95 * sl * dt; b.y += (p.y - b.y) / d * 95 * sl * dt; if (b.spinT > b.f * .32 + .5) { b.f++; SFX.hit(); if (d < b.r + 112) hurt(28 * (R.bossDM || 1)); } } break;
     case 'blink':
       if (b.f === 0 && b.mt > .5) { b.f = 1; burst(b.x, b.y, b.col, 20); const a = Math.random() * 6.283; b.x = Math.max(b.r, Math.min(W - b.r, p.x + Math.cos(a) * 150)); b.y = Math.max(b.r, Math.min(H - b.r, p.y + Math.sin(a) * 150)); burst(b.x, b.y, b.col, 20); SFX.dash(); }
       else if (b.f === 1 && b.mt > .85) { b.f = 2; const n = rage ? 9 : 7, a2 = Math.atan2(p.y - b.y, p.x - b.x); for (let i = 0; i < n; i++) eProj(b.x, b.y, a2 + (i - (n - 1) / 2) * .2, 270, 10, 'orb', b.col); SFX.fire(); } break;
@@ -842,6 +851,7 @@ function bossTick(b, dt, rage, sl) {
 
 /* ---- update ---- */
 function update(dt) {
+  if (R.cine) { updateCine(dt); return; }   // cinematica de entrada do Guardiao: o jogo fica em pausa
   const p = R.p, M = MISSIONS[R.m]; R.time += dt;
   p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; R.toastT -= dt; R.shake *= .9;
   const dead = R.endT !== undefined;
@@ -916,7 +926,7 @@ function update(dt) {
     const d0 = EN[e.type]; R.kills++; burst(e.x, e.y, '#9f9', 12); SFX.kill();
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (1 + R.G.gf / 100))) }); R.xp += 4 + 2 * R.m; R.waveKills++;
-    if (Math.random() < .03 + .0025 * (R.wave || 1) + (R.raid ? .03 : 0)) giveLoot(e.x, e.y);
+    if (Math.random() < .012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) giveLoot(e.x, e.y);
     if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .12) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
@@ -941,7 +951,7 @@ function update(dt) {
       if (b.t <= 0 && !dead) bossScaled(() => bossBegin(b, b.pattern[b.pi++ % b.pattern.length], rage));
     } else { bossScaled(() => bossTick(b, dt, rage, sl)); b.t -= dt; if (b.t <= 0) { b.st = 'walk'; b.t = (rage ? 1.1 : 1.9) * (R.raid ? .7 : 1) * (b.mini ? .6 : 1); } }
     b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.y = Math.max(b.r, Math.min(H - b.r, b.y));
-    if (d < b.r + 12 && !dead) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1));
+    if (d < b.r + 12 && !dead && !b.air) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1));
     if (b.hp <= 0) {
       burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += 40 + 25 * R.m; R.tels = []; bossDown(b);
       for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE)) });
@@ -1057,6 +1067,8 @@ Object.assign(EN_DICT, {"Cão": "Dog", "GRÁTIS": "FREE", "Um companheiro leal q
 Object.assign(EN_DICT, {"CONQUISTA": "ACHIEVEMENT", "Conclui uma raid Inferno": "Clear an Inferno raid", "Mata 10 000 monstros": "Kill 10,000 monsters", "Chega à onda 40 no Farm": "Reach wave 40 in Farm", "Skin desbloqueada:": "Skin unlocked:", "Campeão Inferno": "Inferno Champion", "Caçador Lendário": "Legendary Hunter", "Arquimago Rubro": "Crimson Archmage"});
 Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "O nick não pode ser alterado.": "Your nickname can never be changed.", "Sexo": "Gender", "Masculino": "Male", "Feminino": "Female", "País": "Country", "Escolhe o teu país": "Choose your country", "Guardar": "Save", "Cancelar": "Cancel", "A guardar...": "Saving...", "Outro / Mundo": "Other / World", "Portugal": "Portugal", "Brasil": "Brazil", "Espanha": "Spain", "França": "France", "Alemanha": "Germany", "Reino Unido": "United Kingdom", "Irlanda": "Ireland", "Itália": "Italy", "Países Baixos": "Netherlands", "Bélgica": "Belgium", "Luxemburgo": "Luxembourg", "Suíça": "Switzerland", "Áustria": "Austria", "Polónia": "Poland", "Suécia": "Sweden", "Noruega": "Norway", "Dinamarca": "Denmark", "Finlândia": "Finland", "Ucrânia": "Ukraine", "Rússia": "Russia", "Turquia": "Turkey", "EUA": "USA", "Canadá": "Canada", "México": "Mexico", "Colômbia": "Colombia", "Japão": "Japan",  "Moçambique": "Mozambique", "Cabo Verde": "Cape Verde"});
 Object.assign(EN_DICT, {"Mudar de bandeira custa ◆": "Changing flag costs ◆", "Podes mudar de bandeira por ◆": "You can change your flag for ◆", "A primeira bandeira é grátis": "Your first flag is free", "Precisas de": "You need", "diamantes para mudar de bandeira": "diamonds to change flag"});
+Object.assign(EN_DICT, {"Selecionar": "Select", "Sair da seleção": "Exit selection", "Modo de seleção": "Selection mode", "Clica nos itens para os marcar e depois vende-os de uma vez.": "Click items to mark them, then sell them all at once.", "selecionados": "selected", "Selecionar todos (visíveis)": "Select all (visible)", "Limpar seleção": "Clear selection", "Vender selecionados": "Sell selected", "Vender selecionados?": "Sell selected?", "Desbloqueia primeiro a Mochila anterior": "Unlock the previous bag first", "Desbloquear a Mochila": "Unlock Bag", "+30 lugares para itens": "+30 item slots", "Comprar": "Buy", "Há um item melhor, mas exige nível": "There is a better item, but it requires level"});
+Object.assign(EN_DICT, {"GUARDIÃO DOURADO": "GOLDEN GUARDIAN", "Guardião Dourado": "Golden Guardian", "O Protetor do Ouro": "The Protector of Gold", "GUARDIÃO DOURADO DERROTADO!": "GOLDEN GUARDIAN DEFEATED!", "! Guardião Dourado !": "! Golden Guardian !"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1332,7 +1344,10 @@ function drawKeys() {
    EQUIPAMENTO, ATRIBUTOS E ENCANTAMENTOS
    ===================================================================== */
 const RAR = [['Comum', '#9aa4b8'], ['Raro', '#5aa8ff'], ['Épico', '#b06aff'], ['Lendário', '#ff9a2a'], ['Mítico', '#ff4a6a']];
-const SLOTS = ['head', 'chest', 'boots', 'amulet'], BAG_MAX = 30;
+const SLOTS = ['head', 'chest', 'boots', 'amulet'], BAG_PAGE = 30;
+// 5 mochilas de 30 lugares: a 1.a e gratis, as outras compram-se por ordem (ouro ou diamantes)
+const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 50], ['d', 75]];
+const bagMax = () => BAG_PAGE * ((save && save.bagSlots) || 1);
 const SLOT_LBL = { head: 'Capacete', chest: 'Armadura', boots: 'Botas', amulet: 'Amuleto' };
 const ITEM_NAMES = {
   head:   ['Capuz de Couro', 'Elmo de Ferro', 'Elmo Rúnico', 'Coroa Ancestral', 'Coroa Divina'],
@@ -1400,13 +1415,15 @@ const itemReq = it => Math.ceil(it.il / 2), canWear = it => save.pl.lv >= itemRe
 const anvCap = () => Math.min(ANV_MAX, Math.floor(save.pl.lv / 3)), refCap = () => Math.min(ENC_MAX, Math.floor(save.pl.lv / 4));
 function equipFromBag(i) { const it = save.bag[i], old = save.gear[it.slot]; if (!canWear(it)) { SFX.error(); return; } save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = -1; persist(); SFX.buy(); }
 function equipBest(sl) {
-  const cur = save.gear[sl]; let bi = -1, bs = -1e9;
-  save.bag.forEach((it, i) => { if (it.slot !== sl || !canWear(it)) return; const c = cmpItems(it, cur); if (c.score > bs) { bs = c.score; bi = i; } });
-  if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; } else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
+  const cur = save.gear[sl]; let bi = -1, bs = -1e9, li = -1, ls = -1e9;
+  save.bag.forEach((it, i) => { if (it.slot !== sl) return; const c = cmpItems(it, cur); if (canWear(it)) { if (c.score > bs) { bs = c.score; bi = i; } } else if (c.score > ls) { ls = c.score; li = i; } });
+  if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; }
+  else if (li >= 0 && (!cur || ls > .06)) { SFX.error(); hubToast = { t: 3, s: `Há um item melhor, mas exige nível ${itemReq(save.bag[li])}`, col: '#fd5' }; }   // existe, mas ainda nao o podes usar
+  else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
 }
 function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
 const wpnDps = w => w.dmg * (w.count || 1) * 10 * wlm(save.wl[w.id] || 0) * STAR_MULT[wStar(w.id)] / w.cd;
-function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
+function addBag(it) { if (save.bag.length >= bagMax()) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
   if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
   if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
@@ -1449,6 +1466,7 @@ function giveLoot(x, y, minR = 0) {
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
+  if (b.guardian) { R.toast = 'GUARDIÃO DOURADO DERROTADO!'; R.toastT = 3.2; R.phase = 'hunt'; R.shake = 16; return; }   // por enquanto nao da recompensa
   if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22); R.phase = 'hunt'; nextWave(); return; }
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
@@ -1466,9 +1484,37 @@ function applyWave() {
 function hordeBurst() {
   const n = 8 + Math.min(14, Math.floor(R.wave / 5)); for (let i = 0; i < n; i++) spawnEdge(MISSIONS[R.m].types[Math.floor(Math.random() * MISSIONS[R.m].types.length)]);
 }
+// Depois da onda 40 (e de 10 em 10 ondas) o Guardiao Dourado desce do ceu para te enfrentar
+const GUARD = { name: 'Guardião Dourado', pal: 'gguard', r: 64, spd: 70, ring: 12, charge: 430, col: '#f5c542', pattern: ['leap', 'spin', 'slam', 'charge', 'leap', 'spin', 'ring'], hpK: 6 };
+const guardHere = w => w > 40 && (w - 1) % 10 === 0;
+function spawnGuardian() {
+  const b = GUARD, hpv = TUNE.boss[R.m] * (R.bossM || 1) * 1.2 * lvHP() * b.hpK;
+  R.boss = { boss: true, guardian: true, x: W / 2, y: 130, r: b.r, hp: hpv, max: hpv, spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 1.2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0, air: false, z: 0 };
+  R.enemies = []; R.projs = []; R.tels = []; R.phase = 'boss'; R.p.x = W / 2; R.p.y = H - 110; R.p.inv = 5; R.cine = { t: 0, dur: 4.4 }; SFX.boss();
+}
+function updateCine(dt) {
+  const c = R.cine, b = R.boss; c.t += dt; R.time += dt; R.shake *= .93; R.toastT = 0;
+  if (c.t > .35 && !c.a) { c.a = 1; SFX.boss(); R.shake = 8; }
+  if (c.t > 1.2 && !c.b) { c.b = 1; SFX.boss(); R.shake = 14; for (let i = 0; i < 4; i++) burst(W / 2 + (Math.random() - .5) * 120, 60 + Math.random() * 120, '#ffe58a', 18); }
+  if (c.t > 2 && !c.c) { c.c = 1; SFX.boss(); R.shake = 34; burst(b.x, b.y + b.r, '#ffd34a', 90); burst(b.x, b.y + b.r, '#fff', 40); R.fx.push({ k: 'ring', x: b.x, y: b.y + b.r, r: 320, t: .7, max: .7, col: '#ffd34a' }); R.fx.push({ k: 'ring', x: b.x, y: b.y + b.r, r: 200, t: .5, max: .5, col: '#fff' }); }
+  if (c.t >= c.dur) { R.cine = null; R.p.inv = Math.max(R.p.inv, 1); R.toast = '! Guardião Dourado !'; R.toastT = 2.4; }
+}
+function drawCine() {
+  const c = R.cine; if (!c) return; const t = c.t, ease = Math.min(1, t / .5) * Math.min(1, (c.dur - t) / .5), bh = 64 * ease;
+  ctx.save(); ctx.setTransform(cv.width / W, 0, 0, cv.width / W, 0, 0);
+  const vg = ctx.createRadialGradient(W / 2, H / 2, 120, W / 2, H / 2, 460); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(20,10,0,${.75 * ease})`); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bh); ctx.fillRect(0, H - bh, W, bh);
+  if (t > .35 && t < 2.1) { const k = Math.min(1, (t - .35) / .6), fl = .5 + .5 * Math.sin(t * 40); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(W / 2 - 70, 0, W / 2 + 70, 0); g.addColorStop(0, 'rgba(255,200,60,0)'); g.addColorStop(.5, `rgba(255,230,140,${.55 * k * (.7 + .3 * fl)})`); g.addColorStop(1, 'rgba(255,200,60,0)'); ctx.fillStyle = g; ctx.fillRect(W / 2 - 70, 0, 140, H);
+    ctx.strokeStyle = `rgba(255,240,170,${.8 * fl})`; ctx.lineWidth = 3; for (let i = 0; i < 3; i++) { let x = W / 2 + (rn(i + Math.floor(t * 12)) - .5) * 160, y = 0; ctx.beginPath(); ctx.moveTo(x, y); for (let j = 0; j < 7; j++) { x += (rn(i * 9 + j + Math.floor(t * 12)) - .5) * 50; y += H / 7; ctx.lineTo(x, y); } ctx.stroke(); } ctx.globalCompositeOperation = 'source-over'; }
+  if (t > 2 && t < 2.25) { ctx.fillStyle = `rgba(255,255,255,${1 - (t - 2) / .25})`; ctx.fillRect(0, 0, W, H); }
+  if (t > 2.3) { const k = Math.min(1, (t - 2.3) / .6), n = 'GUARDIÃO DOURADO', shown = n.slice(0, Math.ceil(n.length * k)); ctx.globalAlpha = Math.min(1, (c.dur - t) / .5);
+    txt(L(shown), W / 2 + 2, H - bh - 36 + 2, 34, '#3a2a08', 'center', 'bold'); txt(L(shown), W / 2, H - bh - 38, 34, '#ffd34a', 'center', 'bold'); if (k >= 1) txt('O Protetor do Ouro', W / 2, H - bh - 12, 15, '#ffe9a0', 'center'); ctx.globalAlpha = 1; }
+  ctx.restore();
+}
 function nextWave() {
   R.wave++; applyWave(); R.toast = isHorde(R.wave) ? `ONDA ${R.wave} · HORDA!` : R.wave % 10 === 0 ? `ONDA ${R.wave} · BOSS!` : R.wave % 5 === 0 ? `ONDA ${R.wave} · MINI-BOSS!` : `ONDA ${R.wave}`; R.toastT = 2.5; heal(R.p.max * .15); SFX.ready(); R.shake = 6;
   if (isHorde(R.wave)) { R.toastT = 3.2; R.shake = 14; SFX.boss(); hordeBurst(); }
+  if (R.farm && guardHere(R.wave)) spawnGuardian();
 }
 function endTitle(win) { return R.farm ? (win ? 'FARM CONCLUÍDO' : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
@@ -1621,33 +1667,52 @@ function hubChar() {
   E.forEach(([n, v], i) => { const col = i % 2, row = Math.floor(i / 2), x = 504 + col * 136, y = 380 + row * 16; txt(n, x, y, 11, '#9aa'); txt(String(v), x + 126, y, 11, '#fff', 'right', 'bold'); });
 }
 // ----- Mochila -----
+let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0;
 function hubBag() {
-  [['all', 'Todos']].concat(SLOTS.map(sl => [sl, SLOT_LBL[sl]])).forEach(([k, l], i) => btn(197 + i * 58, 90, 55, 26, l, () => { bagFilter = k; bagSel = -1; }, { size: 11, col: bagFilter === k ? '#a8821f' : '#2a2a48' }));
-  txt(`${save.bag.length}/${BAG_MAX}`, 485, 395, 14, save.bag.length >= BAG_MAX ? '#f66' : '#aab', 'right', 'bold');
-  const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter);
-  for (let n = 0; n < BAG_MAX; n++) {
-    const x = 197 + (n % 6) * 49, y = 124 + Math.floor(n / 6) * 49, o = list[n];
-    bevel(x, y, 45, 45, '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
+  [['all', 'Todos']].concat(SLOTS.map(sl => [sl, SLOT_LBL[sl]])).forEach(([k, l], i) => btn(197 + i * 58, 90, 55, 26, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; }, { size: 11, col: bagFilter === k ? '#a8821f' : '#2a2a48' }));
+  // separadores das 5 mochilas
+  const slots = save.bagSlots | 1; if (bagPage >= slots) bagPage = 0;
+  for (let k = 0; k < 5; k++) {
+    const x = 197 + k * 60, open = k < slots, next = k === slots, c = BAG_COST[k];
+    btn(x, 120, 56, 22, open ? `Mochila ${k + 1}` : c[0] === 'g' ? '¢' + gfmt(c[1]) : '◆' + c[1], () => { if (open) { bagPage = k; bagSel = -1; } else if (next) { bagBuy = k + 1; } else { SFX.error(); hubToast = { t: 2.4, s: 'Desbloqueia primeiro a Mochila anterior', col: '#f88' }; } }, { size: open ? 10 : 11, col: open ? (bagPage === k ? '#a8821f' : '#2a2a48') : next ? '#5a4a2a' : '#26262f', hot: open ? '#c9a030' : '#7a6a3a' });
+    if (!open) drawIcon('lock', x + 9, 131, 1);
+  }
+  txt(`${save.bag.length}/${bagMax()}`, 495, 417, 13, save.bag.length >= bagMax() ? '#f66' : '#aab', 'right', 'bold');
+  const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter), pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);
+  for (let n = 0; n < BAG_PAGE; n++) {
+    const x = 197 + (n % 6) * 44, y = 148 + Math.floor(n / 6) * 44, o = pageList[n], picked = o && bagPick.has(o.it);
+    bevel(x, y, 41, 41, picked ? '#16301c' : '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
     if (o) {
-      slotIcon(o.it.slot, o.it.r, x + 22, y + 22, 3); if (o.it.ench) txt('+' + o.it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 7, y + 7);
-      { const v = cmpItems(o.it, save.gear[o.it.slot]).verdict, c = v > 0 ? '#4cf06a' : v < 0 ? '#ff4a4a' : '#ffd34a'; ctx.fillStyle = '#05050a'; ctx.fillRect(x + 3, y + 35, 9, 9); ctx.fillStyle = c; ctx.fillRect(x + 4, y + 36, 7, 7); }   // verde = melhor que o equipado, vermelho = pior, amarelo = parecido
-      if (bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
-      const idx = o.i; ui.push({ x, y, w: 45, h: 45, fn: () => bagSel = idx });
+      slotIcon(o.it.slot, o.it.r, x + 20, y + 20, 2.6); if (o.it.ench) txt('+' + o.it.ench, x + 38, y + 38, 9, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 6, y + 6);
+      { const v = cmpItems(o.it, save.gear[o.it.slot]).verdict, c = v > 0 ? '#4cf06a' : v < 0 ? '#ff4a4a' : '#ffd34a'; ctx.fillStyle = '#05050a'; ctx.fillRect(x + 2, y + 31, 9, 9); ctx.fillStyle = c; ctx.fillRect(x + 3, y + 32, 7, 7); }
+      if (!canWear(o.it)) drawIcon('lock', x + 31, y + 11, .9);
+      if (picked) { ctx.strokeStyle = '#4cf06a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 43, 43); txt('✓', x + 33, y + 38, 12, '#4cf06a', 'center', 'bold'); }
+      else if (!bagMulti && bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 43, 43); }
+      const idx = o.i, it2 = o.it; ui.push({ x, y, w: 41, h: 41, fn: () => { if (bagMulti) { if (bagPick.has(it2)) bagPick.delete(it2); else bagPick.add(it2); } else bagSel = idx; } });
     }
   }
-  btn(197, 376, 120, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 13, col: '#6a4a2a' });
-  // equipado: as 4 pecas que estas a usar (nao se vendem); a do tipo selecionado/filtrado fica destacada
+  btn(197, 376, 112, 28, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; bagPick.delete(save.bag[i]); save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 12, col: '#6a4a2a' });
+  btn(313, 376, 100, 28, bagMulti ? 'Sair da seleção' : 'Selecionar', () => { bagMulti = !bagMulti; bagPick.clear(); bagSel = -1; }, { size: 12, col: bagMulti ? '#8a3a2a' : '#3a5a7a', hot: bagMulti ? '#b04a3a' : '#4a7aa0' });
+  btn(417, 376, 78, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; bagPick.clear(); persist(); }, { size: 12 });
+  // legenda e peças equipadas (não se vendem)
   [['#4cf06a', lang === 'en' ? 'better' : 'melhor', 197], ['#ff4a4a', lang === 'en' ? 'worse' : 'pior', 252], ['#ffd34a', lang === 'en' ? 'same' : 'igual', 292]].forEach(([c, t, lx]) => { ctx.fillStyle = c; ctx.fillRect(lx, 410, 7, 7); txt(t, lx + 11, 417, 10, '#99a'); }); txt(lang === 'en' ? '(vs equipped)' : '(vs equipado)', 330, 417, 10, '#667');
   { const ref = save.bag[bagSel] ? save.bag[bagSel].slot : bagFilter; txt('Equipado (não se vende)', 197, 428, 12, '#f0c060', 'left', 'bold');
     SLOTS.forEach((sl, k) => { const it = save.gear[sl], x = 197 + k * 49, y = 434, hl = ref === sl;
       bevel(x, y, 45, 45, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
       if (it) { slotIcon(sl, it.r, x + 22, y + 22, 3); if (it.ench) txt('+' + it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 7, y + 7); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 22, y + 22, 3); ctx.globalAlpha = 1; }
       if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
-      ui.push({ x, y, w: 45, h: 45, fn: () => { bagFilter = sl; bagSel = -1; } }); });
+      ui.push({ x, y, w: 45, h: 45, fn: () => { bagFilter = sl; bagSel = -1; bagPage = 0; } }); });
     if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 197 + 4 * 49 + 4, 462, 12, '#ffd34a', 'left', 'bold'); }
-  btn(397, 376, 98, 28, 'Vender tudo', () => { if (save.bag.length) sellAsk = true; else SFX.error(); }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
-  btn(322, 376, 70, 28, 'Ordenar', () => { save.bag.sort((p, q) => q.r - p.r || q.il - p.il); bagSel = -1; persist(); }, { size: 13 });
   panel(500, 90, 280, 388, '#16162a');
+  if (bagMulti) {
+    const picked = save.bag.filter(q => bagPick.has(q)), tot = picked.reduce((a, q) => a + sellValue(q), 0), vis = save.bag.filter(q => bagFilter === 'all' || q.slot === bagFilter);
+    txt('Modo de seleção', 640, 122, 18, '#ffd34a', 'center', 'bold'); wrap('Clica nos itens para os marcar e depois vende-os de uma vez.', 514, 146, 252, 15, 12, '#aab');
+    txt(`${picked.length} selecionados`, 640, 214, 16, '#fff', 'center', 'bold'); txt('¢' + gfmt(tot), 640, 240, 22, '#fd5', 'center', 'bold');
+    btn(512, 268, 256, 28, 'Selecionar todos (visíveis)', () => { vis.forEach(q => bagPick.add(q)); }, { size: 13, col: '#3a5a7a', hot: '#4a7aa0', off: !vis.length });
+    btn(512, 302, 256, 28, 'Limpar seleção', () => bagPick.clear(), { size: 13, off: !picked.length });
+    btn(512, 380, 256, 34, `Vender selecionados`, () => { if (picked.length) sellAsk = 'pick'; else SFX.error(); }, { size: 15, col: '#8a3a2a', hot: '#b04a3a', off: !picked.length });
+    return;
+  }
   const it = save.bag[bagSel];
   if (!it) { txt('Seleciona um item', 640, 270, 15, '#667', 'center'); return; }
   const yy = itemCard(it, 512, 98, 262), cur = save.gear[it.slot];
@@ -1663,17 +1728,28 @@ function hubBag() {
   btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });
 }
 let sellAsk = false, sellArm = null;
-function sellAll() { let g = 0; for (const it of save.bag) g += sellValue(it); save.gold = Math.min(999999, save.gold + g); save.bag = []; enchItem = null; bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
+function sellList(list) { let g = 0; for (const it of list) { g += sellValue(it); if (enchItem === it) enchItem = null; bagPick.delete(it); } save.gold = Math.min(999999, save.gold + g); save.bag = save.bag.filter(it => !list.includes(it)); bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
+const sellTargets = () => sellAsk === 'pick' ? save.bag.filter(it => bagPick.has(it)) : save.bag;
+function drawBagBuy() {
+  if (state !== 'hub' || tab !== 'bag' || !bagBuy) return; const k = bagBuy - 1, c = BAG_COST[k], gem = c[0] === 'd', can = gem ? save.gems >= c[1] : save.gold >= c[1];
+  if (k < (save.bagSlots | 1)) { bagBuy = 0; return; }
+  ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { bagBuy = 0; } });
+  const x = 250, y = 170, w = 300, h = 160; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt(`Desbloquear a Mochila ${k + 1}?`, x + w / 2, y + 34, 18, '#ffd34a', 'center', 'bold'); txt('+30 lugares para itens', x + w / 2, y + 58, 13, '#aab', 'center');
+  txt((gem ? '◆' : '¢') + gfmt(c[1]), x + w / 2, y + 90, 24, gem ? '#7fe8ff' : '#fd5', 'center', 'bold');
+  btn(x + 20, y + 106, 125, 38, 'Comprar', () => { if (!can) { SFX.error(); return; } if (gem) save.gems -= c[1]; else save.gold -= c[1]; save.bagSlots = k + 1; bagPage = k; bagBuy = 0; persist(); SFX.buy(); }, { size: 15, col: can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061', off: !can });
+  btn(x + 155, y + 106, 125, 38, 'Cancelar', () => { bagBuy = 0; }, { size: 15, col: '#2a2a48' });
+}
 function drawSellAsk() {
   if (state !== 'hub' || tab !== 'bag' || !sellAsk) return;
-  if (!save.bag.length) { sellAsk = false; return; }
-  let g = 0; for (const it of save.bag) g += sellValue(it); const hi = save.bag.filter(it => it.r >= 3).length, up = save.bag.filter(it => cmpItems(it, save.gear[it.slot]).verdict > 0).length;
+  const L0 = sellTargets(); if (!L0.length) { sellAsk = false; return; }
+  let g = 0; for (const it of L0) g += sellValue(it); const hi = L0.filter(it => it.r >= 3).length, up = L0.filter(it => cmpItems(it, save.gear[it.slot]).verdict > 0).length;
   ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => {} });
   const x = 250, y = 170, w = 300, h = 170; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
-  txt('Vender tudo?', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold');
-  txt(`${save.bag.length} itens da Mochila por ¢${gfmt(g)}`, x + w / 2, y + 62, 14, '#fff', 'center');
+  txt(sellAsk === 'pick' ? 'Vender selecionados?' : 'Vender tudo?', x + w / 2, y + 34, 20, '#ffd34a', 'center', 'bold');
+  txt(`${L0.length} itens da Mochila por ¢${gfmt(g)}`, x + w / 2, y + 62, 14, '#fff', 'center');
   txt(hi ? `Inclui ${hi} item(ns) Épico/Lendário/Mítico!` : 'Os itens equipados não são vendidos.', x + w / 2, y + 82, 12, hi ? '#f88' : '#9ab', 'center'); if (up) txt(`${up} parecem melhores que o equipado`, x + w / 2, y + 98, 11, '#fd5', 'center');
-  btn(x + 20, y + 112, 125, 38, 'Sim, vender', sellAll, { size: 15, col: '#8a3a2a', hot: '#b04a3a' });
+  btn(x + 20, y + 112, 125, 38, 'Sim, vender', () => sellList(L0), { size: 15, col: '#8a3a2a', hot: '#b04a3a' });
   btn(x + 155, y + 112, 125, 38, 'Cancelar', () => { sellAsk = false; }, { size: 15, col: '#2a2a48' });
 }
 // ----- Encantamentos -----
@@ -2070,7 +2146,7 @@ function openChests(n) {
     const L = ++save.chestDone, g5 = L % 10 === 0;
     rw.gold += Math.round((60 + 30 * L) * (.8 + Math.random() * .6) * (g5 ? 5 : 1));
     if (Math.random() < (g5 ? 1 : .45)) rw.pts += g5 ? 3 : (Math.random() < .3 ? 2 : 1);
-    if (g5 || Math.random() < .28) { const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(120, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
+    if (g5 || Math.random() < .18) { const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(120, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
     if (g5 || Math.random() < .15) { const ok = CLASSES[save.cls].weapons.map((w, k) => k).filter(k => weaponReq(k).ok), wi = ok[Math.floor(Math.random() * ok.length)], id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
     if (Math.random() < (g5 ? .5 : .06)) rw.gems += g5 ? 5 : 2;
     rw.n++;
@@ -2081,10 +2157,10 @@ let chestPops = 0;
 function rewardTokens(r) {
   const t = [];
   if (r.gold) t.push({ txt: '¢' + gfmt(r.gold), col: '#fd5', r: 0, icon: (x, y) => drawIcon('coin', x, y, 1.2) });
-  if (r.pts) t.push({ txt: `+${r.pts} pontos`, col: '#9fe', r: 0 });
+  if (r.pts) t.push({ txt: lang === 'en' ? `+${r.pts} points` : `+${r.pts} pontos`, col: '#9fe', r: 0 });
   if (r.gems) t.push({ txt: '◆ ' + r.gems, col: '#7fe8ff', r: 1 });
-  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); t.push({ txt: `${w.n.split(' ')[0]} ×${r.wpn[id]}`, col: '#ffd34a', r: 2, icon: (x, y) => weaponIcon(id, x, y, .9) }); }
-  r.items.slice().sort((a, b) => a.r - b.r).forEach(it => t.push({ txt: ITEM_NAMES[it.slot][it.r].split(' ')[0], col: RAR[it.r][1], r: it.r, icon: (x, y) => slotIcon(it.slot, it.r, x, y, 1.4) }));
+  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); t.push({ txt: `${L(w.n)} ×${r.wpn[id]}`, col: '#ffd34a', r: 2, icon: (x, y) => weaponIcon(id, x, y, .9) }); }
+  r.items.slice().sort((a, b) => a.r - b.r).forEach(it => t.push({ txt: L(ITEM_NAMES[it.slot][it.r]), col: RAR[it.r][1], r: it.r, icon: (x, y) => slotIcon(it.slot, it.r, x, y, 1.4) }));
   return t;
 }
 function hubRewards() {
@@ -2105,7 +2181,7 @@ function hubRewards() {
     if (pop >= 0) { const cnt = Math.min(n, Math.floor(pop) + 1); if (cnt > chestPops) { for (let q = chestPops; q < cnt; q++) { const tk = shown[q]; tk && tk.r >= 3 ? SFX.special() : SFX.heal(); } chestPops = cnt; } }
     shown.forEach((tk, i) => {
       const t = Math.max(0, Math.min(1, pop - i)); if (t <= 0) return; const e = 1 - Math.pow(1 - t, 3), cols = 2, cx = 350 + ((i % cols) - .5) * 136, rowY = 142 + Math.floor(i / cols) * 34, yy = by + 10 + (rowY - by - 10) * e;
-      ctx.globalAlpha = Math.min(1, t * 2) * (el > 3.2 ? Math.max(0, 1 - (el - 3.2) * 2) : 1); bevel(cx - 62, yy - 14, 124, 28, '#12121f', tk.col, '#05050a'); if (tk.icon) tk.icon(cx - 48, yy); txt(tk.txt, cx - 34, yy + 5, 12, tk.col, 'left', 'bold'); ctx.globalAlpha = 1;
+      ctx.globalAlpha = Math.min(1, t * 2) * (el > 3.2 ? Math.max(0, 1 - (el - 3.2) * 2) : 1); bevel(cx - 62, yy - 14, 124, 28, '#12121f', tk.col, '#05050a'); if (tk.icon) tk.icon(cx - 48, yy); { let fs = 12; while (fs > 8 && txtW(tk.txt, fs, 'bold') > 82) fs--; txt(tk.txt, cx - 34, yy + 5, fs, tk.col, 'left', 'bold'); } ctx.globalAlpha = 1;
     });
     if (best >= 3 && pop > n - 1 && el < 4.2) { ctx.globalAlpha = .6 + .4 * Math.sin(T * 10); txt(best >= 4 ? 'ITEM MÍTICO!' : 'ITEM LENDÁRIO!', 350, 134, 18, RAR[best][1], 'center', 'bold'); ctx.globalAlpha = 1; }
   }
@@ -2116,12 +2192,12 @@ function hubRewards() {
   panel(520, 96, 262, 380, '#16162a'); txt('Última abertura', 651, 122, 16, '#f0c060', 'center', 'bold');
   if (!lastRw) { txt('Ainda não abriste nenhum baú.', 651, 270, 13, '#667', 'center'); return; }
   const r = lastRw; let y = 150; txt(`${r.n} baú(s)`, 534, y, 13, '#9ab'); y += 24;
-  txt('¢' + gfmt(r.gold) + (r.sold ? ` (+${gfmt(r.sold)} vendas)` : ''), 534, y, 16, '#fd5', 'left', 'bold'); y += 22;
+  txt('¢' + gfmt(r.gold) + (r.sold ? ` (+${gfmt(r.sold)} ${lang === 'en' ? 'sales' : 'vendas'})` : ''), 534, y, 16, '#fd5', 'left', 'bold'); y += 22;
   if (r.pts) { txt(`+${r.pts} pontos de atributo`, 534, y, 14, '#9fe', 'left', 'bold'); y += 20; }
   if (r.gems) { txt('◆+' + r.gems, 534, y, 16, '#7fe8ff', 'left', 'bold'); y += 22; }
   for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`Cópia: ${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
   r.items.slice(0, 6).forEach(it => { slotIcon(it.slot, it.r, 546, y - 4, 1.6); txt(itemName(it), 566, y, 13, RAR[it.r][1], 'left', 'bold'); y += 22; });
-  if (r.items.length > 6) txt(`+${r.items.length - 6} itens`, 534, y, 12, '#889');
+  if (r.items.length > 6) txt(`+${r.items.length - 6} ${lang === 'en' ? 'items' : 'itens'}`, 534, y, 12, '#889');
 }
 
 /* ----- Bandeiras em pixel-art, paises e seletor ----- */
@@ -2695,12 +2771,14 @@ function drawWorld() {
     if (e.hp < e.max) bar(e.x - 14, e.y - e.r - 12, 28, 4, e.hp / e.max, '#e44');
   } });
   if (R.boss) { const b = R.boss; list.push({ y: b.y, f: () => {
+    const oy = b.y; if (R.cine) { const c = R.cine; if (c.t < 1.2) return; if (c.t < 2) { const k = (c.t - 1.2) / .8; b.y = oy - (1 - k * k) * 440; } } if (b.z) b.y -= b.z;
+    if (b.guardian) { const sy = oy, a0 = R.time * 14; if (b.st === 'spin') { if (b.mt < .5) { ctx.strokeStyle = '#ffd34a88'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.arc(b.x, sy, b.r + 112, 0, 7); ctx.stroke(); ctx.setLineDash([]); } else { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#ffe58a'; ctx.lineWidth = 8; ctx.globalAlpha = .55; ctx.beginPath(); ctx.arc(b.x, sy, b.r + 100, a0 - 2.2, a0); ctx.stroke(); ctx.globalAlpha = .25; ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(b.x, sy, b.r + 100, a0 - 3.6, a0 - 1); ctx.stroke(); ctx.restore(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(b.x + Math.cos(a0) * 20, sy + Math.sin(a0) * 20); ctx.lineTo(b.x + Math.cos(a0) * (b.r + 112), sy + Math.sin(a0) * (b.r + 112)); ctx.stroke(); } } ctx.fillStyle = '#ffd34a22'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 14 + Math.sin(R.time * 4) * 3, 0, 7); ctx.fill(); }
     ctx.fillStyle = '#0007'; ctx.beginPath(); ctx.ellipse(b.x, b.y + b.r, b.r * 1.1, b.r * .35, 0, 0, 7); ctx.fill();
     if (b.st === 'charge' && b.mt < .7) { ctx.strokeStyle = '#f44a'; ctx.lineWidth = 4; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + b.dx * 500, b.y + b.dy * 500); ctx.stroke(); ctx.setLineDash([]); }
     if (b.st === 'spread' && b.f < 3) { ctx.strokeStyle = b.col + '88'; ctx.lineWidth = 2; ctx.setLineDash([6, 8]); ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]); }
     if (b.st === 'blink' && b.f === 0) { ctx.globalAlpha = .4 + Math.sin(R.time * 30) * .3; }
     if (b.hp < b.max * .5) { ctx.fillStyle = '#f333'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 8 + Math.sin(R.time * 10) * 3, 0, 7); ctx.fill(); }
-    drawSpr(b.pal, b.x, b.y, p.x < b.x, b.hit > 0, Math.sin(R.time * 5) * 3); ctx.globalAlpha = 1;
+    drawSpr(b.pal, b.x, b.y, p.x < b.x, b.hit > 0, Math.sin(R.time * 5) * 3); ctx.globalAlpha = 1; b.y = oy;
     if (b.slow > 0) { ctx.fillStyle = '#8cf5'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 4, 0, 7); ctx.fill(); }
     if (b.burn > 0) drawIcon('flame', b.x + b.r, b.y - b.r, 2);
   } }); }
@@ -2793,7 +2871,7 @@ function overlay(title, col, lines) {
   lines.forEach((l, i) => txt(l, UW / 2, 240 + i * 28, 20, '#fff', 'center'));
 }
 function drawPlayScreens() {
-  drawWorld(); drawHUD(); ctx.save(); ctx.translate(UIOX, 0); playOverlay(); ctx.restore();
+  drawWorld(); drawHUD(); ctx.save(); ctx.translate(UIOX, 0); playOverlay(); ctx.restore(); drawCine();
 }
 function playOverlay() {
   if (state === 'pause') {
@@ -2834,7 +2912,7 @@ function frame(now) {
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawEditProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawEditProfile(); drawSellAsk(); drawBagBuy(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);
