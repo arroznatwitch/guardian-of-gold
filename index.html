@@ -486,7 +486,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
@@ -1850,7 +1850,7 @@ function updateAnvil(dt) {
 }
 /* ----- Fusão (armas e equipamento) ----- */
 let fuseSel = 0, fuseMode = 'w', fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
-const copyPrice = i => Math.max(100, Math.round(CLASSES[save.cls].weapons[i].price * .4));
+const copyPrice = i => Math.max(200, Math.round(CLASSES[save.cls].weapons[i].price * .75));   // cada copia custa 75% do preco da arma
 const gSt = it => it.st || 0;
 function starIcons(n, cx, cy, k) { for (let q = 0; q < n; q++) drawIcon('star', cx + (q - (n - 1) / 2) * 9 * k, cy, k); }
 function fxBurst(msg, col) {
@@ -1861,7 +1861,7 @@ function fxBurst(msg, col) {
 function doFuse(id, t, all) {
   if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
   const a = save.wst[id]; let n = 0;
-  const step = tt => { if (tt < STAR_MAX && a[tt] >= 5) { a[tt] -= 5; a[tt + 1]++; n++; return true; } return false; };
+  const step = tt => { if (tt < STAR_MAX && a[tt] >= FUSE_N) { a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
   if (all) { for (let tt = 0; tt < STAR_MAX; tt++) while (step(tt)); } else step(t);
   if (!n) { SFX.error(); return; }
   const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
@@ -1871,8 +1871,8 @@ function gearGroups() {
   return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
 }
 function fuseGear(g) {
-  if (save.pl.lv < FUSE_LV || g.length < 5) { SFX.error(); return; }
-  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, 5);
+  if (save.pl.lv < FUSE_LV || g.length < FUSE_N) { SFX.error(); return; }
+  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, FUSE_N);
   save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1;
   fxBurst(keep.st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${keep.st}★`, keep.st >= STAR_MAX ? '#ffd34a' : '#9fe');
 }
@@ -1897,7 +1897,7 @@ function hubFuse() {
       if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
       ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
       txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-      if (t < STAR_MAX) btn(x, y + 90, 140, 22, '5 > 1', () => doFuse(w.id, t, false), { size: 13, off: lock || a[t] < 5, col: '#2f7a4a', hot: '#3fa061' });
+      if (t < STAR_MAX) btn(x, y + 90, 140, 22, FUSE_N + ' > 1', () => doFuse(w.id, t, false), { size: 13, off: lock || a[t] < FUSE_N, col: '#2f7a4a', hot: '#3fa061' });
     }
     panel(197, 284, 585, 192, '#16162a');
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
@@ -1915,12 +1915,12 @@ function hubFuse() {
     txt('Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.', 487, 138, 11, '#aab', 'center');
     if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 270, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 292, 13, '#667', 'center'); }
     gs.slice(0, 7).forEach((g, i) => {
-      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= 5, nm = ITEM_NAMES[it.slot][it.r];
+      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= FUSE_N, nm = ITEM_NAMES[it.slot][it.r];
       bevel(197, y, 585, 36, '#12121f', RAR[it.r][1], '#05050a'); slotIcon(it.slot, it.r, 222, y + 18, 2.2);
       txt(nm, 250, y + 23, 14, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 250 + txtW(nm, 14, 'bold') + 14 + q * 10, y + 17, 1.2);
-      txt(`${g.length}/5`, 600, y + 23, 15, g.length >= 5 ? '#6f6' : '#fff', 'center', 'bold');
+      txt(`${Math.min(g.length, 99)}/${FUSE_N}`, 600, y + 23, 15, g.length >= FUSE_N ? '#6f6' : '#fff', 'center', 'bold');
       txt(`>`, 640, y + 23, 15, '#889', 'center'); drawIcon('star', 668, y + 17, 1.2); txt(String(st + 1), 680, y + 23, 13, '#ffd34a', 'left', 'bold');
-      btn(698, y + 4, 78, 28, '5 > 1', () => fuseGear(g), { size: 13, off: !can, col: '#2f7a4a', hot: '#3fa061' });
+      btn(698, y + 4, 78, 28, FUSE_N + ' > 1', () => fuseGear(g), { size: 13, off: !can, col: '#2f7a4a', hot: '#3fa061' });
     });
     if (gs.length > 7) txt(`+${gs.length - 7}`, 487, 436, 12, '#889', 'center');
     txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 487, 466, 13, '#9cf', 'center');
