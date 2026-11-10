@@ -406,6 +406,8 @@ const RAID_D = [
   { n: 'Pesadelo', col: '#ff4a4a', hp: 7,   dmg: 3.2, gold: 8,  spd: 1.2 },
   { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 15, spd: 1.25 },
 ];
+// nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
+const RAID_MINI = { hp: 1.4, dmg: 1.25, cap: 4, capD: 2, rate: 1.5, burst: 5 };
 let raidD = 0;
 const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15, LUCKY_MAX = 85;
 const luckOk = (lv, id) => ANV_CH[lv] + Math.min(25, 5 * ((save.pity && save.pity[id]) || 0)) < LUCKY_MAX;   // o amuleto so ajuda se a chance for inferior a 85%
@@ -573,8 +575,8 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg; R.goldM = D.gold; R.spdM = D.spd;
-    R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_MINI.hp; R.bossM = D.hp * .8; R.dmgM = D.dmg * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd;
+    R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
   if (farm) { R.wave = 1; applyWave(); R.toast = `Farm: ${M.name}`; R.toastT = 3; }
@@ -834,7 +836,7 @@ function update(dt) {
   // spawn
   if (R.phase === 'hunt' && !dead) {
     R.spawnT -= dt;
-    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB + (R.hordeB || 0)) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / ((1 + .1 * (R.raid ? R.raid.d : 0)) * (R.spawnRate || 1)); }
+    if (R.spawnT <= 0 && R.enemies.length < M.cap + R.capB + (R.hordeB || 0)) { spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); R.spawnT = 1.2 / ((1 + .1 * (R.raid ? R.raid.d : 0)) * (R.spawnRate || 1) * (R.raid ? RAID_MINI.rate : 1)); }
     if (R.farm && R.hordeB) { R.packT -= dt; if (R.packT <= 0) { R.packT = 6; const n = 3 + Math.min(5, Math.floor(R.wave / 10)); for (let i = 0; i < n; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); } }
   }
 
@@ -870,7 +872,7 @@ function update(dt) {
   R.enemies = R.enemies.filter(e => e.hp > 0);
   if (R.raid && R.phase === 'hunt' && !dead) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
-    if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < 3 + R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
+    if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < RAID_MINI.burst + 2 * R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
   }
   if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (isHorde(R.wave)) { giveLoot(R.p.x, R.p.y - 24, 1); R.toast = 'HORDA DERROTADA!'; R.toastT = 2.2; } if (R.wave % 5 === 0) spawnBoss(); else nextWave(); } }
   else if (R.phase === 'hunt' && R.kills >= R.need && !dead) spawnBoss();
