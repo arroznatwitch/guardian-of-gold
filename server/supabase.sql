@@ -82,7 +82,7 @@ begin
   w := b->'weapon';
   if jsonb_typeof(w) = 'object' and (w->>'id') ~ '^[a-z]_[a-z]{2,10}$' then
     o := o || jsonb_build_object('weapon', jsonb_build_object('id', w->>'id',
-      'lv', least(greatest(coalesce((w->>'lv')::int, 0), 0), 12), 'st', least(greatest(coalesce((w->>'st')::int, 0), 0), 3)));
+      'lv', least(greatest(coalesce((w->>'lv')::int, 0), 0), 20), 'st', least(greatest(coalesce((w->>'st')::int, 0), 0), 3)));
   end if;
   a := b->'attr';
   if jsonb_typeof(a) = 'object' then
