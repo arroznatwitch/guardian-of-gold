@@ -153,6 +153,8 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 - **Atributo principal:** Capacete e Armadura dão *Vida*, Botas dão *Velocidade*, Amuleto dá *Dano*.
 - **Raridade:** cada nível de raridade acrescenta mais um bónus aleatório (Mítico tem 4). Lendário e Mítico podem trazer um **efeito especial**.
 - **Venda:** itens que não queiras podem ser vendidos por ouro (há botão para vender todos os Comuns).
+- **Nível do item:** sobe com a zona, a onda e também com o **teu nível**, por isso o equipamento acompanha a tua evolução. Lendário e Mítico são raros (cerca de 1% e 0,1% no início, até ~7% e ~2,5% nas raids mais difíceis).
+- **Melhor ou pior?** Na Mochila, cada item mostra **MELHOR / PIOR / SIMILAR** em relação ao equipado, com a diferença de cada atributo. Na loja de armas vês a diferença de dano total face à arma equipada.
 
 | Bónus possível | Descrição |
 |---|---|

@@ -187,6 +187,42 @@ const WSHAPES = {
   cross:   { ax: 3, rows: ['........w...','........ww..','.........w..','hhhhhhhhhbbb','.........w..','........ww..','........w...'] },
   staff:   { ax: 3, rows: ['..........ooo.','.........oohoo','sssssssssooooo','.........ooooo','..........ooo.'] },
 };
+/* cabecas dos cajados desenhadas por codigo (uma forma por cajado e por nivel de estrela) */
+function mkStaffHead(kind, tier) {
+  const t = tier || 1, big = t - 1, W = 16 + big * 2, H = 9 + big * 2, R = 2.6 + big * .85, cx = W - 5 - big, cy = (H - 1) / 2;
+  const sh = t === 1 ? 's' : 'H', mn = t === 1 ? 'o' : 'O', hi = t === 1 ? 'h' : 'L', g = Array.from({ length: H }, () => Array(W).fill('.'));
+  const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < H) g[y][x] = c; };
+  const disc = (px, py, r, c) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ((x - px) ** 2 + (y - py) ** 2 <= r * r) g[y][x] = c; };
+  for (let x = 0; x <= cx - R + 1; x++) put(x, cy, sh);
+  if (kind === 'fire') {            // chama: gota com ponta e linguas de fogo
+    disc(cx - 1, cy + .5, R, mn); const L = 2 + big;
+    for (let i = 1; i <= L; i++) { const half = R * (1 - i / (L + 1.5)); for (let y = Math.ceil(cy - half); y <= Math.floor(cy + half); y++) put(cx - 1 + R + i - .5, y - (i >= L ? 1 : 0), mn); }
+    put(cx - 3, cy - R - 1, mn); put(cx - 1, cy - R - 2 - big * .5, mn); put(cx + 1, cy - R - 1, mn);
+    disc(cx - 1.5, cy + .5, R * .5, hi);
+  } else if (kind === 'ice') {      // cristal com duas lascas
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (Math.abs(x - cx) / (R + 2) + Math.abs(y - cy) / (R + .4) <= 1) g[y][x] = mn;
+    const sx = cx - 2, k = 1.4 + big * .5;
+    for (const dy of [-1, 1]) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (Math.abs(x - sx) / (k + .6) + Math.abs(y - (cy + dy * (R + 1))) / (k + 1) <= 1) g[y][x] = mn;
+    for (let x = cx - R + 1; x <= cx + R; x++) put(x, cy, hi); put(cx - 1, cy - 1, hi);
+  } else if (kind === 'bolt') {     // estrela de faiscas
+    disc(cx, cy, R * .62, mn); const A = Math.floor(R + 2);
+    for (let k = 1; k <= A; k++) { put(cx + k, cy, mn); put(cx - k, cy, mn); put(cx, cy + k, mn); put(cx, cy - k, mn); }
+    for (let k = 1; k <= Math.floor(R); k++) { put(cx + k, cy + k, mn); put(cx - k, cy + k, mn); put(cx + k, cy - k, mn); put(cx - k, cy - k, mn); }
+    disc(cx, cy, R * .3, hi);
+  } else if (kind === 'arcane') {   // anel arcano com nucleo e orbes
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const d = Math.hypot(x - cx, y - cy); if (d <= R + .3 && d >= R - 1) g[y][x] = mn; }
+    disc(cx, cy, R * .42, hi); put(cx + R + 1, cy - R, hi); put(cx - R, cy + R + 1, hi); put(cx + R + 1, cy + 1, mn);
+  } else {                          // sombrio: lua crescente com olho
+    disc(cx, cy, R, mn); disc(cx + R * .6, cy, R * .85, '.'); disc(cx + R * .55, cy, R * .35, hi);
+  }
+  if (t >= 2) {
+    const x0 = Math.round(cx - R - 1 - (kind === 'fire' ? 1 : 0));
+    for (let dy = -1 - big; dy <= 1 + big; dy++) put(x0, cy + dy, 'G'); put(x0 - 1, cy, 'G'); put(x0 + 1, cy - 1 - big, 'G'); put(x0 + 1, cy + 1 + big, 'G'); put(cx, cy, 'J');
+  }
+  if (t === 3) { for (const dy of [-1, 1]) { const yy = cy + dy * (R + 2.2); put(cx - 1, yy, 'G'); put(cx + 1, yy, 'G'); put(cx, yy + dy, 'G'); } put(cx - 1, cy, 'J'); put(cx + 1, cy, 'J'); }
+  return g.map(r => r.join(''));
+}
+for (const k of ['fire', 'ice', 'bolt', 'arcane', 'dark']) WSHAPES['staff_' + k] = { ax: 3, rows: mkStaffHead(k, 1) };
 const WDEF = {
   k_sword:  { shape: 'sword',  pal: { p:'#8a6a2a', h:'#6b4a22', g:'#e8c060', b:'#d0d8e8' } },
   k_axe:    { shape: 'axe',    pal: { h:'#6b4a22', a:'#9aa4b8', A:'#e0e6f4' } },
@@ -198,11 +234,11 @@ const WDEF = {
   a_cross:  { shape: 'cross',  pal: { h:'#6b4a22', w:'#9aa4b8', b:'#e8e8e8' } },
   a_fire:   { shape: 'bow',    pal: { w:'#e0602a', s:'#ffd080' } },
   a_dark:   { shape: 'bow',    pal: { w:'#5a2a8a', s:'#d0a0ff' } },
-  m_fire:   { shape: 'staff',  pal: { s:'#6b4a22', o:'#ff7a1a', h:'#ffe066' } },
-  m_ice:    { shape: 'staff',  pal: { s:'#6b4a22', o:'#6ad0ff', h:'#ffffff' } },
-  m_bolt:   { shape: 'staff',  pal: { s:'#6b4a22', o:'#ffe14a', h:'#ffffff' } },
-  m_arcane: { shape: 'staff',  pal: { s:'#6b4a22', o:'#b06aff', h:'#f0d8ff' } },
-  m_dark:   { shape: 'staff',  pal: { s:'#3a2a2a', o:'#5a1a6a', h:'#ff40c0' } },
+  m_fire:   { shape: 'staff_fire',  pal: { s:'#6b4a22', o:'#ff7a1a', h:'#ffe066' } },
+  m_ice:    { shape: 'staff_ice',  pal: { s:'#6b4a22', o:'#6ad0ff', h:'#ffffff' } },
+  m_bolt:   { shape: 'staff_bolt',  pal: { s:'#6b4a22', o:'#ffe14a', h:'#ffffff' } },
+  m_arcane: { shape: 'staff_arcane',  pal: { s:'#6b4a22', o:'#b06aff', h:'#f0d8ff' } },
+  m_dark:   { shape: 'staff_dark',  pal: { s:'#3a2a2a', o:'#5a1a6a', h:'#ff40c0' } },
 };
 const WSPR = {};
 for (const id in WDEF) { const sh = WSHAPES[WDEF[id].shape]; WSPR[id] = { img: makeSprite(sh.rows, WDEF[id].pal, 1, false), ax: sh.ax, w: sh.rows[0].length, h: sh.rows.length }; }
@@ -229,6 +265,7 @@ const TIER_ART = {
   staff: { 2: { ax: 3, h: ['..........GOOG..', '.........GOLLOG.', '.........OLJJLOO', 'HHHHHHHHGOOJJOOO'] },
            3: { ax: 3, h: ['..........G..G..G.', '..........GOOOOOG..', '.........GOLLLLLOG.', '.........OLJJJJJLOO', 'HHHHHHHHJGOOJWJOOOG'] } },
 };
+for (const k of ['fire', 'ice', 'bolt', 'arcane', 'dark']) TIER_ART['staff_' + k] = { 2: { ax: 3, rows: mkStaffHead(k, 2) }, 3: { ax: 3, rows: mkStaffHead(k, 3) } };
 function tierSprite(id, tier) {
   const shp = WDEF[id].shape, art = TIER_ART[shp][tier], pal = WDEF[id].pal, acc = WCOL[id] || '#ffe14a', up = c => tier === 3 ? mixC(c, '#ffffff', .22) : c;
   let R2;
@@ -242,7 +279,7 @@ function tierSprite(id, tier) {
   else R2 = { H: pal.s, O: pal.o, L: pal.h };
   const base = R2.M || R2.O, C = { D: '#15101f', W: '#ffffff', J: acc, G: tier === 3 ? '#ffe27a' : '#e0b030', L: mixC(base, '#ffffff', .55), m: mixC(base, '#000000', .3) };
   for (const k in R2) C[k] = up(R2[k]); if (R2.L) C.L = tier === 3 ? mixC(R2.L, '#ffffff', .5) : R2.L; if (!R2.m) C.m = mixC(C[R2.M ? 'M' : 'O'], '#000000', .3); if (!C.p) C.p = C.G; if (!C.H) C.H = '#6b4a22'; if (!C.S) C.S = '#e8e8e8'; if (!C.O) C.O = C.M;
-  const top = art.h, low = top.slice(0, -1).reverse().map(r => r.replace(/L/g, 'm')), rows = top.concat(low), w0 = Math.max(...rows.map(r => r.length)), h0 = rows.length, W = w0 + 2, H = h0 + 2;
+  const top = art.h || [], low = top.slice(0, -1).reverse().map(r => r.replace(/L/g, 'm')), rows = art.rows || top.concat(low), w0 = Math.max(...rows.map(r => r.length)), h0 = rows.length, W = w0 + 2, H = h0 + 2;
   const g = []; for (let y = 0; y < H; y++) g.push(new Array(W).fill(null));
   rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch !== '.' && C[ch]) g[j + 1][i + 1] = C[ch]; }));
   const f = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x], ol = tier === 3 ? mixC(acc, '#ffffff', .15) : '#15101f', o = g.map(r => r.slice());
@@ -914,6 +951,7 @@ Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 inv
 Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "Criar conta": "Create account", "Nick": "Nickname", "Palavra-passe": "Password", "Repetir palavra-passe": "Repeat password", "A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.": "Your password never leaves this device: only a cryptographic proof is sent. There is no password recovery, so keep it safe.", "Conectado como": "Logged in as", "Mobs mortos": "Mobs killed", "Ouro ganho": "Gold earned", "Enviar progresso": "Send progress", "Terminar sessão": "Log out", "Apagar conta: escreve a palavra-passe": "Delete account: type your password", "Apagar conta": "Delete account", "Mapa ": "Map ", "Maior nível": "Highest level", "Mais mobs mortos": "Most mobs killed", "Mais ouro ganho": "Most gold earned", "Mais bosses derrotados": "Most bosses defeated", "Mais raids vencidas": "Most raids won", "Recorde de waves:": "Wave record:", "A carregar...": "Loading...", "Ainda sem resultados.": "No results yet.", "Tu: #": "You: #", "Nick inválido: 3 a 16 letras, números ou _": "Invalid nickname: 3 to 16 letters, numbers or _", "A palavra-passe precisa de 8 a 64 caracteres": "The password needs 8 to 64 characters", "As palavras-passe não coincidem": "The passwords don't match", "A palavra-passe não pode ser igual ao nick": "The password can't be the same as the nickname", "Esse nick já está em uso": "That nickname is already taken", "Nick ou palavra-passe incorretos": "Wrong nickname or password", "Conta bloqueada por tentativas falhadas. Tenta daqui a": "Account locked after failed attempts. Try again in", "Muitos registos neste momento. Tenta daqui a uns minutos.": "Too many sign-ups right now. Try again in a few minutes.", "Sem ligação ao servidor": "Cannot reach the server", "O ranking online ainda não está ligado a um servidor.": "The online ranking is not connected to a server yet.", "O teu browser não permite criptografia aqui (usa https).": "Your browser doesn't allow cryptography here (use https).", "Erro do servidor, tenta mais tarde": "Server error, try again later", "Progresso recusado pelo servidor (valores inesperados)": "Progress rejected by the server (unexpected values)", "Sessão expirada. Entra outra vez.": "Session expired. Log in again.", "Pedido inválido": "Invalid request", "Dados inválidos": "Invalid data", "A ligar...": "Connecting...", "Sessão iniciada!": "Logged in!", "Progresso enviado!": "Progress sent!", "Conta apagada.": "Account deleted.", "Este save não pode entrar no ranking.": "This save cannot enter the ranking.", "Espera uns segundos e tenta outra vez.": "Wait a few seconds and try again."});
 Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A aguardar a primeira sincronização...": "Waiting for the first sync...", "Última: agora mesmo": "Last: just now", "Última: há": "Last:"});
 Object.assign(EN_DICT, {"Entra na tua conta para jogar": "Log in to your account to play", "A carregar o teu save": "Loading your save", "Sem ligação ao servidor": "Cannot reach the server", "O jogo precisa de internet para carregar a tua conta.": "The game needs internet to load your account.", "Tentar outra vez": "Try again", "Que save queres usar?": "Which save do you want to use?", "Já tens um save guardado na conta e outro neste dispositivo.": "You already have a save on the account and another on this device.", "Esta conta foi usada noutro dispositivo desde a última vez.": "This account was used on another device since last time.", "Save da conta": "Account save", "Save deste dispositivo": "Save from this device", "Save desta janela": "Save from this window", "Usar este": "Use this", "O save que não escolheres deixa de existir. O da conta fica guardado online.": "The save you don't pick will be lost. The account save stays online.", "Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.": "Pick the account save to load what was stored, or this window's to replace it.", "Sair sem guardar?": "Log out without saving?", "Sair:": "Log out:", "Farm: onda": "Farm: wave", "Não foi possível guardar o progresso recente. Clica outra vez para sair mesmo assim.": "Couldn't save your recent progress. Click again to log out anyway."});
+Object.assign(EN_DICT, {"MELHOR": "BETTER", "PIOR": "WORSE", "SIMILAR": "SIMILAR", "Slot vazio": "Empty slot", "igual à equipada": "same as equipped", "% vs equipada": "% vs equipped"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1277,6 +1315,15 @@ const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
 const sellValue = it => Math.round((6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
+const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
+function itemStats(it) { const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
+function cmpItems(nw, old) {
+  const A = itemStats(nw), B = old ? itemStats(old) : {}, rows = []; let score = 0;
+  for (const k of new Set(Object.keys(A).concat(Object.keys(B)))) { const d = (A[k] || 0) - (B[k] || 0); if (Math.abs(d) < (k === 'hp' ? .5 : .05)) continue; const w = (CMP_W[k] || 1) / (AFF[k].b + AFF[k].p * 20); score += d * w; rows.push({ k, d, w: Math.abs(d * w) }); }
+  rows.sort((p, q) => q.w - p.w); return { score, rows, verdict: !old || score > .06 ? 1 : score < -.06 ? -1 : 0 };
+}
+function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
+const wpnDps = w => w.dmg * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
   if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .3 * r));
@@ -1303,17 +1350,17 @@ function gearStats() {
   return g;
 }
 function rollRarity(boost = 0, min = 0) {
-  const w = [60, 26 + boost * 3, 9 + boost * 3, 3 + boost * 2, .6 + boost * .8]; let x = Math.random() * w.reduce((a, b) => a + b), r = 0;
+  const w = [70, 24 + boost * 2, 6 + boost * 1.6, 1.2 + boost * .9, .15 + boost * .35]; let x = Math.random() * w.reduce((a, b) => a + b), r = 0;
   for (; r < 4; r++) { if (x < w[r]) break; x -= w[r]; } return Math.max(min, r);
 }
-const runIL = () => R.raid ? 6 + R.m * 6 + R.raid.d * 4 : 1 + R.m * 6 + Math.floor((R.wave || 1) * .9);
+const runIL = () => (R.raid ? 6 + R.m * 6 + R.raid.d * 4 : 1 + R.m * 6 + Math.floor((R.wave || 1) * .9)) + Math.floor((save.pl.lv || 1) * .5);
 const lootBoost = () => R.raid ? 2 + R.raid.d * 2 : Math.min(6, Math.floor((R.wave || 1) / 4));
 function giveWeaponCopy(x, y) {
   const c = CLASSES[save.cls], ok = c.weapons.map((w, i) => i).filter(i => weaponReq(i).ok), i = ok[Math.floor(Math.random() * ok.length)], w = c.weapons[i];
   R.wloot.push(w.id); R.texts.push({ x, y: y - 28, s: 'Cópia: ' + w.n, t: 1.8, col: '#ffd34a', sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 24, t: .4, max: .4, col: '#ffd34a' }); SFX.heal();
 }
 function giveLoot(x, y, minR = 0) {
-  const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(lootBoost(), minR), Math.min(60, runIL())); R.loot.push(it);
+  const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(lootBoost(), minR), Math.min(120, runIL())); R.loot.push(it);
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
@@ -1479,6 +1526,10 @@ function hubBag() {
   if (!it) { txt('Seleciona um item', 640, 270, 15, '#667', 'center'); return; }
   const yy = itemCard(it, 512, 98, 262), cur = save.gear[it.slot];
   txt(cur ? `Equipado: ${itemName(cur)}` : 'Equipado: —', 512, yy + 12, 12, cur ? RAR[cur.r][1] : '#667');
+  { const cm = cmpItems(it, cur), vy = yy + 34, vt = cm.verdict > 0 ? [cur ? 'MELHOR' : 'Slot vazio', '#6f6'] : cm.verdict < 0 ? ['PIOR', '#f66'] : ['SIMILAR', '#fd5'];
+    txt(vt[0], 512, vy, 15, vt[1], 'left', 'bold'); if (cur) arrowTri(512 + txtW(vt[0], 15, 'bold') + 12, vy - 5, cm.verdict >= 0, vt[1]);
+    const room = Math.max(0, Math.min(5, Math.floor((374 - (vy + 14)) / 14)));
+    cm.rows.slice(0, room).forEach((r, i) => txt(`${r.d > 0 ? '+' : ''}${ev(r.k, r.d, 1)}${AFF[r.k].u} ${AFF[r.k].n}`, 512, vy + 15 + i * 14, 12, r.d > 0 ? '#6f6' : '#f77')); }
   btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
   btn(512, 412, 256, 28, `Vender ¢${sellValue(it)}`, () => { save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: '#a06a20', hot: '#c98a30' });
   btn(512, 444, 256, 28, 'Encantar', () => { enchItem = it; tab = 'ench'; }, { size: 14, col: '#5a3a7a', hot: '#7a55a0' });
@@ -1643,6 +1694,7 @@ function hubWeapons() {
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
     const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
     txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
+    if (!eq) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
     txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
     if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, col: save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
@@ -1834,7 +1886,7 @@ function openChests(n) {
     const L = ++save.chestDone, g5 = L % 10 === 0;
     rw.gold += Math.round((60 + 30 * L) * (.8 + Math.random() * .6) * (g5 ? 5 : 1));
     if (Math.random() < (g5 ? 1 : .45)) rw.pts += g5 ? 3 : (Math.random() < .3 ? 2 : 1);
-    if (g5 || Math.random() < .28) { const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(60, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
+    if (g5 || Math.random() < .28) { const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(120, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
     if (g5 || Math.random() < .15) { const ok = CLASSES[save.cls].weapons.map((w, k) => k).filter(k => weaponReq(k).ok), wi = ok[Math.floor(Math.random() * ok.length)], id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
     if (Math.random() < (g5 ? .5 : .06)) rw.gems += g5 ? 5 : 2;
     rw.n++;
