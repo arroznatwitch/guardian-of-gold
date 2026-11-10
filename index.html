@@ -393,6 +393,7 @@ const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
+const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 const COIN_RATE = .3, ENEMY_HP = 1.3, ENEMY_DMG = 1.2;
 const lvHP = () => 1 + .05 * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + .02 * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
@@ -988,6 +989,7 @@ Object.assign(EN_DICT, {"Raids": "Raids", "Combates contra bosses muito difícei
 Object.assign(EN_DICT, {"Sorte indisponível (85%+)": "Luck unavailable (85%+)"});
 Object.assign(EN_DICT, {"Perfil indisponível": "Profile unavailable", "A carregar perfil...": "Loading profile...", "Ainda sem build partilhada": "No build shared yet", "Clica num jogador para ver o perfil": "Click a player to see the profile", "Recorde de waves": "Wave record"});
 Object.assign(EN_DICT, {"HORDA!": "HORDE!", "HORDA DERROTADA!": "HORDE DEFEATED!"});
+Object.assign(EN_DICT, {"Chega à onda": "Reach wave", "na zona anterior": "in the previous zone"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1268,7 +1270,7 @@ function runCheat(raw) {
     const on = !save.cheat.god; save.cheat.god = on; save.cheat.gold = on; save.cheat.used = true;
     if (on) {
       save.gold = 999999; save.gems = 999; save.pl = { lv: 60, xp: 0 }; save.attr = { vit: 35, str: 40, agi: 12, per: 30 }; save.pts = 60;
-      save.done = MISSIONS.length; MISSIONS.forEach((m, i) => { save.farmBest[i] = Math.max(save.farmBest[i] || 0, 10); save.raids[i] = [1, 1, 1, 1, 1]; });
+      save.done = MISSIONS.length; MISSIONS.forEach((m, i) => { save.farmBest[i] = Math.max(save.farmBest[i] || 0, FARM_UNLOCK[i]); save.raids[i] = [1, 1, 1, 1, 1]; });
       for (const k in CLASSES) { save.own[k] = save.own[k].map(() => 1); save.sk[k] = save.sk[k].map(() => 1); CLASSES[k].weapons.forEach(w => { save.wl[w.id] = 12; save.wst[w.id] = [0, 0, 0, 1, 0, 0, 0]; }); }
       for (const sl of SLOTS) { const it = genItem(sl, 4, 40); it.ench = 10; it.st = 3; it.spec = rollSpec(it); save.gear[sl] = it; }
     }
@@ -1485,11 +1487,11 @@ function hubFarm() {
   txt('Ondas infinitas · boss a cada 5 ondas · ouro, XP e equipamento', 450, 106, 13, '#aab', 'center');
   btn(684, 90, 96, 22, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 11, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   MISSIONS.forEach((m, i) => {
-    const x = 195, y = 118 + i * 60, w = 585, h = 54, open = i === 0 || (save.farmBest[i - 1] || 0) >= 10, best = save.farmBest[i] || 0;
+    const x = 195, y = 118 + i * 60, w = 585, h = 54, open = i === 0 || (save.farmBest[i - 1] || 0) >= FARM_UNLOCK[i - 1], best = save.farmBest[i] || 0;
     panel(x, y, w, h, open ? '#232342' : '#1a1a22', open ? '#4a4a7a' : '#2a2a3a');
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 42, 42); drawSprBig(m.boss.pal, x + 27, y + 27, .52); if (!open) drawIcon('lock', x + 27, y + 27, 2);
     txt(m.name, x + 58, y + 22, 18, open ? '#fff' : '#667', 'left', 'bold');
-    txt(open ? `Melhor onda: ${best} · Nv rec. ${1 + i * 6}` : 'Chega à onda 10 na zona anterior', x + 58, y + 42, 12, open ? '#9cf' : '#a77');
+    txt(open ? `Melhor onda: ${best} · Nv rec. ${1 + i * 6}` : `Chega à onda ${FARM_UNLOCK[i - 1]} na zona anterior`, x + 58, y + 42, 12, open ? '#9cf' : '#a77');
     btn(x + w - 112, y + 9, 100, 36, open ? 'Entrar' : 'Bloqueada', () => open ? startMission(i, undefined, true) : lockClick('f' + i), { col: open ? '#2f7a4a' : '#26262f', hot: open ? '#3fa061' : '#33333f', size: 15 });
   });
 }
