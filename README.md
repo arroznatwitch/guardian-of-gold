@@ -107,7 +107,7 @@ A **Fusão** desbloqueia no **nível 10** da conta e funciona para armas e para 
 
 ### Efeitos das estrelas nas habilidades (`E`)
 
-Além do dano, cada estrela melhora a habilidade da arma (por exemplo, o Cajado de Fogo passa de 1 meteoro para 2, 3 e, a 3★, uma **chuva de meteoros**).
+As armas também mudam de aspeto: **1★** brilho suave, **2★** brilho e cintilação com partículas, **3★** aura arco-íris. Além do dano, cada estrela melhora a habilidade da arma (por exemplo, o Cajado de Fogo passa de 1 meteoro para 2, 3 e, a 3★, uma **chuva de meteoros**).
 
 **Cavaleiro**
 
