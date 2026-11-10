@@ -189,7 +189,14 @@ const SKINS = {
 SKINS.knight.push({ n: 'Campeão Inferno', price: 0, ach: 'inferno', o: { r: '#ffd34a', s: '#3a0e0e', d: '#7a1a0a', g: '#ff6a2a' } });
 SKINS.archer.push({ n: 'Caçador Lendário', price: 0, ach: 'kills', o: { g: '#c040ff', G: '#4a1a6a', b: '#2a0a3a' } });
 SKINS.mage.push({ n: 'Arquimago Rubro', price: 0, ach: 'waves', o: { p: '#8a1a1a', P: '#2a0808', y: '#ffd34a', w: '#ffb0b0' }, rows: SKINS.mage[3].rows });
-for (const c in HERO_ROWS) SKINS[c].forEach((s, i) => defSprite(c + i, s.rows || HERO_ROWS[c], Object.assign({}, BASE_PAL[c], s.o), 3));
+// versao feminina de cada skin: cabelo comprido e silhueta mais fina (as skins com desenho proprio ganham so o cabelo)
+const FEM_ROWS = {
+  knight: ['....rr....', '...ssss...', '..ssssss..', '..sffffs..', '.bsfkkfsb.', '.b.ffff.b.', '...dssd...', '..dssssd..', '.fsggggsf.', '..ssssss..', '.sssssssd.', '..bb..bb..'],
+  archer: ['...gggg...', '..gggggg..', '..gffffg..', '.bgfkkfgb.', '.b.ffff.b.', '..GGGGGG..', '...GggG...', '.fGggggGf.', '..GggggG..', '.GGGGGGGG.', '..bb..bb..', '.bbb..bbb.'],
+  mage: ['....pp....', '...pppp...', '..pppppp..', '.pppppppp.', '.bffffffb.', '.bfkffkfb.', '.b.wwww.b.', '..PPyyPP..', '.fPPPPPPf.', '..PPPPPP..', '.PPPPPPPP.', 'PPPPPPPPPP'],
+};
+const femify = rows => rows.map(r => { const a = [...r], fi = a.indexOf('f'), li = a.lastIndexOf('f'); if (fi > 0 && a[fi - 1] === '.') a[fi - 1] = 'b'; if (li >= 0 && li < a.length - 1 && a[li + 1] === '.') a[li + 1] = 'b'; return a.join(''); });
+for (const c in HERO_ROWS) SKINS[c].forEach((s, i) => { defSprite(c + i, s.rows || HERO_ROWS[c], Object.assign({}, BASE_PAL[c], s.o), 3); defSprite(c + i + 'f', s.rows ? femify(s.rows) : FEM_ROWS[c], Object.assign({ b: '#8a5a2a' }, BASE_PAL[c], s.o), 3); });
 
 defSprite('slime', ['........','..gggg..','.gggggg.','.gkggkg.','gggggggg','gGgggGgg','GGGGGGGG'], {g:'#4caf50',G:'#2e7d32',k:'#111'}, 3);
 defSprite('bat', ['p......p','pp.pp.pp','pppppppp','.ppkkpp.','..prrp..','...pp...'], {p:'#7a4aa0',k:'#111',r:'#ff4040'}, 3);
@@ -531,7 +538,9 @@ const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const wlm = l => 1 + .15 * l + .006 * l * l;   // bonus de dano do nivel da Bigorna (+12 = x3,6)
 const DM = () => stats().dm * wlm(wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
-const heroSpr = () => save.cls + save.skE[save.cls];
+const myG = () => (typeof on === 'object' && on && on.gender === 'f') ? 'f' : 'm';
+const hk = (cls, skin, g) => { const k = cls + (skin | 0) + (g === 'f' ? 'f' : ''); return SPR[k] ? k : cls + (skin | 0); };   // nome do sprite conforme a skin e o sexo
+const heroSpr = () => hk(save.cls, save.skE[save.cls], myG());
 
 /* =====================================================================
    INPUT / ESTADO
@@ -1046,6 +1055,7 @@ Object.assign(EN_DICT, {"Evoluir exige Nv": "Upgrade needs Lv", "Requer nível":
 Object.assign(EN_DICT, {"Reforjar": "Reforge", "REFORJADO!": "REFORGED!", "Para desativar ou recuperar a conta fala com o administrador.": "To deactivate or recover your account, contact the administrator.", "Esta conta está desativada. Fala com o administrador.": "This account is deactivated. Contact the administrator."});
 Object.assign(EN_DICT, {"Cão": "Dog", "GRÁTIS": "FREE", "Um companheiro leal que corre ao teu lado. Não causa dano, mas dá-te energia enquanto estiver perto de ti.": "A loyal companion that runs by your side. It deals no damage but gives you energy while it is near you.", "velocidade de movimento": "movement speed", "velocidade de ataque": "attack speed", "Se te afastares depressa (esquiva), o bónus pára até ele te alcançar.": "If you move away fast (dash), the bonus stops until it catches up.", "Obter (grátis)": "Get (free)", "Equipado ✓": "Equipped ✓", "Mais companheiros em breve": "More companions soon", "Companheiros que te seguem e te dão bónus enquanto estiverem perto.": "Companions that follow you and give you bonuses while they are near."});
 Object.assign(EN_DICT, {"CONQUISTA": "ACHIEVEMENT", "Conclui uma raid Inferno": "Clear an Inferno raid", "Mata 10 000 monstros": "Kill 10,000 monsters", "Chega à onda 40 no Farm": "Reach wave 40 in Farm", "Skin desbloqueada:": "Skin unlocked:", "Campeão Inferno": "Inferno Champion", "Caçador Lendário": "Legendary Hunter", "Arquimago Rubro": "Crimson Archmage"});
+Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "O nick não pode ser alterado.": "Your nickname can never be changed.", "Sexo": "Gender", "Masculino": "Male", "Feminino": "Female", "País": "Country", "Escolhe o teu país": "Choose your country", "Guardar": "Save", "Cancelar": "Cancel", "A guardar...": "Saving...", "Outro / Mundo": "Other / World", "Portugal": "Portugal", "Brasil": "Brazil", "Espanha": "Spain", "França": "France", "Alemanha": "Germany", "Reino Unido": "United Kingdom", "Irlanda": "Ireland", "Itália": "Italy", "Países Baixos": "Netherlands", "Bélgica": "Belgium", "Luxemburgo": "Luxembourg", "Suíça": "Switzerland", "Áustria": "Austria", "Polónia": "Poland", "Suécia": "Sweden", "Noruega": "Norway", "Dinamarca": "Denmark", "Finlândia": "Finland", "Ucrânia": "Ukraine", "Rússia": "Russia", "Turquia": "Turkey", "EUA": "USA", "Canadá": "Canada", "México": "Mexico", "Colômbia": "Colombia", "Japão": "Japan", "Índia": "India", "Moçambique": "Mozambique", "Cabo Verde": "Cape Verde"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1497,8 +1507,9 @@ let enc = { t: 0, res: null, msg: '', msgT: 0, col: '#fff', sparks: [] };
 function drawHub() {
   menuBg(); const c = CLASSES[save.cls], L = save.pl.lv;
   panel(10, 8, 780, 60, '#17172a'); drawSprBig(heroSpr(), 44, 40, 1.3);
+  { const hv = mouse.x - UIOX >= 14 && mouse.x - UIOX <= 76 && mouse.y >= 12 && mouse.y <= 64; if (on.token) { ui.push({ x: 14, y: 12, w: 62, h: 52, fn: openEditProfile }); if (hv) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(14, 12, 62, 52); txt('Editar perfil', 14, 80, 11, '#ffd34a', 'left', 'bold'); } } }
   const pn = on && on.nick ? on.nick : c.name;   // no menu aparece o nome do jogador
-  txt(pn, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold');
+  txt(pn, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold'); if (on.token) drawFlag(on.country || 'ZZ', 76 + txtW(pn, 20, 'bold') + 12 + txtW(`Nv ${L}`, 15, 'bold') + 10, 17, 20, 13);
   bar(76, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 76, 61, 11, '#8ab');
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
@@ -2034,7 +2045,7 @@ function hubSkins() {
     const x = 197 + i * step, y = 120, h = 350, own = save.sk[save.cls][i], eq = save.skE[save.cls] === i, [cost, cur] = SKIN_COST[i] || [0, 'g'], gem = cur === 'd';
     panel(x, y, w, h, '#232342', eq ? '#f0c060' : '#3a3a5a');
     ctx.fillStyle = '#12121c'; rr(x + 8, y + 10, w - 16, 150, 8); ctx.fill();
-    drawSprBig(save.cls + i, x + w / 2, y + 85 + Math.sin(T * 3 + i) * 2, k);
+    drawSprBig(hk(save.cls, i, myG()), x + w / 2, y + 85 + Math.sin(T * 3 + i) * 2, k);
     txt(s.n, x + w / 2, y + 190, ns, '#fff', 'center', 'bold');
     if (!own && s.ach) {
       const [a, b] = ACH_SKIN[s.ach].prog(); txt('CONQUISTA', x + w / 2, y + 214, 11, '#ffd34a', 'center', 'bold'); wrap(ACH_SKIN[s.ach].text, x + 8, y + 236, w - 16, 14, 11, '#cdd6f0'); bar(x + 10, y + 296, w - 20, 8, a / b, '#ffd34a'); txt(`${gfmt(a)} / ${gfmt(b)}`, x + w / 2, y + 322, 11, '#9ab', 'center');
@@ -2112,13 +2123,82 @@ function hubRewards() {
   if (r.items.length > 6) txt(`+${r.items.length - 6} itens`, 534, y, 12, '#889');
 }
 
+/* ----- Bandeiras em pixel-art, paises e seletor ----- */
+const _H = (...c) => (x, y, w, h) => c.forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(x, y + Math.round(h * i / c.length), w, Math.ceil(h / c.length)); });
+const _V = (...c) => (x, y, w, h) => c.forEach((col, i) => { ctx.fillStyle = col; ctx.fillRect(x + Math.round(w * i / c.length), y, Math.ceil(w / c.length), h); });
+const _dot = (x, y, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
+const _nordic = (bg, cr, inner) => (x, y, w, h) => { ctx.fillStyle = bg; ctx.fillRect(x, y, w, h); const cx = x + Math.round(w * .32), cy = y + Math.round(h * .5), t = Math.max(2, Math.round(h * .24)); ctx.fillStyle = cr; ctx.fillRect(x, cy - t / 2, w, t); ctx.fillRect(cx - t / 2, y, t, h); if (inner) { const u = Math.max(1, Math.round(t / 2)); ctx.fillStyle = inner; ctx.fillRect(x, cy - u / 2, w, u); ctx.fillRect(cx - u / 2, y, u, h); } };
+const FLAGS = {
+  PT: (x, y, w, h) => { ctx.fillStyle = '#0a7a2a'; ctx.fillRect(x, y, Math.round(w * .4), h); ctx.fillStyle = '#d02020'; ctx.fillRect(x + Math.round(w * .4), y, w - Math.round(w * .4), h); _dot(x + w * .4, y + h / 2, h * .26, '#f5c542'); _dot(x + w * .4, y + h / 2, h * .13, '#d02020'); },
+  BR: (x, y, w, h) => { ctx.fillStyle = '#10a040'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#f5d020'; ctx.beginPath(); ctx.moveTo(x + w / 2, y + 1); ctx.lineTo(x + w - 1, y + h / 2); ctx.lineTo(x + w / 2, y + h - 1); ctx.lineTo(x + 1, y + h / 2); ctx.fill(); _dot(x + w / 2, y + h / 2, h * .22, '#2040a0'); },
+  ES: (x, y, w, h) => { ctx.fillStyle = '#d02020'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#f5c542'; ctx.fillRect(x, y + Math.round(h * .25), w, Math.round(h * .5)); },
+  FR: _V('#1a3a9a', '#f4f4f4', '#d02020'), IT: _V('#10903a', '#f4f4f4', '#d02020'), DE: _H('#111', '#d02020', '#f5c542'), NL: _H('#c02020', '#f4f4f4', '#2040a0'),
+  BE: _V('#111', '#f5c542', '#d02020'), IE: _V('#10903a', '#f4f4f4', '#f08020'), PL: _H('#f4f4f4', '#d02040'), AT: _H('#d02020', '#f4f4f4', '#d02020'), LU: _H('#d02020', '#f4f4f4', '#40a0d8'),
+  CH: (x, y, w, h) => { ctx.fillStyle = '#d02020'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#fff'; ctx.fillRect(x + w * .42, y + h * .2, w * .16, h * .6); ctx.fillRect(x + w * .3, y + h * .38, w * .4, h * .24); },
+  GB: (x, y, w, h) => { ctx.fillStyle = '#1a2a7a'; ctx.fillRect(x, y, w, h); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, h * .22); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); ctx.strokeStyle = '#d02030'; ctx.lineWidth = Math.max(1, h * .1); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillRect(x, y + h * .36, w, h * .28); ctx.fillRect(x + w * .4, y, w * .2, h); ctx.fillStyle = '#d02030'; ctx.fillRect(x, y + h * .43, w, h * .14); ctx.fillRect(x + w * .45, y, w * .1, h); },
+  US: (x, y, w, h) => { for (let i = 0; i < 7; i++) { ctx.fillStyle = i % 2 ? '#f4f4f4' : '#c02030'; ctx.fillRect(x, y + Math.round(h * i / 7), w, Math.ceil(h / 7)); } ctx.fillStyle = '#2a3a8a'; ctx.fillRect(x, y, Math.round(w * .45), Math.round(h * 4 / 7)); },
+  CA: (x, y, w, h) => { ctx.fillStyle = '#f4f4f4'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#d02020'; ctx.fillRect(x, y, Math.round(w * .25), h); ctx.fillRect(x + Math.round(w * .75), y, w - Math.round(w * .75), h); ctx.fillRect(x + w * .4, y + h * .3, w * .2, h * .4); },
+  MX: _V('#0a7a3a', '#f4f4f4', '#c02020'), AR: (x, y, w, h) => { _H('#74b4e0', '#f4f4f4', '#74b4e0')(x, y, w, h); _dot(x + w / 2, y + h / 2, h * .14, '#f5c542'); }, CO: (x, y, w, h) => { ctx.fillStyle = '#f5c542'; ctx.fillRect(x, y, w, Math.round(h / 2)); ctx.fillStyle = '#2040a0'; ctx.fillRect(x, y + Math.round(h / 2), w, Math.round(h / 4)); ctx.fillStyle = '#c02020'; ctx.fillRect(x, y + Math.round(h * .75), w, h - Math.round(h * .75)); },
+  AO: (x, y, w, h) => { _H('#c02020', '#111')(x, y, w, h); _dot(x + w / 2, y + h / 2, h * .2, '#f5c542'); }, MZ: (x, y, w, h) => { _H('#0a7a3a', '#111', '#f5c542')(x, y, w, h); ctx.fillStyle = '#c02020'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w * .4, y + h / 2); ctx.lineTo(x, y + h); ctx.fill(); },
+  CV: (x, y, w, h) => { ctx.fillStyle = '#2040a0'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#f4f4f4'; ctx.fillRect(x, y + h * .55, w, h * .2); ctx.fillStyle = '#c02020'; ctx.fillRect(x, y + h * .62, w, h * .07); },
+  SE: _nordic('#1a5a9a', '#f5c542'), NO: _nordic('#c02030', '#f4f4f4', '#1a2a7a'), DK: _nordic('#c02030', '#f4f4f4'), FI: _nordic('#f4f4f4', '#1a3a8a'),
+  JP: (x, y, w, h) => { ctx.fillStyle = '#f4f4f4'; ctx.fillRect(x, y, w, h); _dot(x + w / 2, y + h / 2, h * .3, '#c02030'); }, CN: (x, y, w, h) => { ctx.fillStyle = '#d02020'; ctx.fillRect(x, y, w, h); _dot(x + w * .22, y + h * .3, h * .16, '#f5d020'); },
+  IN: (x, y, w, h) => { _H('#f08020', '#f4f4f4', '#10903a')(x, y, w, h); _dot(x + w / 2, y + h / 2, h * .12, '#2040a0'); }, RU: _H('#f4f4f4', '#2040a0', '#d02020'), UA: _H('#2060c0', '#f5d020'),
+  TR: (x, y, w, h) => { ctx.fillStyle = '#d02020'; ctx.fillRect(x, y, w, h); _dot(x + w * .38, y + h / 2, h * .26, '#f4f4f4'); _dot(x + w * .44, y + h / 2, h * .21, '#d02020'); },
+  ZZ: (x, y, w, h) => { ctx.fillStyle = '#1a4a8a'; ctx.fillRect(x, y, w, h); _dot(x + w / 2, y + h / 2, h * .38, '#3a9a5a'); },
+};
+const COUNTRIES = [['PT', 'Portugal'], ['BR', 'Brasil'], ['AO', 'Angola'], ['MZ', 'Moçambique'], ['CV', 'Cabo Verde'], ['ES', 'Espanha'], ['FR', 'França'], ['DE', 'Alemanha'], ['GB', 'Reino Unido'], ['IE', 'Irlanda'], ['IT', 'Itália'], ['NL', 'Países Baixos'], ['BE', 'Bélgica'], ['LU', 'Luxemburgo'], ['CH', 'Suíça'], ['AT', 'Áustria'], ['PL', 'Polónia'], ['SE', 'Suécia'], ['NO', 'Noruega'], ['DK', 'Dinamarca'], ['FI', 'Finlândia'], ['UA', 'Ucrânia'], ['RU', 'Rússia'], ['TR', 'Turquia'], ['US', 'EUA'], ['CA', 'Canadá'], ['MX', 'México'], ['AR', 'Argentina'], ['CO', 'Colômbia'], ['JP', 'Japão'], ['CN', 'China'], ['IN', 'Índia'], ['ZZ', 'Outro / Mundo']];
+const cName = c => { const q = COUNTRIES.find(z => z[0] === c); return q ? q[1] : 'Outro / Mundo'; };
+function drawFlag(code, x, y, w = 20, h = 13) {
+  const f = FLAGS[code] || FLAGS.ZZ; x = Math.round(x); y = Math.round(y); ctx.fillStyle = '#05050a'; ctx.fillRect(x - 1, y - 1, w + 2, h + 2); ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); f(x, y, w, h); ctx.restore();
+}
+const guessCountry = () => { try { const m = (navigator.language || '').split('-')[1]; const c = (m || '').toUpperCase(); return FLAGS[c] && c !== 'ZZ' ? c : (/^pt/i.test(navigator.language || '') ? 'PT' : 'ZZ'); } catch (e) { return 'ZZ'; } };
+let cpick = null;   // seletor de pais aberto: { pick: codigo => ... }
+function drawCountryPicker() {
+  if (!cpick) return;
+  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { cpick = null; } });
+  const x = 110, y = 36, w = 580, h = 428; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt('Escolhe o teu país', x + w / 2, y + 32, 20, '#ffd34a', 'center', 'bold');
+  COUNTRIES.forEach(([c, n], i) => {
+    const cx = x + 16 + (i % 4) * 140, cy = y + 52 + Math.floor(i / 4) * 40, hov = mouse.x - UIOX >= cx && mouse.x - UIOX <= cx + 132 && mouse.y >= cy && mouse.y <= cy + 34;
+    bevel(cx, cy, 132, 34, hov ? '#2c2c4a' : '#1b1b30', hov ? '#a8821f' : '#33334a', '#05050a'); drawFlag(c, cx + 8, cy + 10, 22, 14); txt(n, cx + 38, cy + 22, 11, '#fff', 'left', 'bold');
+    ui.push({ x: cx, y: cy, w: 132, h: 34, fn: () => { const f = cpick && cpick.pick; cpick = null; if (f) f(c); } });
+  });
+}
+// editar perfil: so o sexo e o pais; o nick nunca muda
+let editProf = null;
+function openEditProfile() { if (!on.token) return; editProf = { gender: myG(), country: on.country || 'ZZ', busy: false, msg: '', col: '#f88' }; }
+async function saveEditProfile() {
+  const e = editProf; if (!e || e.busy) return; e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab';
+  const r = await rpc('gog_set_profile', { p_token: on.token, p_gender: e.gender, p_country: e.country === 'ZZ' ? null : e.country }); e.busy = false;
+  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); SFX.buy(); editProf = null; rk.at = {}; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
+}
+function drawEditProfile() {
+  if (!editProf || state !== 'hub') return; const e = editProf;
+  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { if (!e.busy) editProf = null; } });
+  const x = 200, y = 70, w = 400, h = 360; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt('Editar perfil', x + w / 2, y + 36, 22, '#ffd34a', 'center', 'bold');
+  txt('Nick', x + 24, y + 72, 12, '#8a9ab8'); bevel(x + 24, y + 80, w - 48, 30, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 36, y + 101, 15, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 44, y + 95, 1.2);
+  txt('O nick não pode ser alterado.', x + 24, y + 126, 11, '#778');
+  txt('Sexo', x + 24, y + 154, 12, '#8a9ab8');
+  [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => {
+    const bx = x + 24 + i * 180; btn(bx, y + 162, 172, 62, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
+    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 34, y + 194, 1.1); txt(n, bx + 70, y + 198, 14, '#fff', 'left', 'bold');
+  });
+  txt('País', x + 24, y + 250, 12, '#8a9ab8');
+  btn(x + 24, y + 258, w - 48, 34, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 38, y + 268, 26, 17); txt(cName(e.country), x + 76, y + 281, 14, '#fff', 'left', 'bold'); txt('▾', x + w - 40, y + 282, 14, '#aab', 'center');
+  if (e.msg) txt(e.msg, x + w / 2, y + 314, 12, e.col, 'center');
+  btn(x + 24, y + 322, 172, 28, 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy }); btn(x + 204, y + 322, 172, 28, 'Cancelar', () => { if (!e.busy) editProf = null; }, { size: 14, col: '#3a2a3a' });
+}
+
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
 const ONLINE_URL = 'https://fnkjmykbjuxkagtjlyfn.supabase.co', ONLINE_KEY = 'sb_publishable_y_fMP0OBRbarUpDliORTdw_bfFYuwrx';   // preencher com o URL e a chave publica do teu projecto
 const ON_STORE = 'gog-online-v1';
-let on = { token: null, nick: null };
-try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick }; } catch (e) {}
+let on = { token: null, nick: null, gender: 'm', country: null };
+try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick, gender: o.gender === 'f' ? 'f' : 'm', country: /^[A-Z]{2}$/.test(o.country || '') ? o.country : null }; } catch (e) {}
 const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
-let rk = { mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+let rk = { gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+rk.country = guessCountry();
 const RK_MSG = {
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
   nick_taken: 'Esse nick já está em uso', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
@@ -2180,8 +2260,8 @@ async function rkAuth(register) {
   if (register && rk.pass.toLowerCase() === nick.toLowerCase()) return rkSay('same_pass');
   rk.busy = true; rkSay('working'); let proof;
   try { proof = await mkProof(nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
-  const r = await rpc(register ? 'gog_register' : 'gog_login', { p_nick: nick, p_proof: proof }); rk.busy = false;
-  if (r.ok) { on = { token: r.token, nick: r.nick }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; cloudStart(); } else rkSay(r.error, r.wait);
+  const r = await rpc(register ? 'gog_register' : 'gog_login', register ? { p_nick: nick, p_proof: proof, p_gender: rk.gender, p_country: rk.country === 'ZZ' ? null : rk.country } : { p_nick: nick, p_proof: proof }); rk.busy = false;
+  if (r.ok) { on = { token: r.token, nick: r.nick, gender: r.gender === 'f' ? 'f' : 'm', country: r.country || null }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; cloudStart(); } else rkSay(r.error, r.wait);
 }
 async function rkLogout() {
   if (ONLINE_URL && cloud.ready && (cloud.dirty || cloud.timer || cloud.busy)) {
@@ -2240,9 +2320,10 @@ function hubRank() {
     if (mine) { ctx.fillStyle = '#2c2410'; ctx.fillRect(438, y - 13, 336, 19); }
     const hov = mouse.x - UIOX >= 438 && mouse.x - UIOX <= 774 && mouse.y >= y - 13 && mouse.y <= y + 6; if (hov && !mine) { ctx.fillStyle = '#ffffff12'; ctx.fillRect(438, y - 13, 336, 19); }
     ui.push({ x: 438, y: y - 13, w: 336, h: 19, fn: () => openProfile(r.nick) });
-    const sk = r.cls + ((r.skin | 0) || 0); if (SPR[sk] || SPR[r.cls + '0']) drawSprBig(SPR[sk] ? sk : r.cls + '0', 482, y - 4, .5);
-    txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#ffd34a' : col, 'left', 'bold');
-    if (rk.stat !== 'level') txt('Nv ' + r.lv, 502 + txtW(r.nick, 14, 'bold') + 8, y, 11, '#8a9ab8'); txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
+    if (SPR[r.cls + '0']) drawSprBig(hk(r.cls, r.skin, r.gender), 482, y - 4, .5);
+    txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#ffd34a' : col, 'left', 'bold'); let fx = 502 + txtW(r.nick, 14, 'bold') + 8;
+    if (r.country) { drawFlag(r.country, fx, y - 10, 16, 11); fx += 22; }
+    if (rk.stat !== 'level') txt('Nv ' + r.lv, fx, y, 11, '#8a9ab8'); txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
   });
   if (rk.rows.length) txt('Clica num jogador para ver o perfil', 606, 452, 11, '#778', 'center');
   if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 606, 468, 14, '#7fe8a0', 'center', 'bold');
@@ -2327,13 +2408,17 @@ function sumSave(sv) { let w = 0; for (const k in (sv.farmBest || {})) w = Math.
 function drawLogin() {
   menuScene(); if (!rk.focusSet) { rk.focus = 'nick'; rk.focusSet = true; }
   const gx = UW / 2; txt('GUARDIANS OF GOLD', gx, 62, 36, '#f0c060', 'center', 'bold'); txt('Entra na tua conta para jogar', gx, 88, 15, '#cdd6f0', 'center');
-  panel(235, 108, 330, 372, '#16162aee');
+  panel(235, 108, 330, rk.mode === 'register' ? 392 : 372, '#16162aee');
   ['login', 'register'].forEach((m, i) => btn(247 + i * 158, 120, 154, 28, m === 'login' ? 'Entrar' : 'Criar conta', () => { rk.mode = m; rk.pass2 = ''; rk.msg = ''; }, { size: 14, col: rk.mode === m ? '#a8821f' : '#2a2a48' }));
   rkField(247, 176, 306, 'Nick', 'nick', false); rkField(247, 232, 306, 'Palavra-passe', 'pass', true);
-  let y = 270; if (rk.mode === 'register') { rkField(247, 288, 306, 'Repetir palavra-passe', 'pass2', true); y = 326; }
+  let y = 270; if (rk.mode === 'register') {
+    rkField(247, 288, 306, 'Repetir palavra-passe', 'pass2', true);
+    [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => btn(247 + i * 156, 346, 150, 26, n, () => { rk.gender = g; }, { size: 13, col: rk.gender === g ? '#a06a20' : '#2a2a48' }));
+    btn(247, 376, 306, 26, '', () => { rk.focus = ''; cpick = { pick: c => { rk.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(rk.country, 258, 382, 22, 14); txt(cName(rk.country), 290, 394, 13, '#fff', 'left', 'bold'); txt('▾', 540, 394, 13, '#aab', 'center');
+    y = 408; }
   btn(247, y + 4, 306, 38, rk.mode === 'register' ? 'Criar conta' : 'Entrar', () => rkAuth(rk.mode === 'register'), { size: 17, col: '#2f7a4a', hot: '#3fa061', off: rk.busy });
-  if (rk.msg) wrap(rk.msg, 247, y + 62, 306, 15, 13, rk.col);
-  wrap('A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.', 247, 420, 306, 13, 11, '#778');
+  if (rk.msg) wrap(rk.msg, 247, y + 48, 306, 15, 13, rk.col);
+  if (rk.mode !== 'register') wrap('A tua palavra-passe nunca sai deste dispositivo: só é enviada uma prova criptográfica. Não há recuperação de palavra-passe, por isso guarda-a bem.', 247, 420, 306, 13, 11, '#778');
   btn(8, 8, 60, 24, lang === 'en' ? 'EN' : 'PT', () => setLang(lang === 'en' ? 'pt' : 'en'), { size: 12, col: '#2a2a48' });
 }
 function drawSync() {
@@ -2443,11 +2528,11 @@ function drawProfile() {
   btn(x + w - 40, y + 10, 28, 26, 'X', () => { rk.prof = null; }, { size: 14, col: '#6a2a2a', hot: '#8a3a3a' });
   if (!d) { txt(P.err ? 'Perfil indisponível' : 'A carregar perfil...', x + w / 2, y + 200, 18, P.err ? '#f88' : '#9ab', 'center', 'bold'); return; }
   const b = d.build, cn = CLASSES[d.cls] ? CLASSES[d.cls].name : d.cls, sec = (t, sx, sy, sw) => { txt(t, sx, sy, 13, '#f0c060', 'left', 'bold'); ctx.fillStyle = '#3a3a5a'; ctx.fillRect(sx, sy + 6, sw, 1); };
-  txt(d.nick, x + 20, y + 36, 24, '#ffd34a', 'left', 'bold'); txt(`${cn} · Nv ${gfmt(d.level)}`, x + 20, y + 58, 14, '#9cf', 'left', 'bold');
+  txt(d.nick, x + 20, y + 36, 24, '#ffd34a', 'left', 'bold'); if (d.country) drawFlag(d.country, x + 20 + txtW(d.nick, 24, 'bold') + 12, y + 20, 24, 16); txt(`${cn} · Nv ${gfmt(d.level)}`, x + 20, y + 58, 14, '#9cf', 'left', 'bold');
   ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x + 16, y + 72, w - 32, 1);
   // retrato e arma
   const px = x + 20, py = y + 88; ctx.fillStyle = '#0e0e1a'; ctx.fillRect(px, py, 140, 112);
-  const sk = d.cls + (b ? b.skin | 0 : 0); drawSprBig(SPR[sk] ? sk : d.cls + '0', px + 70, py + 56 + Math.sin(T * 2) * 2, 2.8);
+  drawSprBig(hk(d.cls, b ? b.skin : 0, d.gender), px + 70, py + 56 + Math.sin(T * 2) * 2, 2.8);
   const wd = b && b.weapon && CLASSES[d.cls] ? CLASSES[d.cls].weapons.find(q => q.id === b.weapon.id) : null, wst = wd ? b.weapon.st | 0 : 0;
   sec('Arma', px, py + 134, 140);
   if (wd) { STAR_OV = wst; weaponIcon(wd.id, px + 20, py + 166, 1.5, -.785); STAR_OV = -1; txt(wd.n, px + 44, py + 160, 12, '#fff', 'left', 'bold'); txt(`+${b.weapon.lv | 0}` + (wst ? '  ' + '★'.repeat(wst) : ''), px + 44, py + 177, 12, '#ffd34a', 'left', 'bold'); }
@@ -2744,12 +2829,12 @@ function frame(now) {
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawEditProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);
 }
-if (ONLINE_URL && on.token) cloudStart();
+if (ONLINE_URL && on.token) { cloudStart(); rpc('gog_profile', { p_nick: on.nick }).then(r => { if (r && r.ok) { on.gender = r.gender === 'f' ? 'f' : 'm'; on.country = r.country || null; onSave(); } }); }   // atualiza sexo e pais (podem ter mudado noutro dispositivo)
 requestAnimationFrame(frame);
 </script>
 </body>

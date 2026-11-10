@@ -51,6 +51,12 @@ O ficheiro [`server/test-sql.mjs`](../server/test-sql.mjs) testa estas regras (5
 cd server && npm i @electric-sql/pglite && node test-sql.mjs
 ```
 
+## Perfil da conta: sexo e país
+
+Ao criar a conta escolhe-se o **sexo** (Masculino ou Feminino) e o **país**. O sexo só muda o aspeto: cada skin tem uma versão feminina. O país aparece como **bandeira** no ranking, no perfil público e no cabeçalho do acampamento.
+
+Os dois podem ser alterados em **Editar perfil** (clicando no boneco, no canto do acampamento). O **nick nunca muda**. O servidor valida os valores (`m` ou `f`; código de país com 2 letras) e a função `gog_set_profile` só funciona com sessão válida.
+
 ## Desativar e reativar contas (administrador)
 
 Os jogadores **não podem apagar a conta**. Uma conta nunca é eliminada: fica **inativa** e pode ser reativada. Uma conta inativa não consegue entrar (mesmo com a palavra-passe certa), as sessões abertas deixam de valer, desaparece do ranking e dos perfis e o nick continua reservado.
