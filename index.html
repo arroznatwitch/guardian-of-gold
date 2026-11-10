@@ -933,7 +933,7 @@ function update(dt) {
     const d0 = EN[e.type]; R.kills++; burst(e.x, e.y, '#9f9', 12); SFX.kill();
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (4 + 2 * R.m) * (R.farm ? FARM_RATE : 1); R.waveKills++;
-    if (Math.random() < .012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) giveLoot(e.x, e.y);
+    { const tr = mobTier(e.type); if (Math.random() < (.012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) * (.5 + .5 * tr)) giveLoot(e.x, e.y, 0, tr); }
     if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .12) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
@@ -1469,8 +1469,10 @@ function giveWeaponCopy(x, y) {
   const c = CLASSES[save.cls], ok = c.weapons.map((w, i) => i).filter(i => weaponReq(i).ok), i = ok[Math.floor(Math.random() * ok.length)], w = c.weapons[i];
   R.wloot.push(w.id); R.texts.push({ x, y: y - 28, s: 'Cópia: ' + w.n, t: 1.8, col: '#ffd34a', sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 24, t: .4, max: .4, col: '#ffd34a' }); SFX.heal();
 }
-function giveLoot(x, y, minR = 0) {
-  const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(lootBoost(), minR), Math.min(120, runIL())); R.loot.push(it);
+// o drop depende do monstro: os fortes (bruto, escaravelho) largam mais vezes e itens melhores; os fracos (lodo, morcego) menos e piores
+const mobTier = type => (EN[type] ? EN[type].gold : 8) / 8;   // 0,4 (lodo) ... 1,75 (escaravelho)
+function giveLoot(x, y, minR = 0, tier = 1) {
+  const it = genItem(SLOTS[Math.floor(Math.random() * 4)], rollRarity(Math.max(0, lootBoost() + (tier - 1) * 2), minR), Math.max(1, Math.min(120, runIL() + Math.round((tier - 1) * 8)))); R.loot.push(it);
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
