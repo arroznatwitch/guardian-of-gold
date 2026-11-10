@@ -1141,7 +1141,7 @@ function drawClass() {
     txt('Especial:', x + 18, y + 208, 13, '#f0c060', 'left', 'bold'); txt(c.sp, x + 18, y + 226, 15, '#fff', 'left', 'bold');
     wrap(c.spDesc, x + 18, y + 245, w - 36, 17, 13, '#bbb');
     wrap(c.desc, x + 18, y + 293, w - 36, 17, 13, '#9ab');
-    btn(x + 20, y + h - 46, w - 40, 36, 'Escolher', () => { save = newSave(k); persist(); goHub(); }, { col: '#2f7a4a', hot: '#3fa061' });
+    btn(x + 20, y + h - 46, w - 40, 36, 'Escolher', () => cloudNewGame(k), { col: '#2f7a4a', hot: '#3fa061' });
   });
   btn(20, 14, 90, 32, '< Voltar', () => state = 'menu', { size: 14 });
 }
@@ -2045,6 +2045,10 @@ async function cloudStart() {
   }
   if (local) return cloudApply(local, true);   // conta nova: o progresso deste dispositivo passa para a conta
   cloudApply(null, false);
+}
+async function cloudNewGame(k) {
+  if (ONLINE_URL && on.token && cloud.ready) await cloudReset();   // personagem novo = ranking novo
+  save = newSave(k); persist(); goHub();
 }
 async function cloudReset() {
   if (!ONLINE_URL || !on.token) return; clearTimeout(cloud.timer); cloud.timer = null; cloud.dirty = false;
