@@ -334,7 +334,7 @@ function normalize(s) {
     s.eq[c] = s.eq[c] || 0; s.sk[c] = s.sk[c] || d.sk[c]; while (s.sk[c].length < SKINS[c].length) s.sk[c].push(0); s.skE[c] = s.skE[c] || 0;
   }
   for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => {
-    const old = s.wst[w.id] || []; s.wst[w.id] = [0, 0, 0, 0, 0, 0, 0].map((_, k) => old[k] || 0);
+    const old = s.wst[w.id] || []; s.wst[w.id] = [0, 0, 0, 0, 0, 0, 0].map((_, k) => k < 3 ? (old[k] || 0) : k === 3 ? (old[3] || 0) + (old[4] || 0) + (old[5] || 0) + (old[6] || 0) : 0);
     if (!s.wst[w.id].some(x => x)) s.wst[w.id][0] = (s.own[c] && s.own[c][i]) ? 1 : 0;
   });
   return s;
@@ -359,8 +359,8 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MULT = [1, 1.35, 1.7, 2.1, 2.6, 3.2, 4.2];   // 0..5 estrelas e 6 = Ascendida
-const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = 6; i >= 0; i--) if (a[i] > 0) return i; return 0; };
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.15, 1.3, 1.5], FUSE_LV = 10;   // 0..3 estrelas (3 = MAX)
+const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)];
 const heroSpr = () => save.cls + save.skE[save.cls];
@@ -833,6 +833,7 @@ Object.assign(EN_DICT, {"Guardião Dourado": "Golden Guardian", "Cavernas Dourad
 Object.assign(EN_DICT, {"Ativo": "Active", "Código aceite.": "Code accepted.", "Código removido.": "Code removed."});
 Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", "Cópia:": "Copy:"});
 Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
+Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1045,7 +1046,7 @@ function drawMenu() {
     if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * 22, hy + Math.sin(ang) * 22, 11, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   });
   txt('Usa W/S ou ↑↓ e Enter · F ecrã inteiro · M som', gx, H - 14, 12, dayT > .5 ? '#fff6d0' : '#9a8fb8', 'center');
-  txt('v1.2-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
+  txt('v1.2.1-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
 }
 function drawClass() {
   menuBg(); txt('Escolhe a tua classe', UW / 2, 52, 34, '#f0c060', 'center', 'bold');
@@ -1114,8 +1115,8 @@ function runCheat(raw) {
     if (on) {
       save.gold = 999999; save.gems = 999; save.pl = { lv: 60, xp: 0 }; save.attr = { vit: 35, str: 40, agi: 12, per: 30 }; save.pts = 60;
       save.done = MISSIONS.length; MISSIONS.forEach((m, i) => { save.farmBest[i] = Math.max(save.farmBest[i] || 0, 10); save.raids[i] = [1, 1, 1, 1, 1]; });
-      for (const k in CLASSES) { save.own[k] = save.own[k].map(() => 1); save.sk[k] = save.sk[k].map(() => 1); CLASSES[k].weapons.forEach(w => { save.wl[w.id] = 12; save.wst[w.id] = [0, 0, 0, 0, 0, 1, 0]; }); }
-      for (const sl of SLOTS) { const it = genItem(sl, 4, 40); it.ench = 10; it.spec = rollSpec(it); save.gear[sl] = it; }
+      for (const k in CLASSES) { save.own[k] = save.own[k].map(() => 1); save.sk[k] = save.sk[k].map(() => 1); CLASSES[k].weapons.forEach(w => { save.wl[w.id] = 12; save.wst[w.id] = [0, 0, 0, 1, 0, 0, 0]; }); }
+      for (const sl of SLOTS) { const it = genItem(sl, 4, 40); it.ench = 10; it.st = 3; it.spec = rollSpec(it); save.gear[sl] = it; }
     }
     say(on ? 'Código aceite.' : 'Código removido.', on ? '#6f6' : '#fc6'); SFX.buy();
   } else { say('Código inválido.', '#f88'); SFX.error(); }
@@ -1194,8 +1195,8 @@ const refCost = it => Math.round(30 * (1 + it.il * .25) * (1 + it.r * .5) * (it.
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15));
 const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
-const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}`;
-const sellValue = it => Math.round((6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench));
+const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
+const sellValue = it => Math.round((6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
   if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .3 * r));
@@ -1218,7 +1219,7 @@ function genItem(slot, r, il) {
 function gearStats() {
   const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
   if (!save || !save.gear) return g;
-  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = 1 + .08 * it.ench; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
   return g;
 }
 function rollRarity(boost = 0, min = 0) {
@@ -1257,9 +1258,10 @@ function endLines(win) {
   if (R.gemGain) a.push(`+${R.gemGain} ◆ Diamantes`);
   return a;
 }
+function miniStars(n, x, y) { for (let q = 0; q < n; q++) drawIcon('star', x + q * 8, y, .9); }
 function slotIcon(slot, r, cx, cy, k) { const im = SLOT_SPR[slot][r]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
 function itemCard(it, x, y, w = 230) {
-  const col = RAR[it.r][1], m = 1 + .08 * it.ench, nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
+  const col = RAR[it.r][1], m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
   if (txtW(nm, sz, 'bold') > avail) {
     sz = 13;
     if (txtW(nm, sz, 'bold') > avail) { const words = nm.split(' '); let a = '', b = ''; for (const wd of words) { const t = (a + ' ' + wd).trim(); if (!b && txtW(t, sz, 'bold') <= avail) a = t; else b = (b + ' ' + wd).trim(); } lines = b ? [a, b] : [a]; }
@@ -1272,6 +1274,7 @@ function itemCard(it, x, y, w = 230) {
   for (const a of it.aff) { txt(statLine(a.k, ev(a.k, a.v, m)), x, yy, 13, '#7cf'); yy += 16; }
   if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy, 13, '#ffd34a'); yy += 16; }
   if (it.ench) { txt(`Refinado +${it.ench}`, x, yy, 12, '#9fe'); yy += 15; }
+  if (it.st) { txt(`Fusão ${'★'.repeat(it.st)} (×${GEAR_STAR[it.st].toFixed(2)})`, x, yy, 12, '#ffd34a'); yy += 15; }
   return yy;
 }
 
@@ -1331,7 +1334,7 @@ function hubRaids() {
 function slotBtn(cx, cy, key, label, it, drawIconFn, fn) {
   const x = cx - 27, y = cy - 27, mx = mouse.x - UIOX, hov = mx >= x && mx <= x + 54 && mouse.y >= y && mouse.y <= y + 54; if (hov) slotHover = key;
   bevel(x, y, 54, 54, hov ? '#1a1a30' : '#0e0e1a', it ? RAR[it.r][1] : '#33334a', '#05050a');
-  if (it) { slotIcon(it.slot, it.r, cx, cy, 3.4); if (it.ench) txt('+' + it.ench, x + 50, y + 50, 11, '#fff', 'right', 'bold'); }
+  if (it) { slotIcon(it.slot, it.r, cx, cy, 3.4); if (it.ench) txt('+' + it.ench, x + 50, y + 50, 11, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 8, y + 8); }
   else if (drawIconFn) drawIconFn(cx, cy);
   else { ctx.globalAlpha = .25; slotIcon(key, 0, cx, cy, 3.4); ctx.globalAlpha = 1; }
   ui.push({ x, y, w: 54, h: 54, fn });
@@ -1350,12 +1353,13 @@ function hubChar() {
   slotBtn(237, 190, 'chest', 'Armadura', save.gear.chest, null, go('chest'));
   slotBtn(237, 252, 'boots', 'Botas', save.gear.boots, null, go('boots'));
   slotBtn(437, 128, 'weapon', 'Arma', null, (x, y) => weaponIcon(w.id, x, y, 1.8), () => tab = 'weapons');
+  if (wlvl()) txt('+' + wlvl(), 460, 151, 11, '#fff', 'right', 'bold'); miniStars(wStar(w.id), 418, 109);
   slotBtn(437, 190, 'amulet', 'Amuleto', save.gear.amulet, null, go('amulet'));
   slotBtn(437, 252, 'skin', 'Skin', null, (x, y) => drawSprBig(heroSpr(), x, y, .85), () => tab = 'skins');
   // informacao do slot
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && SLOTS.includes(hv) ? save.gear[hv] : null;
-  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); txt(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 12, '#7cf'); }
+  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv) txt(hv === 'skin' ? SKINS[save.cls][save.skE[save.cls]].n : 'Vazio', 208, 318, 14, '#889');
   else { txt('Passa o rato por um slot', 208, 318, 12, '#667'); SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 346 + i * 20, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // painel direito
@@ -1383,7 +1387,7 @@ function hubBag() {
     const x = 197 + (n % 6) * 49, y = 124 + Math.floor(n / 6) * 49, o = list[n];
     bevel(x, y, 45, 45, '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
     if (o) {
-      slotIcon(o.it.slot, o.it.r, x + 22, y + 22, 3); if (o.it.ench) txt('+' + o.it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold');
+      slotIcon(o.it.slot, o.it.r, x + 22, y + 22, 3); if (o.it.ench) txt('+' + o.it.ench, x + 42, y + 42, 10, '#fff', 'right', 'bold'); miniStars(o.it.st || 0, x + 7, y + 7);
       if (bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 47, 47); }
       const idx = o.i; ui.push({ x, y, w: 45, h: 45, fn: () => bagSel = idx });
     }
@@ -1557,7 +1561,7 @@ function hubWeapons() {
     ctx.restore();
     const nm = w.n + (lv ? `  +${lv}` : '');
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
-    const sst = wStar(w.id); if (own && sst) { if (sst >= 6) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
+    const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
     txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
     if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, col: save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: '#c98a30', size: 14 });
@@ -1638,50 +1642,83 @@ function updateAnvil(dt) {
     }
   }
 }
-/* ----- Fusão de armas ----- */
-let fuseSel = 0, fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
-const fuseNeed = t => t >= 5 ? 2 : 5;
+/* ----- Fusão (armas e equipamento) ----- */
+let fuseSel = 0, fuseMode = 'w', fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
 const copyPrice = i => Math.max(100, Math.round(CLASSES[save.cls].weapons[i].price * .4));
+const gSt = it => it.st || 0;
 function starIcons(n, cx, cy, k) { for (let q = 0; q < n; q++) drawIcon('star', cx + (q - (n - 1) / 2) * 9 * k, cy, k); }
-function doFuse(id, t, all) {
-  const a = save.wst[id]; let n = 0;
-  const step = tt => { const need = fuseNeed(tt); if (tt < 6 && a[tt] >= need) { a[tt] -= need; a[tt + 1]++; n++; return true; } return false; };
-  if (all) { for (let tt = 0; tt < 6; tt++) while (step(tt)); } else step(t);
-  if (!n) { SFX.error(); return; }
-  const st = wStar(id); fz.t = .7; fz.msg = st >= 6 ? 'ASCENDIDA!' : `FUSÃO! ${st}★`; fz.msgT = 2.4; fz.col = st >= 6 ? '#ffd34a' : '#9fe';
+function fxBurst(msg, col) {
+  fz.t = .7; fz.msg = msg; fz.msgT = 2.4; fz.col = col;
   for (let i = 0; i < 40; i++) fz.sparks.push({ x: 487 + (Math.random() - .5) * 240, y: 215 + (Math.random() - .5) * 60, vx: (Math.random() - .5) * 300, vy: -Math.random() * 260, l: .9, c: i % 2 ? '#ffd34a' : '#fff' });
   SFX.special(); SFX.buy(); persist();
 }
+function doFuse(id, t, all) {
+  if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
+  const a = save.wst[id]; let n = 0;
+  const step = tt => { if (tt < STAR_MAX && a[tt] >= 5) { a[tt] -= 5; a[tt + 1]++; n++; return true; } return false; };
+  if (all) { for (let tt = 0; tt < STAR_MAX; tt++) while (step(tt)); } else step(t);
+  if (!n) { SFX.error(); return; }
+  const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
+}
+function gearGroups() {
+  const m = {}; save.bag.forEach(it => { if (gSt(it) >= STAR_MAX) return; (m[it.slot + '|' + it.r + '|' + gSt(it)] = m[it.slot + '|' + it.r + '|' + gSt(it)] || []).push(it); });
+  return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
+}
+function fuseGear(g) {
+  if (save.pl.lv < FUSE_LV || g.length < 5) { SFX.error(); return; }
+  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, 5);
+  save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1;
+  fxBurst(keep.st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${keep.st}★`, keep.st >= STAR_MAX ? '#ffd34a' : '#9fe');
+}
 function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
 function hubFuse() {
-  const c = CLASSES[save.cls];
-  c.weapons.forEach((w, i) => {
-    const x = 197 + i * 117, tot = wTotal(w.id), st = wStar(w.id);
-    btn(x, 90, 110, 46, '', () => fuseSel = i, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
-    weaponIcon(w.id, x + 30, 113, 1.8); txt(tot ? 'x' + tot : '—', x + 56, 119, 15, tot ? '#fff' : '#667', 'left', 'bold');
-    if (st) drawIcon('star', x + 98, 100, 1.3);
-  });
-  const w = c.weapons[fuseSel], a = save.wst[w.id], st = wStar(w.id), rq = weaponReq(fuseSel), cp = copyPrice(fuseSel);
-  txt('Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).', 487, 156, 13, '#aab', 'center');
-  for (let t = 0; t <= 6; t++) {
-    const x = 205 + t * 81, y = 168, cur = st === t && wTotal(w.id) > 0;
-    bevel(x, y, 75, 92, cur ? '#2c2410' : '#12121f', cur ? '#ffd34a' : '#33334a', '#05050a');
-    if (t === 0) txt('Base', x + 37, y + 16, 13, '#889', 'center'); else if (t === 6) { drawIcon('star', x + 24, y + 11, 1.6); txt('MAX', x + 50, y + 16, 12, '#ffd34a', 'center', 'bold'); } else starIcons(t, x + 37, y + 11, 1.2);
-    ctx.globalAlpha = a[t] > 0 ? 1 : .3; weaponIcon(w.id, x + 37, y + 50, 1.9, -.785); ctx.globalAlpha = 1;
-    if (t === 6 && a[6] > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd34a'; ctx.globalAlpha = .25 + .1 * Math.sin(T * 6); ctx.beginPath(); ctx.arc(x + 37, y + 50, 26, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
-    txt('x' + a[t], x + 37, y + 84, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-    if (t < 6) btn(x, y + 98, 75, 24, `${fuseNeed(t)} > 1`, () => doFuse(w.id, t, false), { size: 13, off: a[t] < fuseNeed(t), col: '#2f7a4a', hot: '#3fa061' });
+  const lock = save.pl.lv < FUSE_LV;
+  [['w', 'Armas'], ['g', 'Equipamento']].forEach(([k, l], i) => btn(197 + i * 128, 88, 122, 24, l, () => fuseMode = k, { size: 13, col: fuseMode === k ? '#a8821f' : '#2a2a48' }));
+  if (lock) { drawIcon('lock', 520, 100, 1.6); txt(`Desbloqueia no Nível ${FUSE_LV} (nível atual: ${save.pl.lv})`, 780, 105, 13, '#f88', 'right', 'bold'); }
+  if (fuseMode === 'w') {
+    const c = CLASSES[save.cls];
+    c.weapons.forEach((w, i) => {
+      const x = 197 + i * 117, tot = wTotal(w.id), st = wStar(w.id);
+      btn(x, 116, 110, 40, '', () => fuseSel = i, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
+      weaponIcon(w.id, x + 28, 136, 1.6); txt(tot ? 'x' + tot : '—', x + 54, 142, 15, tot ? '#fff' : '#667', 'left', 'bold');
+      if (st) drawIcon('star', x + 98, 126, 1.3);
+    });
+    const w = c.weapons[fuseSel], a = save.wst[w.id], st = wStar(w.id), rq = weaponReq(fuseSel), cp = copyPrice(fuseSel);
+    for (let t = 0; t <= STAR_MAX; t++) {
+      const x = 197 + t * 148, y = 164, cur = st === t && wTotal(w.id) > 0;
+      bevel(x, y, 140, 86, cur ? '#2c2410' : '#12121f', cur ? '#ffd34a' : '#33334a', '#05050a');
+      if (t === 0) txt('Base', x + 70, y + 16, 13, '#889', 'center'); else starIcons(t, x + (t === STAR_MAX ? 52 : 70), y + 11, 1.2);
+      if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
+      ctx.globalAlpha = a[t] > 0 ? 1 : .3; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); ctx.globalAlpha = 1;
+      if (t === STAR_MAX && a[t] > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd34a'; ctx.globalAlpha = .25 + .1 * Math.sin(T * 6); ctx.beginPath(); ctx.arc(x + 70, y + 46, 26, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+      txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
+      if (t < STAR_MAX) btn(x, y + 90, 140, 22, '5 > 1', () => doFuse(w.id, t, false), { size: 13, off: lock || a[t] < 5, col: '#2f7a4a', hot: '#3fa061' });
+    }
+    panel(197, 284, 585, 192, '#16162a');
+    txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
+    txt(`Dano ×${STAR_MULT[st].toFixed(2)} · Vel. de ataque +${st * 3}%`, 212, 332, 14, '#9cf');
+    if (st < STAR_MAX) txt(`Próximo (${st + 1}★): Dano ×${STAR_MULT[st + 1].toFixed(2)} · Vel. de ataque +${(st + 1) * 3}%`, 212, 352, 14, '#6f6');
+    wrap('Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.', 212, 380, 330, 17, 13, '#9ab');
+    txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
+    txt(rq.ok ? `Comprar cópia · ¢${gfmt(cp)}` : 'Bloqueada', 665, 308, 13, rq.ok ? '#fd5' : '#f88', 'center', 'bold');
+    [1, 5, 10].forEach((n, k) => { const cost = cp * n, can = rq.ok && save.gold >= cost; btn(560 + k * 72, 316, 66, 32, 'x' + n, () => { if (can) { save.gold -= cost; a[0] += n; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' }); });
+    btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
+    if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
+  } else {
+    const gs = gearGroups();
+    txt('Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.', 487, 138, 11, '#aab', 'center');
+    if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 270, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 292, 13, '#667', 'center'); }
+    gs.slice(0, 7).forEach((g, i) => {
+      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= 5, nm = ITEM_NAMES[it.slot][it.r];
+      bevel(197, y, 585, 36, '#12121f', RAR[it.r][1], '#05050a'); slotIcon(it.slot, it.r, 222, y + 18, 2.2);
+      txt(nm, 250, y + 23, 14, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 250 + txtW(nm, 14, 'bold') + 14 + q * 10, y + 17, 1.2);
+      txt(`${g.length}/5`, 600, y + 23, 15, g.length >= 5 ? '#6f6' : '#fff', 'center', 'bold');
+      txt(`>`, 640, y + 23, 15, '#889', 'center'); drawIcon('star', 668, y + 17, 1.2); txt(String(st + 1), 680, y + 23, 13, '#ffd34a', 'left', 'bold');
+      btn(698, y + 4, 78, 28, '5 > 1', () => fuseGear(g), { size: 13, off: !can, col: '#2f7a4a', hot: '#3fa061' });
+    });
+    if (gs.length > 7) txt(`+${gs.length - 7}`, 487, 436, 12, '#889', 'center');
+    txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 487, 466, 13, '#9cf', 'center');
   }
-  panel(197, 300, 585, 176, '#16162a');
-  txt(st ? (st >= 6 ? 'Estrela atual: ASCENDIDA' : `Estrela atual: ${st}★`) : 'Estrela atual: nenhuma', 212, 326, 17, '#f0c060', 'left', 'bold');
-  txt(`Dano ×${STAR_MULT[st].toFixed(2)} · Vel. de ataque +${st * 3}%`, 212, 348, 14, '#9cf');
-  if (st < 6) txt(`Próximo (${st + 1 >= 6 ? 'ASCENDIDA' : (st + 1) + '★'}): Dano ×${STAR_MULT[st + 1].toFixed(2)} · Vel. de ataque +${(st + 1) * 3}%`, 212, 368, 14, '#6f6');
-  wrap('Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.', 212, 396, 330, 17, 13, '#9ab');
-  txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 454, 14, '#fff');
-  txt(rq.ok ? `Comprar cópia · ¢${gfmt(cp)}` : 'Bloqueada', 665, 314, 13, rq.ok ? '#fd5' : '#f88', 'center', 'bold');
-  [1, 5, 10].forEach((n, k) => { const cost = cp * n, can = rq.ok && save.gold >= cost; btn(560 + k * 72, 322, 66, 32, 'x' + n, () => { if (can) { save.gold -= cost; a[0] += n; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' }); });
-  btn(560, 366, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, col: '#2f7a4a', hot: '#3fa061' });
-  if (!rq.ok) txt(rq.text, 665, 424, 12, '#f88', 'center');
   for (const q of fz.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
   if (fz.msgT > 0) { ctx.globalAlpha = Math.min(1, fz.msgT); txt(fz.msg, 487, 232, 24, fz.col, 'center', 'bold'); ctx.globalAlpha = 1; }
 }
