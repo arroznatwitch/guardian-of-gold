@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/img/logo.svg" width="72" alt="Logo">
+
 # Guardians of Gold
 
 Jogo de ação e RPG em pixel-art que corre no browser, sem instalação.
