@@ -1077,6 +1077,8 @@ Object.assign(EN_DICT, {"Mudar de bandeira custa ◆": "Changing flag costs ◆"
 Object.assign(EN_DICT, {"Selecionar": "Select", "Sair da seleção": "Exit selection", "Modo de seleção": "Selection mode", "Clica nos itens para os marcar e depois vende-os de uma vez.": "Click items to mark them, then sell them all at once.", "selecionados": "selected", "Selecionar todos (visíveis)": "Select all (visible)", "Limpar seleção": "Clear selection", "Vender selecionados": "Sell selected", "Vender selecionados?": "Sell selected?", "Desbloqueia primeiro a Mochila anterior": "Unlock the previous bag first", "Desbloquear a Mochila": "Unlock Bag", "+30 lugares para itens": "+30 item slots", "Comprar": "Buy", "Há um item melhor, mas exige nível": "There is a better item, but it requires level"});
 Object.assign(EN_DICT, {"GUARDIÃO DOURADO": "GOLDEN GUARDIAN", "Guardião Dourado": "Golden Guardian", "O Protetor do Ouro": "The Protector of Gold", "GUARDIÃO DOURADO DERROTADO!": "GOLDEN GUARDIAN DEFEATED!", "! Guardião Dourado !": "! Golden Guardian !"});
 Object.assign(EN_DICT, {"Queres sair agora e guardar tudo o que ganhaste?": "Do you want to leave now and keep everything you earned?", "Se continuares e morreres, perdes tudo (ouro, XP e itens). Sair com Esc a meio deixa só 30%.": "If you continue and die, you lose everything (gold, XP and items). Quitting with Esc keeps only 30%.", "Sair e guardar tudo": "Leave and keep all", "Sair do farm (só 30%)": "Leave farm (only 30%)", "Sair a meio guarda só 30% do que ganhaste.": "Leaving midway keeps only 30% of what you earned.", "FARM GUARDADO": "FARM SAVED", "SAÍSTE DO FARM": "YOU LEFT THE FARM", "Perdeste tudo: sem ouro, XP nem itens.": "You lost everything: no gold, XP or items.", "Saíste a meio: ficaste com 30%": "You left midway: you kept 30%", "Guardaste tudo:": "You kept everything:", "Próxima:": "Next:", "Todas desbloqueadas": "All unlocked", "que o equipado": "than equipped"});
+Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "Entra numa conta para editar o perfil.": "Log in to edit your profile.", "Perfil guardado": "Profile saved", "1. Escolhe o grupo   2. Marca 5 itens   3. Clica num item marcado para o manter": "1. Pick a group   2. Mark 5 items   3. Click a marked item to keep it", "pode juntar": "ready to merge", "Itens do grupo": "Items in the group", "Fica este": "This one stays", "Os outros": "The other", "itens desaparecem.": "items disappear.", "Marca itens para ver o resultado.": "Mark items to see the result.", "Só podes marcar 5 itens: desmarca um primeiro": "You can only mark 5 items: unmark one first"});
+Object.assign(EN_DICT, {"Perfil": "Profile"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1564,25 +1566,25 @@ let enc = { t: 0, res: null, msg: '', msgT: 0, col: '#fff', sparks: [] };
 function drawHub() {
   menuBg(); const c = CLASSES[save.cls], L = save.pl.lv;
   panel(10, 8, 780, 60, '#17172a'); drawSprBig(heroSpr(), 44, 40, 1.3);
-  { const hv = mouse.x - UIOX >= 14 && mouse.x - UIOX <= 76 && mouse.y >= 12 && mouse.y <= 64; if (on.token) { ui.push({ x: 14, y: 12, w: 62, h: 52, fn: openEditProfile }); if (hv) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(14, 12, 62, 52); txt('Editar perfil', 14, 80, 11, '#ffd34a', 'left', 'bold'); } } }
+  { const hv = mouse.x - UIOX >= 14 && mouse.x - UIOX <= 76 && mouse.y >= 12 && mouse.y <= 64; if (on.token) { ui.push({ x: 14, y: 12, w: 62, h: 52, fn: () => { tab = 'profile'; } }); if (hv) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(14, 12, 62, 52); } ctx.fillStyle = hv ? '#ffd34a' : '#2a2a48'; ctx.fillRect(60, 50, 16, 14); ctx.fillStyle = '#05050a'; ctx.fillRect(59, 49, 18, 1); ctx.fillRect(59, 49, 1, 16); ctx.fillStyle = hv ? '#3a2a08' : '#cdd6f0'; ctx.fillRect(63, 59, 8, 2); ctx.fillRect(65, 55, 2, 6); ctx.fillRect(67, 53, 2, 2); } }
   const pn = on && on.nick ? on.nick : c.name;   // no menu aparece o nome do jogador
   txt(pn, 76, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 76 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold'); if (on.token) drawFlag(on.country || 'ZZ', 76 + txtW(pn, 20, 'bold') + 12 + txtW(`Nv ${L}`, 15, 'bold') + 10, 17, 20, 13);
   bar(76, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 76, 61, 11, '#8ab');
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
-  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['skins', 'Skins'], ['rewards', 'Recompensas'], ['pets', 'Pets'], ['rank', 'Ranking']];
+  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['profile', 'Perfil'], ['pets', 'Pets'], ['rank', 'Ranking']];
   const nChest = Math.max(0, save.pl.lv - save.chestDone);
   tabs.forEach((t, i) => {
     const by = 76 + i * 29;
-    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: t[0] === 'rewards' ? 12 : 13 });
+    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: (tab === t[0] || (t[0] === 'profile' && (tab === 'skins' || tab === 'rewards'))) ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: t[0] === 'rewards' ? 12 : 13 });
     if (!tabOpen(t[0])) drawIcon('lock', 36, by + 13, 1.3);
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
-    if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(142, by + 5, 26, 14); txt(nChest > 99 ? '99+' : String(nChest), 155, by + 16, 11, '#000', 'center', 'bold'); }
+    if (t[0] === 'profile' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(142, by + 5, 26, 14); txt(nChest > 99 ? '99+' : String(nChest), 155, by + 16, 11, '#000', 'center', 'bold'); }
   });
   btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
-  if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets, rank: hubRank })[tab]();
+  if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, profile: hubProfile, skins: () => { profileTabs(); hubSkins(); }, rewards: () => { profileTabs(); hubRewards(); }, pets: hubPets, rank: hubRank })[tab]();
 }
 function hubFarm() {
   txt('Ondas infinitas · boss a cada 10, mini-boss a cada 5 · ouro, XP e equipamento', 450, 106, 13, '#aab', 'center');
@@ -2059,10 +2061,11 @@ function gearGroups() {
   const m = {}; save.bag.forEach(it => { if (gSt(it) >= STAR_MAX) return; (m[it.slot + '|' + it.r + '|' + gSt(it)] = m[it.slot + '|' + it.r + '|' + gSt(it)] || []).push(it); });
   return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
 }
-function fuseGear(g) {
-  if (save.pl.lv < FUSE_LV || g.length < FUSE_N) { SFX.error(); return; }
-  const o = g.slice().sort((p, q) => q.ench - p.ench || q.il - p.il), keep = o[0], gone = o.slice(1, FUSE_N), fee = gFuseFee(keep); if (save.gold < fee) { SFX.error(); return; } save.gold -= fee;
-  save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1;
+let fuseGrp = null, fusePick = null, fuseKeep = null;
+function fuseGear(pick, keep) {
+  if (save.pl.lv < FUSE_LV || !pick || pick.length < FUSE_N || !keep || !pick.includes(keep)) { SFX.error(); return; }
+  const gone = pick.filter(it => it !== keep), fee = gFuseFee(keep); if (save.gold < fee) { SFX.error(); return; } save.gold -= fee;
+  save.bag = save.bag.filter(it => !gone.includes(it)); keep.st = gSt(keep) + 1; if (gone.includes(enchItem)) enchItem = null; bagSel = -1; fusePick = null; fuseKeep = null;
   fxBurst(keep.st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${keep.st}★`, keep.st >= STAR_MAX ? '#ffd34a' : '#9fe');
 }
 function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
@@ -2098,19 +2101,47 @@ function hubFuse() {
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {
-    const gs = gearGroups();
-    txt('Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.', 487, 138, 11, '#aab', 'center');
-    if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 270, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 292, 13, '#667', 'center'); }
-    gs.slice(0, 7).forEach((g, i) => {
-      const y = 150 + i * 40, it = g[0], st = gSt(it), can = !lock && g.length >= FUSE_N, nm = ITEM_NAMES[it.slot][it.r];
-      bevel(197, y, 585, 36, '#12121f', RAR[it.r][1], '#05050a'); slotIcon(it.slot, it.r, 222, y + 18, 2.2);
-      txt(nm, 250, y + 23, 14, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 250 + txtW(nm, 14, 'bold') + 14 + q * 10, y + 17, 1.2);
-      txt(`${Math.min(g.length, 99)}/${FUSE_N}`, 600, y + 23, 15, g.length >= FUSE_N ? '#6f6' : '#fff', 'center', 'bold');
-      txt(`>`, 620, y + 23, 15, '#889', 'center'); drawIcon('star', 636, y + 17, 1.2); txt(String(st + 1), 646, y + 23, 13, '#ffd34a', 'left', 'bold');
-      btn(660, y + 4, 116, 28, `${FUSE_N}>1 · ¢${gfmt(gFuseFee(it))}`, () => fuseGear(g), { size: 12, off: !can || save.gold < gFuseFee(it), col: '#2f7a4a', hot: '#3fa061' });
-    });
-    if (gs.length > 7) txt(`+${gs.length - 7}`, 487, 436, 12, '#889', 'center');
-    txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 487, 466, 13, '#9cf', 'center');
+    const gs = gearGroups(), key = g => g[0].slot + '|' + g[0].r + '|' + gSt(g[0]);
+    if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 250, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 272, 13, '#667', 'center'); }
+    else {
+      if (!fuseGrp || !gs.some(g => key(g) === fuseGrp)) { fuseGrp = key(gs[0]); fusePick = null; }
+      const grp = gs.find(g => key(g) === fuseGrp), items = grp.slice().sort((p, q) => (q.ench || 0) - (p.ench || 0) || q.il - p.il).slice(0, 12);
+      if (!fusePick || fusePick.some(it => !save.bag.includes(it))) { fusePick = items.slice(0, FUSE_N); fuseKeep = fusePick[0] || null; }
+      if (!fusePick.includes(fuseKeep)) fuseKeep = fusePick[0] || null;
+      txt('1. Escolhe o grupo   2. Marca 5 itens   3. Clica num item marcado para o manter', 487, 134, 11, '#aab', 'center');
+      gs.slice(0, 5).forEach((g, i) => {
+        const y = 142 + i * 28, it = g[0], st = gSt(it), nm = ITEM_NAMES[it.slot][it.r], sel = key(g) === fuseGrp;
+        btn(197, y, 585, 26, '', () => { fuseGrp = key(g); fusePick = null; }, { col: sel ? '#2c2410' : '#12121f', hot: '#2a2a48' }); ctx.fillStyle = RAR[it.r][1]; ctx.fillRect(197, y, 3, 26);
+        slotIcon(it.slot, it.r, 222, y + 13, 1.8); txt(nm, 246, y + 18, 13, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 246 + txtW(nm, 13, 'bold') + 12 + q * 10, y + 13, 1.1);
+        txt(`${Math.min(g.length, 99)} ${lang === 'en' ? 'items' : 'itens'}`, 640, y + 18, 13, g.length >= FUSE_N ? '#6f6' : '#fff', 'right', 'bold'); txt(g.length >= FUSE_N ? (lang === 'en' ? 'ready to merge' : 'pode juntar') : (lang === 'en' ? 'missing ' : 'faltam ') + (FUSE_N - g.length), 770, y + 18, 11, g.length >= FUSE_N ? '#6f6' : '#a88', 'right');
+      });
+      const cy0 = 142 + Math.min(gs.length, 5) * 28 + 20; if (gs.length > 5) txt(`+${gs.length - 5} ${lang === 'en' ? 'groups' : 'grupos'}`, 487, cy0 - 12, 11, '#889', 'center');
+      // candidatos (marca os que queres usar; o com estrela e o que fica)
+      txt('Itens do grupo', 197, cy0, 13, '#f0c060', 'left', 'bold'); txt(`${fusePick.length}/${FUSE_N} ${lang === 'en' ? 'marked' : 'marcados'}`, 487, cy0, 12, fusePick.length === FUSE_N ? '#6f6' : '#fd5', 'right', 'bold');
+      items.forEach((it, i) => {
+        const x = 197 + (i % 6) * 50, y = cy0 + 8 + Math.floor(i / 6) * 46, pk = fusePick.includes(it), kp = it === fuseKeep;
+        bevel(x, y, 46, 41, pk ? '#16301c' : '#10101c', kp ? '#ffd34a' : pk ? '#4cf06a' : RAR[it.r][1], '#05050a'); slotIcon(it.slot, it.r, x + 23, y + 18, 2.4);
+        txt('+' + (it.ench | 0), x + 43, y + 38, 10, '#fff', 'right', 'bold'); txt('Nv' + it.il, x + 4, y + 38, 8, '#99a');
+        if (kp) drawIcon('star', x + 38, y + 8, 1.2); else if (pk) txt('✓', x + 38, y + 12, 11, '#4cf06a', 'center', 'bold');
+        ui.push({ x, y, w: 46, h: 41, fn: () => {
+          if (pk && kp) { fusePick = fusePick.filter(q => q !== it); fuseKeep = fusePick[0] || null; }
+          else if (pk) fuseKeep = it;
+          else if (fusePick.length < FUSE_N) { fusePick = fusePick.concat([it]); if (!fuseKeep) fuseKeep = it; }
+          else { SFX.error(); hubToast = { t: 2, s: 'Só podes marcar 5 itens: desmarca um primeiro', col: '#f88' }; }
+        } });
+      });
+      // resultado: o item que fica e como
+      const rx = 500, ry = cy0 - 10, rw = 282, rh = 172; panel(rx, ry, rw, rh, '#16162a', '#3a3a5a'); txt(lang === 'en' ? 'Result' : 'Resultado', rx + 12, ry + 20, 13, '#f0c060', 'left', 'bold');
+      if (fuseKeep) {
+        const k = fuseKeep, m0 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[gSt(k)], m1 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[Math.min(STAR_MAX, gSt(k) + 1)], col = RAR[k.r][1];
+        slotIcon(k.slot, k.r, rx + 26, ry + 48, 2.2); txt(ITEM_NAMES[k.slot][k.r] + (k.ench ? ' +' + k.ench : ''), rx + 50, ry + 44, 12, col, 'left', 'bold'); txt(`Fica este · ${gSt(k)}★ > ${gSt(k) + 1}★ · ${lang === 'en' ? 'bonus' : 'bónus'} ×${m0.toFixed(2)} > ×${m1.toFixed(2)}`, rx + 50, ry + 60, 10, '#9cf');
+        const lines = [[k.main.k, k.main.v]].concat(k.aff.map(a => [a.k, a.v])); lines.slice(0, 4).forEach(([kk, v], i) => txt(`${statLine(kk, ev(kk, v, m0))}  >  ${statLine(kk, ev(kk, v, m1))}`, rx + 14, ry + 84 + i * 15, 11, i ? '#7cf' : '#fff'));
+        txt(`Os outros ${Math.max(0, fusePick.length - 1)} itens desaparecem.`, rx + 14, ry + 150, 10, '#f99');
+      } else txt('Marca itens para ver o resultado.', rx + rw / 2, ry + 90, 12, '#667', 'center');
+      const fee = fuseKeep ? gFuseFee(fuseKeep) : 0, ok = !lock && fusePick.length === FUSE_N && fuseKeep && save.gold >= fee;
+      btn(197, cy0 + 106, 290, 34, fusePick.length === FUSE_N ? `Juntar ${FUSE_N} > 1 · ¢${gfmt(fee)}` : `Marca ${FUSE_N} itens`, () => fuseGear(fusePick, fuseKeep), { size: 14, off: !ok, col: '#2f7a4a', hot: '#3fa061' });
+      txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 342, 462, 10, '#9cf', 'center');
+    }
   }
   for (const q of fz.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
   if (fz.msgT > 0) { ctx.globalAlpha = Math.min(1, fz.msgT); txt(fz.msg, 487, 232, 24, fz.col, 'center', 'bold'); ctx.globalAlpha = 1; }
@@ -2128,7 +2159,7 @@ function checkAchSkins() {
   SKINS[c].forEach((sk, i) => { if (!sk.ach || save.sk[c][i]) return; const [a, b] = ACH_SKIN[sk.ach].prog(); if (a >= b) { save.sk[c][i] = 1; hubToast = { t: 3.5, s: 'Skin desbloqueada: ' + sk.n, col: '#ffd34a' }; SFX.buy(); persist(); } });
 }
 function hubSkins() {
-  txt('A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).', 487, 106, 14, '#fd5', 'center', 'bold');
+  txt('A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).', 487, 116, 12, '#fd5', 'center', 'bold');
   const n = SKINS[save.cls].length, wide = n > 4, tiny = n > 5, step = tiny ? 98 : wide ? 118 : 148, w = tiny ? 92 : wide ? 110 : 138, k = tiny ? 2.4 : wide ? 2.8 : 3.4, ns = tiny ? 10 : wide ? 12 : 14;
   SKINS[save.cls].forEach((s, i) => {
     const x = 197 + i * step, y = 120, h = 350, own = save.sk[save.cls][i], eq = save.skE[save.cls] === i, [cost, cur] = SKIN_COST[i] || [0, 'g'], gem = cur === 'd';
@@ -2207,7 +2238,7 @@ function hubRewards() {
   txt('¢' + gfmt(r.gold) + (r.sold ? ` (+${gfmt(r.sold)} ${lang === 'en' ? 'sales' : 'vendas'})` : ''), 534, y, 16, '#fd5', 'left', 'bold'); y += 22;
   if (r.pts) { txt(`+${r.pts} pontos de atributo`, 534, y, 14, '#9fe', 'left', 'bold'); y += 20; }
   if (r.gems) { txt('◆+' + r.gems, 534, y, 16, '#7fe8ff', 'left', 'bold'); y += 22; }
-  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`Cópia: ${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
+  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
   r.items.slice(0, 6).forEach(it => { slotIcon(it.slot, it.r, 546, y - 4, 1.6); txt(itemName(it), 566, y, 13, RAR[it.r][1], 'left', 'bold'); y += 22; });
   if (r.items.length > 6) txt(`+${r.items.length - 6} ${lang === 'en' ? 'items' : 'itens'}`, 534, y, 12, '#889');
 }
@@ -2263,25 +2294,30 @@ async function saveEditProfile() {
   const e = editProf; if (!e || e.busy) return; const cost = flagCost(e); if (save.gems < cost) { e.msg = `Precisas de ${cost} diamantes para mudar de bandeira`; e.col = '#f88'; SFX.error(); return; }
   e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab';
   const r = await rpc('gog_set_profile', { p_token: on.token, p_gender: e.gender, p_country: e.country === 'ZZ' ? null : e.country }); e.busy = false;
-  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
+  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
-function drawEditProfile() {
-  if (!editProf || state !== 'hub') return; const e = editProf;
-  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { if (!e.busy) editProf = null; } });
-  const x = 200, y = 70, w = 400, h = 360; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+function profileTabs() {
+  [['profile', 'Perfil'], ['skins', 'Skins'], ['rewards', 'Recompensas']].forEach(([k, l], i) => btn(197 + i * 102, 83, 98, 18, l, () => { tab = k; }, { size: 11, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' }));
+}
+function hubProfile() {
+  profileTabs();
+  if (!on.token) { txt('Entra numa conta para editar o perfil.', 487, 270, 15, '#778', 'center'); return; }
+  if (!editProf) openEditProfile(); const e = editProf; if (!e) return;
+  const x = 260, y = 112, w = 460, h = 340; panel(x, y, w, h, '#16162a', '#3a3a5a');
   txt('Editar perfil', x + w / 2, y + 36, 22, '#ffd34a', 'center', 'bold');
-  txt('Nick', x + 24, y + 72, 12, '#8a9ab8'); bevel(x + 24, y + 80, w - 48, 30, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 36, y + 101, 15, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 44, y + 95, 1.2);
-  txt('O nick não pode ser alterado.', x + 24, y + 126, 11, '#778');
-  txt('Sexo', x + 24, y + 154, 12, '#8a9ab8');
+  txt('Nick', x + 24, y + 70, 12, '#8a9ab8'); bevel(x + 24, y + 78, w - 48, 30, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 36, y + 99, 15, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 44, y + 93, 1.2);
+  txt('O nick não pode ser alterado.', x + 24, y + 124, 11, '#778');
+  txt('Sexo', x + 24, y + 152, 12, '#8a9ab8');
   [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => {
-    const bx = x + 24 + i * 180; btn(bx, y + 162, 172, 62, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
-    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 34, y + 194, 1.1); txt(n, bx + 70, y + 198, 14, '#fff', 'left', 'bold');
+    const bx = x + 24 + i * 204, bw = 196; btn(bx, y + 160, bw, 62, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
+    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 34, y + 192, 1.1); txt(n, bx + 72, y + 196, 14, '#fff', 'left', 'bold');
   });
-  txt('País', x + 24, y + 250, 12, '#8a9ab8');
-  btn(x + 24, y + 258, w - 48, 34, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 38, y + 268, 26, 17); txt(cName(e.country), x + 76, y + 281, 14, '#fff', 'left', 'bold'); txt('▾', x + w - 40, y + 282, 14, '#aab', 'center');
-  { const c = flagCost(e); if (!e.msg) txt(c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis'), x + w / 2, y + 314, 12, c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
-  if (e.msg) txt(e.msg, x + w / 2, y + 314, 12, e.col, 'center');
-  btn(x + 24, y + 322, 172, 28, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy || save.gems < flagCost(e) }); btn(x + 204, y + 322, 172, 28, 'Cancelar', () => { if (!e.busy) editProf = null; }, { size: 14, col: '#3a2a3a' });
+  txt('País', x + 24, y + 248, 12, '#8a9ab8');
+  btn(x + 24, y + 256, w - 48, 34, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 38, y + 266, 26, 17); txt(cName(e.country), x + 76, y + 279, 14, '#fff', 'left', 'bold'); txt('▾', x + w - 40, y + 280, 14, '#aab', 'center');
+  { const c = flagCost(e); if (!e.msg) txt(c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis'), x + w / 2, y + 308, 12, c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
+  if (e.msg) txt(e.msg, x + w / 2, y + 308, 12, e.col, 'center');
+  const changed = e.gender !== myG() || e.country !== (on.country || 'ZZ');
+  btn(x + 24, y + 316, w - 48, 20, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 13, col: '#2f7a4a', hot: '#3fa061', off: e.busy || !changed || save.gems < flagCost(e) });
 }
 
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
@@ -2792,6 +2828,7 @@ function drawWorld() {
     const oy = b.y; if (R.cine) { const c = R.cine; if (c.t < 1.2) return; if (c.t < 2) { const k = (c.t - 1.2) / .8; b.y = oy - (1 - k * k) * 440; } } if (b.z) b.y -= b.z;
     if (b.guardian) { const sy = oy, a0 = R.time * 14; if (b.st === 'spin') { if (b.mt < .5) { ctx.strokeStyle = '#ffd34a88'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.arc(b.x, sy, b.r + 112, 0, 7); ctx.stroke(); ctx.setLineDash([]); } else { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#ffe58a'; ctx.lineWidth = 8; ctx.globalAlpha = .55; ctx.beginPath(); ctx.arc(b.x, sy, b.r + 100, a0 - 2.2, a0); ctx.stroke(); ctx.globalAlpha = .25; ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(b.x, sy, b.r + 100, a0 - 3.6, a0 - 1); ctx.stroke(); ctx.restore(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(b.x + Math.cos(a0) * 20, sy + Math.sin(a0) * 20); ctx.lineTo(b.x + Math.cos(a0) * (b.r + 112), sy + Math.sin(a0) * (b.r + 112)); ctx.stroke(); } } ctx.fillStyle = '#ffd34a22'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 14 + Math.sin(R.time * 4) * 3, 0, 7); ctx.fill(); }
     ctx.fillStyle = '#0007'; ctx.beginPath(); ctx.ellipse(b.x, b.y + b.r, b.r * 1.1, b.r * .35, 0, 0, 7); ctx.fill();
+    if (!R.cine) bar(b.x - b.r, b.y - b.r - 14, b.r * 2, 6, Math.max(0, b.hp / b.max), '#e44');   // barra de vida por cima do boss
     if (b.st === 'charge' && b.mt < .7) { ctx.strokeStyle = '#f44a'; ctx.lineWidth = 4; ctx.setLineDash([10, 8]); ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + b.dx * 500, b.y + b.dy * 500); ctx.stroke(); ctx.setLineDash([]); }
     if (b.st === 'spread' && b.f < 3) { ctx.strokeStyle = b.col + '88'; ctx.lineWidth = 2; ctx.setLineDash([6, 8]); ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.setLineDash([]); }
     if (b.st === 'blink' && b.f === 0) { ctx.globalAlpha = .4 + Math.sin(R.time * 30) * .3; }
@@ -2881,7 +2918,7 @@ function drawHUD() {
   if (R.farm && R.hordeB && R.phase === 'hunt') txt('HORDA!', W - 12, 134, 14, '#ff6a6a', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
   if (R.raid) txt(`Raid ${RAID_D[R.raid.d].n} · Onda ${R.wave}/4`, W - 12, 92, 13, RAID_D[R.raid.d].col, 'right', 'bold');
   if (gameSpeed === 2) txt('VELOCIDADE x2', W - 12, 112, 13, '#ffd34a', 'right', 'bold');
-  if (R.boss) { bar(W / 2 - 170, H - 30, 340, 16, R.boss.hp / R.boss.max, R.boss.col); txt(R.boss.name, W / 2, H - 36, 14, '#fff', 'center', 'bold'); }
+  if (R.boss && !R.cine) { const b = R.boss, bw = 380, bx = W / 2 - bw / 2; txt(b.mini ? 'Mini-boss · ' + b.name : b.name, W / 2, 20, 15, '#fff', 'center', 'bold'); bar(bx, 26, bw, 14, Math.max(0, b.hp / b.max), b.col || '#e44'); txt(`${gfmt(Math.max(0, Math.ceil(b.hp * 10)))} / ${gfmt(Math.round(b.max * 10))}`, W / 2, 37, 11, '#fff', 'center', 'bold'); }
   if (R.toastT > 0) { ctx.globalAlpha = Math.min(1, R.toastT); txt(R.toast, W / 2, 80, 24, '#ffd66b', 'center', 'bold'); ctx.globalAlpha = 1; }
 }
 function overlay(title, col, lines) {
@@ -2943,7 +2980,7 @@ function frame(now) {
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawEditProfile(); drawSellAsk(); drawBagBuy(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawBagBuy(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);
