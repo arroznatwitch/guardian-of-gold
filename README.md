@@ -282,7 +282,7 @@ Cosméticos que mudam o aspeto do herói. A skin inicial é grátis, a 1.ª extr
 
 ## Ranking online
 
-O separador **Ranking** tem classificações de **nível, mobs mortos, ouro ganho, bosses, raids** e **recorde de waves por mapa**. A conta só precisa de **nick + palavra-passe** (a palavra-passe nunca sai do teu dispositivo), e o **save fica guardado na conta**: podes jogar noutro dispositivo e, ao terminar sessão, o save local é apagado. Precisa de um pequeno servidor Supabase: vê o [guia de configuração](docs/ONLINE.md).
+O separador **Ranking** tem classificações de **nível, mobs mortos, ouro ganho, bosses, raids** e **recorde de waves por mapa**. A conta só precisa de **nick + palavra-passe** (a palavra-passe nunca sai do teu dispositivo), o **perfil público** de cada jogador (classe, arma, atributos e equipamento) e o **save guardado na conta**: podes jogar noutro dispositivo e, ao terminar sessão, o save local é apagado. Precisa de um pequeno servidor Supabase: vê o [guia de configuração](docs/ONLINE.md).
 
 ---
 

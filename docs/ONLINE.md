@@ -5,6 +5,7 @@ Com o servidor configurado, o jogo passa a ser **100% online**:
 - É preciso **conta (nick + palavra-passe)** para jogar.
 - O **save vive na conta** (nuvem). Podes continuar no telemóvel ou noutro PC, e **Terminar sessão apaga o save local** do dispositivo.
 - Há **ranking** de nível, mobs mortos, ouro, bosses, raids e recorde de waves por mapa.
+- Na lista vês a **classe** de cada jogador e, ao clicar nele, o **perfil**: skin, arma (com +N e estrelas), atributos, equipamento e estatísticas.
 - O jogo em si continua a correr no teu browser; o servidor guarda a conta, o save e o ranking.
 
 O primeiro login envia para a conta o progresso que já tinhas neste dispositivo (se a conta já tiver um save, perguntamos qual manter). Este guia usa o **Supabase** (plano gratuito chega).
@@ -39,11 +40,12 @@ A chave anon/publishable é pública por desenho e pode estar no código. **Nunc
 | Acesso direto às tabelas | Ficam num schema privado (`gog`) que a API não expõe, com RLS ligado e sem permissões para `anon`. Só se chega aos dados pelas funções do SQL. |
 | SQL injection | Funções com parâmetros tipados; os nomes de colunas vêm de uma lista fixa. |
 | Save na nuvem | Só se grava com sessão válida e `rev` igual à do servidor (controlo de versão). Se a conta foi usada noutro dispositivo, o jogo pergunta qual save manter. Limite de 600 KB por save. |
+| Perfil público | Só se mostram dados de jogo (skin, arma, atributos, equipamento e estatísticas). O servidor reconstrói a build com campos fixos e valores limitados; texto livre do cliente nunca é guardado. |
 | Registos em massa | No máximo 30 registos de contas novas por 10 minutos (global). |
 | Batota nas pontuações | Os valores só sobem, e cada envio só aceita aumentos plausíveis para o tempo passado. Saves que usaram trapaças locais não enviam. |
 | XSS | Os nicks só aceitam letras, números e `_`, e são desenhados no canvas (nunca como HTML). |
 
-O ficheiro [`server/test-sql.mjs`](../server/test-sql.mjs) testa estas regras (41 verificações) contra uma base de dados Postgres em memória:
+O ficheiro [`server/test-sql.mjs`](../server/test-sql.mjs) testa estas regras (50 verificações) contra uma base de dados Postgres em memória:
 
 ```bash
 cd server && npm i @electric-sql/pglite && node test-sql.mjs

@@ -45,6 +45,7 @@ create table if not exists gog.players (
   submitted_at timestamptz,
   updated_at   timestamptz not null default now()
 );
+alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
 create table if not exists gog.sessions (
   token_hash bytea primary key,
   player_id  bigint not null references gog.players(id) on delete cascade,
@@ -65,6 +66,40 @@ do $$ begin
 end $$;
 
 -- ------------------------------------------------------- funcoes internas
+-- Reconstroi a build so com campos conhecidos e valores limitados; nunca guarda texto livre do cliente.
+create or replace function gog._clean_build(b jsonb) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare o jsonb; w jsonb; a jsonb; g jsonb := '{}'::jsonb; it jsonb; sl text;
+begin
+  if b is null or jsonb_typeof(b) <> 'object' or length(b::text) > 3000 then return null; end if;
+  o := jsonb_build_object('skin', least(greatest(coalesce((b->>'skin')::int, 0), 0), 9));
+  w := b->'weapon';
+  if jsonb_typeof(w) = 'object' and (w->>'id') ~ '^[a-z]_[a-z]{2,10}$' then
+    o := o || jsonb_build_object('weapon', jsonb_build_object('id', w->>'id',
+      'lv', least(greatest(coalesce((w->>'lv')::int, 0), 0), 12), 'st', least(greatest(coalesce((w->>'st')::int, 0), 0), 3)));
+  end if;
+  a := b->'attr';
+  if jsonb_typeof(a) = 'object' then
+    o := o || jsonb_build_object('attr', jsonb_build_object(
+      'vit', least(greatest(coalesce((a->>'vit')::int, 0), 0), 99999), 'str', least(greatest(coalesce((a->>'str')::int, 0), 0), 99999),
+      'agi', least(greatest(coalesce((a->>'agi')::int, 0), 0), 99999), 'per', least(greatest(coalesce((a->>'per')::int, 0), 0), 99999)));
+  end if;
+  if jsonb_typeof(b->'gear') = 'object' then
+    foreach sl in array array['head', 'chest', 'boots', 'amulet'] loop
+      it := b->'gear'->sl;
+      if jsonb_typeof(it) = 'object' then
+        g := g || jsonb_build_object(sl, jsonb_build_object('r', least(greatest(coalesce((it->>'r')::int, 0), 0), 4),
+          'e', least(greatest(coalesce((it->>'e')::int, 0), 0), 10), 'st', least(greatest(coalesce((it->>'st')::int, 0), 0), 3),
+          'sp', left(regexp_replace(coalesce(it->>'sp', ''), '[^[:alpha:]]', '', 'g'), 14)));
+      end if;
+    end loop;
+    o := o || jsonb_build_object('gear', g);
+  end if;
+  return o;
+exception when others then
+  return null;
+end $$;
+
 create or replace function gog._new_session(p_player bigint) returns text
 language plpgsql security definer set search_path = '' as $$
 declare t text := encode(extensions.gen_random_bytes(32), 'hex');
@@ -205,7 +240,7 @@ begin
     end loop;
   end if;
   update gog.players set
-    cls = n_cls, level = greatest(level, n_level), kills = greatest(kills, n_kills), gold = greatest(gold, n_gold),
+    cls = n_cls, build = coalesce(gog._clean_build(p->'build'), build), level = greatest(level, n_level), kills = greatest(kills, n_kills), gold = greatest(gold, n_gold),
     bosses = greatest(bosses, n_bosses), raids = greatest(raids, n_raids),
     w0 = greatest(w0, n_w[1]), w1 = greatest(w1, n_w[2]), w2 = greatest(w2, n_w[3]), w3 = greatest(w3, n_w[4]), w4 = greatest(w4, n_w[5]), w5 = greatest(w5, n_w[6]),
     submitted_at = now(), updated_at = now()
@@ -221,8 +256,8 @@ begin
                      when 'wave0' then 'w0' when 'wave1' then 'w1' when 'wave2' then 'w2' when 'wave3' then 'w3' when 'wave4' then 'w4' when 'wave5' then 'w5' end;
   if col is null then return jsonb_build_object('ok', false, 'error', 'bad_stat'); end if;
   execute format($q$
-    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v) order by r), '[]'::jsonb) from (
-      select nick, cls, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
+    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin) order by r), '[]'::jsonb) from (
+      select nick, cls, level as lv, coalesce((build->>'skin')::int, 0) as skin, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
       from gog.players where %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
@@ -304,7 +339,7 @@ declare pid bigint; newrev int;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  update gog.players set save = null, save_rev = save_rev + 1, save_at = null, save_dev = null,
+  update gog.players set save = null, save_rev = save_rev + 1, save_at = null, save_dev = null, build = null,
     level = 0, kills = 0, gold = 0, bosses = 0, raids = 0, w0 = 0, w1 = 0, w2 = 0, w3 = 0, w4 = 0, w5 = 0, submitted_at = null, updated_at = now()
   where id = pid returning save_rev into newrev;
   return jsonb_build_object('ok', true, 'rev', newrev);
@@ -318,4 +353,29 @@ begin
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
   end loop;
+end $$;
+
+-- ====================================================== perfil publico (v3)
+create or replace function public.gog_profile(p_nick text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare v gog.players;
+begin
+  if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
+  select * into v from gog.players where nick_key = lower(p_nick);
+  if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
+  return jsonb_build_object('ok', true, 'nick', v.nick, 'cls', v.cls, 'level', v.level, 'kills', v.kills, 'gold', v.gold, 'bosses', v.bosses, 'raids', v.raids,
+    'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build);
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['public.gog_profile(text)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
+  end loop;
+  execute 'revoke all on function gog._clean_build(jsonb) from public';
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute 'revoke all on function gog._clean_build(jsonb) from anon'; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute 'revoke all on function gog._clean_build(jsonb) from authenticated'; end if;
 end $$;
