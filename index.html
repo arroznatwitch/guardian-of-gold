@@ -527,7 +527,9 @@ function keyName(c) {
   const m = { Space: 'Espaço', ShiftLeft: 'Shift', ShiftRight: 'Shift (dir.)', ControlLeft: 'Ctrl', ControlRight: 'Ctrl (dir.)', AltLeft: 'Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Escape: 'Esc', Enter: 'Enter', Tab: 'Tab', Backspace: '⌫' };
   if (m[c]) return m[c]; if (c.startsWith('Key')) return c.slice(3); if (c.startsWith('Digit')) return c.slice(5); return c;
 }
-const attrEff = n => n <= 40 ? n : n <= 100 ? 40 + (n - 40) * .5 : 70 + (n - 100) * .25;   // depois de 40 pontos num atributo, cada ponto rende metade (e um quarto depois de 100)
+// o travao acompanha o nivel: cada ponto vale por inteiro ate 15 + 1,2 x nivel num atributo; ate ao dobro vale metade e depois um quarto
+const attrCap = L => 15 + 1.2 * (L || (save && save.pl && save.pl.lv) || 1);
+const attrEff = (n, L) => { const T = attrCap(L); return n <= T ? n : n <= 2 * T ? T + (n - T) * .5 : 1.5 * T + (n - 2 * T) * .25; };
 const stats = () => {
   const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, a = { vit: attrEff(save.attr.vit), str: attrEff(save.attr.str), agi: attrEff(save.attr.agi), per: attrEff(save.attr.per) };
   return { hp: Math.round(c.hp + a.vit * 14 + 4 * (L - 1) + g.hp), spd: c.spd * (1 + (a.agi * 1.2 + g.spd) / 100), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .02) * (1 + g.dmg / 100), cdm: Math.max(.3, 1 - a.per * .012 - g.cdr / 100) };
@@ -1661,7 +1663,7 @@ function hubChar() {
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
-    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, a[key] > 40 ? '#ff9a4a' : '#f0c060', 'right', 'bold'); if (a[key] > 40) txt(`efetivo ${Math.round(attrEff(a[key]))}`, 690, y + 31, 9, '#c98a4a', 'right');
+    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, a[key] > attrCap() ? '#ff9a4a' : '#f0c060', 'right', 'bold'); if (a[key] > attrCap()) txt(`efetivo ${Math.round(attrEff(a[key]))}`, 690, y + 31, 9, '#c98a4a', 'right');
     const capped = key === 'per' && stats().cdm <= .3001;   // a velocidade de ataque tem limite de +70%: mais pontos seriam desperdicados
     if (capped) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
