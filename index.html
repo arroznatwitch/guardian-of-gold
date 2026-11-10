@@ -49,8 +49,9 @@ function initAudio() {
   ac = new AC(); master = ac.createGain(); master.gain.value = .5; master.connect(ac.destination);
   sfxBus = ac.createGain(); musBus = ac.createGain(); sfxBus.connect(master); musBus.connect(master); applyVol(); musicLoop();
 }
+let sfxQuiet = false;   // no x2 o segundo passo de simulacao fica em silencio
 function tone(f, d, type = 'square', vol = .12, slide = 0, delay = 0, bus = null) {
-  if (!ac || muted) return;
+  if (!ac || muted || sfxQuiet) return;
   const o = ac.createOscillator(), g = ac.createGain(), s = ac.currentTime + delay;
   o.type = type; o.frequency.setValueAtTime(f, s);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), s + d);
@@ -58,7 +59,7 @@ function tone(f, d, type = 'square', vol = .12, slide = 0, delay = 0, bus = null
   o.connect(g); g.connect(bus || sfxBus); o.start(s); o.stop(s + d + .02);
 }
 function noise(d, vol = .2, freq = 1500) {
-  if (!ac || muted) return;
+  if (!ac || muted || sfxQuiet) return;
   const n = Math.floor(ac.sampleRate * d), b = ac.createBuffer(1, n, ac.sampleRate), a = b.getChannelData(0);
   for (let i = 0; i < n; i++) a[i] = (Math.random() * 2 - 1) * (1 - i / n);
   const s = ac.createBufferSource(); s.buffer = b;
@@ -395,7 +396,7 @@ const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
-const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: 1.2, wHP: .18, wHP2: .008, wDM: .09, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
+const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
@@ -407,7 +408,7 @@ const RAID_D = [
   { n: 'Inferno',  col: '#c040ff', hp: 65,  dmg: 7.5, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
-const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.22, .28, .36, .47, .55, .6];   // as primeiras raids pesam menos; as ultimas muito mais
+const RAID_ZH = [.4, .55, .75, 1, 1.3, 1.6], RAID_ZD = [.132, .168, .216, .282, .33, .36];   // as primeiras raids pesam menos; as ultimas muito mais
 const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
 const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
@@ -490,7 +491,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5 }, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .5 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const DM = () => stats().dm * (1 + .12 * wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
@@ -501,6 +502,7 @@ const heroSpr = () => save.cls + save.skE[save.cls];
    ===================================================================== */
 const keys = {}; let mouse = { x: W / 2, y: H / 2 }, mdown = false;
 let state = 'menu', tab = 'farm', ui = [], R = null, T = 0, capture = null, keysBack = 'menu', optBack = 'menu', menuConfirm = false, anvSel = 0;
+const BASE_SPD = 1.12;   // o jogo normal corre um pouco mais depressa
 let gameSpeed = 1; try { gameSpeed = localStorage.getItem('bladehunter_speed') === '2' ? 2 : 1; } catch (e) {}
 function toggleSpeed() { gameSpeed = gameSpeed === 1 ? 2 : 1; try { localStorage.setItem('bladehunter_speed', String(gameSpeed)); } catch (e) {} SFX.click(); }
 let autoAtk = false; try { autoAtk = localStorage.getItem('bladehunter_auto') === '1'; } catch (e) {}
@@ -577,7 +579,7 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .09 * (6 * i + 4 * rd);
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = D.hp * RAID_ZH[i] * RAID_MINI.hp; R.bossM = D.hp * RAID_ZH[i] * .8; R.dmgM = D.dmg * RAID_ZD[i] * RAID_MINI.dmg; R.goldM = D.gold; R.spdM = D.spd; R.bossDM = 1 + .07 * (6 * i + 4 * rd);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.waveKills = 0; R.retire = false; R.lootN = 0;
@@ -609,7 +611,7 @@ function dmgE(e, d, ang, kb, quiet) {
   let crit = false; const g = R.G;
   if (g && !quiet) {
     if (Math.random() * 100 < Math.min(75, g.crit)) { d *= 1.75; crit = true; }
-    if (g.ls) heal(d * 10 * g.ls / 100);
+    if (g.ls) heal(Math.min(R.p.max * .008, d * 10 * g.ls / 100 * .4));   // 40% do valor, no maximo 0,8% da vida por golpe
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);
   }
@@ -1387,12 +1389,12 @@ function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up)
 const wpnDps = w => w.dmg * (w.count || 1) * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
-  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp);
-  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .24 * r) * GEAR_F.hp);
-  if (slot === 'boots') return +((3 + .25 * il) * (1 + .2 * r)).toFixed(1);
-  return +((3 + .35 * il) * (1 + .2 * r) * GEAR_F.dmg).toFixed(1);
+  if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
+  if (slot === 'chest') return Math.round((50 + 12 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
+  if (slot === 'boots') return +((3 + .25 * il) * (1 + .2 * r) * (r === 4 ? MYTH_F : 1)).toFixed(1);
+  return +((3 + .35 * il) * (1 + .2 * r) * GEAR_F.dmg * (r === 4 ? MYTH_F : 1)).toFixed(1);
 }
-function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
+function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1) * (r === 4 ? MYTH_F : 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
 function rollSpec(it, avoid) {
   let c; do { c = SPEC_POOL[Math.floor(Math.random() * SPEC_POOL.length)]; } while (avoid && c[0] === avoid);
   const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
@@ -1408,7 +1410,7 @@ function gearStats() {
   const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
   if (!save || !save.gear) return g;
   for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
-  g.xpb = Math.min(25, g.xpb);   // XP extra tem teto
+  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(6, g.ls);   // tetos   // XP extra tem teto
   return g;
 }
 function rollRarity(boost = 0, min = 0) {
@@ -2304,10 +2306,12 @@ function markUnl(sv) {
 }
 function nerfGear(sv) {
   const f = it => { if (!it || !it.main) return; const sc = o => { if (o && GEAR_F[o.k]) o.v = it.main === o && o.k === 'hp' ? Math.round(o.v * GEAR_F[o.k]) : +(o.v * GEAR_F[o.k]).toFixed(1); }; sc(it.main); (it.aff || []).forEach(sc); sc(it.spec); };
-  for (const sl of SLOTS) f(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(f); sv.gv = 2;
+  const g3 = it => { if (!it || !it.main) return; const sc = o => { if (!o) return; const m = (it.r === 4 ? MYTH_F : 1) * (o.k === 'ls' ? GEAR_F.ls : 1); if (m !== 1) o.v = o.k === 'hp' ? Math.round(o.v * m) : +(o.v * m).toFixed(1); }; sc(it.main); (it.aff || []).forEach(sc); sc(it.spec); };
+  if ((sv.gv | 0) < 2) { for (const sl of SLOTS) f(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(f); sv.gv = 2; }
+  if (sv.gv < 3) { for (const sl of SLOTS) g3(sv.gear && sv.gear[sl]); (sv.bag || []).forEach(g3); sv.gv = 3; }
 }
 function checkUnlocks() {
-  if (save && (save.gv | 0) < 2) { nerfGear(save); persist(); }
+  if (save && (save.gv | 0) < 3) { nerfGear(save); persist(); }
   if (!save || ua) return; if (!save.unl) { markUnl(save); persist(); return; }
   let q = null; CLASSES[save.cls].weapons.forEach((w, i) => { if (!q && weaponReq(i).ok && !save.unl[w.id]) q = { key: w.id, name: w.n, w: w.id }; });
   for (const t of LOCK_TABS) { if (!tabOpen(t) && save.unl['t_' + t]) delete save.unl['t_' + t]; if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: TAB_INFO[t][0] }; }
@@ -2609,7 +2613,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
   ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
-  if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
+  if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
   if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawSellAsk(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
