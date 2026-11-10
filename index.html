@@ -69,6 +69,8 @@ const SFX = {
   click: () => tone(660, .06, 'square', .08),
   buy: () => { tone(523, .08, 'square', .1); tone(784, .08, 'square', .1, 0, .08); tone(1047, .15, 'square', .1, 0, .16); },
   error: () => tone(120, .18, 'sawtooth', .12, -40),
+  locked: () => { tone(170, .07, 'square', .13, -50); tone(105, .13, 'square', .13, -30, .06); noise(.05, .12, 900); },
+  unlock: () => { noise(.08, .2, 2500); [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .2, 'square', .1, 0, .12 + i * .09)); tone(1568, .5, 'sine', .08, 0, .6); },
   ready: () => { tone(880, .08, 'sine', .13); tone(1320, .16, 'sine', .13, 0, .08); },
   slash: () => { noise(.13, .3, 2400); tone(320, .1, 'sawtooth', .07, -220); },
   arrow: () => { tone(900, .12, 'triangle', .1, -600); noise(.05, .1, 4000); },
@@ -91,16 +93,41 @@ const SFX = {
   win: () => [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, .22, 'square', .12, 0, i * .13)),
   lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, .35, 'triangle', .18, 0, i * .22)),
 };
-const MUS = {
-  calm: { step: 280, bass: [110,0,110,0,131,0,131,0,147,0,147,0,98,0,98,0], lead: [440,0,523,0,659,0,523,0,587,0,523,0,392,0,440,0] },
-  battle: { step: 150, bass: [110,110,0,110,131,131,0,131,98,98,0,98,147,147,0,147], lead: [440,0,523,659,0,523,440,0,392,0,494,587,0,494,392,0] },
+const MUS = { calm: { step: 280 }, battle: { step: 150 } };
+// progressao de acordes (raiz, terceira, quinta) em 8 compassos de 8 passos; a melodia e escolhida ao acaso dentro da escala
+const CHORDS = {
+  calm: [[110, 131, 165], [87.3, 110, 131], [131, 165, 196], [98, 123, 147], [110, 131, 165], [147, 175, 220], [82.4, 103.8, 123.5], [110, 131, 165]],
+  battle: [[110, 131, 165], [110, 131, 165], [87.3, 110, 131], [98, 123, 147], [110, 131, 165], [82.4, 98, 123.5], [87.3, 110, 131], [82.4, 103.8, 123.5]],
 };
+const POOL = [262, 294, 330, 349, 392, 440, 494, 523, 587, 659, 698, 784, 880, 988];
+const RHY = {
+  calm: [[1, 0, 1, 0, 1, 1, 0, 0], [1, 0, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 0, 1, 0, 0], [1, 1, 0, 0, 1, 0, 1, 0], [1, 0, 0, 0, 1, 0, 0, 1], [0, 1, 0, 1, 1, 0, 1, 0]],
+  battle: [[1, 0, 1, 1, 0, 1, 1, 0], [1, 1, 0, 1, 1, 0, 1, 1], [1, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, 0, 1, 0, 1, 0], [1, 0, 1, 1, 1, 0, 1, 1]],
+};
+let melK = 7, melR = null, phrase = 0;
 function musicLoop() {
-  const m = MUS[musicMode], i = mi++;
+  const m = MUS[musicMode], i = mi++, set = musicMode === 'battle' ? 'battle' : 'calm', cs = CHORDS[set], bar = Math.floor(i / 8) % cs.length, st = i % 8, ch = cs[bar], ss = m.step / 1000;
+  if (st === 0) {
+    melR = RHY[set][Math.floor(Math.random() * RHY[set].length)]; if (bar === 0) phrase++;
+    const tgt = ch[Math.floor(Math.random() * 3)] * (Math.random() < .5 ? 4 : 2); let bk = 0; POOL.forEach((f, k) => { if (Math.abs(f - tgt) < Math.abs(POOL[bk] - tgt)) bk = k; }); melK = bk;
+  }
   if (!muted && ac) {
-    const b = m.bass[i % m.bass.length], l = m.lead[i % m.lead.length];
-    if (b) tone(b, m.step / 1000 * 1.6, 'triangle', .13, 0, 0, musBus);
-    if (l) tone(l, m.step / 1000 * .9, 'square', .035, 0, 0, musBus);
+    if (set === 'calm') {
+      if (st === 0) ch.forEach(f => tone(f * 2, ss * 7.5, 'sine', .028, 0, 0, musBus));                     // pad
+      if (st === 0 || st === 4) tone(ch[0], ss * 3.2, 'triangle', .13, 0, 0, musBus);                         // baixo
+      if (st === 2 || st === 6) tone(ch[2], ss * 1.5, 'triangle', .06, 0, 0, musBus);
+      if (st % 2 === 1) tone(ch[(st >> 1) % 3] * 4, ss * .8, 'sine', .03, 0, 0, musBus);                      // arpejo
+    } else {
+      tone(ch[0] * (st % 2 ? 2 : 1), ss * 1.1, 'triangle', .12, 0, 0, musBus);
+      if (st % 4 === 0) tone(70, .09, 'sine', .16, -40, 0, musBus);
+      if (st === 6 && bar % 2) tone(ch[2] * 4, ss * 1.5, 'sawtooth', .02, 0, 0, musBus);
+    }
+    if (melR && melR[st]) {
+      if (st !== 0) melK = Math.max(0, Math.min(POOL.length - 1, melK + [-2, -1, -1, 0, 1, 1, 2][Math.floor(Math.random() * 7)]));
+      const lead = set === 'calm' ? ['triangle', .06, 1.4] : ['square', .04, .8];
+      tone(POOL[melK], ss * lead[2], lead[0], lead[1], 0, 0, musBus);
+      if (set === 'calm' && phrase % 2 === 0 && st % 4 === 0) tone(POOL[melK] / 2, ss * 2, 'sine', .03, 0, ss * .5, musBus);   // eco/harmonia nas frases pares
+    }
   }
   setTimeout(musicLoop, m.step);
 }
@@ -366,7 +393,8 @@ const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
-const COIN_RATE = .3, ENEMY_HP = 1.3, ENEMY_DMG = 1.2;   // ouro por inimigo (reequilibrio v1.1)
+const COIN_RATE = .3, ENEMY_HP = 1.3, ENEMY_DMG = 1.2;
+const lvHP = () => 1 + .05 * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + .02 * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
   { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 2,  spd: 1.05 },
@@ -585,7 +613,7 @@ function hurt(n) {
   const p = R.p;
   if (save.cheat && save.cheat.god) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * ENEMY_DMG * (1 - Math.min(60, R.G ? R.G.dr : 0) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * ENEMY_DMG * lvDM() * (1 - Math.min(60, R.G ? R.G.dr : 0) / 100)));
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -713,7 +741,7 @@ function dash() {
 /* ---- inimigos & bosses ---- */
 function spawnE(type, x, y) {
   const d = EN[type], k = (1 + .2 * R.m) * (R.hpM || 1);
-  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k * ENEMY_HP, max: d.hp * k * ENEMY_HP, spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
+  R.enemies.push({ type, x, y, r: d.r, hp: d.hp * k * ENEMY_HP * lvHP(), max: d.hp * k * ENEMY_HP * lvHP(), spd: d.spd * (1 + .04 * R.m) * (R.spdM || 1), hit: 0, kx: 0, ky: 0, slow: 0, stun: 0, burn: 0, bt: 0, ob: 0, cd: 1 + Math.random() * 1.5, ph: Math.random() * 6.28 });
 }
 function spawnEdge(type) {
   const s = Math.floor(Math.random() * 4); let x, y;
@@ -722,7 +750,7 @@ function spawnEdge(type) {
 }
 function spawnBoss() {
   const b = MISSIONS[R.m].boss;
-  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: b.hp * (R.bossM || 1) * 1.2, max: b.hp * (R.bossM || 1) * 1.2, spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
+  R.boss = { boss: true, x: W / 2, y: 80, r: b.r, hp: b.hp * (R.bossM || 1) * 1.2 * lvHP(), max: b.hp * (R.bossM || 1) * 1.2 * lvHP(), spd: b.spd, hit: 0, kx: 0, ky: 0, st: 'walk', t: 2, mt: 0, f: 0, dx: 0, dy: 0, slow: 0, burn: 0, bt: 0, ob: 0, summoned: false, pal: b.pal, name: b.name, ring: b.ring, chg: b.charge, col: b.col, pattern: b.pattern, pi: 0, spin: 0 };
   R.enemies = []; R.phase = 'boss'; R.toast = '! ' + b.name + ' apareceu!'; R.toastT = 3; R.shake = 14; SFX.boss();
 }
 function eProj(x, y, a, spd, dmg, kind, col) { R.projs.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, a, r: kind === 'orb' ? 7 : 4, dmg, from: 'e', kind, life: 4, col }); }
@@ -952,6 +980,7 @@ Object.assign(EN_DICT, {"Conta online": "Online account", "Entrar": "Log in", "C
 Object.assign(EN_DICT, {"Sincronização automática": "Automatic sync", "A aguardar a primeira sincronização...": "Waiting for the first sync...", "Última: agora mesmo": "Last: just now", "Última: há": "Last:"});
 Object.assign(EN_DICT, {"Entra na tua conta para jogar": "Log in to your account to play", "A carregar o teu save": "Loading your save", "Sem ligação ao servidor": "Cannot reach the server", "O jogo precisa de internet para carregar a tua conta.": "The game needs internet to load your account.", "Tentar outra vez": "Try again", "Que save queres usar?": "Which save do you want to use?", "Já tens um save guardado na conta e outro neste dispositivo.": "You already have a save on the account and another on this device.", "Esta conta foi usada noutro dispositivo desde a última vez.": "This account was used on another device since last time.", "Save da conta": "Account save", "Save deste dispositivo": "Save from this device", "Save desta janela": "Save from this window", "Usar este": "Use this", "O save que não escolheres deixa de existir. O da conta fica guardado online.": "The save you don't pick will be lost. The account save stays online.", "Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.": "Pick the account save to load what was stored, or this window's to replace it.", "Sair sem guardar?": "Log out without saving?", "Sair:": "Log out:", "Farm: onda": "Farm: wave", "Não foi possível guardar o progresso recente. Clica outra vez para sair mesmo assim.": "Couldn't save your recent progress. Click again to log out anyway."});
 Object.assign(EN_DICT, {"MELHOR": "BETTER", "PIOR": "WORSE", "SIMILAR": "SIMILAR", "Slot vazio": "Empty slot", "igual à equipada": "same as equipped", "% vs equipada": "% vs equipped"});
+Object.assign(EN_DICT, {"Arma bloqueada": "Locked weapon", "DESBLOQUEADO!": "UNLOCKED!", "O teu nível:": "Your level:", "Mochila ·": "Backpack ·", "Nenhum item para este slot": "No items for this slot", "Shift+clique: melhor": "Shift+click: best", "Nada melhor na mochila": "Nothing better in the backpack", "PRONTO": "READY"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1322,6 +1351,12 @@ function cmpItems(nw, old) {
   for (const k of new Set(Object.keys(A).concat(Object.keys(B)))) { const d = (A[k] || 0) - (B[k] || 0); if (Math.abs(d) < (k === 'hp' ? .5 : .05)) continue; const w = (CMP_W[k] || 1) / (AFF[k].b + AFF[k].p * 20); score += d * w; rows.push({ k, d, w: Math.abs(d * w) }); }
   rows.sort((p, q) => q.w - p.w); return { score, rows, verdict: !old || score > .06 ? 1 : score < -.06 ? -1 : 0 };
 }
+function equipFromBag(i) { const it = save.bag[i], old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = -1; persist(); SFX.buy(); }
+function equipBest(sl) {
+  const cur = save.gear[sl]; let bi = -1, bs = -1e9;
+  save.bag.forEach((it, i) => { if (it.slot !== sl) return; const c = cmpItems(it, cur); if (c.score > bs) { bs = c.score; bi = i; } });
+  if (bi >= 0 && (!cur || bs > .06)) { const nm = itemName(save.bag[bi]); equipFromBag(bi); hubToast = { t: 2.4, s: 'Equipado: ' + nm, col: '#6f6' }; } else { SFX.error(); hubToast = { t: 2, s: 'Nada melhor na mochila', col: '#f88' }; }
+}
 function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up) { ctx.moveTo(x, y - 6); ctx.lineTo(x + 6, y + 2); ctx.lineTo(x - 6, y + 2); } else { ctx.moveTo(x, y + 6); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x - 6, y - 2); } ctx.fill(); }
 const wpnDps = w => w.dmg * 10 * (1 + .12 * (save.wl[w.id] || 0)) * STAR_MULT[wStar(w.id)] / w.cd;
 function addBag(it) { if (save.bag.length >= BAG_MAX) return false; save.bag.push(it); return true; }
@@ -1422,13 +1457,14 @@ function drawHub() {
   const nChest = Math.max(0, save.pl.lv - save.chestDone);
   tabs.forEach((t, i) => {
     const by = 76 + i * 29;
-    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    if (!tabOpen(t[0])) drawIcon('lock', 36, by + 13, 1.3);
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
     if (t[0] === 'rewards' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(134, by + 5, 30, 14); txt(nChest > 99 ? '99+' : String(nChest), 149, by + 16, 11, '#000', 'center', 'bold'); }
   });
   btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
-  ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets, rank: hubRank })[tab]();
+  if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, skins: hubSkins, rewards: hubRewards, pets: hubPets, rank: hubRank })[tab]();
 }
 function hubFarm() {
   txt('Ondas infinitas · boss a cada 5 ondas · ouro, XP e equipamento', 450, 106, 13, '#aab', 'center');
@@ -1439,7 +1475,7 @@ function hubFarm() {
     ctx.fillStyle = THEMES[m.theme].bg; ctx.fillRect(x + 6, y + 6, 42, 42); drawSprBig(m.boss.pal, x + 27, y + 27, .52); if (!open) drawIcon('lock', x + 27, y + 27, 2);
     txt(m.name, x + 58, y + 22, 18, open ? '#fff' : '#667', 'left', 'bold');
     txt(open ? `Melhor onda: ${best} · Nv rec. ${1 + i * 6}` : 'Chega à onda 10 na zona anterior', x + 58, y + 42, 12, open ? '#9cf' : '#a77');
-    btn(x + w - 112, y + 9, 100, 36, open ? 'Entrar' : 'Bloqueada', () => startMission(i, undefined, true), { off: !open, col: '#2f7a4a', hot: '#3fa061', size: 15 });
+    btn(x + w - 112, y + 9, 100, 36, open ? 'Entrar' : 'Bloqueada', () => open ? startMission(i, undefined, true) : lockClick('f' + i), { col: open ? '#2f7a4a' : '#26262f', hot: open ? '#3fa061' : '#33333f', size: 15 });
   });
 }
 function hubRaids() {
@@ -1454,7 +1490,7 @@ function hubRaids() {
     txt(`Raid: ${m.name}`, x + 54, y + 20, 16, open ? '#fff' : '#667', 'left', 'bold');
     if (open && unl) { txt(`Conclusões: ${cl[raidD]} · Recompensa: ¢${Math.round(m.reward * d.gold * 1.5)} + ${2 + raidD} itens`, x + 54, y + 38, 12, '#9cf'); txt(`Nv rec. ${rec}`, x + w - 124, y + 28, 12, save.pl.lv >= rec ? '#6f6' : '#f66', 'right', 'bold'); }
     else txt(!open ? 'Conclui a raid anterior' : 'Conclui a dificuldade anterior', x + 54, y + 38, 12, '#a77');
-    btn(x + w - 112, y + 7, 100, 34, unl ? 'Entrar' : 'Bloqueada', () => startMission(i, raidD), { off: !unl, col: d.col, hot: d.col, size: 14 });
+    btn(x + w - 112, y + 7, 100, 34, unl ? 'Entrar' : 'Bloqueada', () => unl ? startMission(i, raidD) : lockClick('r' + i), { col: unl ? d.col : '#26262f', hot: unl ? d.col : '#33333f', size: 14 });
   });
 }
 // ----- Personagem (corpo inteiro) -----
@@ -1475,7 +1511,7 @@ function hubChar() {
   const k = 3.3; drawSprBig(heroSpr(), cx, cy + Math.sin(T * 2) * 1.5, k);
   const base = w.t === 'melee' ? -.9 : w.t === 'arrow' ? -.12 : -1.3, ang = base + Math.sin(T * 2) * .05, hh = HAND[save.cls], hx = cx + hh[0] * 3 * k, hy = cy + Math.sin(T * 2) * 1.5 + hh[1] * 3 * k; drawWeapon(w.id, hx, hy, ang, k);
   if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * 27 * k / 3, hy + Math.sin(ang) * 27 * k / 3, 14, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
-  const go = (sl) => () => { bagFilter = sl; bagSel = -1; tab = 'bag'; };
+  const go = (sl) => () => { if (keys.ShiftLeft || keys.ShiftRight) { equipBest(sl); return; } bagFilter = sl; bagSel = -1; tab = 'bag'; };
   slotBtn(237, 128, 'head', 'Capacete', save.gear.head, null, go('head'));
   slotBtn(237, 190, 'chest', 'Armadura', save.gear.chest, null, go('chest'));
   slotBtn(237, 252, 'boots', 'Botas', save.gear.boots, null, go('boots'));
@@ -1489,6 +1525,20 @@ function hubChar() {
   if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv) txt(hv === 'skin' ? SKINS[save.cls][save.skE[save.cls]].n : 'Vazio', 208, 318, 14, '#889');
   else { txt('Passa o rato por um slot', 208, 318, 12, '#667'); SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 346 + i * 20, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
+  // tira da mochila para o slot sobre o qual estas
+  const inLeft = mouse.x - UIOX >= 195 && mouse.x - UIOX <= 480 && mouse.y >= 88 && mouse.y <= 478;
+  if (hv && SLOTS.includes(hv)) charStrip = hv; else if (!inLeft) charStrip = null;
+  if (charStrip) {
+    const cur = save.gear[charStrip], cand = save.bag.map((it, i) => ({ it, i })).filter(o => o.it.slot === charStrip).slice(0, 7);
+    txt(`Mochila · ${SLOT_LBL[charStrip]}`, 208, 436, 12, '#9ab', 'left', 'bold');
+    if (!cand.length) txt('Nenhum item para este slot', 208, 462, 12, '#667');
+    cand.forEach((o, k) => {
+      const x = 208 + k * 38, cm = cmpItems(o.it, cur), col = cm.verdict > 0 ? '#6f6' : cm.verdict < 0 ? '#f66' : '#fd5';
+      btn(x, 442, 34, 34, '', () => equipFromBag(o.i), { col: '#10101c', hot: '#1c1c34' }); slotIcon(o.it.slot, o.it.r, x + 17, 459, 1.9); arrowTri(x + 27, 449, cm.verdict >= 0, col);
+    });
+    if (cand.length) txt('Shift+clique: melhor', 478, 436, 10, '#778', 'right');
+  }
+  if (hubToast.t > 0) { ctx.globalAlpha = Math.min(1, hubToast.t); txt(hubToast.s, 337, 424, 13, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1; }
   // painel direito
   panel(490, 88, 295, 390, '#16162a', '#3a3a5a');
   txt(c.name, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(c.name, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
@@ -1532,7 +1582,7 @@ function hubBag() {
     cm.rows.slice(0, room).forEach((r, i) => txt(`${r.d > 0 ? '+' : ''}${ev(r.k, r.d, 1)}${AFF[r.k].u} ${AFF[r.k].n}`, 512, vy + 15 + i * 14, 12, r.d > 0 ? '#6f6' : '#f77')); }
   btn(512, 380, 256, 28, 'Equipar', () => { const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, col: '#2f7a4a', hot: '#3fa061' });
   btn(512, 412, 256, 28, `Vender ¢${sellValue(it)}`, () => { save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, col: '#a06a20', hot: '#c98a30' });
-  btn(512, 444, 256, 28, 'Encantar', () => { enchItem = it; tab = 'ench'; }, { size: 14, col: '#5a3a7a', hot: '#7a55a0' });
+  btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });
 }
 // ----- Encantamentos -----
 function doRefine() {
@@ -1669,7 +1719,8 @@ function hubWeapons() {
   const c = CLASSES[save.cls];
   c.weapons.forEach((w, i) => {
     const x = 195, y = 88 + i * 79, wd = 585, h = 72, own = save.own[save.cls][i], eq = save.eq[save.cls] === i, lv = save.wl[w.id] || 0;
-    const [tn, tc] = TIERS[i], wc = WCOL[w.id], ac = auraCol(lv), rq = weaponReq(i);
+    const [tn, tc] = TIERS[i], wc = WCOL[w.id], ac = auraCol(lv), rq = weaponReq(i), locked = !own && !rq.ok;
+    if (locked) ui.push({ x, y, w: wd, h, fn: () => lockClick(w.id) });
     panel(x, y, wd, h, '#232342', own ? tc : shade(tc, -.6));
     // brilho que passa pelo cartao
     ctx.save(); ctx.beginPath(); ctx.rect(x + 2, y + 2, wd - 4, h - 4); ctx.clip();
@@ -1684,19 +1735,19 @@ function hubWeapons() {
     if (ac) { ctx.fillStyle = ac; ctx.globalAlpha = .18 + .08 * Math.sin(T * 6); ctx.beginPath(); ctx.arc(ix, iy, 26, 0, 7); ctx.fill(); }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     const bob = Math.sin(T * 2.4 + i) * 2.5, sway = Math.sin(T * 1.6 + i) * .12;
-    ctx.globalAlpha = own ? 1 : .45; weaponIcon(w.id, ix, iy + bob, 2.6, -.785 + sway); ctx.globalAlpha = 1;
+    if (locked) drawLockBig(ix + lkOff(w.id), iy + 2, 1.05, 0); else { ctx.globalAlpha = own ? 1 : .45; weaponIcon(w.id, ix, iy + bob, 2.6, -.785 + sway); ctx.globalAlpha = 1; }
     if (own) {
       SHOP_FX[w.id](ix, iy, T);
       if (ac) for (let q = 0; q < 4; q++) { const a2 = T * 1.4 + q * 1.5708, r = 24 + 2 * Math.sin(T * 3 + q); pxl(ix + Math.cos(a2) * r, iy + Math.sin(a2) * r * .8, 2, ac, .9); }
     }
     ctx.restore();
-    const nm = w.n + (lv ? `  +${lv}` : '');
+    const nm = locked ? 'Arma bloqueada' : w.n + (lv ? `  +${lv}` : '');
     txt(nm, x + 80, y + 22, 17, own ? '#fff' : '#889', 'left', 'bold'); txt(tn, x + 80 + txtW(nm, 17, 'bold') + 10, y + 21, 12, tc, 'left', 'bold');
     const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
-    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
-    if (!eq) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
-    txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
-    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, col: save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: '#c98a30', size: 14 });
+    txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * (1 + .12 * lv) * STAR_MULT[wStar(w.id)])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
+    if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
+    if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
+    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { save.gold -= w.price; save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');
   });
@@ -1811,8 +1862,8 @@ function hubFuse() {
     const c = CLASSES[save.cls];
     c.weapons.forEach((w, i) => {
       const x = 197 + i * 117, tot = wTotal(w.id), st = wStar(w.id);
-      btn(x, 116, 110, 40, '', () => fuseSel = i, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
-      weaponIcon(w.id, x + 28, 136, 1.6); txt(tot ? 'x' + tot : '—', x + 54, 142, 15, tot ? '#fff' : '#667', 'left', 'bold');
+      btn(x, 116, 110, 40, '', () => { if (!save.own[save.cls][i] && !weaponReq(i).ok) lockClick(w.id); else fuseSel = i; }, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
+      if (!save.own[save.cls][i] && !weaponReq(i).ok) drawIcon('lock', x + 55, 136, 1.8); else { weaponIcon(w.id, x + 28, 136, 1.6); txt(tot ? 'x' + tot : '—', x + 54, 142, 15, tot ? '#fff' : '#667', 'left', 'bold'); }
       if (st) drawIcon('star', x + 98, 126, 1.3);
     });
     const w = c.weapons[fuseSel], a = save.wst[w.id], st = wStar(w.id), rq = weaponReq(fuseSel), cp = copyPrice(fuseSel);
@@ -2148,6 +2199,51 @@ function drawConflict() {
   wrap(cf.reason === 'legacy' ? 'O save que não escolheres deixa de existir. O da conta fica guardado online.' : 'Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.', 150, 392, 500, 15, 13, '#9ab');
 }
 
+/* ----- cadeados, desbloqueios e animacao ----- */
+let ua = null, lkShake = {}, hubToast = { t: 0, s: '', col: '#fff' }, charStrip = null;
+const tabLv = t => t === 'ench' ? 15 : t === 'fuse' ? FUSE_LV : 0;
+const tabOpen = t => !save || save.pl.lv >= tabLv(t);
+function lockClick(key) { lkShake[key] = .35; SFX.locked(); }
+function lkOff(key) { return lkShake[key] > 0 ? Math.sin(T * 70) * 3 * lkShake[key] / .35 : 0; }
+function drawLockBig(cx, cy, k, o) {
+  ctx.save(); ctx.translate(Math.round(cx), Math.round(cy)); const bw = 30 * k, bh = 24 * k, top = -bh / 2 - 8 * k - o * 4 * k;
+  ctx.strokeStyle = '#d0d4e4'; ctx.lineWidth = Math.max(2, 5 * k); ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(9 * k, -bh / 2 + 2 * k); ctx.lineTo(9 * k, top); ctx.arc(0, top, 9 * k, 0, Math.PI, true); ctx.lineTo(-9 * k, -bh / 2 + 2 * k - o * 12 * k); ctx.stroke();
+  ctx.fillStyle = '#8a6418'; ctx.fillRect(-bw / 2, -bh / 2, bw, bh); ctx.fillStyle = '#c9962a'; ctx.fillRect(-bw / 2 + k, -bh / 2 + k, bw - 2 * k, bh - 3 * k); ctx.fillStyle = '#f0c860'; ctx.fillRect(-bw / 2 + k, -bh / 2 + k, bw - 2 * k, 3 * k);
+  ctx.fillStyle = '#2a1a08'; ctx.beginPath(); ctx.arc(0, -2 * k, 3 * k, 0, 7); ctx.fill(); ctx.fillRect(-1.2 * k, -2 * k, 2.4 * k, 7 * k); ctx.restore();
+}
+function markUnl(sv) {
+  sv.unl = sv.unl || {};
+  for (const c in CLASSES) CLASSES[c].weapons.forEach((w, i) => { const r = WEAPON_REQ[i]; if (sv.pl.lv >= r.lv && !(r.raid !== undefined && !((sv.raids[r.raid] || [0])[0] > 0))) sv.unl[w.id] = 1; });
+  for (const t of ['ench', 'fuse']) if (sv.pl.lv >= tabLv(t)) sv.unl['t_' + t] = 1;
+}
+function checkUnlocks() {
+  if (!save || ua) return; if (!save.unl) { markUnl(save); persist(); return; }
+  let q = null; CLASSES[save.cls].weapons.forEach((w, i) => { if (!q && weaponReq(i).ok && !save.unl[w.id]) q = { key: w.id, name: w.n, w: w.id }; });
+  for (const t of ['ench', 'fuse']) if (!q && tabOpen(t) && !save.unl['t_' + t]) q = { key: 't_' + t, name: t === 'ench' ? 'Encantar' : 'Fusão' };
+  if (q) { save.unl[q.key] = 1; persist(); ua = Object.assign({ t: 0, sp: [], fx: false }, q); }
+}
+function updateUnlock(dt) {
+  for (const k in lkShake) { lkShake[k] -= dt; if (lkShake[k] <= 0) delete lkShake[k]; } if (hubToast.t > 0) hubToast.t -= dt;
+  if (!ua) return; ua.t += dt;
+  if (ua.t > .6 && !ua.fx) { ua.fx = true; SFX.unlock(); for (let i = 0; i < 60; i++) { const a = Math.random() * 6.283, v = 80 + Math.random() * 260; ua.sp.push({ x: UW / 2, y: 175, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, l: .9 + Math.random() * .6, c: i % 3 ? '#ffd34a' : '#fff' }); } }
+  for (const q of ua.sp) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 260 * dt; q.l -= dt; } ua.sp = ua.sp.filter(q => q.l > 0);
+  if (ua.t > 4.2) ua = null;
+}
+function drawUnlock() {
+  if (!ua) return; const o = Math.max(0, Math.min(1, (ua.t - .55) / .35)), shake = ua.t < .6 ? Math.sin(ua.t * 60) * 3 * (ua.t / .6) : 0;
+  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H);
+  if (o > 0 && o < 1) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd34a'; ctx.globalAlpha = (1 - o) * .5; ctx.beginPath(); ctx.arc(UW / 2, 175, 50 + o * 140, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  drawLockBig(UW / 2 + shake, 175, 4.5, o);
+  for (const q of ua.sp) { ctx.globalAlpha = Math.max(0, Math.min(1, q.l * 2)); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
+  if (ua.t > .7) { const a = Math.min(1, (ua.t - .7) * 3); ctx.globalAlpha = a; txt('DESBLOQUEADO!', UW / 2, 300, 38, '#ffd34a', 'center', 'bold'); txt(ua.name, UW / 2, 336, 24, '#fff', 'center', 'bold'); if (ua.w) weaponIcon(ua.w, UW / 2, 392, 4); ctx.globalAlpha = 1; }
+  ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { if (ua && ua.t > .9) ua = null; } });
+}
+function drawTabLock(t) {
+  const lv = tabLv(t), nm = t === 'ench' ? 'Encantar' : 'Fusão';
+  drawLockBig(487 + lkOff(t), 220, 5, 0); txt(nm, 487, 330, 26, '#fff', 'center', 'bold'); txt(`Desbloqueia no Nível ${lv}`, 487, 364, 20, '#f88', 'center', 'bold');
+  txt(`O teu nível: ${save.pl.lv}`, 487, 390, 14, '#9ab', 'center'); bar(387, 402, 200, 8, Math.min(1, save.pl.lv / lv), '#a8821f');
+  ui.push({ x: 197, y: 90, w: 585, h: 385, fn: () => lockClick(t) });
+}
 /* ----- Pets (em breve) ----- */
 const PET_EGG = makeSprite(['..eeee..', '.eeeeee.', 'eewweeee', 'eewweeee', 'eeeeeeee', 'eeeeeeee', '.eeeeee.', '..eeee..'], { e: '#2f2f4a', w: '#4f4f72' }, 1, false);
 function hubPets() {
@@ -2319,21 +2415,22 @@ function drawWorld() {
   ctx.strokeStyle = '#c9952a'; ctx.lineWidth = 1; ctx.strokeRect(4.5, 4.5, W - 9, H - 9);
   ctx.fillStyle = '#e6b53a'; for (const [cx, cy] of [[8, 8], [W - 8, 8], [8, H - 8], [W - 8, H - 8]]) { ctx.beginPath(); ctx.moveTo(cx, cy - 6); ctx.lineTo(cx + 6, cy); ctx.lineTo(cx, cy + 6); ctx.lineTo(cx - 6, cy); ctx.fill(); }
 }
-function cdBar(y, key, name, cd, max, ready, col) {
-  const bl = ready && Math.floor(T * 4) % 2;
-  rr(12, y - 1, 30, 15, 4); ctx.fillStyle = ready ? (bl ? '#fc6' : '#a80') : '#333'; ctx.fill(); txt(keyName(key).slice(0, 3), 27, y + 10, 11, ready ? '#000' : '#999', 'center', 'bold');
-  bar(46, y, 190, 13, ready ? 1 : 1 - Math.max(0, cd) / max, ready ? (bl ? '#ffe9a0' : col) : '#6a6a58');
-  txt(ready ? name + ' — PRONTO!' : name + ` (${Math.ceil(cd)}s)`, 141, y + 10, 10, '#000', 'center', 'bold');
+function abilBox(x, y, key, name, cd, max, ready, col) {
+  const w = 130, h = 36, bl = ready && Math.floor(T * 4) % 2;
+  rr(x, y, w, h, 6); ctx.fillStyle = '#0007'; ctx.fill(); ctx.strokeStyle = ready ? (bl ? '#ffe9a0' : col) : '#ffffff40'; ctx.lineWidth = 2; ctx.stroke();
+  if (!ready) { ctx.save(); rr(x, y, w, h, 6); ctx.clip(); ctx.fillStyle = '#000b'; ctx.fillRect(x, y, w, h * Math.max(0, Math.min(1, cd / max))); ctx.restore(); }
+  rr(x + 6, y + 6, 24, 24, 5); ctx.fillStyle = ready ? '#a80' : '#333'; ctx.fill(); txt(keyName(key).slice(0, 3), x + 18, y + 24, 15, ready ? '#000' : '#999', 'center', 'bold');
+  txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
 function drawHUD() {
   const p = R.p, M = MISSIONS[R.m], w = curW();
-  panel(6, 6, 238, 128, '#000a', '#ffffff30');
-  drawIcon('heart', 28, 23, 2); bar(46, 15, 190, 16, p.hp / p.max, '#d33'); txt(`${Math.ceil(p.hp)}/${p.max}`, 141, 28, 12, '#fff', 'center', 'bold');
-  cdBar(40, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6');
-  cdBar(60, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
-  txt(keyName(binds.dash).slice(0, 5), 12, 91, 10, '#6cf', 'left', 'bold'); bar(46, 81, 190, 9, 1 - Math.max(0, p.dashCd), '#4cf');
-  weaponIcon(w.id, 24, 106, 1.1); txt(`${w.n}${wlvl() ? ' +' + wlvl() : ''}`, 42, 109, 12, '#fff');
-  txt(`Nv ${save.pl.lv}`, 12, 127, 11, '#6cf', 'left', 'bold'); bar(46, 119, 190, 6, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf');
+  ctx.globalAlpha = .85;
+  drawIcon('heart', 20, 21, 2); bar(36, 12, 190, 16, p.hp / p.max, '#d33', '#0006'); txt(`${Math.ceil(p.hp)}/${p.max}`, 131, 25, 12, '#fff', 'center', 'bold');
+  txt(keyName(binds.dash).slice(0, 5), 8, 47, 10, '#6cf', 'left', 'bold'); bar(36, 38, 190, 7, 1 - Math.max(0, p.dashCd), '#4cf', '#0006');
+  weaponIcon(w.id, 18, 66, 1.1); txt(`${w.n}${wlvl() ? ' +' + wlvl() : ''}`, 36, 69, 12, '#fff');
+  txt(`Nv ${save.pl.lv}`, 8, 88, 11, '#6cf', 'left', 'bold'); bar(36, 81, 190, 6, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf', '#0006');
+  ctx.globalAlpha = 1;
+  const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
   txt(autoAtk ? `AUTO-ATAQUE (${keyName(binds.auto)})` : '', W - 12, 70, 12, '#7f7', 'right', 'bold');
   txt(R.phase === 'hunt' ? (R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : 'Derrota o Boss!', W - 12, 26, 16, '#fff', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
   if (R.raid) txt(`Raid ${RAID_D[R.raid.d].n} · Onda ${R.wave}/4`, W - 12, 92, 13, RAID_D[R.raid.d].col, 'right', 'bold');
@@ -2372,10 +2469,10 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
+  ui = []; cv.style.cursor = ''; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (cheatMsgT > 0) cheatMsgT -= dt; if (save) { if (save.cheat && save.cheat.gold) save.gold = 999999; if (save.gold > 999999) save.gold = 999999; }
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) update(dt);
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: drawHub, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'cheats', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawUnlock(); }, options: drawOptions, cheats: drawCheats, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
   requestAnimationFrame(frame);

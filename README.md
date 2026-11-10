@@ -154,6 +154,7 @@ Quatro peças que caem dos inimigos e dos bosses (nos bosses e nas raids a rarid
 - **Raridade:** cada nível de raridade acrescenta mais um bónus aleatório (Mítico tem 4). Lendário e Mítico podem trazer um **efeito especial**.
 - **Venda:** itens que não queiras podem ser vendidos por ouro (há botão para vender todos os Comuns).
 - **Nível do item:** sobe com a zona, a onda e também com o **teu nível**, por isso o equipamento acompanha a tua evolução. Lendário e Mítico são raros (cerca de 1% e 0,1% no início, até ~7% e ~2,5% nas raids mais difíceis).
+- **Atalho no Personagem:** passa o rato por um slot para veres os itens da mochila para esse slot (com setas melhor/pior) e usa **Shift + clique** no slot para equipar o melhor.
 - **Melhor ou pior?** Na Mochila, cada item mostra **MELHOR / PIOR / SIMILAR** em relação ao equipado, com a diferença de cada atributo. Na loja de armas vês a diferença de dano total face à arma equipada.
 
 | Bónus possível | Descrição |
@@ -186,6 +187,8 @@ Chances base: +1: 100% · +2: 95% · +3: 90% · +4: 80% · +5: 70% · +6: 60% ·
 - **Nível infinito.** Ganhas XP ao matar inimigos e bosses (mais nas raids difíceis). O ouro máximo é **999.999**.
 - Cada nível dá **+4 de vida**, **+1% de dano** e **3 pontos de atributo**.
 - Podes redistribuir os pontos por ouro (50 × o teu nível). Mantém o botão **+** premido para gastar pontos mais depressa.
+- **Desbloqueios:** a **Fusão** abre no nível 10 e o **Encantar** no nível 15; as armas mais fortes pedem nível (e raids). O que está bloqueado aparece com um cadeado e, ao desbloquear, há uma animação.
+- **Inimigos:** ficam mais fortes com o teu nível (vida e dano), para o desafio acompanhar a tua evolução.
 
 | Atributo | Efeito por ponto |
 |---|---|
