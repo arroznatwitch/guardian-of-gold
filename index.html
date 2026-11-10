@@ -361,24 +361,24 @@ const CLASSES = {
   knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Redemoinho', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Gira a lâmina e fere tudo à volta.',
     weapons: [
       { id: 'k_sword',  n: 'Espada de Ferro',    price: 0,   t: 'melee', dmg: 1,   cd: .35, range: 70,  arc: .45, kb: 240, info: 'Rápida e equilibrada.', sk: { n: 'Investida', cd: 6, d: 'Lança-te em frente ferindo tudo no caminho.' } },
-      { id: 'k_axe',    n: 'Machado de Guerra',  price: 400, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
-      { id: 'k_spear',  n: 'Lança do Caçador',   price: 1800, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
-      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 7000, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
-      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 20000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
+      { id: 'k_axe',    n: 'Machado de Guerra',  price: 600, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
+      { id: 'k_spear',  n: 'Lança do Caçador',   price: 2700, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
+      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 10500, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
+      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 30000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
   archer: { name: 'Arqueiro', hp: 95, spd: 195, sp: 'Chuva de Flechas', desc: 'Ataca de longe. Rápido mas frágil.', spDesc: 'Dispara 14 flechas em todas as direções.',
     weapons: [
       { id: 'a_bow',    n: 'Arco Curto',   price: 0,   t: 'arrow', dmg: 1,  cd: .38, count: 1, spread: 0,  spd: 560, pierce: 0, info: 'Flecha rápida e certeira.', sk: { n: 'Salva Rápida', cd: 6, d: '7 flechas em rápida sequência.' } },
-      { id: 'a_triple', n: 'Arco Triplo',  price: 400, t: 'arrow', dmg: 0.9, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
-      { id: 'a_cross',  n: 'Besta Pesada', price: 1800, t: 'arrow', dmg: 3.6,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
-      { id: 'a_fire',   n: 'Arco Ígneo',   price: 7000, t: 'arrow', dmg: 3, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
-      { id: 'a_dark',   n: 'Arco Sombrio', price: 20000, t: 'arrow', dmg: 1.4, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
+      { id: 'a_triple', n: 'Arco Triplo',  price: 600, t: 'arrow', dmg: 0.9, cd: .55, count: 3, spread: .2, spd: 560, pierce: 0, info: '3 flechas em leque.', sk: { n: 'Leque', cd: 7, d: '11 flechas num leque gigante.' } },
+      { id: 'a_cross',  n: 'Besta Pesada', price: 2700, t: 'arrow', dmg: 3.6,  cd: .95, count: 1, spread: 0,  spd: 780, pierce: 3, info: 'Lenta, atravessa inimigos.', sk: { n: 'Virote Perfurante', cd: 7, d: 'Virote enorme que atravessa tudo.' } },
+      { id: 'a_fire',   n: 'Arco Ígneo',   price: 10500, t: 'arrow', dmg: 3, cd: .42, count: 1, spread: 0, spd: 580, pierce: 0, burn: true, info: 'Flechas que queimam.', sk: { n: 'Flecha Explosiva', cd: 8, d: 'Explode em área e incendeia.' } },
+      { id: 'a_dark',   n: 'Arco Sombrio', price: 30000, t: 'arrow', dmg: 1.4, cd: .3,  count: 2, spread: .1, spd: 620, pierce: 1, info: 'Duas flechas, cadência alta.', sk: { n: 'Armadilha', cd: 9, d: 'Coloca uma armadilha no cursor.' } } ] },
   mage: { name: 'Mago', hp: 80, spd: 175, sp: 'Nova Gélida', desc: 'Magia à distância com efeitos especiais.', spDesc: 'Explosão de gelo que fere e atrasa todos.',
     weapons: [
       { id: 'm_fire',   n: 'Cajado de Fogo',  price: 0,   t: 'bolt', kind: 'fire', dmg: 1.75, cd: .6, spd: 380, aoe: 55, info: 'Bola de fogo explosiva que deixa chamas no chão.', sk: { n: 'Meteoro', cd: 8, d: 'Chama um meteoro que incendeia o chão.' } },
-      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 400, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
-      { id: 'm_bolt',   n: 'Cajado de Raios', price: 1800, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
-      { id: 'm_arcane', n: 'Cajado Arcano',   price: 7000, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
-      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 20000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
+      { id: 'm_ice',    n: 'Cajado de Gelo',  price: 600, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
+      { id: 'm_bolt',   n: 'Cajado de Raios', price: 2700, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
+      { id: 'm_arcane', n: 'Cajado Arcano',   price: 10500, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
+      { id: 'm_dark',   n: 'Cajado Sombrio',  price: 30000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
 const UPGRADES = [
   { k: 'hp',  n: 'Vitalidade', icon: 'heart', per: 20, sign: '+', unit: '', label: ' vida máxima' },
@@ -396,20 +396,20 @@ function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv
 const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.3, eDmg: 1.2, wHP: .10, wHP2: .003, wDM: .06, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.9, archer: 1, mage: .72 } };
-const COIN_RATE = .3;
+const COIN_RATE = .25;
 const lvHP = () => 1 + TUNE.lHP * (((save && save.pl.lv) || 1) - 1), lvDM = () => 1 + TUNE.lDM * (((save && save.pl.lv) || 1) - 1);   // os inimigos acompanham o nivel do jogador   // ouro por inimigo (reequilibrio v1.1)
 const WEAPON_REQ = [{ lv: 1 }, { lv: 6 }, { lv: 12, raid: 0 }, { lv: 20, raid: 1 }, { lv: 28, raid: 2 }];
 const RAID_D = [
-  { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 2,  spd: 1.05 },
-  { n: 'Normal',   col: '#4a9aff', hp: 3,   dmg: 1.8, gold: 4,  spd: 1.1 },
-  { n: 'Difícil',  col: '#ff9a2a', hp: 4.5, dmg: 2.4, gold: 8,  spd: 1.15 },
-  { n: 'Pesadelo', col: '#ff4a4a', hp: 7,   dmg: 3.2, gold: 16, spd: 1.2 },
-  { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 30, spd: 1.25 },
+  { n: 'Fácil',    col: '#4cc46a', hp: 2,   dmg: 1.4, gold: 1,  spd: 1.05 },
+  { n: 'Normal',   col: '#4a9aff', hp: 3,   dmg: 1.8, gold: 2,  spd: 1.1 },
+  { n: 'Difícil',  col: '#ff9a2a', hp: 4.5, dmg: 2.4, gold: 4,  spd: 1.15 },
+  { n: 'Pesadelo', col: '#ff4a4a', hp: 7,   dmg: 3.2, gold: 8,  spd: 1.2 },
+  { n: 'Inferno',  col: '#c040ff', hp: 11,  dmg: 4.5, gold: 15, spd: 1.25 },
 ];
 let raidD = 0;
 const ANV_MAX = 12, ANV_CH = [100, 95, 90, 80, 70, 60, 50, 40, 30, 22, 15, 10], LUCKY_BONUS = 15, LUCKY_MAX = 85;
 const luckOk = (lv, id) => ANV_CH[lv] + Math.min(25, 5 * ((save.pity && save.pity[id]) || 0)) < LUCKY_MAX;   // o amuleto so ajuda se a chance for inferior a 85%
-const anvCost = l => 40 * (l + 1) + (l >= 8 ? 100 * (l - 7) : 0), luckyCost = l => 30 + 15 * l, protCost = l => 60 + 30 * l;
+const anvCost = l => 60 * (l + 1) + (l >= 8 ? 150 * (l - 7) : 0), luckyCost = l => 30 + 15 * l, protCost = l => 60 + 30 * l;
 const auraCol = l => l >= 12 ? '#ffd34a' : l >= 10 ? '#ff6a6a' : l >= 5 ? '#7fd0ff' : null;
 
 const EN = {
@@ -1350,12 +1350,12 @@ const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico']
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
 const ATTRS = [['vit', 'Vitalidade', '+14 vida'], ['str', 'Força', '+2% dano'], ['agi', 'Agilidade', '+1.2% velocidade'], ['per', 'Perícia', '+1.2% vel. de ataque']];
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
-const refCost = it => Math.round(30 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1));
+const refCost = it => Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1));
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15));
 const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
-const sellValue = it => Math.round((6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
+const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
 const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
 function itemStats(it) { const m = (1 + .08 * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
@@ -1413,7 +1413,7 @@ function giveLoot(x, y, minR = 0) {
 function bossDown(b) {
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(4, 1 + (R.raid.d >= 2 ? 1 : 0) + (R.raid.d >= 4 ? 1 : 0)) : 1;
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
-  for (let i = 0; i < (R.raid ? 1 + R.raid.d : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
+  for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
   if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
 }
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
@@ -1850,7 +1850,7 @@ function updateAnvil(dt) {
 }
 /* ----- Fusão (armas e equipamento) ----- */
 let fuseSel = 0, fuseMode = 'w', fz = { t: 0, msg: '', msgT: 0, col: '#fff', sparks: [] };
-const copyPrice = i => Math.max(200, Math.round(CLASSES[save.cls].weapons[i].price * .75));   // cada copia custa 75% do preco da arma
+const copyPrice = i => Math.max(300, CLASSES[save.cls].weapons[i].price);   // cada copia custa o preco da arma
 const gSt = it => it.st || 0;
 function starIcons(n, cx, cy, k) { for (let q = 0; q < n; q++) drawIcon('star', cx + (q - (n - 1) / 2) * 9 * k, cy, k); }
 function fxBurst(msg, col) {
