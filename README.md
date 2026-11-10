@@ -2,7 +2,7 @@
 
 # Guardians of Gold
 
-**v1.2.1-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
+**v1.3-BETA** &nbsp;·&nbsp; RPG de ação em pixel-art, no browser
 
 <img src="docs/img/menu.jpg" width="640" alt="Menu do Guardians of Gold">
 
@@ -104,6 +104,40 @@ A **Fusão** desbloqueia no **nível 10** da conta e funciona para armas e para 
 
 - **Armas:** as cópias caem de inimigos, bosses, raids e baús, ou compram-se no ecrã *Fusão* (de 1, 5 ou 10 de cada vez). Juntam-se 5 cópias base para 1★, 5 de 1★ para 2★ e 5 de 2★ para 3★.
 - **Equipamento:** juntam-se 5 peças iguais da Mochila (mesma peça, raridade e estrelas). Fica a peça com melhor refinamento. As peças equipadas não contam.
+
+### Efeitos das estrelas nas habilidades (`E`)
+
+Além do dano, cada estrela melhora a habilidade da arma (por exemplo, o Cajado de Fogo passa de 1 meteoro para 2, 3 e, a 3★, uma **chuva de meteoros**).
+
+**Cavaleiro**
+
+| Arma | 1★ | 2★ | 3★ |
+|---|---|---|---|
+| Espada de Ferro | 2 investidas | 3 investidas | 4 investidas |
+| Machado de Guerra | 2 ondas de choque | 3 ondas de choque | 4 ondas de choque |
+| Lança do Caçador | 3 lanças em leque | 5 lanças em leque | 7 lanças em leque |
+| Martelo do Trovão | 6 raios | 8 raios | 12 raios |
+| Lâmina Vampírica | 8s de duração | 10s de duração | 12s de duração |
+
+**Arqueiro**
+
+| Arma | 1★ | 2★ | 3★ |
+|---|---|---|---|
+| Arco Curto | 10 flechas | 14 flechas | 20 flechas |
+| Arco Triplo | 15 flechas no leque | 19 flechas no leque | 23 flechas no leque |
+| Besta Pesada | 2 virotes | 3 virotes | 5 virotes |
+| Arco Ígneo | explosão maior | 2 flechas de fogo | 3 flechas, explosão enorme |
+| Arco Sombrio | 2 armadilhas | 3 armadilhas | 5 armadilhas |
+
+**Mago**
+
+| Arma | 1★ | 2★ | 3★ |
+|---|---|---|---|
+| Cajado de Fogo | 2 meteoros | 3 meteoros | CHUVA DE METEOROS |
+| Cajado de Gelo | área maior | área e gelo maiores | nova gigante (5s de gelo) |
+| Cajado de Raios | 10 raios | 14 raios | 20 raios |
+| Cajado Arcano | escudo de 5s | escudo de 6s | escudo de 8s |
+| Cajado Sombrio | orbes durante 8s | orbes durante 10s | orbes durante 13s |
 
 ## Equipamento
 
