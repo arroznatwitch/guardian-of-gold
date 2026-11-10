@@ -14,6 +14,7 @@ Escolhe um herói, farma ondas infinitas, enfrenta raids muito difíceis, equipa
 
 - **Localmente:** descarrega o repositório e abre o `index.html` no Chrome, Edge ou Firefox.
 - **Online:** se o GitHub Pages estiver ativo, em <https://arroznatwitch.github.io/guardian-of-gold/>.
+- **Wiki com pesquisa:** abre o `wiki.html` (ou <https://arroznatwitch.github.io/guardian-of-gold/wiki.html>).
 - O progresso fica guardado **no teu browser** (não limpes os dados do site se quiseres manter o save).
 - Português (Portugal) e English (UK), em **Opções**.
 
