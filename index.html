@@ -555,33 +555,45 @@ function special() {
 /* ---- E: habilidade da arma ---- */
 function aimPoint(maxD) { const p = R.p; let dx = mouse.x - p.x, dy = mouse.y - p.y; const d = Math.hypot(dx, dy); if (d > maxD) { dx *= maxD / d; dy *= maxD / d; } return { x: p.x + dx, y: p.y + dy }; }
 const sched = (t, fn) => R.sched.push({ t, fn });
+const SS = () => wStar(curW().id);
+const STAR_FX = {"k_sword": ["2 investidas", "3 investidas", "4 investidas"], "k_axe": ["2 ondas de choque", "3 ondas de choque", "4 ondas de choque"], "k_spear": ["3 lanças em leque", "5 lanças em leque", "7 lanças em leque"], "k_hammer": ["6 raios", "8 raios", "12 raios"], "k_blade": ["8s de duração", "10s de duração", "12s de duração"], "a_bow": ["10 flechas", "14 flechas", "20 flechas"], "a_triple": ["15 flechas no leque", "19 flechas no leque", "23 flechas no leque"], "a_cross": ["2 virotes", "3 virotes", "5 virotes"], "a_fire": ["explosão maior", "2 flechas de fogo", "3 flechas, explosão enorme"], "a_dark": ["2 armadilhas", "3 armadilhas", "5 armadilhas"], "m_fire": ["2 meteoros", "3 meteoros", "CHUVA DE METEOROS"], "m_ice": ["área maior", "área e gelo maiores", "nova gigante (5s de gelo)"], "m_bolt": ["10 raios", "14 raios", "20 raios"], "m_arcane": ["escudo de 5s", "escudo de 6s", "escudo de 8s"], "m_dark": ["orbes durante 8s", "orbes durante 10s", "orbes durante 13s"]};
 const SK = {
-  k_sword() { const p = R.p; p.lunge = { t: .22, hit: new Set(), dm: DM() }; p.dashT = .22; p.vx = Math.cos(p.face) * 760; p.vy = Math.sin(p.face) * 760; p.inv = Math.max(p.inv, .35); },
-  k_axe() { const p = R.p; areaDmg(p.x, p.y, 125, 3 * DM(), { kb: 300, stun: 1.3 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 125, t: .4, max: .4, col: '#c93' }); burst(p.x, p.y, '#a86', 25); R.shake = 14; SFX.boom(); },
-  k_spear() { const p = R.p; pProj({ x: p.x, y: p.y, vx: Math.cos(p.face) * 780, vy: Math.sin(p.face) * 780, a: p.face, r: 9, dmg: 5 * DM(), kind: 'spear', pierce: 99, life: 1.1 }); SFX.slash(); },
+  k_sword() {
+    const n = 1 + SS(), lunge = () => { const p = R.p; p.lunge = { t: .22, hit: new Set(), dm: DM() * (n > 1 ? .8 : 1) }; p.dashT = .22; p.vx = Math.cos(p.face) * 760; p.vy = Math.sin(p.face) * 760; p.inv = Math.max(p.inv, .35); };
+    lunge(); for (let i = 1; i < n; i++) sched(i * .32, lunge);
+  },
+  k_axe() {
+    const n = 1 + SS();
+    for (let i = 0; i < n; i++) { const f = () => { const p = R.p, r = 125 + i * 50; areaDmg(p.x, p.y, r, 3 * DM() * (n > 1 ? .8 : 1), { kb: 300, stun: 1.3 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r, t: .4, max: .4, col: '#c93' }); burst(p.x, p.y, '#a86', 25); R.shake = 14; SFX.boom(); }; if (i) sched(i * .32, f); else f(); }
+  },
+  k_spear() { const p = R.p, n = [1, 3, 5, 7][SS()]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .14; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 780, vy: Math.sin(a) * 780, a, r: 9, dmg: 5 * DM() * (n > 1 ? .7 : 1), kind: 'spear', pierce: 99, life: 1.1 }); } SFX.slash(); },
   k_hammer() {
-    const p = R.p, t = targets().filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 400).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)).slice(0, 4);
+    const p = R.p, st = SS(), t = targets().filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 400).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)).slice(0, [4, 6, 8, 12][st]);
     if (!t.length) R.fx.push({ k: 'bolt', x: mouse.x, y: mouse.y, t: .3, max: .3 });
-    for (const e of t) { dmgE(e, 4 * DM(), 0, 0); stunE(e, .9); R.fx.push({ k: 'bolt', x: e.x, y: e.y, t: .3, max: .3 }); burst(e.x, e.y, '#ff6', 8); }
+    for (const e of t) { dmgE(e, 4 * DM() * (st ? .85 : 1), 0, 0); stunE(e, .9); R.fx.push({ k: 'bolt', x: e.x, y: e.y, t: .3, max: .3 }); burst(e.x, e.y, '#ff6', 8); }
     R.shake = 10; SFX.thunder();
   },
-  k_blade() { R.p.rage = 6; R.texts.push({ x: R.p.x, y: R.p.y - 34, s: 'SEDE DE SANGUE!', t: 1.2, col: '#f55' }); },
-  a_bow() { for (let i = 0; i < 7; i++) sched(i * .07, () => { arrow(R.p.face, 1.1 * DM(), { spd: 700, pierce: 0 }); SFX.arrow(); }); },
-  a_triple() { const p = R.p; for (let i = 0; i < 11; i++) arrow(p.face + (i - 5) * .15, .9 * DM(), { spd: 600, pierce: 0 }); SFX.arrow(); },
-  a_cross() { const p = R.p; pProj({ x: p.x, y: p.y, vx: Math.cos(p.face) * 950, vy: Math.sin(p.face) * 950, a: p.face, r: 9, dmg: 6 * DM(), kind: 'bigbolt', pierce: 99, life: 1.1 }); SFX.slash(); },
-  a_fire() { const p = R.p; pProj({ x: p.x, y: p.y, vx: Math.cos(p.face) * 600, vy: Math.sin(p.face) * 600, a: p.face, r: 8, dmg: 3.5 * DM(), kind: 'boom', aoe: 95, burn: true }); SFX.fire(); },
-  a_dark() { const q = aimPoint(280); R.traps.push({ x: q.x, y: q.y, t: 12, r: 32, dmg: 4 * DM() }); },
-  m_fire() { R.tels.push({ x: mouse.x, y: mouse.y, r: 85, t: .8, max: .8, dmg: 5 * DM(), from: 'p', col: '#fa4', burn: true }); SFX.fire(); },
-  m_ice() { const q = mouse; areaDmg(q.x, q.y, 115, 1 * DM(), { stun: 3 }); R.fx.push({ k: 'ring', x: q.x, y: q.y, r: 115, t: .5, max: .5, col: '#8cf' }); burst(q.x, q.y, '#bef', 25); spark(q.x, q.y, '#e8ffff', 30, 240, .9, 3, 160); R.fx.push({ k: 'crystals', x: q.x, y: q.y, r: 115, t: 1.3, max: 1.3 }); SFX.ice(); },
+  k_blade() { R.p.rage = 6 + 2 * SS(); R.texts.push({ x: R.p.x, y: R.p.y - 34, s: 'SEDE DE SANGUE!', t: 1.2, col: '#f55' }); },
+  a_bow() { const st = SS(), n = [7, 10, 14, 20][st]; for (let i = 0; i < n; i++) sched(i * (n > 14 ? .05 : .07), () => { arrow(R.p.face, 1.1 * DM() * (st ? .85 : 1), { spd: 700, pierce: 0 }); SFX.arrow(); }); },
+  a_triple() { const p = R.p, st = SS(), n = 11 + 4 * st; for (let i = 0; i < n; i++) arrow(p.face + (i - (n - 1) / 2) * .15, .9 * DM() * (st ? .85 : 1), { spd: 600, pierce: 0 }); SFX.arrow(); },
+  a_cross() { const p = R.p, n = [1, 2, 3, 5][SS()]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .1; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 950, vy: Math.sin(a) * 950, a, r: 9, dmg: 6 * DM() * (n > 1 ? .8 : 1), kind: 'bigbolt', pierce: 99, life: 1.1 }); } SFX.slash(); },
+  a_fire() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .14; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 600, vy: Math.sin(a) * 600, a, r: 8, dmg: 3.5 * DM() * (n > 1 ? .8 : 1), kind: 'boom', aoe: [95, 120, 120, 150][st], burn: true }); } SFX.fire(); },
+  a_dark() { const q = aimPoint(280), st = SS(), n = [1, 2, 3, 5][st]; for (let i = 0; i < n; i++) R.traps.push({ x: q.x + (i ? (Math.random() - .5) * 130 : 0), y: q.y + (i ? (Math.random() - .5) * 130 : 0), t: 12, r: 32 + 4 * st, dmg: 4 * DM() * (n > 1 ? .8 : 1) }); },
+  m_fire() {
+    const st = SS(), n = [1, 2, 3, 9][st], mx = mouse.x, my = mouse.y, rain = st === 3;
+    for (let i = 0; i < n; i++) sched(i * (rain ? .12 : .22), () => { const a = Math.random() * 6.283, d = i ? Math.random() * (rain ? 170 : 95) : 0; R.tels.push({ x: mx + Math.cos(a) * d, y: my + Math.sin(a) * d, r: rain ? 75 : 85, t: .8, max: .8, dmg: 5 * DM() * (n > 1 ? (rain ? .7 : .85) : 1), from: 'p', col: '#fa4', burn: true }); SFX.fire(); });
+  },
+  m_ice() { const q = mouse, st = SS(), r = [115, 130, 145, 165][st]; areaDmg(q.x, q.y, r, 1 * DM(), { stun: [3, 3.5, 4, 5][st] }); R.fx.push({ k: 'ring', x: q.x, y: q.y, r, t: .5, max: .5, col: '#8cf' }); burst(q.x, q.y, '#bef', 25 + 8 * st); spark(q.x, q.y, '#e8ffff', 30, 240, .9, 3, 160); R.fx.push({ k: 'crystals', x: q.x, y: q.y, r, t: 1.3, max: 1.3 }); SFX.ice(); },
   m_bolt() {
-    for (let i = 0; i < 7; i++) sched(i * .2, () => {
+    const st = SS(), n = [7, 10, 14, 20][st];
+    for (let i = 0; i < n; i++) sched(i * 1.4 / n, () => {
       const t = targets(); let x, y;
       if (t.length) { const e = t[Math.floor(Math.random() * t.length)]; x = e.x; y = e.y; } else { x = mouse.x + (Math.random() - .5) * 160; y = mouse.y + (Math.random() - .5) * 160; }
-      areaDmg(x, y, 45, 2.5 * DM()); R.fx.push({ k: 'bolt', x, y, t: .25, max: .25 }); spark(x, y, '#ffe14a', 14, 200, .4, 3, 0); spark(x, y, '#fff', 8, 150, .3, 3, 0); SFX.thunder();
+      areaDmg(x, y, 45, 2.5 * DM() * (st ? .85 : 1)); R.fx.push({ k: 'bolt', x, y, t: .25, max: .25 }); spark(x, y, '#ffe14a', 14, 200, .4, 3, 0); spark(x, y, '#fff', 8, 150, .3, 3, 0); SFX.thunder();
     });
   },
-  m_arcane() { R.p.inv = Math.max(R.p.inv, 4); R.p.shield = 4; R.fx.push({ k: 'ring', x: R.p.x, y: R.p.y, r: 40, t: .4, max: .4, col: '#c8f' }); },
-  m_dark() { R.p.orbs = 6; },
+  m_arcane() { const d = [4, 5, 6, 8][SS()]; R.p.inv = Math.max(R.p.inv, d); R.p.shield = d; R.fx.push({ k: 'ring', x: R.p.x, y: R.p.y, r: 40, t: .4, max: .4, col: '#c8f' }); },
+  m_dark() { R.p.orbs = [6, 8, 10, 13][SS()]; },
 };
 function skill() {
   const p = R.p, w = curW();
@@ -834,6 +846,7 @@ Object.assign(EN_DICT, {"Ativo": "Active", "Código aceite.": "Code accepted.", 
 Object.assign(EN_DICT, {"Diamantes": "Diamonds", " · Cópias:": " · Copies:", "Cópia:": "Copy:"});
 Object.assign(EN_DICT, {"Fusão": "Fusion", "Recompensas": "Rewards", "Juntar 5 armas iguais dá 1 do nível seguinte. 2 de 5 estrelas dão 1 Ascendida (MAX).": "Merging 5 identical weapons gives 1 of the next tier. 2 five-star weapons give 1 Ascended (MAX).", "Estrela atual: nenhuma": "Current star: none", "Estrela atual: ASCENDIDA": "Current star: ASCENDED", "Estrela atual:": "Current star:", "Próximo (": "Next (", "ASCENDIDA": "ASCENDED", "FUSÃO!": "FUSION!", "Cópias caem de inimigos, bosses, raids e baús, e também podes comprá-las aqui.": "Copies drop from enemies, bosses, raids and chests, and you can also buy them here.", "Cópias de": "Copies of", "Comprar cópia": "Buy copy", "Juntar tudo": "Merge all", "A 1.ª skin custa ouro; as outras custam diamantes ◆ (+10 por cada 10 níveis).": "The 1st skin costs gold; the others cost diamonds ◆ (+10 every 10 levels).", "Baú dourado:": "Golden chest:", "Baú do nível": "Level chest", "baús por abrir": "chests to open", "Sem baús por abrir": "No chests to open", "Abrir baú": "Open chest", "Abrir todos": "Open all", "Última abertura": "Last opening", "Ainda não abriste nenhum baú.": "You haven't opened any chest yet.", "Sobe de nível para ganhares mais baús.": "Level up to earn more chests.", "Próximo baú dourado: nível": "Next golden chest: level", "baú(s)": "chest(es)", " vendas)": " sales)", "pontos de atributo": "attribute points", "Ainda por vir": "Coming soon", "Companheiros que te seguem": "Companions that follow you", "e lutam ao teu lado.": "and fight by your side."});
 Object.assign(EN_DICT, {"Equipamento": "Gear", "Desbloqueia no Nível": "Unlocks at Level", "nível atual:": "current level:", "Junta 5 itens iguais (mesma peça, raridade e estrelas) da Mochila. Fica o de melhor refinamento.": "Merge 5 identical items (same piece, rarity and stars) from the Backpack. The best-refined one is kept.", "Ainda não tens itens repetidos na Mochila.": "You have no duplicate items in the Backpack yet.", "Os itens equipados não contam.": "Equipped items don't count.", "Estrelas dão": "Stars give", "aos bónus da peça.": "to the piece bonuses.", "Fusão:": "Fusion:", "sem estrelas": "no stars", "A Fusão desbloqueia no Nível": "Fusion unlocks at Level", "Junta cópias no ecrã Fusão": "Merge copies on the Fusion screen", "Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.": "Merge 5 identical weapons to gain a star (max 3). Copies drop from enemies, bosses, raids and chests, and you can buy them here."});
+Object.assign(EN_DICT, {"Efeito da habilidade (E):": "Skill effect (E):", "2 investidas": "2 charges", "3 investidas": "3 charges", "4 investidas": "4 charges", "2 ondas de choque": "2 shockwaves", "3 ondas de choque": "3 shockwaves", "4 ondas de choque": "4 shockwaves", "3 lanças em leque": "3 spears in a fan", "5 lanças em leque": "5 spears in a fan", "7 lanças em leque": "7 spears in a fan", "6 raios": "6 lightning bolts", "8 raios": "8 lightning bolts", "12 raios": "12 lightning bolts", "8s de duração": "8s duration", "10s de duração": "10s duration", "12s de duração": "12s duration", "10 flechas": "10 arrows", "14 flechas": "14 arrows", "20 flechas": "20 arrows", "15 flechas no leque": "15 arrows in the fan", "19 flechas no leque": "19 arrows in the fan", "23 flechas no leque": "23 arrows in the fan", "2 virotes": "2 bolts", "3 virotes": "3 bolts", "5 virotes": "5 bolts", "explosão maior": "bigger explosion", "2 flechas de fogo": "2 fire arrows", "3 flechas, explosão enorme": "3 arrows, huge explosion", "2 armadilhas": "2 traps", "3 armadilhas": "3 traps", "5 armadilhas": "5 traps", "2 meteoros": "2 meteors", "3 meteoros": "3 meteors", "CHUVA DE METEOROS": "METEOR SHOWER", "área maior": "bigger area", "área e gelo maiores": "bigger area and freeze", "nova gigante (5s de gelo)": "giant nova (5s freeze)", "10 raios": "10 lightning bolts", "14 raios": "14 lightning bolts", "20 raios": "20 lightning bolts", "escudo de 5s": "5s shield", "escudo de 6s": "6s shield", "escudo de 8s": "8s shield", "orbes durante 8s": "orbs for 8s", "orbes durante 10s": "orbs for 10s", "orbes durante 13s": "orbs for 13s"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1046,7 +1059,7 @@ function drawMenu() {
     if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * 22, hy + Math.sin(ang) * 22, 11, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   });
   txt('Usa W/S ou ↑↓ e Enter · F ecrã inteiro · M som', gx, H - 14, 12, dayT > .5 ? '#fff6d0' : '#9a8fb8', 'center');
-  txt('v1.2.1-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
+  txt('v1.3-BETA', UW - 10, H - 10, 11, '#8a7a50', 'right');
 }
 function drawClass() {
   menuBg(); txt('Escolhe a tua classe', UW / 2, 52, 34, '#f0c060', 'center', 'bold');
@@ -1359,7 +1372,7 @@ function hubChar() {
   // informacao do slot
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && SLOTS.includes(hv) ? save.gear[hv] : null;
-  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
+  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv) txt(hv === 'skin' ? SKINS[save.cls][save.skE[save.cls]].n : 'Vazio', 208, 318, 14, '#889');
   else { txt('Passa o rato por um slot', 208, 318, 12, '#667'); SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 346 + i * 20, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // painel direito
@@ -1698,7 +1711,8 @@ function hubFuse() {
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
     txt(`Dano ×${STAR_MULT[st].toFixed(2)} · Vel. de ataque +${st * 3}%`, 212, 332, 14, '#9cf');
     if (st < STAR_MAX) txt(`Próximo (${st + 1}★): Dano ×${STAR_MULT[st + 1].toFixed(2)} · Vel. de ataque +${(st + 1) * 3}%`, 212, 352, 14, '#6f6');
-    wrap('Junta 5 armas iguais para subir uma estrela (máx. 3). Cópias caem de inimigos, bosses, raids e baús, e podes comprá-las aqui.', 212, 380, 330, 17, 13, '#9ab');
+    txt('Efeito da habilidade (E):', 212, 378, 13, '#f0c060', 'left', 'bold');
+    for (let q = 1; q <= STAR_MAX; q++) txt(`${q}★ ${STAR_FX[w.id][q - 1]}`, 212, 380 + q * 17, 13, st >= q ? '#6f6' : '#778');
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
     txt(rq.ok ? `Comprar cópia · ¢${gfmt(cp)}` : 'Bloqueada', 665, 308, 13, rq.ok ? '#fd5' : '#f88', 'center', 'bold');
     [1, 5, 10].forEach((n, k) => { const cost = cp * n, can = rq.ok && save.gold >= cost; btn(560 + k * 72, 316, 66, 32, 'x' + n, () => { if (can) { save.gold -= cost; a[0] += n; save.own[save.cls][fuseSel] = 1; persist(); SFX.buy(); } else SFX.error(); }, { off: !rq.ok, size: 14, col: can ? '#a06a20' : '#4a3a3a', hot: '#c98a30' }); });
