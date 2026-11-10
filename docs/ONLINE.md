@@ -51,6 +51,19 @@ O ficheiro [`server/test-sql.mjs`](../server/test-sql.mjs) testa estas regras (5
 cd server && npm i @electric-sql/pglite && node test-sql.mjs
 ```
 
+## Desativar e reativar contas (administrador)
+
+Os jogadores **não podem apagar a conta**. Uma conta nunca é eliminada: fica **inativa** e pode ser reativada. Uma conta inativa não consegue entrar (mesmo com a palavra-passe certa), as sessões abertas deixam de valer, desaparece do ranking e dos perfis e o nick continua reservado.
+
+No **SQL Editor** do Supabase:
+
+```sql
+select gog.set_active('nick_do_jogador', false);  -- desativar (por exemplo, conta roubada)
+select gog.set_active('nick_do_jogador', true);   -- reativar
+```
+
+Devolve `deactivated`, `reactivated` ou `not_found`. A função só existe no schema privado `gog`, por isso o jogo e a chave pública não a conseguem chamar. A função antiga `gog_delete` é removida quando corres o `server/supabase.sql`.
+
 ## 4. Limites que convém saber
 
 - **Contas por rede:** no máximo **5 contas por IP**. O servidor usa o cabeçalho `cf-connecting-ip` (ou o último `x-forwarded-for`) e guarda apenas um HMAC do IP, nunca o IP em claro. Apagar uma conta liberta a vaga. Quem está atrás da mesma rede (casa, escola) partilha o limite.

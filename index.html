@@ -520,6 +520,7 @@ const heroSpr = () => save.cls + save.skE[save.cls];
    ===================================================================== */
 const keys = {}; let mouse = { x: W / 2, y: H / 2 }, mdown = false;
 let state = 'menu', tab = 'farm', ui = [], R = null, T = 0, capture = null, keysBack = 'menu', optBack = 'menu', menuConfirm = false, anvSel = 0;
+const DASH_CD = 6;   // espera da esquiva (Shift), em segundos
 const BASE_SPD = 1.12;   // o jogo normal corre um pouco mais depressa
 let gameSpeed = 1; try { gameSpeed = localStorage.getItem('bladehunter_speed') === '2' ? 2 : 1; } catch (e) {}
 function toggleSpeed() { gameSpeed = gameSpeed === 1 ? 2 : 1; try { localStorage.setItem('bladehunter_speed', String(gameSpeed)); } catch (e) {} SFX.click(); }
@@ -766,7 +767,7 @@ function dash() {
   let dx = (K('right') || keys.ArrowRight ? 1 : 0) - (K('left') || keys.ArrowLeft ? 1 : 0);
   let dy = (K('down') || keys.ArrowDown ? 1 : 0) - (K('up') || keys.ArrowUp ? 1 : 0);
   if (!dx && !dy) { dx = Math.cos(p.face); dy = Math.sin(p.face); }
-  const l = Math.hypot(dx, dy); p.vx = dx / l * 540; p.vy = dy / l * 540; p.dashT = .15; p.dashCd = 1; p.inv = Math.max(p.inv, .3); SFX.dash();
+  const l = Math.hypot(dx, dy); p.vx = dx / l * 540; p.vy = dy / l * 540; p.dashT = .15; p.dashCd = DASH_CD; p.inv = Math.max(p.inv, .3); SFX.dash();
 }
 
 /* ---- inimigos & bosses ---- */
@@ -1032,6 +1033,7 @@ Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the 
 Object.assign(EN_DICT, {"Já existem 5 contas criadas a partir desta rede": "There are already 5 accounts created from this network", "Confirmar venda?": "Confirm sale?", "Item raro: pede confirmação": "Rare item: asks to confirm", "Pode ser melhor que o equipado": "May be better than equipped", "parecem melhores que o equipado": "look better than equipped", "● melhor  ● pior  ● igual (vs equipado)": "● better  ● worse  ● same (vs equipped)", "efetivo": "effective"});
 Object.assign(EN_DICT, {"Pedras de evolução:": "Evolution stones:", "Evoluir Nv": "Upgrade Lv", "Nível de item máximo": "Max item level", "Pedra": "Stone", "EVOLUÍDO! Nível": "UPGRADED! Level", "Diamantes insuficientes": "Not enough diamonds", "Refinar: +6% a todos os atributos por nível.": "Refine: +6% to all stats per level.", "Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.": "Enchant: rolls a special effect (costs gold and diamonds). Raid stones raise the item level.", "MÁX": "MAX"});
 Object.assign(EN_DICT, {"Evoluir exige Nv": "Upgrade needs Lv", "Requer nível": "Requires level", "A Bigorna só melhora a arma até ao nível do jogador ÷ 3. Sobe de nível para continuar.": "The Anvil only upgrades a weapon up to player level ÷ 3. Level up to continue."});
+Object.assign(EN_DICT, {"Reforjar": "Reforge", "REFORJADO!": "REFORGED!", "Para desativar ou recuperar a conta fala com o administrador.": "To deactivate or recover your account, contact the administrator.", "Esta conta está desativada. Fala com o administrador.": "This account is deactivated. Contact the administrator."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1439,8 +1441,10 @@ function gearStats() {
   g.xpb = Math.min(25, g.xpb); g.ls = Math.min(6, g.ls);   // tetos   // XP extra tem teto
   return g;
 }
+// pesos de raridade (Comum..Mitico): Lendario ronda 1% e Mitico 0,1% mesmo no melhor caso
+const rarityWeights = b => [70, 24 + b * 1.8, 6 + b * 1.2, .5 + b * .12, .04 + b * .015];
 function rollRarity(boost = 0, min = 0) {
-  const w = [70, 24 + boost * 2, 6 + boost * 1.6, 1.2 + boost * .9, .15 + boost * .35]; let x = Math.random() * w.reduce((a, b) => a + b), r = 0;
+  const w = rarityWeights(boost); let x = Math.random() * w.reduce((a, b) => a + b), r = 0;
   for (; r < 4; r++) { if (x < w[r]) break; x -= w[r]; } return Math.max(min, r);
 }
 const runIL = () => (R.raid ? 6 + R.m * 6 + R.raid.d * 4 : 1 + R.m * 6 + Math.floor((R.wave || 1) * .9)) + Math.floor((save.pl.lv || 1) * .5);
@@ -1454,7 +1458,7 @@ function giveLoot(x, y, minR = 0) {
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
-  const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(4, 1 + (R.raid.d >= 2 ? 1 : 0) + (R.raid.d >= 4 ? 1 : 0)) : 1;
+  const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
   for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
   if (R.farm) { R.phase = 'hunt'; nextWave(); } else { R.endT = 1.4; R.endWin = true; }
@@ -1687,6 +1691,14 @@ function doRefine() {
 }
 // pedras de evolucao: cada pedra da raridade da peca sobe +2 niveis de item (ate 120) e os bonus crescem com ele
 const MAIN_BASE = { head: il => 30 + 8 * il, chest: il => 50 + 12 * il, boots: il => 3 + .25 * il, amulet: il => 3 + .35 * il };
+const reforgeCost = it => Math.round(400 * (1 + it.il * .25) * (1 + it.r * .8) * (1 + (it.rf || 0) * .35));
+function reforgeItem(it) {
+  const c = reforgeCost(it); if (!it || enc.t > 0 || !it.aff.length || save.gold < c) { SFX.error(); return; }
+  save.gold -= c; it.rf = (it.rf || 0) + 1; const pool = AFF_POOL.filter(k => k !== it.main.k); it.aff = [];
+  for (let i = 0; i < it.r; i++) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; it.aff.push({ k, v: affVal(k, it.r, it.il) }); }
+  enc.msg = 'REFORJADO!'; enc.col = '#ffb070'; enc.msgT = 2.5; SFX.special();
+  for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#ffb070' }); persist();
+}
 function evolveItem(it) {
   if (!it || enc.t > 0 || it.il >= 120 || !(save.stones[it.r] > 0) || Math.ceil((it.il + 2) / 2) > save.pl.lv) { SFX.error(); return; }
   const il2 = Math.min(120, it.il + 2), fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
@@ -1746,7 +1758,8 @@ function hubEnchant() {
   btn(607, 392, 165, 56, '', doSpec, { off: enc.t > 0 || save.gold < sc || save.gems < sg, col: '#5a3a7a', hot: '#7a55a0' });
   txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
   { const have = save.stones[it.r], capIl = it.il >= 120, needLv = Math.ceil((it.il + 2) / 2), lvLock = !capIl && needLv > save.pl.lv;
-    btn(432, 452, 340, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir Nv ${it.il} > ${Math.min(120, it.il + 2)}  ·  Pedra ${RAR[it.r][0]} (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 13, col: '#2a5a7a', hot: '#3a7aa0' }); }
+    btn(432, 452, 200, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir ${it.il}>${Math.min(120, it.il + 2)} · Pedra (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 12, col: '#2a5a7a', hot: '#3a7aa0' });
+    const rfc = reforgeCost(it); btn(638, 452, 134, 24, `Reforjar ¢${gfmt(rfc)}`, () => reforgeItem(it), { off: enc.t > 0 || !it.aff.length || save.gold < rfc, size: 12, col: '#7a4a2a', hot: '#a0643a' }); }
   if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 386, 12, '#f88', 'center'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 386, 12, '#f88', 'center');
 }
 
@@ -2090,7 +2103,7 @@ const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.s
 let rk = { mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 const RK_MSG = {
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
-  nick_taken: 'Esse nick já está em uso', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
+  nick_taken: 'Esse nick já está em uso', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
   network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
   implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
 };
@@ -2159,12 +2172,6 @@ async function rkLogout() {
   }
   const t = on.token; dropSession(true); if (t) rpc('gog_logout', { p_token: t });
 }
-async function rkDelete() {
-  if (rk.busy || !on.token) return; if (rk.pass.length < 8) return rkSay('short_pass');
-  rk.busy = true; rkSay('working'); let proof; try { proof = await mkProof(on.nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
-  const r = await rpc('gog_delete', { p_token: on.token, p_proof: proof }); rk.busy = false;
-  if (r.ok) { dropSession(true); rkSay('deleted'); } else rkSay(r.error);
-}
 function rankKey(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
   const k = e.code, f = rk.focus;
@@ -2200,8 +2207,7 @@ function hubRank() {
     if (cheat) wrap(RK_MSG.cheat, 207, 262, 205, 14, 12, '#f88'); else { const ago = rk.lastSub ? Math.floor((Date.now() - rk.lastSub) / 1000) : -1; txt('Sincronização automática', 309, 270, 13, '#7fe8a0', 'center', 'bold'); txt(ago < 0 ? 'A aguardar a primeira sincronização...' : ago < 60 ? 'Última: agora mesmo' : `Última: há ${Math.floor(ago / 60)} min`, 309, 290, 12, '#9ab', 'center'); }
     if (rk.msg) wrap(rk.msg, 207, 304, 205, 14, 12, rk.col);
     btn(207, 346, 205, 28, 'Terminar sessão', rkLogout, { size: 13, col: '#3a2a3a' });
-    rkField(207, 400, 205, 'Apagar conta: escreve a palavra-passe', 'pass', true);
-    btn(207, 432, 205, 28, 'Apagar conta', rkDelete, { size: 13, col: '#6a2a2a', hot: '#8a3a3a', off: rk.busy || rk.pass.length < 8 });
+    wrap('Para desativar ou recuperar a conta fala com o administrador.', 207, 400, 205, 14, 11, '#778');
   }
   // classificacao
   panel(430, 90, 352, 386, '#16162a');
@@ -2651,7 +2657,7 @@ function drawHUD() {
   // bloco unico da arma (canto inferior direito): arma, dash e nivel/XP
   const bx = W - 212, bt = H - 68; rr(bx - 8, bt - 8, 212, 64, 8); ctx.fillStyle = '#0005'; ctx.fill();
   weaponIcon(w.id, bx + 8, bt + 7, 1.1); txt(`${w.n}${wlvl() ? ' +' + wlvl() : ''}`, bx + 26, bt + 11, 12, '#fff', 'left', 'bold');
-  txt(keyName(binds.dash).slice(0, 5), bx, bt + 31, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 24, 160, 7, 1 - Math.max(0, p.dashCd), '#4cf', '#0006');
+  txt(keyName(binds.dash).slice(0, 5), bx, bt + 31, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 24, 160, 7, 1 - Math.max(0, p.dashCd) / DASH_CD, '#4cf', '#0006');
   txt(`Nv ${save.pl.lv}`, bx, bt + 48, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 42, 160, 7, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf', '#0006');
   ctx.globalAlpha = 1;
   const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');

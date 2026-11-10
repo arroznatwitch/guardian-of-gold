@@ -46,6 +46,8 @@ create table if not exists gog.players (
   updated_at   timestamptz not null default now()
 );
 alter table gog.players add column if not exists build jsonb;   -- build publica: skin, arma, atributos e equipamento (limpa no servidor)
+alter table gog.players add column if not exists active boolean not null default true;   -- false = conta desativada (so o administrador mexe nisto)
+alter table gog.players add column if not exists inactive_at timestamptz;
 alter table gog.players add column if not exists reg_ip text;   -- HMAC do IP de registo (nunca o IP em claro), so para limitar contas por rede
 create table if not exists gog.secrets (k text primary key, v text not null);
 insert into gog.secrets (k, v) values ('ip_salt', encode(extensions.gen_random_bytes(24), 'hex')) on conflict do nothing;
@@ -122,8 +124,8 @@ language plpgsql security definer set search_path = '' as $$
 declare pid bigint;
 begin
   if p_token is null or p_token !~ '^[0-9a-f]{64}$' then return null; end if;
-  select player_id into pid from gog.sessions
-   where token_hash = extensions.digest(decode(p_token, 'hex'), 'sha256') and expires_at > now();
+  select s.player_id into pid from gog.sessions s join gog.players p on p.id = s.player_id
+   where s.token_hash = extensions.digest(decode(p_token, 'hex'), 'sha256') and s.expires_at > now() and p.active;
   return pid;
 end $$;
 
@@ -179,6 +181,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'locked', 'wait', ceil(extract(epoch from v.locked_until - now()))::int);
   end if;
   ok := extensions.crypt(p_proof, v.pass_hash) = v.pass_hash;
+  if ok and not v.active then return jsonb_build_object('ok', false, 'error', 'inactive'); end if;
   if ok then
     update gog.players set failed = 0, locked_until = null where id = v.id;
     return jsonb_build_object('ok', true, 'nick', v.nick, 'token', gog._new_session(v.id));
@@ -197,18 +200,18 @@ begin
   return jsonb_build_object('ok', true);
 end $$;
 
-create or replace function public.gog_delete(p_token text, p_proof text) returns jsonb
+-- Os jogadores nao podem apagar a conta. O administrador desativa/reativa com gog.set_active (ver docs/ONLINE.md).
+drop function if exists public.gog_delete(text, text);
+create or replace function gog.set_active(p_nick text, p_active boolean) returns text
 language plpgsql security definer set search_path = '' as $$
-declare pid bigint; v gog.players;
+declare pid bigint;
 begin
-  pid := gog._auth(p_token);
-  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  if p_proof is null or p_proof !~ '^[0-9a-f]{64}$' then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
-  select * into v from gog.players where id = pid for update;
-  if extensions.crypt(p_proof, v.pass_hash) <> v.pass_hash then return jsonb_build_object('ok', false, 'error', 'bad_login'); end if;
-  delete from gog.players where id = pid;
-  return jsonb_build_object('ok', true);
+  update gog.players set active = p_active, inactive_at = case when p_active then null else now() end where nick_key = lower(p_nick) returning id into pid;
+  if pid is null then return 'not_found'; end if;
+  if not p_active then delete from gog.sessions where player_id = pid; end if;
+  return case when p_active then 'reactivated' else 'deactivated' end;
 end $$;
+revoke all on function gog.set_active(text, boolean) from public;
 
 create or replace function public.gog_submit(p_token text, p jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
@@ -269,12 +272,12 @@ begin
   execute format($q$
     select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin) order by r), '[]'::jsonb) from (
       select nick, cls, level as lv, coalesce((build->>'skin')::int, 0) as skin, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
-      from gog.players where %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
+      from gog.players where active and %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
     execute format('select %I::bigint from gog.players where id = $1', col) into mine using pid;
     if mine > 0 then
-      execute format('select jsonb_build_object(''rank'', 1 + count(*), ''value'', $2::bigint) from gog.players where %I > $2', col) into me using pid, mine;
+      execute format('select jsonb_build_object(''rank'', 1 + count(*), ''value'', $2::bigint) from gog.players where active and %I > $2', col) into me using pid, mine;
     end if;
   end if;
   return jsonb_build_object('ok', true, 'rows', rows, 'me', me);
@@ -290,7 +293,7 @@ do $$
 declare f text;
 begin
   foreach f in array array[
-    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)', 'public.gog_delete(text,text)',
+    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
     'public.gog_submit(text,jsonb)', 'public.gog_board(text,int,text)', 'public.gog_nick_free(text)',
     'gog._new_session(bigint)', 'gog._auth(text)'] loop
     execute format('revoke all on function %s from public', f);
@@ -298,7 +301,7 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); end if;
   end loop;
   foreach f in array array[
-    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)', 'public.gog_delete(text,text)',
+    'public.gog_register(text,text)', 'public.gog_login(text,text)', 'public.gog_logout(text)',
     'public.gog_submit(text,jsonb)', 'public.gog_board(text,int,text)', 'public.gog_nick_free(text)'] loop
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('grant execute on function %s to authenticated', f); end if;
@@ -372,7 +375,7 @@ language plpgsql security definer set search_path = '' as $$
 declare v gog.players;
 begin
   if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_nick'); end if;
-  select * into v from gog.players where nick_key = lower(p_nick);
+  select * into v from gog.players where nick_key = lower(p_nick) and active;
   if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
   return jsonb_build_object('ok', true, 'nick', v.nick, 'cls', v.cls, 'level', v.level, 'kills', v.kills, 'gold', v.gold, 'bosses', v.bosses, 'raids', v.raids,
     'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build);
