@@ -545,7 +545,7 @@ function drawSprBig(name, x, y, k) { const img = SPR[name].n; ctx.drawImage(img,
    DADOS
    ===================================================================== */
 const CLASSES = {
-  knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Redemoinho', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Gira a lâmina e fere tudo à volta.',
+  knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Escudo Férreo', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Ergue um escudo durante 10 segundos: recebes 60% menos dano. Recarrega a cada 22 segundos.',
     weapons: [
       { id: 'k_sword',  n: 'Espada de Ferro',    price: 0,   t: 'melee', dmg: 1,   cd: .35, range: 70,  arc: .45, kb: 240, info: 'Rápida e equilibrada.', sk: { n: 'Investida', cd: 6, d: 'Lança-te em frente ferindo tudo no caminho.' } },
       { id: 'k_axe',    n: 'Machado de Guerra',  price: 600, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
@@ -852,7 +852,8 @@ function hurt(n) {
   const p = R.p;
   if (p.inv > 0 || R.endT !== undefined) return;
   n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
-  p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, '#f55', 10);
+  if (p.kshield > 0) n = Math.max(1, Math.round(n * .4));   // escudo do Cavaleiro: 60% menos dano
+  p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, p.kshield > 0 ? '#9cf' : '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
 }
@@ -913,12 +914,12 @@ function areaDmg(x, y, r, dmg, o = {}) {
 function special() {
   const p = R.p, dm = DM();
   if (p.sp > 0 || R.endT !== undefined) return;
-  p.sp = save.cls === 'mage' ? 12 : 8;
+  p.sp = save.cls === 'mage' ? 12 : save.cls === 'knight' ? 22 : 8;
   if (save.cls === 'mage') {   // o Mago nao ataca com a habilidade: recupera 10% da vida
     const h = Math.round(Math.min(p.max - p.hp, p.max * .10)); heal(p.max * .10); SFX.heal(); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 60, t: .5, max: .5, col: '#6f6' }); spark(p.x, p.y, '#8f8', 16, 90, .8, 3, -60); R.texts.push({ x: p.x, y: p.y - 30, s: '+' + h, t: 1, col: '#6f6' }); return;
   }
   SFX.special(); R.shake = 7;
-  if (save.cls === 'knight') { areaDmg(p.x, p.y, 105, 3 * dm, { kb: 450 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 105, t: .35, max: .35, col: '#fff' }); }
+  if (save.cls === 'knight') { p.kshield = 10; areaDmg(p.x, p.y, 90, 1.2 * dm, { kb: 300 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 90, t: .35, max: .35, col: '#9cf' }); burst(p.x, p.y, '#9cf', 16); }   // escudo: 10 s com 60% menos dano (e um pequeno empurrao ao erguer)
   else if (save.cls === 'archer') { for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283; arrow(a, 1.5 * dm, null, { pierce: 1, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480 }); } }
 }
 
@@ -1041,7 +1042,7 @@ function bossTick(b, dt, rage, sl) {
 function update(dt) {
   if (R.cine) { updateCine(dt); return; }   // cinematica de entrada do Guardiao: o jogo fica em pausa
   const p = R.p, M = MISSIONS[R.m]; R.time += dt;
-  p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; R.toastT -= dt; R.shake *= .9;
+  p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; p.kshield = (p.kshield || 0) - dt; R.toastT -= dt; R.shake *= .9;
   const dead = R.endT !== undefined;
   p.face = Math.atan2(mouse.y - p.y, mouse.x - p.x); p.flip = mouse.x < p.x; updatePet(dt);
   const cwp = curW(); if (GLOWW[cwp.id] && Math.random() < .35 && R.endT === undefined) spark(p.x + Math.cos(p.face) * 34, p.y + 4 + Math.sin(p.face) * 24, GLOWW[cwp.id], 1, 25, .5, 2, -30);
@@ -1265,7 +1266,7 @@ Object.assign(EN_DICT, {"Perfil": "Profile"});
 Object.assign(EN_DICT, {"Personagens": "Characters", "Personagem atual": "Current character", "Entrar com este": "Play this one", "Criar personagem": "Create character", "Nick do personagem": "Character nickname", "Ainda não tens": "You do not have one yet", "A carregar...": "Loading...", "principal": "main", "Perfil da conta": "Account profile", "O sexo e o país valem para todos os teus personagens.": "Gender and country apply to all your characters.", "Cada personagem tem um nick diferente e uma classe fixa. Entras com a mesma palavra-passe.": "Each character has a different nickname and a fixed class. You log in with the same password.", "Entra numa conta para ver o perfil e os personagens.": "Log in to see your profile and characters.", "A guardar o personagem atual...": "Saving the current character...", "Não foi possível guardar o personagem atual. Espera uns segundos e tenta outra vez.": "Could not save the current character. Wait a few seconds and try again.", "Não foi possível guardar o personagem atual. Tenta outra vez.": "Could not save the current character. Try again.", "Já tens um personagem com esta classe": "You already have a character of this class", "Já tens os 3 personagens": "You already have all 3 characters", "Personagem não encontrado": "Character not found", "Este personagem é de outra classe.": "This character is of another class.", "Já tens um personagem com esta classe.": "You already have a character of this class.", "Indisponível": "Unavailable", "Cada personagem tem uma classe fixa e a conta só pode ter uma de cada.": "Each character has a fixed class and an account can only have one of each.", "A escolha é permanente para este personagem. Mais tarde podes criar outros, um por classe.": "The choice is permanent for this character. Later you can create others, one per class."});
 Object.assign(EN_DICT, {"1. Escolhe o grupo (mesma peça, raridade, estrelas e faixa de nível)   2. Marca 5 itens   3. Clica num marcado para o manter": "1. Pick a group (same piece, rarity, stars and level band)   2. Mark 5 items   3. Click a marked one to keep it", "Nível do item": "Item level", "média dos 5": "average of the 5"});
 Object.assign(EN_DICT, {"Evoluir exige Nv": "Evolve needs Lv", "Evoluir": "Evolve", "Campanha": "Campaign", "O título é de cada personagem.": "The title belongs to each character.", "Nick (não pode ser alterado)": "Nickname (cannot be changed)", "Conquistas": "Achievements", "Cajado de Raios com 3 estrelas e +20 na Bigorna": "Lightning Staff with 3 stars and +20 at the Anvil", "Conclui as 6 raids na dificuldade Fácil": "Clear all 6 raids on Easy", "Mago Relâmpago": "Lightning Mage", "Lobo Alfa": "Alpha Wolf", "Rainha Aranha": "Spider Queen", "Cavaleiro Negro": "Black Knight", "Sapo Colossal": "Colossal Toad", "Escorpião Rei": "Scorpion King", "Arquidemónio": "Archdemon"});
-Object.assign(EN_DICT, {"Renovação Arcana": "Arcane Renewal", "Recupera 10% da vida. Recarrega a cada 12 segundos.": "Restores 10% of your health. Recharges every 12 seconds.", "Guilda": "Guild", "A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.": "Your account was deactivated because of suspicious save values. Contact the administrator.", "O servidor recusou o save: valores suspeitos. Se jogaste normalmente, espera um pouco e tenta outra vez.": "The server refused the save: suspicious values. If you played normally, wait a moment and try again."});
+Object.assign(EN_DICT, {"Escudo Férreo": "Iron Shield", "Ergue um escudo durante 10 segundos: recebes 60% menos dano. Recarrega a cada 22 segundos.": "Raises a shield for 10 seconds: you take 60% less damage. Recharges every 22 seconds.", "Renovação Arcana": "Arcane Renewal", "Recupera 10% da vida. Recarrega a cada 12 segundos.": "Restores 10% of your health. Recharges every 12 seconds.", "Guilda": "Guild", "A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.": "Your account was deactivated because of suspicious save values. Contact the administrator.", "O servidor recusou o save: valores suspeitos. Se jogaste normalmente, espera um pouco e tenta outra vez.": "The server refused the save: suspicious values. If you played normally, wait a moment and try again."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -3544,6 +3545,7 @@ function drawWorld() {
     drawSpr(heroSpr(), p.x, p.y, p.flip, p.dashT > 0, bobY);
     if (!behind) heldWeapon(p, bobY);
     if (R.pet && R.pet.y >= p.y) drawPet(R.pet);
+    if (p.kshield > 0) { const bl = p.kshield < 2 && Math.floor(R.time * 8) % 2; if (!bl) { ctx.save(); ctx.translate(p.x, p.y); ctx.globalAlpha = .22; ctx.fillStyle = '#6ab8ff'; ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + R.time * .8; ctx.lineTo(Math.cos(a) * 30, Math.sin(a) * 30); } ctx.closePath(); ctx.fill(); ctx.globalAlpha = .85; ctx.strokeStyle = '#bfe4ff'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); } }
     if (p.shield > 0) { ctx.strokeStyle = '#c8f'; ctx.lineWidth = 3; ctx.globalAlpha = .5 + Math.sin(R.time * 10) * .2; ctx.beginPath(); ctx.arc(p.x, p.y, 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; for (let i = 0; i < 6; i++) { const a = R.time * 3 + i * 1.047; ctx.fillStyle = i % 2 ? '#ffffff' : '#d9a6ff'; ctx.fillRect(Math.round(p.x + Math.cos(a) * 26) - 2, Math.round(p.y + Math.sin(a) * 26) - 2, 4, 4); } }
     ctx.globalAlpha = 1;
     // badges de "pronto"
