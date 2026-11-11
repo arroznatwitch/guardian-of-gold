@@ -66,6 +66,14 @@ Uma conta pode ter **até 3 personagens, um por classe** (Cavaleiro, Arqueiro e 
 - O **sexo e o país** valem para a conta toda. Desativar um nick (`gog.set_active`) desativa a conta inteira, com todos os personagens.
 - **Segurança do save:** antes de trocar, o personagem atual é guardado na nuvem (se falhar, a troca não acontece). O save do browser só é usado se pertencer ao personagem que entrou (id do personagem); o de outro personagem fica de lado e nunca passa para outro.
 
+## Guildas
+
+Sem chat. Uma guilda tem no máximo 10 membros e só há líder e membros. Para criar é preciso nível 40, 15 000 de ouro e 100 diamantes (o servidor confere o ouro e os diamantes no save guardado na nuvem; o jogo desconta-os a seguir). Para entrar basta nível 10, e quem sai ou é expulso espera 24 horas.
+
+- **Pontos automáticos:** cada gravação de save validada pelo anti-batota dá à guilda 1 ponto por mob, 10 por boss e 60 por raid concluída do membro. O nível vai até 40 (cerca de 6 milhões de pontos no total) e cada nível dá 1 ponto de melhoria ao líder.
+- **Melhorias** (só o líder, cada uma até ao nível 10): XP +1% por nível (máx. +10%), ouro +1,5% (máx. +15%), chance de drop +0,25% relativo (máx. +2,5%) e atributos +0,5% (máx. +5%). O jogo aplica estes valores lidos do servidor; não ficam no save.
+- **Nomes:** o filtro `gog._text_ok` recusa palavras ofensivas em inglês e português (troca números e símbolos por letras e junta letras repetidas). Aplica-se a nomes e tags de guildas, aos nomes dos pets e aos nicks novos. Para ver as guildas: `select * from gog.guilds;`. Para desfazer uma guilda: `delete from gog.guilds where id = 1;`.
+
 ## Pets no perfil público
 
 A build pública inclui o pet equipado (`build.pet`: `dog`, `chicken` ou `bird`, nível 1 a 30 e nome). O servidor só aceita esses três ids, limita o nível a 30 e remove do nome tudo o que não seja letras, números, espaço, `_` ou `-` (máximo 12 caracteres). Um pet acima do nível 30 num save conta como valor impossível (anti-batota).
