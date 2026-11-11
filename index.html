@@ -580,13 +580,13 @@ const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
-const FARM_UNLOCK = [10, 10, 20, 20, 30, 30];   // onda a atingir em cada zona para abrir a seguinte
+const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const REC_BASE = [1, 15, 30, 45, 58, 70], PRES_MAX = 5, PRES_STEP = 10, PRES_WAVE = 30;   // nivel recomendado de cada zona; cada estrela de prestigio sobe 10 niveis (a ultima do Abismo Final e nivel 120); para dar prestigio chega a onda 30
 const farmRec = (m, P) => REC_BASE[m] + PRES_STEP * (P === undefined ? ((typeof save === 'object' && save && save.pres && save.pres[m]) | 0) : P);
 // forca extra dos monstros da campanha por nivel recomendado: [nivel, multiplicador de vida, multiplicador de dano] (calibrado com o simulador)
-const FARM_KT = [[1, 1, 1], [15, 1.8, 1.36], [30, 2.8, 1.8], [45, 5.6, 3.1], [60, 11, 5.5], [75, 12.5, 6.2], [90, 14, 6.9], [105, 15, 7.3], [120, 16, 7.7]];
+const FARM_KT = [[1, .55, .8], [15, 1.25, 1.11], [30, 1.9, 1.4], [45, 3.6, 2.17], [60, 6, 3.25], [75, 7, 3.7], [90, 8, 4.15], [105, 8.8, 4.5], [120, 9.2, 4.7]];   // recalibrado: a um nivel igual ao recomendado chega-se a onda 10
 function farmK(rec) {
   const t = FARM_KT; if (rec <= t[0][0]) return { hp: t[0][1], dm: t[0][2] };
   for (let i = 1; i < t.length; i++) if (rec <= t[i][0]) { const a = t[i - 1], b = t[i], f = (rec - a[0]) / (b[0] - a[0]); return { hp: a[1] + (b[1] - a[1]) * f, dm: a[2] + (b[2] - a[2]) * f }; }
