@@ -612,10 +612,10 @@ const RAID_D = [
 // nivel recomendado de cada raid: de 8 (1a Facil) ate 118 (ultima Inferno); a forca dos monstros segue esse nivel
 const raidRec = (i, d) => 8 + 6 * i + 20 * d;
 // vida e dano dos monstros: base por dificuldade, crescendo ao longo das 6 raids (nas dificuldades altas a subida por raid e menor)
-const RAID_H0 = [3.2, 14, 34, 100, 170], RAID_HZ = [7, 2.2, 1.4, .6, .1], RAID_M0 = [.54, 1.4, 2.4, 10, 10.6], RAID_MZ = [1.7, 1.1, .8, -.5, -.35];
+const RAID_H0 = [3.2, 14, 34, 65, 105], RAID_HZ = [7, 2.2, 1.4, .6, .1], RAID_M0 = [.54, 1.4, 2.4, 6.5, 6.6], RAID_MZ = [1.7, 1.1, .8, -.5, -.35];   // Pesadelo e Inferno recalibrados com o simulador
 const raidHP = (i, d) => RAID_H0[d] * (1 + RAID_HZ[d] * i / 5), raidDM = (i, d) => RAID_M0[d] * (1 + RAID_MZ[d] * i / 5);
 RAID_D.forEach((d, j) => { d.hp = +raidHP(0, j).toFixed(1); d.dmg = +raidDM(0, j).toFixed(1); });   // valores da primeira raid (so para mostrar)
-const RAID_OVER = { hp: .3, dmg: .15 };
+const RAID_OVER = { hp: .04, dmg: .02, cap: 12 };   // acima do nivel recomendado os monstros ganham pouca forca (no maximo 12 niveis a contar)
 const RAID_MINI = { hp: 1.8, dmg: 1.4, cap: 5, capD: 3, rate: 1.8, burst: 6 };
 const diffOpen = d => d === 0 || MISSIONS.every((m, i) => ((save.raids[i] || [])[d - 1] | 0) > 0);   // uma dificuldade abre quando concluis TODAS as raids da anterior
 let raidD = 0;
@@ -796,7 +796,7 @@ function startMission(i, rd, farm) {
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
     const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = raidHP(i, rd) * RAID_MINI.hp; R.bossM = raidHP(i, rd) * .8; R.dmgM = raidDM(i, rd) * RAID_MINI.dmg; R.goldM = D.gold;
-    { const ov = Math.max(0, (save.pl.lv || 1) - raidRec(i, rd)); R.hpM *= 1 + RAID_OVER.hp * ov; R.bossM *= 1 + RAID_OVER.hp * ov; R.dmgM *= 1 + RAID_OVER.dmg * ov; }   // quem vai muito acima do nivel recomendado encontra monstros mais fortes R.spdM = D.spd; R.bossDM = 1 + .07 * (raidRec(i, rd) - 8);
+    { const ov = Math.min(RAID_OVER.cap, Math.max(0, (save.pl.lv || 1) - raidRec(i, rd))); R.hpM *= 1 + RAID_OVER.hp * ov; R.bossM *= 1 + RAID_OVER.hp * ov; R.dmgM *= 1 + RAID_OVER.dmg * ov; }   // quem vai muito acima do nivel recomendado encontra monstros mais fortes R.spdM = D.spd; R.bossDM = 1 + .07 * (raidRec(i, rd) - 8);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.rec = farm ? farmRec(i) : 0; R.waveKills = 0; R.retire = false; R.lootN = 0;
@@ -1675,7 +1675,7 @@ function bossDown(b) {
   R.petXp = (R.petXp | 0) + (b.guardian ? 60 : b.mini ? 12 : 25);   // o pet equipado ganha XP com os bosses
   if (b.guardian) { statUp('guard'); R.toast = 'GUARDIÃO DOURADO DERROTADO!'; R.toastT = 3.2; R.phase = 'hunt'; R.shake = 16; return; }   // por enquanto nao da recompensa
   if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22);
-    if (R.farm && R.m === 0) { R.phase = 'cp'; R.cpWave = R.wave; state = 'cp'; SFX.win(); return; }   // so na Floresta Sombria: tambem podes sair nas ondas 5, 15, 25...
+    if (R.farm && R.m === 0 && !((save.pres && save.pres[0]) | 0)) { R.phase = 'cp'; R.cpWave = R.wave; state = 'cp'; SFX.win(); return; }   // so na Floresta Sombria e so sem prestigio: tambem podes sair nas ondas 5, 15, 25...
     R.phase = 'hunt'; nextWave(); return; }
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
@@ -1870,7 +1870,7 @@ function drawFarmInfo() {
     txt(name, rx + 60, by + 28, 14, col, 'left', 'bold'); txt(hpTxt, rx + 60, by + 44, 11, '#cdd6f0'); wrap([...new Set(pattern)].map(q => T2(...PAT_N[q])).join(', '), rx + 60, by + 58, rw - 62, 12, 10, '#9ab');
     wrap(drop, rx, by + 82, rw, 12, 10, '#7cf');
   };
-  bossBlock(y + 204, m.semi.pal, m.semi.name, m.semi.pattern, `${T2('Vida na onda 5', 'Health on wave 5')}: ${gfmt(bossHP(5, .3))}`, T2('Onda 5, 15, 25… Larga 1 equipamento e 40% de uma cópia de arma.' + (i === 0 ? ' Aqui também podes sair (checkpoint).' : ''), 'Wave 5, 15, 25… Drops 1 gear piece and a 40% chance of a weapon copy.' + (i === 0 ? ' You can also leave here (checkpoint).' : '')), 'Semi-boss', '#ffd34a');
+  bossBlock(y + 204, m.semi.pal, m.semi.name, m.semi.pattern, `${T2('Vida na onda 5', 'Health on wave 5')}: ${gfmt(bossHP(5, .3))}`, T2('Onda 5, 15, 25… Larga 1 equipamento e 40% de uma cópia de arma.' + (i === 0 && !(save.pres[0] | 0) ? ' Aqui também podes sair (checkpoint).' : ''), 'Wave 5, 15, 25… Drops 1 gear piece and a 40% chance of a weapon copy.' + (i === 0 && !(save.pres[0] | 0) ? ' You can also leave here (checkpoint).' : '')), 'Semi-boss', '#ffd34a');
   bossBlock(y + 304, m.boss.pal, m.boss.name, m.boss.pattern, `${T2('Vida na onda 10', 'Health on wave 10')}: ${gfmt(bossHP(10, 1))}`, T2('Onda 10, 20… Larga equipamento (no mínimo Raro), 1 cópia de arma e 8 moedas grandes; depois há checkpoint e horda.', 'Wave 10, 20… Drops gear (at least Rare), 1 weapon copy and 8 big coins; then a checkpoint and a horde.'), 'Boss', '#ff9a6a');
   txt(T2('Guardião Dourado: ondas 41, 81, 121…', 'Gold Guardian: waves 41, 81, 121…'), rx, y + 428, 11, '#f5c542', 'left', 'bold');
 }
