@@ -66,6 +66,10 @@ Uma conta pode ter **até 3 personagens, um por classe** (Cavaleiro, Arqueiro e 
 - O **sexo e o país** valem para a conta toda. Desativar um nick (`gog.set_active`) desativa a conta inteira, com todos os personagens.
 - **Segurança do save:** antes de trocar, o personagem atual é guardado na nuvem (se falhar, a troca não acontece). O save do browser só é usado se pertencer ao personagem que entrou (id do personagem); o de outro personagem fica de lado e nunca passa para outro.
 
+## Pets no perfil público
+
+A build pública inclui o pet equipado (`build.pet`: `dog`, `chicken` ou `bird`, nível 1 a 30 e nome). O servidor só aceita esses três ids, limita o nível a 30 e remove do nome tudo o que não seja letras, números, espaço, `_` ou `-` (máximo 12 caracteres). Um pet acima do nível 30 num save conta como valor impossível (anti-batota).
+
 ## Anti-batota (o servidor valida o save)
 
 Cada vez que o jogo guarda na nuvem (`gog_save_put`), o servidor confere o save antes de o aceitar:

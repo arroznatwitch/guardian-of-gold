@@ -661,14 +661,14 @@ const THEMES = [
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '' }, bagSlots: 1 };
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '', lv: {}, xp: {}, names: {} }, bagSlots: 1 };
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
   s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0); s.bagSlots = Math.max(1, Math.min(5, s.bagSlots | 0 || 1));
-  s.pets = s.pets && typeof s.pets === 'object' ? s.pets : {}; s.pets.own = s.pets.own || {}; s.pets.eq = s.pets.eq || '';
+  s.pets = s.pets && typeof s.pets === 'object' ? s.pets : {}; s.pets.own = s.pets.own || {}; s.pets.eq = s.pets.eq || ''; for (const k of ['lv', 'xp', 'names']) s.pets[k] = s.pets[k] && typeof s.pets[k] === 'object' && !Array.isArray(s.pets[k]) ? s.pets[k] : {};
   s.pres = Array.from({ length: 6 }, (_, i) => Math.min(PRES_MAX, (Array.isArray(s.pres) && s.pres[i]) | 0)); s.presW = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.presW) && s.presW[i]) | 0);
   s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {}; s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
@@ -732,8 +732,8 @@ const K = a => !!keys[binds[a]];
 addEventListener('keydown', e => {
   initAudio();
   if (state === 'hub' && tab === 'rank' && rk.prof && e.code === 'Escape') { rk.prof = null; return; }
-  if (state === 'hub' && e.code === 'Escape' && (farmInfo >= 0 || presAsk >= 0)) { farmInfo = -1; presAsk = -1; return; }
-  if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile' || tab === 'ach'))) && rk.focus && !capture && rankKey(e)) return;
+  if (state === 'hub' && e.code === 'Escape' && (farmInfo >= 0 || presAsk >= 0 || petRename)) { farmInfo = -1; presAsk = -1; petRename = ''; rk.focus = ''; return; }
+  if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile' || tab === 'ach' || tab === 'pets'))) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   keys[e.code] = true;
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
@@ -813,6 +813,7 @@ function endMission(win, mode) {
   }
   else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
+  R.petGain = 0; R.petUp = 0; if (R.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { R.petGain = R.petXp; R.petUp = addPetXp(save.pets.eq, R.petXp); }
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
@@ -1104,7 +1105,7 @@ function update(dt) {
     if (d < e.r + 12 && !dead && e.stun <= 0) hurt(d0.dmg);
   }
   for (const e of R.enemies) if (e.hp <= 0) {
-    const d0 = EN[e.type]; R.kills++; burst(e.x, e.y, '#9f9', 12); SFX.kill();
+    const d0 = EN[e.type]; R.kills++; R.petXp = (R.petXp | 0) + 1; burst(e.x, e.y, '#9f9', 12); SFX.kill();
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (R.farm && R.rec ? 4 + (R.rec - 1) / 3 : 4 + 2 * R.m) * (R.farm ? FARM_RATE * xpK(save.pl.lv, R.rec) : 1); R.waveKills++;
     { const tr = mobTier(e.type); if (Math.random() < (.012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) * (.5 + .5 * tr)) giveLoot(e.x, e.y, 0, tr); }
@@ -1662,6 +1663,7 @@ function giveLoot(x, y, minR = 0, tier = 1) {
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
+  R.petXp = (R.petXp | 0) + (b.guardian ? 60 : b.mini ? 12 : 25);   // o pet equipado ganha XP com os bosses
   if (b.guardian) { statUp('guard'); R.toast = 'GUARDIÃO DOURADO DERROTADO!'; R.toastT = 3.2; R.phase = 'hunt'; R.shake = 16; return; }   // por enquanto nao da recompensa
   if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22); R.phase = 'hunt'; nextWave(); return; }
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
@@ -1719,6 +1721,7 @@ function endLines(win) {
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : `Morreste: ficaste com 40% do XP e 10% do ouro (¢${R.earned}) · itens perdidos`) : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
+  if (R.petGain) a.push(`${petDisplayName(save.pets.eq)}: +${R.petGain} XP` + (R.petUp ? T2(` · subiu para o nível ${petLv(save.pets.eq)}!`, ` · reached level ${petLv(save.pets.eq)}!`) : ''));
   if (R.lvUp) a.push(`Subiste para o nível ${R.lvUp}! (+${R.ptsGain} pontos)`);
   if (R.gemGain) a.push(`+${R.gemGain} ◆ Diamantes`);
   if (R.stoneGain && R.stoneGain.some(Boolean)) a.push('Pedras de evolução: ' + R.stoneGain.map((n, r) => n ? `${n}× ${RAR[r][0]}` : '').filter(Boolean).join(', '));
@@ -2776,7 +2779,7 @@ const ON_STORE = 'gog-online-v1';
 let on = { token: null, nick: null, gender: 'm', country: null };
 try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick, gender: o.gender === 'f' ? 'f' : 'm', country: /^[A-Z]{2}$/.test(o.country || '') ? o.country : null }; } catch (e) {}
 const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
-let rk = { code: '', cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+let rk = { pname: '', code: '', cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 rk.country = guessCountry();
 const RK_MSG = {
   banned: 'A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.',
@@ -2808,7 +2811,7 @@ function statPayload() {
 // build publica (so dados de jogo): skin, arma, atributos e equipamento
 function buildPayload() {
   const g = {}; for (const sl of SLOTS) { const it = save.gear[sl]; if (it) g[sl] = { r: it.r, e: it.ench || 0, st: it.st || 0, sp: it.spec ? it.spec.nm : '' }; }
-  const w = curW(); return { skin: save.skE[save.cls] | 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
+  const w = curW(); return { pet: save.pets && save.pets.eq && save.pets.own[save.pets.eq] ? { id: save.pets.eq, lv: petLv(save.pets.eq), name: (save.pets.names && save.pets.names[save.pets.eq]) || '' } : null, skin: save.skE[save.cls] | 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
 }
 async function openProfile(nick) {
   rk.prof = { nick, d: null, err: '' }; const r = await rpc('gog_profile', { p_nick: nick });
@@ -2856,9 +2859,9 @@ function rankKey(e) {
   const k = e.code, f = rk.focus;
   if (k === 'Escape') { rk.focus = ''; return true; }
   if (k === 'Tab') { e.preventDefault(); const order = on.token ? ['pass'] : rk.mode === 'register' ? ['nick', 'pass', 'pass2'] : ['nick', 'pass']; rk.focus = order[(order.indexOf(f) + 1) % order.length]; return true; }
-  if (k === 'Enter') { e.preventDefault(); if (f === 'code') redeemCode(); else if (f === 'cnick' && chNew) createChar(chNew); else if (!on.token) rkAuth(rk.mode === 'register'); return true; }
+  if (k === 'Enter') { e.preventDefault(); if (f === 'pname') confirmPetRename(); else if (f === 'code') redeemCode(); else if (f === 'cnick' && chNew) createChar(chNew); else if (!on.token) rkAuth(rk.mode === 'register'); return true; }
   if (k === 'Backspace') { e.preventDefault(); rk[f] = (rk[f] || '').slice(0, -1); return true; }
-  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' || f === 'cnick' || f === 'code' ? /[A-Za-z0-9_]/.test(e.key) && (rk[f] || '').length < 16 : rk[f].length < 64) rk[f] = (rk[f] || '') + e.key; return true; }
+  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'pname' ? /[A-Za-z0-9 _-]/.test(e.key) && (rk[f] || '').length < 12 : f === 'nick' || f === 'cnick' || f === 'code' ? /[A-Za-z0-9_]/.test(e.key) && (rk[f] || '').length < 16 : rk[f].length < 64) rk[f] = (rk[f] || '') + e.key; return true; }
   return false;
 }
 function rkField(x, y, w, label, key, mask) {
@@ -3149,6 +3152,7 @@ function drawTabLock(t) {
   txt('Joga na Campanha para ganhar XP e subir de nível.', cx, y0 + 120, 12, '#778', 'center');
   ui.push({ x: 197, y: 90, w: 585, h: 385, fn: () => lockClick(t) });
 }
+function drawStars(n, x, cy, k) { for (let i = 0; i < n; i++) drawIcon('star', x + i * 8 * k + 3.5 * k, cy, k); }   // estrelas centradas na linha
 function drawProfile() {
   if (state !== 'hub' || tab !== 'rank' || !rk.prof) return;
   const P = rk.prof, d = P.d; ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H);
@@ -3161,14 +3165,18 @@ function drawProfile() {
   ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x + 16, y + 72, w - 32, 1);
   // retrato e arma
   const px = x + 20, py = y + 88; ctx.fillStyle = '#0e0e1a'; ctx.fillRect(px, py, 140, 112);
-  drawSprBig(hk(d.cls, b ? b.skin : 0, d.gender), px + 70, py + 56 + Math.sin(T * 2) * 2, 2.8);
+  const bp = b && b.pet && PETS[b.pet.id] ? b.pet : null;
+  drawSprBig(hk(d.cls, b ? b.skin : 0, d.gender), px + (bp ? 46 : 70), py + 52 + Math.sin(T * 2) * 2, 2.8);
+  if (bp) { const im = petImg(bp.id, T), k = bp.id === 'dog' ? 3 : bp.id === 'chicken' ? 3.2 : 3.6, pw = im.width * k, ph = im.height * k, pn = bp.name || petSpecies(bp.id);
+    ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(px + 106, py + 76, 14, 4, 0, 0, 7); ctx.fill(); ctx.drawImage(im, Math.round(px + 106 - pw / 2), Math.round(py + 60 - ph / 2 + Math.sin(T * 3) * 2), pw, ph);
+    { let fs = 10; while (fs > 7 && txtW(pn, fs, 'bold') > 64) fs--; txt(pn, px + 106, py + 92, fs, '#cfd8f0', 'center', 'bold'); } txt(`Lv ${bp.lv | 0}`, px + 106, py + 105, 9, '#ffd34a', 'center', 'bold'); }
   const wd = b && b.weapon && CLASSES[d.cls] ? CLASSES[d.cls].weapons.find(q => q.id === b.weapon.id) : null, wst = wd ? b.weapon.st | 0 : 0;
-  sec('Arma', px, py + 134, 140);
-  if (wd) { STAR_OV = wst; weaponIcon(wd.id, px + 20, py + 166, 1.5, -.785); STAR_OV = -1; txt(wd.n, px + 44, py + 160, 12, '#fff', 'left', 'bold'); txt(`+${b.weapon.lv | 0}` + (wst ? '  ' + '★'.repeat(wst) : ''), px + 44, py + 177, 12, '#ffd34a', 'left', 'bold'); }
+  sec(T2('Arma', 'Weapon'), px, py + 134, 140);
+  if (wd) { STAR_OV = wst; weaponIcon(wd.id, px + 20, py + 166, 1.5, -.785); STAR_OV = -1; txt(wd.n, px + 44, py + 160, 12, '#fff', 'left', 'bold'); { const wl = '+' + (b.weapon.lv | 0); txt(wl, px + 44, py + 177, 12, '#ffd34a', 'left', 'bold'); drawStars(wst, px + 44 + txtW(wl, 12, 'bold') + 10, py + 173, 1.2); } }
   else txt('—', px, py + 166, 13, '#556');
   // atributos
   const mx = x + 184; sec('Atributos', mx, y + 100, 130);
-  if (b && b.attr) ATTRS.forEach((q, i) => { const yy = y + 130 + i * 28; txt(q[1], mx, yy, 13, '#aab6d0'); txt(gfmt(b.attr[q[0]] | 0), mx + 130, yy, 14, '#fff', 'right', 'bold'); });
+  if (b && b.attr) ATTRS.forEach((q, i) => { const ry = y + 114 + i * 38, ac = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a'][i]; ctx.fillStyle = ac; ctx.fillRect(mx, ry + 4, 2, 28); txt(q[1], mx + 12, ry + 24, 13, '#aab6d0'); txt(gfmt(b.attr[q[0]] | 0), mx + 130, ry + 24, 14, ac, 'right', 'bold'); });   // mesmas linhas do equipamento
   else txt('Sem build partilhada', mx, y + 130, 12, '#778');
   // equipamento
   const ex = x + 334; sec('Equipamento', ex, y + 100, 146);
@@ -3177,7 +3185,7 @@ function drawProfile() {
     if (!it) { ctx.globalAlpha = .3; slotIcon(sl, 0, ex + 14, yy + 18, 1.8); ctx.globalAlpha = 1; txt('—', ex + 36, yy + 22, 12, '#556'); return; }
     const rc = RAR[it.r | 0][1]; ctx.fillStyle = rc; ctx.fillRect(ex, yy + 4, 2, 28); slotIcon(sl, it.r | 0, ex + 18, yy + 18, 1.8);
     txt(ITEM_NAMES[sl][it.r | 0], ex + 38, yy + 15, 11, rc, 'left', 'bold');
-    txt(`+${it.e | 0}${it.sp ? ' · ' + it.sp : ''}${it.st ? ' · ' + it.st + '★' : ''}`, ex + 38, yy + 30, 10, '#9ab');
+    { const t1 = `+${it.e | 0}${it.sp ? ' · ' + it.sp : ''}`; txt(t1, ex + 38, yy + 30, 10, '#9ab'); if (it.st) drawStars(it.st | 0, ex + 38 + txtW(t1, 10) + 9, yy + 26, 1); }
   });
   // totais e recordes, em linhas simples
   const ty = y + 286; ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x + 16, ty - 14, w - 32, 1);
@@ -3193,32 +3201,127 @@ const DOG_ROWS = [
   ['...........dd.', '.b.......bbbbd', '.bb.....bbbkbb', '..bbbbbbbbbbbn', '...bbbbbbbbwww', '...bbbbbbbbb..', '...bbbbbbbbb..', '....bb.bb.bb.b', '....bb.bb.bb.b', '....dd.dd.dd.d']];
 const PET_DOG = DOG_ROWS.map(r => makeSprite(padRows(r), DOG_PAL, 1, false));
 const PET_EGG = makeSprite(['..eeee..', '.eeeeee.', 'eewweeee', 'eewweeee', 'eeeeeeee', 'eeeeeeee', '.eeeeee.', '..eeee..'], { e: '#2f2f4a', w: '#4f4f72' }, 1, false);
-const DOG_BUFF = { spd: .12, atk: .10, near: 90 };   // o cao nao da dano: so ajuda quando esta perto de ti
+const DOG_BUFF = { spd: .12, atk: .10, near: 90 };   // o cao nao da dano: so ajuda quando esta perto de ti (os valores sobem com o nivel do pet)
+const CHICKEN_PAL = { w: '#f8f4ea', W: '#d8d0c0', r: '#d83030', y: '#f0b030', k: '#1a1208' };
+const CHICKEN_ROWS = [
+  ['.......rr...', '......rrr...', '.....wwwww..', '.....wkwwyy.', '.....wwwwyy.', '..ww.wwwwr..', '.wwwwwwwww..', 'wWwwwwwwww..', 'wWWwwwwww...', '.wwwwwww....', '..y..y......'],
+  ['.......rr...', '......rrr...', '.....wwwww..', '.....wkwwyy.', '.....wwwwyy.', '..ww.wwwwr..', '.wwwwwwwww..', 'wWwwwwwwww..', 'wWWwwwwww...', '.wwwwwww....', '...y..y.....']];
+const PET_CHICKEN = CHICKEN_ROWS.map(r => makeSprite(r, CHICKEN_PAL, 1, false));
+const BIRD_PAL = { b: '#4a9ae8', B: '#2a5aa8', l: '#bfe4ff', y: '#f0b030', k: '#10203a' };
+const BIRD_ROWS = [
+  ['..B.......', '.BB..bbb..', 'BBB.bbbbb.', '.BBbkbbbyy', '..bbbbbby.', '..bbbllb..', '...bbbb...', '...y.y....'],
+  ['..........', '...bbbb...', '..bbbbbbb.', '.BBbkbbbyy', 'BBBbbbbby.', '.BBbbllb..', '..BBbbb...', '...y.y....']];
+const PET_BIRD = BIRD_ROWS.map(r => makeSprite(r, BIRD_PAL, 1, false));
+const EGG_SPR = makeSprite(['..ww..', '.wwww.', 'wwwwww', 'wwWwww', 'wwwwww', '.wwww.', '..ww..'], { w: '#fff8e0', W: '#e8d8b0' }, 1, false);
+const PETS = { dog: { n: ['Dog', 'Cão'], price: 0 }, chicken: { n: ['Chicken Bomber', 'Galinha Bombista'], price: 50000 }, bird: { n: ['Bird', 'Pássaro'], price: 65000 } };
+const ensurePets = () => { const P = save.pets = save.pets || { own: {}, eq: '' }; P.own = P.own || {}; for (const k of ['lv', 'xp', 'names']) P[k] = P[k] && typeof P[k] === 'object' ? P[k] : {}; return P; };
+const PET_MAX = 30, PET_RENAME = 50;   // nivel maximo e custo (diamantes) de cada mudanca de nome
+const petSpecies = id => lang === 'en' ? PETS[id].n[0] : PETS[id].n[1];
+const petDisplayName = id => (save.pets.names && save.pets.names[id]) || petSpecies(id);
+const petLv = id => Math.max(1, Math.min(PET_MAX, ((save.pets.lv && save.pets.lv[id]) | 0) || 1));
+const petXpNeed = l => Math.round(100 + 60 * (l - 1) + 2 * (l - 1) * (l - 1));   // do nivel 1 ao 30 sao cerca de 43 000 de XP: demora
+function addPetXp(id, n) {   // devolve quantos niveis subiu
+  const P = ensurePets(); if (!id || !P.own[id] || n <= 0) return 0; let l = petLv(id), x = (P.xp[id] | 0) + n, up = 0;
+  while (l < PET_MAX && x >= petXpNeed(l)) { x -= petXpNeed(l); l++; up++; }
+  if (l >= PET_MAX) x = 0; P.lv[id] = l; P.xp[id] = x; return up;
+}
+const petStats = (id, L) => ({
+  dog: { spd: .12 + .002 * (L - 1), atk: .10 + .0017 * (L - 1) },
+  chicken: { egg: Math.max(1.1, 2 - .03 * (L - 1)), r: 34 + .8 * (L - 1), dmg: .6 + .03 * (L - 1), spd: 130 + 2 * (L - 1) },
+  bird: { regen: .004 + .00025 * (L - 1) },
+})[id];
+const petImg = (id, t) => id === 'dog' ? PET_DOG[Math.floor(t * 4) % 2] : id === 'chicken' ? PET_CHICKEN[Math.floor(t * 4) % 2] : PET_BIRD[Math.floor(t * 5) % 2];
 function updatePet(dt) {
-  const p = R.p; if (!save.pets || save.pets.eq !== 'dog') { R.pet = null; R.petBuff = 0; return; }
-  if (!R.pet) R.pet = { x: p.x - 30, y: p.y + 12, flip: false, t: 0 };
-  const q = R.pet, tx = p.x + (p.flip ? 34 : -34), ty = p.y + 12, d = Math.hypot(tx - q.x, ty - q.y), sp = stats().spd * 1.15 + 40;
-  if (d > 4) { const st = Math.min(d, sp * dt); q.x += (tx - q.x) / d * st; q.y += (ty - q.y) / d * st; q.t += dt; if (Math.abs(tx - q.x) > 3) q.flip = tx < q.x; }
-  R.petBuff = Math.hypot(p.x - q.x, p.y - q.y) < DOG_BUFF.near ? 1 : 0;
+  ensurePets(); const p = R.p, id = save.pets.eq; R.petBuff = 0;
+  if (R.eggs && R.eggs.length) {   // os ovos da galinha explodem passado um bocadinho
+    for (const e of R.eggs) { e.t += dt; if (e.t >= e.max && !e.done) { e.done = true; areaDmg(e.x, e.y, e.r, e.d * DM(), { kb: 90 }); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r, t: .25, max: .25, col: '#ffe9a0' }); burst(e.x, e.y, '#fff3b0', 9); SFX.hit(); } }
+    R.eggs = R.eggs.filter(e => !e.done);
+  }
+  if (!id || !save.pets.own[id]) { R.pet = null; return; }
+  if (!R.pet || R.pet.id !== id) R.pet = { id, x: p.x - 30, y: p.y + 12, flip: false, t: 0, egg: 1, ang: Math.random() * 6, wx: p.x, wy: p.y };
+  const q = R.pet, L = petLv(id), S = petStats(id, L);
+  if (id === 'dog') {
+    DOG_BUFF.spd = S.spd; DOG_BUFF.atk = S.atk;
+    const tx = p.x + (p.flip ? 34 : -34), ty = p.y + 12, d = Math.hypot(tx - q.x, ty - q.y), sp = stats().spd * 1.15 + 40;
+    if (d > 4) { const st = Math.min(d, sp * dt); q.x += (tx - q.x) / d * st; q.y += (ty - q.y) / d * st; q.t += dt; if (Math.abs(tx - q.x) > 3) q.flip = tx < q.x; }
+    R.petBuff = Math.hypot(p.x - q.x, p.y - q.y) < DOG_BUFF.near ? 1 : 0;
+  } else if (id === 'chicken') {
+    let tg = null, bd = 1e9, kind = '';
+    for (const c of R.coins) { if (c.got) continue; const d = Math.hypot(c.x - q.x, c.y - q.y); if (d < bd) { bd = d; tg = c; kind = 'c'; } }
+    if (p.hp < p.max) for (const h of R.hearts) { if (h.got) continue; const d = Math.hypot(h.x - q.x, h.y - q.y); if (d < bd) { bd = d; tg = h; kind = 'h'; } }
+    let tx, ty, sp = S.spd * .55;
+    if (tg) { tx = tg.x; ty = tg.y; sp = S.spd * 1.3; }
+    else { if (Math.hypot(q.wx - q.x, q.wy - q.y) < 10 || (q.wt = (q.wt || 0) - dt) <= 0) { q.wx = 50 + Math.random() * (W - 100); q.wy = 60 + Math.random() * (H - 120); q.wt = 4; } tx = q.wx; ty = q.wy; }
+    const d = Math.hypot(tx - q.x, ty - q.y) || 1;
+    if (tg && d < 14) {
+      tg.got = true;
+      if (kind === 'c') { R.gold += tg.v; SFX.coin(); R.texts.push({ x: tg.x, y: tg.y - 8, s: '+' + tg.v, t: .6, col: '#fd5' }); }
+      else { heal(20); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+20', t: .8, col: '#6f6' }); }
+    } else if (d > 3) { const st = Math.min(d, sp * dt); q.x += (tx - q.x) / d * st; q.y += (ty - q.y) / d * st; q.t += dt; if (Math.abs(tx - q.x) > 2) q.flip = tx < q.x; q.egg -= dt;
+      if (q.egg <= 0) { q.egg = S.egg; R.eggs = R.eggs || []; R.eggs.push({ x: q.x, y: q.y + 8, t: 0, max: .7, r: S.r, d: S.dmg }); }   // so poe ovos quando anda
+    }
+  } else if (id === 'bird') {
+    q.ang += dt * (1.8 + .02 * L); q.t += dt; const px = p.x + Math.cos(q.ang) * 52, py = p.y - 20 + Math.sin(q.ang) * 20; q.flip = Math.cos(q.ang + 1.57) < 0; q.x = px; q.y = py;
+    if (p.hp > 0 && p.hp < p.max * .5 && R.endT === undefined) { heal(p.max * S.regen * dt); q.hs = (q.hs || 0) - dt; if (q.hs <= 0) { q.hs = .9; spark(p.x, p.y - 10, '#6f6', 3, 40, .6, 3, -30); } }
+  }
 }
 function drawPet(q) {
-  const im = PET_DOG[Math.floor(q.t * 9) % 2], k = 2.6, w = im.width * k, h = im.height * k;
-  ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(q.x, q.y + h / 2 - 2, 14, 4, 0, 0, 7); ctx.fill();
-  ctx.save(); ctx.translate(Math.round(q.x), Math.round(q.y)); if (q.flip) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore();
+  const im = petImg(q.id, q.t), k = q.id === 'dog' ? 2.6 : q.id === 'chicken' ? 2.4 : 2.6, w = im.width * k, h = im.height * k, fl = q.id === 'bird' ? Math.sin(q.t * 6) * 2 : 0;
+  ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(q.x, q.y + (q.id === 'bird' ? 30 : h / 2 - 2), q.id === 'bird' ? 8 : 14, 4, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(Math.round(q.x), Math.round(q.y + fl)); if (q.flip) ctx.scale(-1, 1); ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore();
+  if (save.pets.names && save.pets.names[q.id]) { ctx.globalAlpha = .75; txt(save.pets.names[q.id], q.x, q.y - h / 2 - 4 + fl, 9, '#fff', 'center'); ctx.globalAlpha = 1; }
+}
+function drawEggs() {
+  for (const e of R.eggs || []) {
+    const k = e.t / e.max, s = 2 + (k > .6 ? Math.sin(R.time * 40) * .4 : 0), w = EGG_SPR.width * s, h = EGG_SPR.height * s;
+    ctx.globalAlpha = .12 + .25 * k; ctx.fillStyle = '#ffd34a'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r * k, 0, 7); ctx.fill(); ctx.globalAlpha = .5; ctx.strokeStyle = '#ffe9a0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.drawImage(EGG_SPR, Math.round(e.x - w / 2), Math.round(e.y - h / 2), w, h);
+  }
+}
+const petLines = (id, L) => {   // o que o pet faz a este nivel (ingles primeiro)
+  const S = petStats(id, L), f1 = v => (v * 100).toFixed(1).replace(/\.0$/, '');
+  if (id === 'dog') return [T2('Deals no damage; helps while close to you', 'Deals no damage; helps while close to you'), `+${f1(S.spd)}% ${T2('move speed', 'move speed')} · +${f1(S.atk)}% ${T2('attack speed', 'attack speed')}`];
+  if (id === 'chicken') return [T2('Collects coins and hearts for you', 'Collects coins and hearts for you'), T2(`Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`, `Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`)];
+  return [T2('Circles you and heals you below 50% health', 'Circles you and heals you below 50% health'), `${T2('Regen', 'Regen')} ${(S.regen * 100).toFixed(2)}% ${T2('max health per second', 'max health per second')}`];
+};
+let petRename = '', petMsg = '';
+function confirmPetRename() {
+  ensurePets(); const id = petRename; if (!id) return; const name = (rk.pname || '').trim();
+  if (!/^[A-Za-z0-9 _-]{1,12}$/.test(name)) { petMsg = T2('Use 1 to 12 letters, numbers, spaces, _ or -', 'Use 1 to 12 letters, numbers, spaces, _ or -'); SFX.error(); return; }
+  if (name === ((save.pets.names && save.pets.names[id]) || '')) { petRename = ''; rk.focus = ''; return; }
+  if (save.gems < PET_RENAME) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
+  save.gems -= PET_RENAME; save.pets.names[id] = name; petRename = ''; rk.focus = ''; hubToast = { t: 2.4, s: `${petSpecies(id)} → ${name}`, col: '#ffd34a' }; SFX.buy(); persist(); if (on.token) { rk.at = {}; onlineSubmit(); }
+}
+function drawPetRename() {
+  if (state !== 'hub' || tab !== 'pets' || !petRename) return;
+  const id = petRename, x = 230, y = 140, w = 340, h = 210;
+  ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { petRename = ''; rk.focus = ''; } });
+  panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
+  txt(T2('Rename pet', 'Rename pet'), x + w / 2, y + 32, 18, '#ffd34a', 'center', 'bold');
+  txt(`${petSpecies(id)} · ${T2('each change costs', 'each change costs')} ◆${PET_RENAME}`, x + w / 2, y + 54, 12, '#7fe8ff', 'center');
+  rkField(x + 20, y + 84, w - 40, T2('Name (1-12 characters)', 'Name (1-12 characters)'), 'pname', false);
+  if (petMsg) txt(petMsg, x + w / 2, y + 134, 11, '#f88', 'center');
+  btn(x + 20, y + 152, 140, 38, T2('Confirm', 'Confirm'), confirmPetRename, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: save.gems < PET_RENAME });
+  btn(x + w - 160, y + 152, 140, 38, T2('Cancel', 'Cancel'), () => { petRename = ''; rk.focus = ''; }, { size: 14, col: '#2a2a48' });
 }
 function hubPets() {
-  const own = save.pets.own.dog, eq = save.pets.eq === 'dog', x = 197, y = 96, w = 585, h = 190;
-  panel(x, y, w, h, '#16162a', eq ? '#a8821f' : '#3a3a5a');
-  ctx.fillStyle = '#0e0e1a'; ctx.fillRect(x + 14, y + 14, 150, 162);
-  { const im = PET_DOG[Math.floor(T * 4) % 2], k = 8; ctx.drawImage(im, Math.round(x + 89 - im.width * k / 2), Math.round(y + 95 - im.height * k / 2 + Math.sin(T * 3) * 2), im.width * k, im.height * k); }
-  txt('Cão', x + 184, y + 40, 24, '#fff', 'left', 'bold'); bevel(x + 184 + txtW('Cão', 24, 'bold') + 12, y + 22, 64, 22, '#2c2410', '#a8821f', '#4a3a10'); txt('GRÁTIS', x + 184 + txtW('Cão', 24, 'bold') + 44, y + 38, 12, '#ffe9a0', 'center', 'bold');
-  wrap('Um companheiro leal que corre ao teu lado. Não causa dano, mas dá-te energia enquanto estiver perto de ti.', x + 184, y + 70, 380, 16, 13, '#aab6d0');
-  txt(`+${Math.round(DOG_BUFF.spd * 100)}% velocidade de movimento`, x + 184, y + 118, 14, '#6f6', 'left', 'bold'); txt(`+${Math.round(DOG_BUFF.atk * 100)}% velocidade de ataque`, x + 184, y + 138, 14, '#6f6', 'left', 'bold');
-  txt('Se te afastares depressa (esquiva), o bónus pára até ele te alcançar.', x + 184, y + 160, 11, '#778');
-  if (!own) btn(x + w - 190, y + 18, 170, 36, 'Obter (grátis)', () => { save.pets.own.dog = 1; save.pets.eq = 'dog'; persist(); SFX.buy(); }, { size: 15, col: '#2f7a4a', hot: '#3fa061' });
-  else btn(x + w - 190, y + 18, 170, 36, eq ? 'Equipado ✓' : 'Equipar', () => { save.pets.eq = eq ? '' : 'dog'; persist(); SFX.click(); }, { size: 15, col: eq ? '#a06a20' : '#2f7a4a', hot: eq ? '#c98a30' : '#3fa061' });
-  txt('Mais companheiros em breve', 487, 318, 15, '#8a9ab8', 'center', 'bold');
-  [380, 487, 594].forEach((px, i) => { const bob = Math.sin(T * 2 + i) * 3, k = 5; ctx.globalAlpha = .6; ctx.drawImage(PET_EGG, Math.round(px - 4 * k), Math.round(392 + bob - 4 * k), 8 * k, 8 * k); ctx.globalAlpha = 1; txt('?', px, 400 + bob, 20, '#ffd34a', 'center', 'bold'); });
+  ensurePets(); const ids = ['dog', 'chicken', 'bird'];
+  ids.forEach((id, i) => {
+    const x = 197, y = 94 + i * 128, w = 585, h = 120, own = !!save.pets.own[id], eq = save.pets.eq === id, L = own ? petLv(id) : 1, price = PETS[id].price, can = save.gold >= price;
+    panel(x, y, w, h, '#16162a', eq ? '#a8821f' : '#3a3a5a');
+    ctx.fillStyle = '#0e0e1a'; ctx.fillRect(x + 10, y + 10, 100, 100);
+    { const im = petImg(id, T), k = id === 'dog' ? 5.5 : id === 'chicken' ? 6 : 7; if (!own) ctx.globalAlpha = .55; ctx.drawImage(im, Math.round(x + 60 - im.width * k / 2), Math.round(y + 60 - im.height * k / 2 + Math.sin(T * 3 + i) * 2), im.width * k, im.height * k); ctx.globalAlpha = 1; }
+    const nm = own ? petDisplayName(id) : petSpecies(id); txt(nm, x + 126, y + 30, 20, '#fff', 'left', 'bold');
+    if (own && save.pets.names[id]) txt(petSpecies(id), x + 126 + txtW(nm, 20, 'bold') + 10, y + 30, 11, '#8a9ab8');
+    if (!own) { const bw = txtW(price ? '¢' + gfmt(price) : T2('FREE', 'FREE'), 14, 'bold') + 16; bevel(x + 126 + txtW(nm, 20, 'bold') + 12, y + 14, bw, 22, '#2c2410', '#a8821f', '#4a3a10'); txt(price ? '¢' + gfmt(price) : T2('FREE', 'FREE'), x + 126 + txtW(nm, 20, 'bold') + 12 + bw / 2, y + 30, 14, can || !price ? '#ffe9a0' : '#f88', 'center', 'bold'); }
+    if (own) { const xp = save.pets.xp[id] | 0, need = petXpNeed(L); txt(`Lv ${L}${L >= PET_MAX ? ' (MAX)' : ''}`, x + 126, y + 54, 13, '#ffd34a', 'left', 'bold'); bar(x + 196, y + 45, 130, 9, L >= PET_MAX ? 1 : xp / need, '#a8821f'); txt(L >= PET_MAX ? 'MAX' : `${gfmt(xp)} / ${gfmt(need)} XP`, x + 334, y + 54, 11, '#9ab'); }
+    else txt(T2('Levels up to 30 while equipped', 'Levels up to 30 while equipped'), x + 126, y + 54, 12, '#778');
+    petLines(id, L).forEach((ln, k) => txt(ln, x + 126, y + 78 + k * 18, 12, k ? '#6f6' : '#aab6d0', 'left', k ? 'bold' : 'normal'));
+    const bx = x + w - 172;
+    if (!own) btn(bx, y + 14, 158, 36, price ? T2('Buy', 'Buy') : T2('Get (free)', 'Get (free)'), () => { if (price && !can) { SFX.error(); hubToast = { t: 2.4, s: T2('Not enough gold', 'Not enough gold'), col: '#f88' }; return; } if (price) spendG(price); save.pets.own[id] = 1; save.pets.lv[id] = 1; save.pets.xp[id] = 0; if (!save.pets.eq) save.pets.eq = id; persist(); SFX.buy(); }, { size: 15, col: !price || can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061' });
+    else { btn(bx, y + 14, 158, 36, eq ? T2('Equipped ✓', 'Equipped ✓') : T2('Equip', 'Equip'), () => { save.pets.eq = eq ? '' : id; persist(); SFX.click(); if (on.token) { rk.at = {}; } }, { size: 15, col: eq ? '#a06a20' : '#2f7a4a', hot: eq ? '#c98a30' : '#3fa061' });
+      btn(bx, y + 58, 158, 28, `${T2('Rename', 'Rename')} · ◆${PET_RENAME}`, () => { petRename = id; petMsg = ''; rk.pname = (save.pets.names && save.pets.names[id]) || ''; rk.focus = 'pname'; }, { size: 12, col: '#3a5a7a', hot: '#4a7aa0' }); }
+  });
 }
 
 /* =====================================================================
@@ -3326,7 +3429,7 @@ function drawWorld() {
   const th = THEMES[MISSIONS[R.m].theme], p = R.p;
   ctx.save(); if (R.shake > .5) ctx.translate((Math.random() - .5) * R.shake, (Math.random() - .5) * R.shake);
   ctx.fillStyle = th.bg; ctx.fillRect(-20, -20, W + 40, H + 40); if (R.bg) ctx.drawImage(R.bg, 0, 0, W, H);
-  drawDeco(MISSIONS[R.m].theme, R.time); drawAmbient(MISSIONS[R.m].theme, R.time); drawTels();
+  drawDeco(MISSIONS[R.m].theme, R.time); drawAmbient(MISSIONS[R.m].theme, R.time); drawTels(); drawEggs();
   for (const c of R.coins) { drawIcon('coin', c.x, c.y + Math.sin(R.time * 6 + c.x) * 2, 1.5); }
   for (const h of R.hearts) drawIcon('heart', h.x, h.y + Math.sin(R.time * 5) * 2, 2);
 
@@ -3514,7 +3617,7 @@ function frame(now) {
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
-  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
+  if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawPetRename(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
     frameErr = 0;
