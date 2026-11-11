@@ -2903,11 +2903,11 @@ function hubRank() {
   if (!rk.rows.length) txt(rk.loading ? 'A carregar...' : 'Ainda sem resultados.', 606, 280, 14, '#778', 'center');
   rk.rows.forEach((r, i) => {
     const y = 186 + i * 20.5, mine = on.nick && r.nick.toLowerCase() === on.nick.toLowerCase(), col = i === 0 ? '#ffd34a' : i === 1 ? '#d8e0f0' : i === 2 ? '#e0a060' : '#fff';
-    if (mine) { ctx.fillStyle = '#2c2410'; ctx.fillRect(438, y - 13, 336, 19); }
+    if (mine) { ctx.fillStyle = '#10263e'; ctx.fillRect(438, y - 13, 336, 19); ctx.fillStyle = '#4aa8ff'; ctx.fillRect(438, y - 13, 3, 19); }   // a tua linha fica a azul, para nao se confundir com o 1.º lugar
     const hov = mouse.x - UIOX >= 438 && mouse.x - UIOX <= 774 && mouse.y >= y - 13 && mouse.y <= y + 6; if (hov && !mine) { ctx.fillStyle = '#ffffff12'; ctx.fillRect(438, y - 13, 336, 19); }
     ui.push({ x: 438, y: y - 13, w: 336, h: 19, fn: () => openProfile(r.nick) });
     if (SPR[r.cls + '0']) drawSprBig(hk(r.cls, r.skin, r.gender), 482, y - 4, .5);
-    txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#ffd34a' : col, 'left', 'bold'); let fx = 502 + txtW(r.nick, 14, 'bold') + 8;
+    txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#6cc4ff' : col, 'left', 'bold'); let fx = 502 + txtW(r.nick, 14, 'bold') + 8;
     if (r.country) { drawFlag(r.country, fx, y - 10, 16, 11); fx += 22; }
     { const tt = r.title && TITLES[r.title] ? '« ' + titleName(r.title) + ' »' : '', room = 768 - txtW(gfmt(r.value), 14, 'bold') - 8 - fx; if (tt && txtW(tt, 10, 'bold') <= room) drawTitle(tt, fx, y, 10, r.title); else if (rk.stat !== 'level' && txtW('Nv ' + r.lv, 11) <= room) txt('Nv ' + r.lv, fx, y, 11, '#8a9ab8'); }
     txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
