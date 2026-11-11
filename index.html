@@ -656,7 +656,7 @@ function normalize(s) {
   const d = newSave(s.cls || 'knight');
   s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0); s.bagSlots = Math.max(1, Math.min(5, s.bagSlots | 0 || 1));
   s.pets = s.pets && typeof s.pets === 'object' ? s.pets : {}; s.pets.own = s.pets.own || {}; s.pets.eq = s.pets.eq || '';
-  s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
+  s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {}; s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {
@@ -718,7 +718,7 @@ const K = a => !!keys[binds[a]];
 addEventListener('keydown', e => {
   initAudio();
   if (state === 'hub' && tab === 'rank' && rk.prof && e.code === 'Escape') { rk.prof = null; return; }
-  if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile'))) && rk.focus && !capture && rankKey(e)) return;
+  if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile' || tab === 'ach'))) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   keys[e.code] = true;
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
@@ -1239,7 +1239,7 @@ Object.assign(EN_DICT, {"Editar perfil": "Edit profile", "Entra numa conta para 
 Object.assign(EN_DICT, {"Perfil": "Profile"});
 Object.assign(EN_DICT, {"Personagens": "Characters", "Personagem atual": "Current character", "Entrar com este": "Play this one", "Criar personagem": "Create character", "Nick do personagem": "Character nickname", "Ainda não tens": "You do not have one yet", "A carregar...": "Loading...", "principal": "main", "Perfil da conta": "Account profile", "O sexo e o país valem para todos os teus personagens.": "Gender and country apply to all your characters.", "Cada personagem tem um nick diferente e uma classe fixa. Entras com a mesma palavra-passe.": "Each character has a different nickname and a fixed class. You log in with the same password.", "Entra numa conta para ver o perfil e os personagens.": "Log in to see your profile and characters.", "A guardar o personagem atual...": "Saving the current character...", "Não foi possível guardar o personagem atual. Espera uns segundos e tenta outra vez.": "Could not save the current character. Wait a few seconds and try again.", "Não foi possível guardar o personagem atual. Tenta outra vez.": "Could not save the current character. Try again.", "Já tens um personagem com esta classe": "You already have a character of this class", "Já tens os 3 personagens": "You already have all 3 characters", "Personagem não encontrado": "Character not found", "Este personagem é de outra classe.": "This character is of another class.", "Já tens um personagem com esta classe.": "You already have a character of this class.", "Indisponível": "Unavailable", "Cada personagem tem uma classe fixa e a conta só pode ter uma de cada.": "Each character has a fixed class and an account can only have one of each.", "A escolha é permanente para este personagem. Mais tarde podes criar outros, um por classe.": "The choice is permanent for this character. Later you can create others, one per class."});
 Object.assign(EN_DICT, {"1. Escolhe o grupo (mesma peça, raridade, estrelas e faixa de nível)   2. Marca 5 itens   3. Clica num marcado para o manter": "1. Pick a group (same piece, rarity, stars and level band)   2. Mark 5 items   3. Click a marked one to keep it", "Nível do item": "Item level", "média dos 5": "average of the 5"});
-Object.assign(EN_DICT, {"Conquistas": "Achievements", "Cajado de Raios com 3 estrelas e +20 na Bigorna": "Lightning Staff with 3 stars and +20 at the Anvil", "Conclui as 6 raids na dificuldade Fácil": "Clear all 6 raids on Easy", "Mago Relâmpago": "Lightning Mage", "Lobo Alfa": "Alpha Wolf", "Rainha Aranha": "Spider Queen", "Cavaleiro Negro": "Black Knight", "Sapo Colossal": "Colossal Toad", "Escorpião Rei": "Scorpion King", "Arquidemónio": "Archdemon"});
+Object.assign(EN_DICT, {"O título é de cada personagem.": "The title belongs to each character.", "Nick (não pode ser alterado)": "Nickname (cannot be changed)", "Conquistas": "Achievements", "Cajado de Raios com 3 estrelas e +20 na Bigorna": "Lightning Staff with 3 stars and +20 at the Anvil", "Conclui as 6 raids na dificuldade Fácil": "Clear all 6 raids on Easy", "Mago Relâmpago": "Lightning Mage", "Lobo Alfa": "Alpha Wolf", "Rainha Aranha": "Spider Queen", "Cavaleiro Negro": "Black Knight", "Sapo Colossal": "Colossal Toad", "Escorpião Rei": "Scorpion King", "Arquidemónio": "Archdemon"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1520,7 +1520,7 @@ function drawKeys() {
 const RAR = [['Comum', '#9aa4b8'], ['Raro', '#5aa8ff'], ['Épico', '#b06aff'], ['Lendário', '#ff9a2a'], ['Mítico', '#ff4a6a']];
 const SLOTS = ['head', 'chest', 'boots', 'amulet'], BAG_PAGE = 30;
 // 5 mochilas de 30 lugares: a 1.a e gratis, as outras compram-se por ordem (ouro ou diamantes)
-const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 50], ['d', 75]];
+const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 200], ['d', 300]];
 const bagMax = () => BAG_PAGE * ((save && save.bagSlots) || 1);
 const SLOT_LBL = { head: 'Capacete', chest: 'Armadura', boots: 'Botas', amulet: 'Amuleto' };
 const ITEM_NAMES = {
@@ -1850,7 +1850,7 @@ let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0;
 function hubBag() {
   [['all', 'Todos']].concat(SLOTS.map(sl => [sl, SLOT_LBL[sl]])).forEach(([k, l], i) => btn(197 + i * 58, 88, 55, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; }, { size: 11, col: bagFilter === k ? '#a8821f' : '#2a2a48' }));
   // mochilas: cinco separadores numerados; os bloqueados mostram um cadeado e o proximo mostra o preco
-  const slots = save.bagSlots | 1; if (bagPage >= slots) bagPage = 0;
+  const slots = save.bagSlots || 1; if (bagPage >= slots) bagPage = 0;
   txt('Mochila', 197, 132, 12, '#8a9ab8', 'left', 'bold');
   for (let k = 0; k < 5; k++) {
     const x = 252 + k * 34, open = k < slots, next = k === slots;
@@ -1913,7 +1913,7 @@ function sellList(list) { let g = 0; for (const it of list) { g += sellValue(it)
 const sellTargets = () => sellAsk === 'pick' ? save.bag.filter(it => bagPick.has(it)) : save.bag;
 function drawBagBuy() {
   if (state !== 'hub' || tab !== 'bag' || !bagBuy) return; const k = bagBuy - 1, c = BAG_COST[k], gem = c[0] === 'd', can = gem ? save.gems >= c[1] : save.gold >= c[1];
-  if (k < (save.bagSlots | 1)) { bagBuy = 0; return; }
+  if (k < (save.bagSlots || 1)) { bagBuy = 0; return; }
   ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { bagBuy = 0; } });
   const x = 250, y = 170, w = 300, h = 160; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
   txt(`Desbloquear a Mochila ${k + 1}?`, x + w / 2, y + 34, 18, '#ffd34a', 'center', 'bold'); txt('+30 lugares para itens', x + w / 2, y + 58, 13, '#aab', 'center');
@@ -1965,7 +1965,7 @@ function evolveItem(it) {
   it.il = il2; save.stones[it.r]--; enc.msg = `EVOLUÍDO! Nível ${il2}`; enc.col = '#7fe8ff'; enc.msgT = 2.5; SFX.special();
   for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#7fe8ff' }); persist();
 }
-const specGems = it => 1 + it.r + Math.floor((it.rr || 0) / 2);   // encantar especial custa diamantes: sobem com a raridade e com cada repeticao
+const specGems = it => 4 * (1 + it.r + Math.floor((it.rr || 0) / 2));   // encantar especial custa diamantes: sobem com a raridade e com cada repeticao
 function doSpec() {
   const it = enchItem; if (!it || enc.t > 0) return; const c = specCost(it), gm = specGems(it); if (save.gold < c || save.gems < gm) { SFX.error(); return; }
   spendG(c); save.gems -= gm; enc = { t: .9, res: { kind: 'spec', it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
@@ -2325,7 +2325,7 @@ function hubFuse() {
 }
 
 /* ----- Skins (1.ª com ouro, restantes com diamantes) ----- */
-const SKIN_COST = [[0, 'g'], [5000, 'g'], [100, 'd'], [200, 'd'], [300, 'd']];   // diamantes: mais caras, porque as conquistas dao muitos
+const SKIN_COST = [[0, 'g'], [5000, 'g'], [300, 'd'], [600, 'd'], [900, 'd']];   // diamantes: mais caras, porque as conquistas dao muitos
 const ACH_SKIN = {
   inferno: { text: 'Conclui uma raid Inferno', prog: () => save.raids && Object.values(save.raids).some(a => (a[4] | 0) > 0) ? [1, 1] : [0, 1] },
   kills: { text: 'Mata 10 000 monstros', prog: () => [Math.min(10000, (save.stats && save.stats.kills) | 0), 10000] },
@@ -2365,7 +2365,7 @@ const TITLES = {
   reaper: ['Ceifador de Almas', 'Soul Reaper'], slayer: ['Aniquilador', 'Annihilator'], treasure: ['Caçador de Tesouros', 'Treasure Hunter'], tycoon: ['Magnata', 'Tycoon'],
   veteran: ['Veterano', 'Veteran'], legend: ['Lenda Viva', 'Living Legend'], immortal: ['Imortal', 'Immortal'], tireless: ['Incansável', 'Tireless'],
   lord0: ['Senhor da Floresta', 'Lord of the Forest'], lord1: ['Rei das Cavernas', 'King of the Caves'], lord2: ['Conquistador do Castelo', 'Castle Conqueror'], lord3: ['Mestre do Pântano', 'Swamp Master'], lord4: ['Faraó das Areias', 'Pharaoh of the Sands'], lord5: ['Dominador do Abismo', 'Abyss Dominator'],
-  hardcore: ['Veterano das Raids', 'Raid Veteran'], nightmare: ['Terror dos Pesadelos', 'Nightmare Terror'], inferno: ['Campeão do Inferno', 'Inferno Champion'],
+  beta: ['Beta Tester', 'Beta Tester'], hardcore: ['Veterano das Raids', 'Raid Veteran'], nightmare: ['Terror dos Pesadelos', 'Nightmare Terror'], inferno: ['Campeão do Inferno', 'Inferno Champion'],
   enchanter: ['Encantador', 'Enchanter'], armorer: ['Mestre Armeiro', 'Master Armorer'], smith: ['Ferreiro Lendário', 'Legendary Smith'], lucky: ['O Sortudo', 'The Lucky One'], dandy: ['Dândi', 'Dandy'],
 };
 const ACH = [];
@@ -2395,7 +2395,8 @@ achAdd('rar4', 'gear', 'd', ['Sorte Absoluta', 'Absolute Luck'], ['Obtém um ite
 const achSt = a => (save.ach && save.ach[a.id]) | 0;   // 0 em curso, 1 concluida por receber, 2 recebida
 const achReady = () => save && save.ach ? ACH.filter(a => save.ach[a.id] === 1).length : 0;
 const titleName = id => TITLES[id] ? T2(TITLES[id][0], TITLES[id][1]) : '';
-const titleOwned = id => ACH.some(a => a.title === id && achSt(a) === 2);
+const titleOwned = id => ACH.some(a => a.title === id && achSt(a) === 2) || (id === 'beta' && !!(save && save.codes && save.codes.beta));
+function setTitle(id) { save.title = id; persist(); SFX.click(); if (on.token) { rk.at = {}; onlineSubmit(); } }   // o titulo vai na build publica: aparece no ranking e no perfil dos outros
 function checkAch() {
   if (!save) return; save.ach = save.ach || {}; const fresh = [];
   for (const a of ACH) if (!save.ach[a.id]) { const [x, y] = a.prog(); if (x >= y) { save.ach[a.id] = 1; fresh.push(a); } }
@@ -2406,7 +2407,18 @@ function achClaim(a) {
   if (achSt(a) !== 1) return; save.ach[a.id] = 2; save.gems += a.gems; if (a.title && !save.title) save.title = a.title;
   hubToast = { t: 2.6, s: `+${a.gems} ◆` + (a.title ? T2(' · Novo título: ', ' · New title: ') + titleName(a.title) : ''), col: '#7fe8ff' }; SFX.buy(); persist();
 }
-let achCat = 'all', achPage = 0;
+let achCat = 'all', achPage = 0, codeMsg = { s: '', col: '#9ab' }, codeBusy = false;
+async function redeemCode() {   // codigos promocionais: validados no servidor e so se usam uma vez por CONTA
+  const c = (rk.code || '').trim().toLowerCase(); rk.focus = ''; if (!c || codeBusy) return;
+  if (!on.token) { codeMsg = { s: T2('Inicia sessão para usar códigos.', 'Log in to use codes.'), col: '#f88' }; SFX.error(); return; }
+  codeBusy = true; codeMsg = { s: T2('A verificar...', 'Checking...'), col: '#9ab' }; const r = await rpc('gog_redeem', { p_token: on.token, p_code: c }); codeBusy = false;
+  if (r && r.ok) {
+    save.codes = save.codes || {}; save.codes[c] = 1; save.gems += r.gems | 0; if (r.title && TITLES[r.title] && !save.title) save.title = r.title; rk.code = '';
+    codeMsg = { s: T2(`Código aceite: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · título ' + titleName(r.title) : ''), `Code accepted: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · title ' + titleName(r.title) : '')), col: '#6f6' }; hubToast = { t: 2.6, s: `+${r.gems | 0} ◆`, col: '#7fe8ff' }; SFX.buy(); persist();
+  } else {
+    const e = r && r.error; codeMsg = { s: e === 'used' ? T2('Este código já foi usado nesta conta.', 'This code was already used on this account.') : e === 'bad_code' ? T2('Código inválido.', 'Invalid code.') : e === 'auth' ? T2('Sessão expirada. Entra outra vez.', 'Session expired. Log in again.') : T2('Não foi possível verificar o código.', 'Could not check the code.'), col: '#f88' }; SFX.error();
+  }
+}
 function hubAch() {
   if (!save) return;
   const cats = [['all', 'Todas', 'All'], ['combat', 'Combate', 'Combat'], ['prog', 'Progresso', 'Progress'], ['farm', 'Farm', 'Farm'], ['raid', 'Raids', 'Raids'], ['gear', 'Equipamento', 'Gear'], ['titles', 'Títulos', 'Titles']];
@@ -2414,18 +2426,21 @@ function hubAch() {
   const done = ACH.filter(a => achSt(a) > 0).length, ready = achReady();
   if (achCat === 'titles') {
     const own = Object.keys(TITLES).filter(titleOwned).length; txt(T2(`${own} / ${Object.keys(TITLES).length} títulos`, `${own} / ${Object.keys(TITLES).length} titles`), 197, 160, 13, '#9ab', 'left', 'bold');
-    btn(650, 146, 130, 24, T2('Sem título', 'No title'), () => { save.title = ''; persist(); }, { size: 12, col: save.title ? '#4a3a3a' : '#2a2a48', off: !save.title });
+    btn(650, 146, 130, 24, T2('Sem título', 'No title'), () => setTitle(''), { size: 12, col: save.title ? '#4a3a3a' : '#2a2a48', off: !save.title });
     Object.keys(TITLES).forEach((id, i) => {
-      const x = 197 + (i % 3) * 196, y = 178 + Math.floor(i / 3) * 42, own = titleOwned(id), eq = save.title === id, a = ACH.find(q => q.title === id);
-      if (own) { btn(x, y, 190, 38, '', () => { save.title = eq ? '' : id; persist(); }, { col: eq ? '#a8821f' : '#222240', hot: '#3a3a60' }); txt(titleName(id), x + 95, y + 24, 13, eq ? '#fff' : '#ffd34a', 'center', 'bold'); }
-      else { bevel(x, y, 190, 38, '#0e0e18', '#26263a', '#05050a'); txt(titleName(id), x + 95, y + 17, 12, '#667', 'center', 'bold'); { let q = T2(...a.name); while (q.length > 8 && txtW(q, 10) > 176) q = q.slice(0, -1); txt(q, x + 95, y + 31, 10, '#556', 'center'); } }
+      const x = 197 + (i % 4) * 147, y = 176 + Math.floor(i / 4) * 40, own = titleOwned(id), eq = save.title === id, a = ACH.find(q => q.title === id);
+      const fit = (str, sz, mw, wt) => { let f = sz; while (f > 8 && txtW(str, f, wt) > mw) f--; return f; }, nm = titleName(id);
+      if (own) { btn(x, y, 141, 36, '', () => setTitle(eq ? '' : id), { col: eq ? '#a8821f' : '#222240', hot: '#3a3a60' }); txt(nm, x + 70, y + 23, fit(nm, 12, 130, 'bold'), eq ? '#fff' : '#ffd34a', 'center', 'bold'); }
+      else { bevel(x, y, 141, 36, '#0e0e18', '#26263a', '#05050a'); txt(nm, x + 70, y + 15, fit(nm, 11, 130, 'bold'), '#667', 'center', 'bold'); { let q = a ? T2(...a.name) : T2('Código especial', 'Special code'); while (q.length > 8 && txtW(q, 10) > 130) q = q.slice(0, -1); txt(q, x + 70, y + 29, 10, '#556', 'center'); } }
     });
+    rkField(197, 438, 200, T2('Código promocional', 'Promo code'), 'code', false); btn(405, 438, 110, 28, T2('Resgatar', 'Redeem'), redeemCode, { size: 13, col: '#2f7a4a', hot: '#3fa061' });
+    if (codeMsg.s) txt(codeMsg.s, 524, 457, 11, codeMsg.col);
     return;
   }
   txt(T2(`${done} / ${ACH.length} concluídas`, `${done} / ${ACH.length} complete`) + (ready ? T2(` · ${ready} por receber`, ` · ${ready} to claim`) : ''), 197, 160, 13, ready ? '#ffd34a' : '#9ab', 'left', 'bold');
   btn(650, 146, 130, 24, T2('Receber tudo', 'Claim all'), () => { let g = 0, n = 0; for (const a of ACH) if (achSt(a) === 1) { save.ach[a.id] = 2; g += a.gems; n++; if (a.title && !save.title) save.title = a.title; } if (n) { save.gems += g; hubToast = { t: 2.6, s: `+${g} ◆`, col: '#7fe8ff' }; SFX.buy(); persist(); } }, { size: 12, col: ready ? '#2f7a4a' : '#2a2a48', hot: '#3fa061', off: !ready });
-  const rk = a => { const s = achSt(a); return s === 1 ? 0 : s === 0 ? 1 : 2; };
-  const list = ACH.filter(a => achCat === 'all' || a.cat === achCat).map((a, i) => [a, i]).sort((u, v) => rk(u[0]) - rk(v[0]) || u[1] - v[1]).map(u => u[0]);
+  const rnk = a => { const s = achSt(a); return s === 1 ? 0 : s === 0 ? 1 : 2; };
+  const list = ACH.filter(a => achCat === 'all' || a.cat === achCat).map((a, i) => [a, i]).sort((u, v) => rnk(u[0]) - rnk(v[0]) || u[1] - v[1]).map(u => u[0]);
   const per = 5, pages = Math.max(1, Math.ceil(list.length / per)); achPage = Math.max(0, Math.min(pages - 1, achPage));
   list.slice(achPage * per, achPage * per + per).forEach((a, i) => {
     const x = 197, y = 176 + i * 54, w = 583, h = 50, st = achSt(a), [p, g] = a.prog();
@@ -2551,7 +2566,7 @@ function drawCountryPicker() {
   });
 }
 // editar perfil: so o sexo e o pais; o nick nunca muda
-const FLAG_COST = 100;   // mudar de bandeira custa diamantes; escolher a primeira e gratis
+const FLAG_COST = 250;   // mudar de bandeira custa diamantes; escolher a primeira e gratis
 const flagCost = e => (on.country && on.country !== 'ZZ' && e.country !== (on.country || 'ZZ')) ? FLAG_COST : 0;
 let editProf = null;
 function openEditProfile() { if (!on.token) return; editProf = { gender: myG(), country: on.country || 'ZZ', busy: false, msg: '', col: '#f88' }; }
@@ -2591,19 +2606,22 @@ function hubProfile() {
   if (chMsg && !chNew) txt(chMsg, lx + lw / 2, 470, 11, chBusy ? '#9ab' : '#f88', 'center');
   // coluna da direita: editar perfil
   const x = 497, w = 285; txt('Perfil da conta', x, 128, 15, '#f0c060', 'left', 'bold'); ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x, 134, w, 1);
-  txt('Nick', x, 156, 11, '#8a9ab8'); bevel(x, 162, w, 28, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 10, 182, 14, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 18, 176, 1.1);
-  txt('O nick não pode ser alterado.', x, 204, 10, '#778');
-  txt('Sexo', x, 228, 11, '#8a9ab8');
+  { const own = Object.keys(TITLES).filter(titleOwned), list = [''].concat(own), ci = Math.max(0, list.indexOf(save.title)), step = d => { setTitle(list[(ci + d + list.length) % list.length]); };
+    txt(T2('Título', 'Title'), x, 152, 11, '#8a9ab8'); bevel(x, 158, w, 28, '#10101c', '#33334a', '#05050a');
+    btn(x, 158, 28, 28, '‹', () => step(-1), { size: 16, col: '#2a2a48', off: !own.length }); btn(x + w - 28, 158, 28, 28, '›', () => step(1), { size: 16, col: '#2a2a48', off: !own.length });
+    txt(own.length ? (save.title && TITLES[save.title] ? '« ' + titleName(save.title) + ' »' : T2('Sem título', 'No title')) : T2('Ainda sem títulos (ver Conquistas)', 'No titles yet (see Achievements)'), x + w / 2, 177, 12, save.title && own.length ? '#ffd34a' : '#778', 'center', 'bold'); }
+  txt('Nick (não pode ser alterado)', x, 212, 11, '#8a9ab8'); bevel(x, 218, w, 28, '#10101c', '#33334a', '#05050a'); txt(on.nick || '', x + 10, 238, 14, '#fff', 'left', 'bold'); drawIcon('lock', x + w - 18, 232, 1.1);
+  txt('Sexo', x, 268, 11, '#8a9ab8');
   [['m', 'Masculino'], ['f', 'Feminino']].forEach(([g, n], i) => {
-    const bx = x + i * 145, bw = 140; btn(bx, 234, bw, 58, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
-    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 28, 264, .9); txt(n, bx + 54, 268, 12, '#fff', 'left', 'bold');
+    const bx = x + i * 145, bw = 140; btn(bx, 274, bw, 50, '', () => { e.gender = g; SFX.click(); }, { col: e.gender === g ? '#a06a20' : '#2a2a48', hot: '#c98a30' });
+    drawSprBig(hk(save.cls, save.skE[save.cls], g), bx + 28, 299, .8); txt(n, bx + 54, 303, 12, '#fff', 'left', 'bold');
   });
-  txt('País', x, 316, 11, '#8a9ab8');
-  btn(x, 322, w, 32, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 10, 330, 24, 16); txt(cName(e.country), x + 44, 343, 13, '#fff', 'left', 'bold'); txt('▾', x + w - 16, 343, 13, '#aab', 'center');
-  { const c = flagCost(e); txt(e.msg || (c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis')), x + w / 2, 376, 11, e.msg ? e.col : c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
+  txt('País', x, 344, 11, '#8a9ab8');
+  btn(x, 350, w, 30, '', () => { cpick = { pick: c => { e.country = c; } }; }, { col: '#2a2a48', hot: '#3a3a5a' }); drawFlag(e.country, x + 10, 357, 24, 16); txt(cName(e.country), x + 44, 370, 13, '#fff', 'left', 'bold'); txt('▾', x + w - 16, 370, 13, '#aab', 'center');
+  { const c = flagCost(e); txt(e.msg || (c ? `Mudar de bandeira custa ◆${c}` : (on.country && on.country !== 'ZZ' ? 'Podes mudar de bandeira por ◆' + FLAG_COST : 'A primeira bandeira é grátis')), x + w / 2, 399, 11, e.msg ? e.col : c ? (save.gems >= c ? '#7fe8ff' : '#f88') : '#9ab', 'center'); }
   const changed = e.gender !== myG() || e.country !== (on.country || 'ZZ');
-  btn(x, 390, w, 32, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy || !changed || save.gems < flagCost(e) });
-  wrap('O sexo e o país valem para todos os teus personagens.', x, 442, w, 13, 10, '#778');
+  btn(x, 408, w, 30, flagCost(e) ? `Guardar · ◆${flagCost(e)}` : 'Guardar', saveEditProfile, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: e.busy || !changed || save.gems < flagCost(e) });
+  wrap('O sexo e o país valem para todos os teus personagens. O título é de cada personagem.', x, 452, w, 13, 10, '#778');
 }
 
 /* ----- Ranking online (Supabase; ver docs/ONLINE.md) ----- */
@@ -2612,7 +2630,7 @@ const ON_STORE = 'gog-online-v1';
 let on = { token: null, nick: null, gender: 'm', country: null };
 try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick, gender: o.gender === 'f' ? 'f' : 'm', country: /^[A-Z]{2}$/.test(o.country || '') ? o.country : null }; } catch (e) {}
 const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
-let rk = { cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+let rk = { code: '', cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 rk.country = guessCountry();
 const RK_MSG = {
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
@@ -2642,7 +2660,7 @@ function statPayload() {
 // build publica (so dados de jogo): skin, arma, atributos e equipamento
 function buildPayload() {
   const g = {}; for (const sl of SLOTS) { const it = save.gear[sl]; if (it) g[sl] = { r: it.r, e: it.ench || 0, st: it.st || 0, sp: it.spec ? it.spec.nm : '' }; }
-  const w = curW(); return { skin: save.skE[save.cls] | 0, weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
+  const w = curW(); return { skin: save.skE[save.cls] | 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
 }
 async function openProfile(nick) {
   rk.prof = { nick, d: null, err: '' }; const r = await rpc('gog_profile', { p_nick: nick });
@@ -2690,9 +2708,9 @@ function rankKey(e) {
   const k = e.code, f = rk.focus;
   if (k === 'Escape') { rk.focus = ''; return true; }
   if (k === 'Tab') { e.preventDefault(); const order = on.token ? ['pass'] : rk.mode === 'register' ? ['nick', 'pass', 'pass2'] : ['nick', 'pass']; rk.focus = order[(order.indexOf(f) + 1) % order.length]; return true; }
-  if (k === 'Enter') { e.preventDefault(); if (f === 'cnick' && chNew) createChar(chNew); else if (!on.token) rkAuth(rk.mode === 'register'); return true; }
-  if (k === 'Backspace') { e.preventDefault(); rk[f] = rk[f].slice(0, -1); return true; }
-  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' || f === 'cnick' ? /[A-Za-z0-9_]/.test(e.key) && rk[f].length < 16 : rk[f].length < 64) rk[f] += e.key; return true; }
+  if (k === 'Enter') { e.preventDefault(); if (f === 'code') redeemCode(); else if (f === 'cnick' && chNew) createChar(chNew); else if (!on.token) rkAuth(rk.mode === 'register'); return true; }
+  if (k === 'Backspace') { e.preventDefault(); rk[f] = (rk[f] || '').slice(0, -1); return true; }
+  if (e.key && e.key.length === 1) { e.preventDefault(); if (f === 'nick' || f === 'cnick' || f === 'code' ? /[A-Za-z0-9_]/.test(e.key) && (rk[f] || '').length < 16 : rk[f].length < 64) rk[f] = (rk[f] || '') + e.key; return true; }
   return false;
 }
 function rkField(x, y, w, label, key, mask) {
@@ -2738,7 +2756,8 @@ function hubRank() {
     if (SPR[r.cls + '0']) drawSprBig(hk(r.cls, r.skin, r.gender), 482, y - 4, .5);
     txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#ffd34a' : col, 'left', 'bold'); let fx = 502 + txtW(r.nick, 14, 'bold') + 8;
     if (r.country) { drawFlag(r.country, fx, y - 10, 16, 11); fx += 22; }
-    if (rk.stat !== 'level') txt('Nv ' + r.lv, fx, y, 11, '#8a9ab8'); txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
+    { const tt = r.title && TITLES[r.title] ? '« ' + titleName(r.title) + ' »' : '', room = 768 - txtW(gfmt(r.value), 14, 'bold') - 8 - fx; if (tt && txtW(tt, 10, 'bold') <= room) txt(tt, fx, y, 10, '#ffd34a', 'left', 'bold'); else if (rk.stat !== 'level' && txtW('Nv ' + r.lv, 11) <= room) txt('Nv ' + r.lv, fx, y, 11, '#8a9ab8'); }
+    txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
   });
   if (rk.rows.length) txt('Clica num jogador para ver o perfil', 606, 452, 11, '#778', 'center');
   if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 606, 468, 14, '#7fe8a0', 'center', 'bold');
@@ -2988,7 +3007,7 @@ function drawProfile() {
   btn(x + w - 40, y + 10, 28, 26, 'X', () => { rk.prof = null; }, { size: 14, col: '#6a2a2a', hot: '#8a3a3a' });
   if (!d) { txt(P.err ? 'Perfil indisponível' : 'A carregar perfil...', x + w / 2, y + 200, 18, P.err ? '#f88' : '#9ab', 'center', 'bold'); return; }
   const b = d.build, cn = CLASSES[d.cls] ? CLASSES[d.cls].name : d.cls, sec = (t, sx, sy, sw) => { txt(t, sx, sy, 13, '#f0c060', 'left', 'bold'); ctx.fillStyle = '#3a3a5a'; ctx.fillRect(sx, sy + 6, sw, 1); };
-  txt(d.nick, x + 20, y + 36, 24, '#ffd34a', 'left', 'bold'); if (d.country) drawFlag(d.country, x + 20 + txtW(d.nick, 24, 'bold') + 12, y + 20, 24, 16); txt(`${cn} · Nv ${gfmt(d.level)}`, x + 20, y + 58, 14, '#9cf', 'left', 'bold');
+  txt(d.nick, x + 20, y + 36, 24, '#ffd34a', 'left', 'bold'); if (d.country) drawFlag(d.country, x + 20 + txtW(d.nick, 24, 'bold') + 12, y + 20, 24, 16); txt(`${cn} · Nv ${gfmt(d.level)}`, x + 20, y + 58, 14, '#9cf', 'left', 'bold'); if (d.build && d.build.title && TITLES[d.build.title]) txt('« ' + titleName(d.build.title) + ' »', x + 20 + txtW(`${cn} · Nv ${gfmt(d.level)}`, 14, 'bold') + 14, y + 58, 14, '#ffd34a', 'left', 'bold');
   ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x + 16, y + 72, w - 32, 1);
   // retrato e arma
   const px = x + 20, py = y + 88; ctx.fillStyle = '#0e0e1a'; ctx.fillRect(px, py, 140, 112);

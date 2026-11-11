@@ -85,6 +85,7 @@ declare o jsonb; w jsonb; a jsonb; g jsonb := '{}'::jsonb; it jsonb; sl text;
 begin
   if b is null or jsonb_typeof(b) <> 'object' or length(b::text) > 3000 then return null; end if;
   o := jsonb_build_object('skin', least(greatest(coalesce((b->>'skin')::int, 0), 0), 9));
+  if (b->>'title') ~ '^[a-z0-9]{3,12}$' then o := o || jsonb_build_object('title', b->>'title'); end if;   -- titulo de conquista (so um codigo curto)
   w := b->'weapon';
   if jsonb_typeof(w) = 'object' and (w->>'id') ~ '^[a-z]_[a-z]{2,10}$' then
     o := o || jsonb_build_object('weapon', jsonb_build_object('id', w->>'id',
@@ -281,8 +282,8 @@ begin
                      when 'wave0' then 'w0' when 'wave1' then 'w1' when 'wave2' then 'w2' when 'wave3' then 'w3' when 'wave4' then 'w4' when 'wave5' then 'w5' end;
   if col is null then return jsonb_build_object('ok', false, 'error', 'bad_stat'); end if;
   execute format($q$
-    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
-      select nick, cls, gender, country, level as lv, coalesce((build->>'skin')::int, 0) as skin, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
+    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'title', title, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
+      select nick, cls, gender, country, level as lv, coalesce((build->>'skin')::int, 0) as skin, build->>'title' as title, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
       from gog.players where active and %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
@@ -492,3 +493,40 @@ end $$;
 
 -- personagens que ja existiam: a classe passa a ficar fixa
 update gog.players set char_cls = save->>'cls' where char_cls is null and save is not null and save->>'cls' in ('knight', 'archer', 'mage');
+
+-- ====================================================== codigos promocionais (cada codigo so se usa 1 vez por CONTA)
+create table if not exists gog.promo (code text primary key, gems int not null default 0, title text);
+create table if not exists gog.promo_used (root bigint not null references gog.players(id) on delete cascade, code text not null references gog.promo(code) on delete cascade, at timestamptz not null default now(), primary key (root, code));
+alter table gog.promo enable row level security;
+alter table gog.promo_used enable row level security;
+revoke all on gog.promo, gog.promo_used from public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then revoke all on gog.promo, gog.promo_used from anon; end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then revoke all on gog.promo, gog.promo_used from authenticated; end if;
+end $$;
+insert into gog.promo (code, gems, title) values ('beta', 10, 'beta') on conflict (code) do nothing;   -- titulo Beta Tester + 10 diamantes
+
+create or replace function public.gog_redeem(p_token text, p_code text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; root bigint; pr gog.promo; k text := lower(btrim(coalesce(p_code, '')));
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if k !~ '^[a-z0-9_]{1,16}$' then return jsonb_build_object('ok', false, 'error', 'bad_code'); end if;
+  select * into pr from gog.promo where code = k;
+  if not found then return jsonb_build_object('ok', false, 'error', 'bad_code'); end if;
+  select coalesce(owner, id) into root from gog.players where id = pid;   -- a conta e o personagem principal: todos os personagens partilham o mesmo uso
+  begin
+    insert into gog.promo_used (root, code) values (root, k);
+  exception when unique_violation then
+    return jsonb_build_object('ok', false, 'error', 'used');
+  end;
+  return jsonb_build_object('ok', true, 'gems', pr.gems, 'title', pr.title);
+end $$;
+do $$
+declare f text := 'public.gog_redeem(text,text)';
+begin
+  execute format('revoke all on function %s from public', f);
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
+end $$;
