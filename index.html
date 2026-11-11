@@ -128,7 +128,8 @@ const RHY = {
   battle: [[1, 0, 1, 1, 0, 1, 1, 0], [1, 1, 0, 1, 1, 0, 1, 1], [1, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, 0, 1, 0, 1, 0], [1, 0, 1, 1, 1, 0, 1, 1]],
 };
 let melK = 7, melR = null, phrase = 0;
-function musicLoop() {
+function musicLoop() { try { musicStep(); } catch (e) { setTimeout(musicLoop, 250); } }
+function musicStep() {
   const m = MUS[musicMode], i = mi++, set = CHORDS[musicMode] ? musicMode : 'calm', cs = CHORDS[set], bar = Math.floor(i / 8) % cs.length, st = i % 8, ch = cs[bar], ss = m.step / 1000;
   if (st === 0) {
     melR = RHY[set][Math.floor(Math.random() * RHY[set].length)]; if (bar === 0) phrase++;
@@ -729,6 +730,7 @@ const K = a => !!keys[binds[a]];
 addEventListener('keydown', e => {
   initAudio();
   if (state === 'hub' && tab === 'rank' && rk.prof && e.code === 'Escape') { rk.prof = null; return; }
+  if (state === 'hub' && e.code === 'Escape' && (farmInfo >= 0 || presAsk >= 0)) { farmInfo = -1; presAsk = -1; return; }
   if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile' || tab === 'ach'))) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   keys[e.code] = true;
@@ -1256,11 +1258,12 @@ const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
 setLang(lang);
-const LCACHE = {};
+const LCACHE = {}; let LCN = 0;
 function L(s) {
   if (lang !== 'en') return s;
   let r = LCACHE[s]; if (r !== undefined) return r; r = s;
   for (const k of EN_KEYS) if (r.includes(k)) r = r.split(k).join(EN_DICT[k]);
+  if (++LCN > 5000) { for (const k in LCACHE) delete LCACHE[k]; LCN = 0; }
   return LCACHE[s] = r;
 }
 const FS = 1.3;
@@ -1289,15 +1292,15 @@ function txtParts(s, size) {
   const parts = s.split(/([¢✓♥¤◆★])/).filter(p => p !== ''), k = Math.max(1, Math.round(size / 9));
   return { parts, k, wd: parts.map(p => TOK[p] ? ICN[TOK[p]].width * k + 3 : ctx.measureText(p).width) };
 }
-function txtW(s, size, w = 'normal') { ctx.font = `${w} ${Math.round(size * FS)}px ${FONT}`; return txtParts(L(s), size).wd.reduce((a, b) => a + b, 0); }
+function txtW(s, size, w = 'normal') { ctx.font = `normal ${Math.round(size * FS)}px ${FONT}`; return txtParts(L(s), size).wd.reduce((a, b) => a + b, 0); }
 function txt(s, x, y, size, col, al, w) { txtR(L(s), x, y, size, col, al, w); }
 function txtR(s, x, y, size = 16, col = '#fff', al = 'left', w = 'normal') {
-  ctx.font = `${w} ${Math.round(size * FS)}px ${FONT}`;
+  ctx.font = `normal ${Math.round(size * FS)}px ${FONT}`;   // sempre peso normal: letra mais fina (o negrito falso engrossava os tracos)
   const { parts, k, wd } = txtParts(s, size), total = wd.reduce((a, b) => a + b, 0);
   let cx = al === 'center' ? x - total / 2 : al === 'right' ? x - total : x; ctx.textAlign = 'left';
   parts.forEach((p, i) => {
     if (TOK[p]) { const im = ICN[TOK[p]]; ctx.drawImage(im, Math.round(cx), Math.round(y - im.height * k + 1), im.width * k, im.height * k); }
-    else { ctx.fillStyle = '#000b'; ctx.fillText(p, cx + 1, y + 1); ctx.fillStyle = col; ctx.fillText(p, cx, y); }
+    else { ctx.fillStyle = '#0009'; ctx.fillText(p, cx + 1, y + 1); ctx.fillStyle = col; ctx.fillText(p, cx, y); }
     cx += wd[i];
   });
 }
@@ -2546,13 +2549,13 @@ function hubAch() {
     const own = Object.keys(TITLES).filter(titleOwned).length; txt(T2(`${own} / ${Object.keys(TITLES).length} títulos`, `${own} / ${Object.keys(TITLES).length} titles`), 197, 160, 13, '#9ab', 'left', 'bold');
     btn(650, 146, 130, 24, T2('Sem título', 'No title'), () => setTitle(''), { size: 12, col: save.title ? '#4a3a3a' : '#2a2a48', off: !save.title });
     Object.keys(TITLES).forEach((id, i) => {
-      const x = 197 + (i % 4) * 147, y = 176 + Math.floor(i / 4) * 40, own = titleOwned(id), eq = save.title === id, a = ACH.find(q => q.title === id);
+      const x = 197 + (i % 4) * 147, y = 172 + Math.floor(i / 4) * 36, own = titleOwned(id), eq = save.title === id, a = ACH.find(q => q.title === id);
       const fit = (str, sz, mw, wt) => { let f = sz; while (f > 8 && txtW(str, f, wt) > mw) f--; return f; }, nm = titleName(id);
-      if (own) { btn(x, y, 141, 36, '', () => setTitle(eq ? '' : id), { col: eq ? '#a8821f' : '#222240', hot: '#3a3a60' }); drawTitle(nm, x + 70, y + 23, fit(nm, 12, 130, 'bold'), id, 'center'); }
-      else { bevel(x, y, 141, 36, '#0e0e18', '#26263a', '#05050a'); txt(nm, x + 70, y + 15, fit(nm, 11, 130, 'bold'), '#667', 'center', 'bold'); { let q = a ? T2(...a.name) : T2('Código especial', 'Special code'); while (q.length > 8 && txtW(q, 10) > 130) q = q.slice(0, -1); txt(q, x + 70, y + 29, 10, '#556', 'center'); } }
+      if (own) { btn(x, y, 141, 32, '', () => setTitle(eq ? '' : id), { col: eq ? '#a8821f' : '#222240', hot: '#3a3a60' }); drawTitle(nm, x + 70, y + 21, fit(nm, 12, 130, 'bold'), id, 'center'); }
+      else { bevel(x, y, 141, 32, '#0e0e18', '#26263a', '#05050a'); txt(nm, x + 70, y + 14, fit(nm, 11, 130, 'bold'), '#667', 'center', 'bold'); { let q = L(a ? T2(...a.name) : T2('Código especial', 'Special code')); while (q.length > 6 && txtW(q, 9) > 132) q = q.slice(0, -2) + '…'; txt(q, x + 70, y + 26, 9, '#556', 'center'); } }
     });
-    rkField(197, 438, 200, T2('Código promocional', 'Promo code'), 'code', false); btn(405, 438, 110, 28, T2('Resgatar', 'Redeem'), redeemCode, { size: 13, col: '#2f7a4a', hot: '#3fa061' });
-    if (codeMsg.s) txt(codeMsg.s, 524, 457, 11, codeMsg.col);
+    rkField(197, 450, 200, T2('Código promocional', 'Promo code'), 'code', false); btn(405, 450, 110, 28, T2('Resgatar', 'Redeem'), redeemCode, { size: 13, col: '#2f7a4a', hot: '#3fa061' });
+    if (codeMsg.s) txt(codeMsg.s, 524, 469, 11, codeMsg.col);
     return;
   }
   txt(T2(`${done} / ${ACH.length} concluídas`, `${done} / ${ACH.length} complete`) + (ready ? T2(` · ${ready} por receber`, ` · ${ready} to claim`) : ''), 197, 160, 13, ready ? '#ffd34a' : '#9ab', 'left', 'bold');
@@ -2760,8 +2763,9 @@ function rkSay(code, extra) { const good = code === 'welcome' || code === 'sent'
 async function rpc(fn, args) {
   if (!ONLINE_URL || !ONLINE_KEY) return { ok: false, error: 'off' };
   try {
-    const r = await fetch(`${ONLINE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args) });
-    const j = await r.json(); return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: 'server' };
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 20000);
+    try { const r = await fetch(`${ONLINE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args), signal: ac.signal });
+      const j = await r.json(); return j && typeof j === 'object' && 'ok' in j ? j : { ok: false, error: 'server' }; } finally { clearTimeout(tm); }
   } catch (e) { return { ok: false, error: 'network' }; }
 }
 // A palavra-passe nunca sai do dispositivo: envia-se apenas PBKDF2-SHA256 (210 000 iteracoes, sal = nick) em hexadecimal.
@@ -3473,7 +3477,10 @@ const CUR = (() => {
   return { arrow: mk(26, 34, arrow('#fff4c8', '#3a2a10'), 0, 0), hand: mk(26, 34, arrow('#ffd34a', '#3a2a10'), 0, 0), aim: mk(33, 33, aim, 16, 16) };
 })();
 let last = performance.now();
+let frameErr = 0;
 function frame(now) {
+  requestAnimationFrame(frame);   // o proximo fotograma e pedido logo: uma falha pontual nunca para o jogo
+  try {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
   ui = []; cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
@@ -3482,7 +3489,16 @@ function frame(now) {
   if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
-  requestAnimationFrame(frame);
+    frameErr = 0;
+  } catch (e) {
+    frameErr++; sfxQuiet = false; mdown = false; try { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; } catch (e2) {}
+    if (frameErr === 1) { try { console.error(e); } catch (e3) {} window.__lastErr = String(e && e.message || e); }
+    if (frameErr >= 30) {   // continua a falhar: volta a um sitio seguro em vez de ficar preso
+      frameErr = 0; farmInfo = -1; presAsk = -1; bagBuy = 0; cpick = null; chNew = null; try { rk.prof = null; } catch (e4) {}
+      if (state === 'play' || state === 'cp' || state === 'win' || state === 'lose') state = save ? 'hub' : 'menu'; else if (state === 'hub') tab = 'farm';
+      hubToast = { t: 4, s: 'Erro recuperado: ' + (window.__lastErr || ''), col: '#f88' };
+    }
+  }
 }
 if (ONLINE_URL && on.token) { cloudStart(); rpc('gog_profile', { p_nick: on.nick }).then(r => { if (r && r.ok) { on.gender = r.gender === 'f' ? 'f' : 'm'; on.country = r.country || null; onSave(); } }); }   // atualiza sexo e pais (podem ter mudado noutro dispositivo)
 requestAnimationFrame(frame);
