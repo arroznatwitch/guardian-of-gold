@@ -178,18 +178,19 @@ function makeSprite(rows, pal, sc, flash) {
 }
 const SPR = {};
 function defSprite(name, rows, pal, sc) { SPR[name] = { n: makeSprite(rows, pal, sc, false), f: makeSprite(rows, pal, sc, true) }; }
+// Herois: pixel art 16x16 feita a mao (PNG em art/heroes/; tools/png2sprite.py converte um PNG nestas linhas). Cada pixel e desenhado com 2x2.
 const HERO_ROWS = {
-  knight: ['....rr....','...ssss...','..ssssss..','..sffffs..','..sfkkfs..','...ffff...','..dssssd..','.dssggssd.','.fssggssf.','..ssssss..','..bb..bb..','.bbb..bbb.'],
-  archer: ['...gggg...','..gggggg..','..gffffg..','..gfkkfg..','...ffff...','..GGGGGG..','.bGggggGb.','.fGggggGf.','..GggggG..','..GG..GG..','..bb..bb..','.bbb..bbb.'],
-  mage:   ['....pp....','...pppp...','..pppppp..','.pppppppp.','..ffffff..','..fkffkf..','..wwwwww..','..PPyyPP..','.fPPPPPPf.','..PPPPPP..','..PPPPPP..','.PPPPPPPP.'],
+  knight: ['................', '................', '.........ab.....', '........ab.b....', '.......aaa......', '......ccac......', '.....cccccc.....', '....cddddddc....', '....cdeddedc....', '....cccccccc....', '......cccc......', '....dccccccd....', '.....cccccc.....', '.....cccccc.....', '......f..f......', '......g..g......'],
+  archer: ['................', '.........a.b....', '........aab.....', '.......aabb.....', '.....cccaaa.....', '....ccccccdc....', '....cccccccdc...', '....cefeefccc...', '.....geeeegcc...', '.....aaeeaa.c...', '....eaaaaaae....', '.....daaaad.....', '....daaaaaad....', '.....dddddd.....', '......e..e......', '......h..h......'],
+  mage: ['................', '..........aa....', '........baa.....', '.......bbba.....', '......bbbb......', '.....bbbbbb.....', '.....cccccc.....', '.....cdccdc.....', '.....eeeeee.....', '.....bbccbb.....', '....cbbbbbbc....', '.....bbbbbb.....', '.....bbbbbb.....', '.....bbbbbb.....', '.....abbbba.....', '....bbaaaabb....'],
 };
 const BASE_PAL = {
-  knight: { r:'#e03030', s:'#b8c0d0', d:'#6b7388', f:'#f0c8a0', k:'#222', g:'#e8c060', b:'#5a3b22' },
-  archer: { g:'#3f9f4a', G:'#2a6a34', f:'#f0c8a0', k:'#222', b:'#6b4a2a' },
-  mage:   { p:'#8a4fd0', P:'#5a2a98', y:'#ffd24a', f:'#f0c8a0', k:'#222', w:'#eee' },
+  knight: { a: '#ac3232', b: '#a84242', c: '#696a6a', d: '#eec39a', e: '#000000', f: '#373838', g: '#595652' },
+  archer: { a: '#4b692f', b: '#ffffff', c: '#df7126', d: '#32471e', e: '#eec39a', f: '#000000', g: '#d77bba', h: '#663931' },
+  mage: { a: '#925fa6', b: '#76428a', c: '#eec39a', d: '#000000', e: '#ffffff' },
 };
 const SKINS = { knight: [0], archer: [0], mage: [0] };   // uma unica aparencia por classe (as skins foram removidas)
-for (const c in HERO_ROWS) defSprite(c + '0', HERO_ROWS[c], BASE_PAL[c], 3);
+for (const c in HERO_ROWS) defSprite(c + '0', HERO_ROWS[c], BASE_PAL[c], 2);
 
 defSprite('gguard', ['......HH......', '.....GLLG.....', '....GGEEGG....', '....GEKKEG....', '....GGLLGG....', '..H.HGGGGH.H..', '.GGHNNNNNNHGG.', 'GLGNNEEEENNGLG', 'GGGNNNEENNNGGG', '.G.GGNNNNGG.G.', '.G..GNNNNG..G.', '....KGGGGK....', '...KK....KK...', '..GGG....GGG..'], { G: '#f5c542', H: '#c9951c', L: '#ffe58a', K: '#241e16', N: '#3a2e1c', E: '#ff8a1a' }, 8);
 defSprite('slime', ['........','..gggg..','.gggggg.','.gkggkg.','gggggggg','gGgggGgg','GGGGGGGG'], {g:'#4caf50',G:'#2e7d32',k:'#111'}, 3);
@@ -1322,7 +1323,7 @@ function menuBg() {
    ECRÃS
    ===================================================================== */
 function openKeys(back) { keysBack = back; state = 'keys'; capture = null; }
-const HAND = { knight: [3.5, 2.5], archer: [3.5, 1.5], mage: [3.5, 2.5] };   // posicao da mao (em células de 3px a partir do centro do sprite)
+const HAND = { knight: [7 / 3, 7 / 3], archer: [7 / 3, 5 / 3], mage: [7 / 3, 5 / 3] };   // mao direita (pixel bege): knight (11,11), archer e mage (11,10) na grelha 16x16; em unidades de 3px a partir do centro do sprite (cada pixel do sprite vale 2px)
 let menuSel = 0, menuItems = [], menuMouse = { x: mouse.x, y: mouse.y };
 function menuActivate() { const it = menuItems[menuSel]; if (it) { SFX.click(); it.fn(); } }
 function chevron(x, y, dir) { ctx.fillStyle = '#f0c060'; for (let i = 0; i < 4; i++) ctx.fillRect(x + dir * i * 3, y - (4 - i) * 2, 3, (4 - i) * 4); }
