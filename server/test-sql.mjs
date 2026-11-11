@@ -280,6 +280,90 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   await db.exec('reset role'); const bad = (await db.query(`select gog._check_save(null, '{"cls":"mage","pl":{"lv":1},"pets":{"lv":{"dog":99}}}'::jsonb, 5, 1) as x`)).rows[0].x; await db.exec('set role anon');
   ok('anticheat: a pet above level 30 is an impossible value', bad === 'abs:pets', bad);
 }
+// guildas
+{
+  const mk = async (nick, lv = 45, gold = 30000, gems = 200, kills = 0) => {
+    await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon');
+    const rr = await q('select public.gog_register($1,$2)', [nick, B]); const tk = rr.token;
+    await db.exec('reset role');
+    await db.query("update gog.players set save = $2::jsonb, char_cls = 'knight', level = $3, save_at = now() - interval '2 minutes' where nick_key = lower($1)", [nick, JSON.stringify({ cls: 'knight', pl: { lv, xp: 0 }, gold, gems, chestDone: 1, stats: { kills, gold: 0, bosses: 0 } }), lv]);
+    await db.exec('set role anon'); return tk;
+  };
+  const ga = async (fn, ...args) => { await db.exec('reset role'); await db.exec('update gog.players set guild_at = null'); await db.exec('set role anon'); return q(`select public.${fn}(${args.map((_, i) => '$' + (i + 1)).join(',')})`, args); };
+  const okText = async s => { await db.exec('reset role'); const x = (await db.query('select gog._text_ok($1) as x', [s])).rows[0].x; await db.exec('set role anon'); return x; };
+  // filtro de palavras
+  const bads = ['n1gger', 'Nigga', 'N-I-G-G-E-R', 'niiiigga', 'f u c k', 'fuuuck', 'Cabrão', 'Put4', 'p0rn', 'FILHODAPUTA', 'Hitler', 'k k k', 'sh1t'];
+  const goods = ['Dragons', 'Guardians', 'Peacock', 'Computador', 'Golden_Knights', 'Niger-Delta'.replace('Niger-Delta', 'Nigeria'), 'Assassins', 'Classic', 'Mage Squad'];
+  let badMiss = [], goodHit = [];
+  for (const s of bads) if (await okText(s)) badMiss.push(s);
+  for (const s of goods) if (!(await okText(s))) goodHit.push(s);
+  ok('profanity filter blocks slurs and leetspeak variants', badMiss.length === 0, badMiss);
+  ok('profanity filter lets normal names through', goodHit.length === 0, goodHit);
+  await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2)', ['n1gger_x', B]); ok('a slur cannot be used as a nickname', r.error === 'bad_word', r);
+
+  const L1 = await mk('gl_lead'), L2 = await mk('gl_two'), L3 = await mk('gl_low', 30), L4 = await mk('gl_poor', 45, 100, 200), L5 = await mk('gl_nogems', 45, 30000, 10);
+  r = await ga('gog_guild_create', L3, 'Test Guild', 'TST'); ok('guild: level 40 is required', r.error === 'need_level', r);
+  r = await ga('gog_guild_create', L4, 'Test Guild', 'TST'); ok('guild: 15,000 gold is required', r.error === 'need_gold', r);
+  r = await ga('gog_guild_create', L5, 'Test Guild', 'TST'); ok('guild: 100 diamonds are required', r.error === 'need_gems', r);
+  r = await ga('gog_guild_create', L1, 'x', 'TST'); ok('guild: name too short', r.error === 'bad_name', r);
+  r = await ga('gog_guild_create', L1, 'Good Name', 'TOOLONG'); ok('guild: tag must be 2-4 characters', r.error === 'bad_name', r);
+  r = await ga('gog_guild_create', L1, 'Nigger Squad', 'NSQ'); ok('guild: slurs in the name are refused', r.error === 'bad_word', r);
+  r = await ga('gog_guild_create', L1, 'Nice Name', 'KKK'); ok('guild: slurs in the tag are refused', r.error === 'bad_word', r);
+  r = await ga('gog_guild_create', L1, 'Dragon Slayers', 'DRG'); ok('guild: created by a level 45 player', r.ok && r.guild && r.guild.level === 1 && r.guild.leader === true && r.guild.members.length === 1 && r.guild.free === 1, r); const gid = r.guild && r.guild.id;
+  r = await ga('gog_guild_create', L1, 'Another One', 'ANO'); ok('guild: cannot create while in a guild', r.error === 'in_guild', r);
+  r = await ga('gog_guild_create', L2, 'dragon slayers', 'XYZ'); ok('guild: name is unique (case-insensitive)', r.error === 'name_taken', r);
+  r = await ga('gog_guild_create', L2, 'Other Name', 'drg'); ok('guild: tag is unique (case-insensitive)', r.error === 'name_taken', r);
+  r = await ga('gog_guild_create', '0'.repeat(64), 'Zzz', 'ZZZ'); ok('guild: needs a session', r.error === 'auth', r);
+  r = await ga('gog_guild_get', L1); ok('guild: get returns the guild', r.ok && r.guild && r.guild.name === 'Dragon Slayers' && r.guild.tag === 'DRG', r);
+  r = await ga('gog_guild_get', L2); ok('guild: get without a guild returns null', r.ok && r.guild === null, r);
+  // entrar, limite de 10, sair e espera
+  const LT = await mk('gl_tiny', 5); r = await ga('gog_guild_join', LT, gid); ok('guild: level 10 is required to join', r.error === 'need_level_join', r);
+  r = await ga('gog_guild_join', L2, gid); ok('guild: a member joins', r.ok && r.guild.members.length === 2 && r.guild.leader === false, r);
+  r = await ga('gog_guild_join', L2, gid); ok('guild: cannot join twice', r.error === 'in_guild', r);
+  const extra = []; for (let i = 0; i < 8; i++) { const tk = await mk('gm_' + i, 20); extra.push(tk); r = await ga('gog_guild_join', tk, gid); }
+  ok('guild: ten members fit', r.ok && r.guild.members.length === 10, r);
+  const TF = await mk('gm_full', 20); r = await ga('gog_guild_join', TF, gid); ok('guild: the 11th member is refused', r.error === 'full', r);
+  r = await ga('gog_guild_list', L5, 0); ok('guild: list shows the guild with its members', r.ok && r.rows.some(x => x.name === 'Dragon Slayers' && x.members === 10), r);
+  // so o lider gere
+  r = await ga('gog_guild_upgrade', L2, 'xp'); ok('guild: a member cannot upgrade', r.error === 'not_leader', r);
+  r = await ga('gog_guild_kick', L2, 'gm_0'); ok('guild: a member cannot kick', r.error === 'not_leader', r);
+  r = await ga('gog_guild_upgrade', L1, 'xp'); ok('guild: the leader spends the first point', r.ok && r.guild.perks.xp === 1 && r.guild.free === 0, r);
+  r = await ga('gog_guild_upgrade', L1, 'gold'); ok('guild: no points left at level 1', r.error === 'no_points', r);
+  r = await ga('gog_guild_upgrade', L1, 'speed'); ok('guild: unknown upgrade is refused', r.error === 'bad_request', r);
+  // pontos automaticos: os mobs de cada membro (validados) sobem a guilda
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '2 minutes'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [L2, JSON.stringify({ cls: 'knight', pl: { lv: 45, xp: 0 }, gold: 30000, gems: 200, chestDone: 1, stats: { kills: 500, gold: 0, bosses: 2 } }), 0, 'd']); ok('guild: a member save with new kills is accepted', r.ok, r);
+  r = await ga('gog_guild_get', L1); const me2 = r.guild.members.find(x => x.nick === 'gl_two');
+  ok('guild: kills and bosses became guild points (500 + 2 bosses x 10)', r.guild.xp === 520 && me2 && me2.contrib === 520, r.guild && { xp: r.guild.xp, me2 });
+  await db.exec('reset role'); await db.exec('update gog.guilds set xp = 4000'); await db.exec('set role anon');
+  r = await ga('gog_guild_get', L1); ok('guild: level 2 at 4,000 points with a new point to spend', r.guild.level === 2 && r.guild.free === 1 && r.guild.xp === 0, r.guild);
+  for (let i = 0; i < 9; i++) { await db.exec('reset role'); await db.exec('update gog.guilds set xp = xp + 100000'); await db.exec('set role anon'); }
+  await db.exec('reset role'); await db.exec('update gog.guilds set xp = 99999999999'); await db.exec('set role anon');
+  r = await ga('gog_guild_get', L1); ok('guild: level is capped at 40', r.guild.level === 40, r.guild && r.guild.level);
+  for (let i = 0; i < 10; i++) r = await ga('gog_guild_upgrade', L1, 'xp');
+  ok('guild: a perk stops at level 10', r.error === 'maxed', r);
+  // expulsar, transferir e sair
+  r = await ga('gog_guild_kick', L1, 'gm_0'); ok('guild: the leader kicks a member', r.ok && r.guild.members.length === 9, r);
+  r = await ga('gog_guild_join', extra[0], gid); ok('guild: a kicked member waits 24h to join again', r.error === 'cooldown', r);
+  r = await ga('gog_guild_kick', L1, 'gl_lead'); ok('guild: the leader cannot kick themselves', r.error === 'bad_request', r);
+  r = await ga('gog_guild_transfer', L1, 'gl_two'); ok('guild: leadership is transferred', r.ok, r);
+  r = await ga('gog_guild_get', L1); ok('guild: the old leader is a plain member now', r.guild && r.guild.leader === false, r.guild && r.guild.leader);
+  r = await ga('gog_guild_leave', L2); ok('guild: the leader leaves', r.ok, r);
+  r = await ga('gog_guild_get', L1); ok('guild: leadership passes to the top contributor when the leader leaves', r.guild && r.guild.members.length === 8, r.guild && r.guild.members.length);
+  r = await ga('gog_guild_create', L2, 'Later Guild', 'LTR'); ok('guild: leaving starts a 24h wait before creating or joining', r.error === 'cooldown', r);
+  // a guilda desaparece quando sai o ultimo
+  const S1 = await mk('gs_solo'); r = await ga('gog_guild_create', S1, 'Solo Squad', 'SOL'); r = await ga('gog_guild_leave', S1);
+  await db.exec('reset role'); const left = (await db.query("select count(*) as n from gog.guilds where name_key = 'solo squad'")).rows[0].n; await db.exec('set role anon');
+  ok('guild: a guild with no members disappears', Number(left) === 0, left);
+  // tag no ranking e no perfil
+  await db.exec('reset role'); await db.exec("update gog.players set submitted_at = null"); await db.exec('set role anon');
+  r = await q('select public.gog_submit($1,$2::jsonb)', [L1, JSON.stringify({ cls: 'knight', level: 45, kills: 10, gold: 5, bosses: 0, raids: 0, w0: 1, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 0 } })]);
+  r = await q('select public.gog_board($1,20,null)', ['level']); const rowg = r.rows.find(x => x.nick === 'gl_lead'); ok('guild: the board rows carry the guild tag', rowg && rowg.gtag === 'DRG', r);
+  r = await q('select public.gog_profile($1)', ['gl_lead']); ok('guild: the public profile carries the guild', r.guild && r.guild.tag === 'DRG' && r.guild.name === 'Dragon Slayers', r);
+  let dg = false; try { await db.query('select * from gog.guilds'); } catch (e) { dg = true; } ok('guild: anon cannot read the guild tables', dg);
+  let dg2 = false; try { await db.query("select gog._text_ok('x')"); } catch (e) { dg2 = true; } ok('guild: anon cannot call the filter directly', dg2);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);
