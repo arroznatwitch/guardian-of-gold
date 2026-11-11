@@ -1674,7 +1674,9 @@ function giveLoot(x, y, minR = 0, tier = 1) {
 function bossDown(b) {
   R.petXp = (R.petXp | 0) + (b.guardian ? 60 : b.mini ? 12 : 25);   // o pet equipado ganha XP com os bosses
   if (b.guardian) { statUp('guard'); R.toast = 'GUARDIÃO DOURADO DERROTADO!'; R.toastT = 3.2; R.phase = 'hunt'; R.shake = 16; return; }   // por enquanto nao da recompensa
-  if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22); R.phase = 'hunt'; nextWave(); return; }
+  if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22);
+    if (R.farm && R.m === 0) { R.phase = 'cp'; R.cpWave = R.wave; state = 'cp'; SFX.win(); return; }   // so na Floresta Sombria: tambem podes sair nas ondas 5, 15, 25...
+    R.phase = 'hunt'; nextWave(); return; }
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
   for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
@@ -1868,7 +1870,7 @@ function drawFarmInfo() {
     txt(name, rx + 60, by + 28, 14, col, 'left', 'bold'); txt(hpTxt, rx + 60, by + 44, 11, '#cdd6f0'); wrap([...new Set(pattern)].map(q => T2(...PAT_N[q])).join(', '), rx + 60, by + 58, rw - 62, 12, 10, '#9ab');
     wrap(drop, rx, by + 82, rw, 12, 10, '#7cf');
   };
-  bossBlock(y + 204, m.semi.pal, m.semi.name, m.semi.pattern, `${T2('Vida na onda 5', 'Health on wave 5')}: ${gfmt(bossHP(5, .3))}`, T2('Onda 5, 15, 25… Larga 1 equipamento e 40% de uma cópia de arma.', 'Wave 5, 15, 25… Drops 1 gear piece and a 40% chance of a weapon copy.'), 'Semi-boss', '#ffd34a');
+  bossBlock(y + 204, m.semi.pal, m.semi.name, m.semi.pattern, `${T2('Vida na onda 5', 'Health on wave 5')}: ${gfmt(bossHP(5, .3))}`, T2('Onda 5, 15, 25… Larga 1 equipamento e 40% de uma cópia de arma.' + (i === 0 ? ' Aqui também podes sair (checkpoint).' : ''), 'Wave 5, 15, 25… Drops 1 gear piece and a 40% chance of a weapon copy.' + (i === 0 ? ' You can also leave here (checkpoint).' : '')), 'Semi-boss', '#ffd34a');
   bossBlock(y + 304, m.boss.pal, m.boss.name, m.boss.pattern, `${T2('Vida na onda 10', 'Health on wave 10')}: ${gfmt(bossHP(10, 1))}`, T2('Onda 10, 20… Larga equipamento (no mínimo Raro), 1 cópia de arma e 8 moedas grandes; depois há checkpoint e horda.', 'Wave 10, 20… Drops gear (at least Rare), 1 weapon copy and 8 big coins; then a checkpoint and a horde.'), 'Boss', '#ff9a6a');
   txt(T2('Guardião Dourado: ondas 41, 81, 121…', 'Gold Guardian: waves 41, 81, 121…'), rx, y + 428, 11, '#f5c542', 'left', 'bold');
 }
