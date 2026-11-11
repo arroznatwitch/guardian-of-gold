@@ -476,7 +476,7 @@ end $$;
 -- devolve null se o save e plausivel, ou o motivo ('abs:...' = valor impossivel)
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
-declare k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric;
+declare k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
 begin
   -- valores impossiveis (ban imediato)
   if gog._n(nw, 'gold') > 1000000 or gog._n(nw, 'gems') > 60000 or gog._n(nw, 'pl', 'lv') > 400 or gog._n(nw, 'stats', 'kills') > 5000000
@@ -522,7 +522,15 @@ begin
     if r1 > r0 + 3 + dt / 45 then return 'raids'; end if;
     -- diamantes: so sobem por subir de nivel (a cada 10), baus, conquistas recebidas (max. 75 cada) e o codigo promocional
     allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + 10 + 80;
-    if g1 > g0 + allow then return 'gems'; end if;
+    -- reembolso unico das skins removidas: so conta o que o save anterior provava ter comprado (300, 600 e 900 diamantes)
+    if nw ? 'skRef' and not (o ? 'skRef') then
+      foreach c in array array['knight', 'archer', 'mage'] loop
+        for i in 2..(case when c = 'knight' then 4 else 3 end) loop
+          if (o->'sk'->c->>i) = '1' then refund := refund + (array[0, 0, 300, 600, 900])[i + 1]; end if;
+        end loop;
+      end loop;
+    end if;
+    if g1 > g0 + allow + refund then return 'gems'; end if;
   end if;
   return null;
 end $$;

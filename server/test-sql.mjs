@@ -229,6 +229,12 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   // titulos
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);
+  // reembolso das skins removidas
+  const TKS = await fresh('ac_skins'); r = await put(TKS, { sk: { knight: [1, 1, 1, 0, 1], archer: [1, 0, 0, 0, 0], mage: [1, 0, 0, 0, 0] } }, 0); rev = r.rev;
+  r = await put(TKS, { sk: { knight: [1, 1, 1, 0, 1] }, skRef: 1, gold: 5000, gems: 1200 }, rev); ok('skins refund: what the previous save proved is accepted once (300 + 900 gems, 5000 gold)', r.ok, r); rev = r.rev;
+  r = await put(TKS, { sk: { knight: [1, 1, 1, 0, 1] }, skRef: 1, gold: 5000, gems: 2400 }, rev); ok('skins refund: it cannot be claimed twice', r.error === 'cheat' || r.error === 'banned', r);
+  const TKT = await fresh('ac_skins2'); r = await put(TKT, {}, 0); rev = r.rev;
+  r = await put(TKT, { sk: { knight: [1, 1, 1, 1, 1] }, skRef: 1, gems: 1800 }, rev); ok('skins refund: skins the server never saw are not refunded', r.error === 'cheat' || r.error === 'banned', r);
   // conta nova para testar o ban em 3 ocorrencias e o ban imediato
   const TKB = await fresh('ac_beta'); r = await put(TKB, {}, 0); rev = r.rev;
   r = await put(TKB, { title: 'beta' }, rev); ok('anticheat: beta title without the code is refused', r.error === 'cheat', r);

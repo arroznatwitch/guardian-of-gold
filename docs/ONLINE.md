@@ -84,7 +84,7 @@ A build pública inclui o pet equipado (`build.pet`: `dog`, `chicken` ou `bird`,
 Cada vez que o jogo guarda na nuvem (`gog_save_put`), o servidor confere o save antes de o aceitar:
 
 - **Saltos impossíveis** face ao save anterior, tendo em conta o tempo passado: nível, mobs, bosses, ouro, ouro gasto, diamantes, ondas, raids, fusões, prestígio.
-- **Diamantes**: só podem subir por subir de nível (a cada 10), abrir baús, receber conquistas (máx. 75 cada) e pelo código promocional.
+- **Diamantes**: só podem subir por subir de nível (a cada 10), abrir baús, receber conquistas (máx. 75 cada), pelo código promocional e, uma única vez, pelo reembolso das skins removidas (só o que o save anterior provava ter comprado: 300, 600 e 900 ◆).
 - **Conquistas**: cada conquista nova tem de ser justificada pelo próprio save (por exemplo, `kills10000` exige 10 000 mobs mortos).
 - **Títulos**: só se aceita um título que venha de uma conquista recebida (ou o `beta`, se o código foi usado). O título mostrado no Ranking vem do save verificado, nunca do pedido de ranking.
 - Uma conta nova só pode começar com um personagem novo (nível 1 ou 2, ouro e diamantes quase a zero).
