@@ -78,7 +78,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
 // build publica e perfil
 {
   r = await q('select public.gog_register($1,$2)', ['builder', A]); const TB = r.token;
-  const BUILD = { skin: 2, title: 'reaper', weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
+  const BUILD = { skin: 2, title: 'inferno', weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
     gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, junk: 'x'.repeat(50) };
   const SB = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: BUILD });
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, SB]); ok('submit with build', r.ok, r);
@@ -86,12 +86,16 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && bd.attr.str === 99999 && !('evil' in bd.attr) && !('junk' in bd), r);
   ok('gear slots whitelisted and clamped', Object.keys(bd.gear).sort().join() === 'chest,head' && bd.gear.chest.r === 4 && bd.gear.chest.e === 0 && bd.gear.head.sp === 'Ígneoscript', bd);
   r = await q('select public.gog_board($1,5,null)', ['level']); const row = r.rows.find(x => x.nick === 'builder'); ok('board rows carry class, level and skin', row && row.cls === 'mage' && row.lv === 10 && row.skin === 2, r);
-  ok('title travels in the build and in the board rows', bd.title === 'reaper' && row.title === 'reaper', row);
+  ok('a forged title in the build is dropped', !('title' in bd) && !row.title, row);
   await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
   const EVIL = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 1, title: 'Bad Title!', weapon: { id: "x';drop table gog.players;--" } } });
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, EVIL]);
   r = await q('select public.gog_profile($1)', ['builder']); ok('invalid weapon id is dropped, skin updates', r.build.skin === 1 && !r.build.weapon, r);
   ok('invalid title is dropped', !('title' in r.build), r.build);
+  // o titulo mostrado vem do save verificado
+  await db.exec('reset role'); await db.exec("update gog.players set save = '{\"cls\":\"mage\",\"title\":\"reaper\",\"stats\":{\"kills\":10000},\"ach\":{\"kills10000\":2}}'::jsonb, submitted_at = now() - interval '5 minutes' where nick = 'builder'"); await db.exec('set role anon');
+  r = await q('select public.gog_submit($1,$2)', [TB, EVIL.replace('Bad Title!', 'inferno')]);
+  r = await q('select public.gog_profile($1)', ['builder']); ok('ranking title comes from the verified save', r.build && r.build.title === 'reaper', r);
   r = await q('select public.gog_profile($1)', ['nobody_here']); ok('profile of unknown nick', r.error === 'not_found', r);
   r = await q('select public.gog_profile($1)', ["a'; drop"]); ok('profile rejects bad nick', r.error === 'bad_nick', r);
   let d2 = false; try { await db.query("select gog._clean_build('{}'::jsonb)"); } catch (e) { d2 = true; } ok('anon cannot call _clean_build', d2);
@@ -138,7 +142,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, JSON.stringify({ cls: 'knight', pl: { lv: 'x' } }), 0, 'dev']); ok('new account refuses a malformed level', r.error === 'not_new', r);
   r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(1, 0), 0, 'dev']); ok('new account accepts a fresh character', r.ok, r);
   await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
-  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 90000), 1, 'dev']); ok('an account that already has a save can progress', r.ok, r);
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(4, 3000), 1, 'dev']); ok('an account that already has a save can progress', r.ok, r);
   r = await q('select public.gog_save_reset($1)', [TF]); r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TF, SV(30, 90000), r.rev, 'dev']); ok('after a reset the account is new again', r.error === 'not_new', r);
   r = await q('select public.gog_register($1,$2)', ['fresh_two', B]); const TF2 = r.token; r = await q('select public.gog_save_get($1)', [TF2]); ok('each account has its own uid', r.uid && r.uid !== uid1, r);
 }
@@ -196,6 +200,70 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_register($1,$2)', ['promo_b', B]); const PB = r.token;
   r = await q('select public.gog_redeem($1,$2)', [PB, 'beta']); ok('a different account can use it', r.ok, r);
   let d3 = false; try { await db.query('select * from gog.promo_used'); } catch (e) { d3 = true; } ok('anon cannot read the promo tables', d3);
+}
+// anti-batota
+{
+  const SAVEAC = (o = {}) => JSON.stringify(Object.assign({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0, chestDone: 1, stats: { kills: 0, gold: 0, bosses: 0 }, ach: {}, title: '' }, o));
+  const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
+  const age = async () => { await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '2 minutes'"); await db.exec('set role anon'); };
+  const put = async (tk, o, rev) => { await age(); return q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [tk, SAVEAC(o), rev, 'd']); };
+  const TK = await fresh('ac_one');
+  r = await put(TK, {}, 0); ok('anticheat: a normal first save passes', r.ok, r); let rev = r.rev;
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TK, SAVEAC({ gems: 500 }), 0, 'd']); // fica sem efeito: so confirma que a primeira conta nova nao leva diamantes
+  const TK0 = await fresh('ac_zero'); await age();
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [TK0, SAVEAC({ gems: 500 }), 0, 'd']); ok('anticheat: a new character cannot start with diamonds', r.error === 'not_new', r);
+  // saltos impossiveis
+  r = await put(TK, { gold: 900000 }, rev); ok('anticheat: huge gold jump is refused', r.error === 'cheat', r);
+  r = await put(TK, { pl: { lv: 60, xp: 0 }, chestDone: 1 }, rev); ok('anticheat: huge level jump is refused', r.error === 'cheat', r);
+  r = await put(TK, { gems: 5000 }, rev); ok('anticheat: gems cannot appear from nowhere', r.error === 'cheat', r);
+  r = await put(TK, { stats: { kills: 900000, gold: 0, bosses: 0 } }, rev); ok('anticheat: absurd kills are refused', r.error === 'cheat' || r.error === 'banned', r);
+  // uma conquista sem prova
+  const TK2 = await fresh('ac_two'); r = await put(TK2, {}, 0); rev = r.rev;
+  r = await put(TK2, { ach: { kills10000: 1 } }, rev); ok('anticheat: achievement without proof is refused', r.error === 'cheat', r);
+  r = await put(TK2, { ach: { nonsense: 1 } }, rev); ok('anticheat: unknown achievement id is refused', r.error === 'cheat' || r.error === 'banned', r);
+  r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 1 } }, rev); ok('anticheat: an earned achievement passes', r.ok, r); rev = r.rev;
+  r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25 }, rev); ok('anticheat: claiming it gives its diamonds', r.ok, r); rev = r.rev;
+  r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 400 }, rev); ok('anticheat: extra diamonds beyond the rewards are refused', r.error === 'cheat' || r.error === 'banned', r);
+  // titulos
+  r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
+  r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);
+  // conta nova para testar o ban em 3 ocorrencias e o ban imediato
+  const TKB = await fresh('ac_beta'); r = await put(TKB, {}, 0); rev = r.rev;
+  r = await put(TKB, { title: 'beta' }, rev); ok('anticheat: beta title without the code is refused', r.error === 'cheat', r);
+  r = await q('select public.gog_redeem($1,$2)', [TKB, 'beta']); ok('anticheat: redeem the beta code', r.ok, r);
+  r = await put(TKB, { title: 'beta', gems: 10 }, rev); ok('anticheat: beta title and its 10 diamonds are accepted after the code', r.ok, r);
+  const TK3 = await fresh('ac_three'); r = await put(TK3, {}, 0); rev = r.rev;
+  const strike = async () => { await db.exec('reset role'); await db.exec("update gog.violations set at = now() - interval '20 minutes' where root = (select id from gog.players where nick = 'ac_three')"); await db.exec('set role anon'); return put(TK3, { gold: 900000 }, rev); };
+  r = await put(TK3, { gold: 900000 }, rev); ok('anticheat: 1st strike is refused', r.error === 'cheat', r);
+  r = await put(TK3, { gold: 900000 }, rev); ok('anticheat: repeated attempts within minutes count once', r.error === 'cheat', r);
+  r = await strike(); ok('anticheat: 2nd strike is still only refused', r.error === 'cheat', r);
+  r = await strike(); ok('anticheat: 3rd strike bans the account', r.error === 'banned', r);
+  r = await q('select public.gog_login($1,$2)', ['ac_three', B]); ok('anticheat: a banned account cannot log in', r.error === 'inactive', r);
+  const TK4 = await fresh('ac_four'); r = await put(TK4, {}, 0); rev = r.rev;
+  r = await put(TK4, { gold: 99999999 }, rev); ok('anticheat: impossible values ban immediately', r.error === 'banned', r);
+  r = await q('select public.gog_save_get($1)', [TK4]); ok('anticheat: the banned session is dead', !r.ok, r);
+  // recuperar de um falso positivo: o administrador reativa
+  await db.exec('reset role'); await db.exec("select gog.set_active('ac_four', true)"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['ac_four', B]); ok('anticheat: admin can reactivate a banned account', r.ok, r);
+  let dd = false; try { await db.query('select * from gog.violations'); } catch (e) { dd = true; } ok('anticheat: anon cannot read violations', dd);
+  let d4 = false; try { await db.query("select gog._check_save(null, '{}'::jsonb, 5, 1)"); } catch (e) { d4 = true; } ok('anticheat: anon cannot call the checker', d4);
+}
+// um save real do jogo (tudo no maximo) tem de passar sem falsos positivos
+{
+  const MAXSAVE = "{\"cls\":\"mage\",\"gold\":500000,\"up\":{\"hp\":0,\"dmg\":0,\"spd\":0,\"cd\":0},\"done\":0,\"own\":{\"knight\":[1,0,0,0,0],\"archer\":[1,0,0,0,0],\"mage\":[1,0,0,0,0]},\"eq\":{\"knight\":0,\"archer\":0,\"mage\":0},\"wl\":{\"k_sword\":20,\"k_axe\":20,\"k_spear\":20,\"k_hammer\":20,\"k_blade\":20,\"a_bow\":20,\"a_triple\":20,\"a_cross\":20,\"a_fire\":20,\"a_dark\":20,\"m_fire\":20,\"m_ice\":20,\"m_bolt\":20,\"m_arcane\":20,\"m_dark\":20},\"sk\":{\"knight\":[1,1,1,1,1,1],\"archer\":[1,1,1,1,1,1],\"mage\":[1,1,1,1,1,1]},\"skE\":{\"knight\":0,\"archer\":0,\"mage\":0},\"pity\":{},\"cheat\":{},\"stats\":{\"kills\":50000,\"gold\":900000,\"bosses\":250,\"guard\":10,\"spent\":500000,\"fuses\":50,\"rar\":4},\"pl\":{\"lv\":120,\"xp\":0},\"raids\":{\"0\":[1,1,1,1,1],\"1\":[1,1,1,1,1],\"2\":[1,1,1,1,1],\"3\":[1,1,1,1,1],\"4\":[1,1,1,1,1],\"5\":[1,1,1,1,1]},\"attr\":{\"vit\":0,\"str\":0,\"agi\":0,\"per\":0},\"pts\":0,\"bag\":[],\"gear\":{\"head\":{\"slot\":\"head\",\"r\":4,\"il\":100,\"ench\":10},\"chest\":{\"slot\":\"chest\",\"r\":4,\"il\":100,\"ench\":10},\"boots\":{\"slot\":\"boots\",\"r\":4,\"il\":100,\"ench\":10},\"amulet\":{\"slot\":\"amulet\",\"r\":4,\"il\":100,\"ench\":10}},\"farmBest\":{\"0\":50,\"1\":50,\"2\":50,\"3\":50,\"4\":50,\"5\":50},\"gems\":5510,\"wst\":{\"k_sword\":[0,0,0,1,0,0,0],\"k_axe\":[0,0,0,1,0,0,0],\"k_spear\":[0,0,0,1,0,0,0],\"k_hammer\":[0,0,0,1,0,0,0],\"k_blade\":[0,0,0,1,0,0,0],\"a_bow\":[0,0,0,1,0,0,0],\"a_triple\":[0,0,0,1,0,0,0],\"a_cross\":[0,0,0,1,0,0,0],\"a_fire\":[0,0,0,1,0,0,0],\"a_dark\":[0,0,0,1,0,0,0],\"m_fire\":[0,0,0,1,0,0,0],\"m_ice\":[0,0,0,1,0,0,0],\"m_bolt\":[0,0,0,1,0,0,0],\"m_arcane\":[0,0,0,1,0,0,0],\"m_dark\":[0,0,0,1,0,0,0]},\"chestDone\":120,\"stones\":[0,0,0,0,0],\"pets\":{\"own\":{},\"eq\":\"\"},\"bagSlots\":5,\"pres\":[5,5,5,5,5,5],\"presW\":[0,0,0,0,0,0],\"codes\":{},\"ach\":{\"kills1000\":2,\"kills2500\":2,\"kills5000\":2,\"kills10000\":2,\"kills25000\":2,\"kills50000\":2,\"boss10\":2,\"boss50\":2,\"boss250\":2,\"guard1\":2,\"guard10\":2,\"spend5000\":2,\"spend10000\":2,\"spend25000\":2,\"spend50000\":2,\"spend75000\":2,\"spend100000\":2,\"spend250000\":2,\"spend500000\":2,\"lv10\":2,\"lv20\":2,\"lv30\":2,\"lv40\":2,\"lv50\":2,\"lv60\":2,\"lv70\":2,\"lv80\":2,\"lv90\":2,\"lv100\":2,\"lv110\":2,\"lv120\":2,\"bag5\":2,\"skin1\":2,\"skin3\":2,\"farm5\":2,\"farm10\":2,\"farm15\":2,\"farm25\":2,\"wave0_10\":2,\"wave0_20\":2,\"wave0_30\":2,\"wave0_40\":2,\"wave0_50\":2,\"wave1_10\":2,\"wave1_20\":2,\"wave1_30\":2,\"wave1_40\":2,\"wave1_50\":2,\"wave2_10\":2,\"wave2_20\":2,\"wave2_30\":2,\"wave2_40\":2,\"wave2_50\":2,\"wave3_10\":2,\"wave3_20\":2,\"wave3_30\":2,\"wave3_40\":2,\"wave3_50\":2,\"wave4_10\":2,\"wave4_20\":2,\"wave4_30\":2,\"wave4_40\":2,\"wave4_50\":2,\"wave5_10\":2,\"wave5_20\":2,\"wave5_30\":2,\"wave5_40\":2,\"wave5_50\":2,\"raid0\":2,\"raid1\":2,\"raid2\":2,\"raid3\":2,\"raid4\":2,\"stars1\":2,\"stars3\":2,\"stars6\":2,\"stars12\":2,\"stars20\":2,\"stars30\":2,\"presmax0\":2,\"presmax1\":2,\"presmax2\":2,\"presmax3\":2,\"presmax4\":2,\"presmax5\":2,\"ench5\":2,\"ench10\":2,\"wmax1\":2,\"wmax2\":2,\"wmax3\":2,\"wmax4\":2,\"wmax5\":2,\"anv5\":2,\"anv10\":2,\"anv15\":2,\"anv20\":2,\"rar3\":2,\"rar4\":2,\"fuse1\":2,\"fuse10\":2,\"fuse50\":2},\"title\":\"\",\"farmN\":[25,25,25,25,25,25]}";
+  await db.exec('reset role');
+  let rr = (await db.query('select gog._check_save(null, $1::jsonb, 3, 1) as x', [MAXSAVE])).rows[0].x; ok('real client save with every achievement claimed passes the checker', rr === null, rr);
+  const ach = JSON.parse(MAXSAVE).ach; let missing = [];
+  for (const id of Object.keys(ach)) { const x = (await db.query('select gog._ach_ok($1, $2::jsonb) as x', [id, MAXSAVE])).rows[0].x; if (!x) missing.push(id); }
+  ok('server knows how to verify all 101 achievements', missing.length === 0 && Object.keys(ach).length === 101, missing);
+  const titles = ['reaper', 'slayer', 'treasure', 'tycoon', 'veteran', 'legend', 'immortal', 'tireless', 'lord0', 'lord1', 'lord2', 'lord3', 'lord4', 'lord5', 'hardcore', 'nightmare', 'inferno', 'enchanter', 'armorer', 'smith', 'lucky', 'dandy', 'lodestar', 'astro', 'emperor', 'abyss5'];
+  let badT = [];
+  for (const tt of titles) { const x = (await db.query("select gog._title_ok(($1::jsonb) || jsonb_build_object('title', $2::text), 1, $2) as x", [MAXSAVE, tt])).rows[0].x; if (!x) badT.push(tt); }
+  ok('all 26 achievement titles are accepted for a full save', badT.length === 0, badT);
+  const empty = '{"cls":"mage","pl":{"lv":1},"ach":{}}';
+  let nothing = []; for (const tt of titles) { const x = (await db.query("select gog._title_ok(($1::jsonb) || jsonb_build_object('title', $2::text), 1, $2) as x", [empty, tt])).rows[0].x; if (x) nothing.push(tt); }
+  ok('no title is accepted for an empty save', nothing.length === 0, nothing);
+  await db.exec('set role anon');
 }
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
