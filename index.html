@@ -1577,15 +1577,15 @@ function drawHub() {
   txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   txt('¢' + gfmt(save.gold), 770, 34, 22, '#fd5', 'right', 'bold'); txt('◆' + save.gems, 770, 58, 16, '#7fe8ff', 'right', 'bold');
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
-  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['profile', 'Perfil'], ['pets', 'Pets'], ['rank', 'Ranking']];
-  const nChest = Math.max(0, save.pl.lv - save.chestDone);
+  const tabs = [['farm', 'Farm'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['pets', 'Pets'], ['rank', 'Ranking'], ['options', 'Opções']];
   tabs.forEach((t, i) => {
     const by = 76 + i * 29;
-    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: (tab === t[0] || (t[0] === 'profile' && (tab === 'skins' || tab === 'rewards'))) ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: t[0] === 'rewards' ? 12 : 13 });
+    if (t[0] === 'options') { btn(20, by, 150, 26, t[1], () => { rk.focus = ''; optBack = 'hub'; state = 'options'; }, { col: '#2a2a48', hot: '#d2a73a', size: 13 }); return; }
+    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
     if (!tabOpen(t[0])) drawIcon('lock', 36, by + 13, 1.3);
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
-    if (t[0] === 'profile' && nChest > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(142, by + 5, 26, 14); txt(nChest > 99 ? '99+' : String(nChest), 155, by + 16, 11, '#000', 'center', 'bold'); }
   });
+  if (on.token && save.pl.lv > save.chestDone) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(14, 54, 14, 14); txt('!', 21, 65, 11, '#000', 'center', 'bold'); }   // aviso no retrato: ha baus por abrir no Perfil
   btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
   if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, profile: hubProfile, skins: () => { profileTabs(); hubSkins(); }, rewards: () => { profileTabs(); hubRewards(); }, pets: hubPets, rank: hubRank })[tab]();
@@ -2311,7 +2311,11 @@ async function saveEditProfile() {
   if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
 function profileTabs() {
-  [['profile', 'Perfil'], ['skins', 'Skins'], ['rewards', 'Recompensas']].forEach(([k, l], i) => btn(197 + i * 104, 87, 100, 20, l, () => { tab = k; }, { size: 12, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' }));
+  const nChest = Math.max(0, save.pl.lv - save.chestDone);
+  [['profile', 'Perfil'], ['skins', 'Skins'], ['rewards', 'Recompensas']].forEach(([k, l], i) => {
+    const bx = 197 + i * 104; btn(bx, 87, 100, 20, l, () => { tab = k; }, { size: 12, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' });
+    if (k === 'rewards' && nChest > 0) { const s = nChest > 99 ? '99+' : String(nChest), w = Math.max(16, s.length * 8 + 6); ctx.fillStyle = '#05050a'; ctx.fillRect(bx + 100 - w - 1, 82, w + 2, 16); ctx.fillStyle = '#ffd34a'; ctx.fillRect(bx + 100 - w, 83, w, 14); txt(s, bx + 100 - w / 2, 94, 11, '#000', 'center', 'bold'); }   // aviso: ha baus por abrir
+  });
 }
 function hubProfile() {
   profileTabs();
