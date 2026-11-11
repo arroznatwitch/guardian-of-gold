@@ -72,6 +72,7 @@ Sem chat. Uma guilda tem no máximo 10 membros e só há líder e membros. Para 
 
 - **Pontos automáticos:** cada gravação de save validada pelo anti-batota dá à guilda 1 ponto por mob, 10 por boss e 60 por raid concluída do membro. O nível vai até 40 (cerca de 6 milhões de pontos no total) e cada nível dá 1 ponto de melhoria ao líder.
 - **Melhorias** (só o líder, cada uma até ao nível 10): XP +1% por nível (máx. +10%), ouro +1,5% (máx. +15%), chance de drop +0,25% relativo (máx. +2,5%) e atributos +0,5% (máx. +5%). O jogo aplica estes valores lidos do servidor; não ficam no save.
+- **Personalização:** `gog_guild_style(token, cor 0-7, emblema 0-11, lema)` (só o líder; o lema tem até 40 caracteres simples e passa pelo filtro). `gog_guild_board(token, offset)` é o ranking público de guildas e `gog_guild_public(id)` o perfil público de uma guilda (membros, bónus, líder). `gog_profile` devolve `account` (nick da conta principal, nulo nas principais) e a guilda com `id`, cor e emblema; as linhas do ranking trazem `gcol`.
 - **Nomes:** o filtro `gog._text_ok` recusa palavras ofensivas em inglês e português (troca números e símbolos por letras e junta letras repetidas). Aplica-se a nomes e tags de guildas, aos nomes dos pets e aos nicks novos. Para ver as guildas: `select * from gog.guilds;`. Para desfazer uma guilda: `delete from gog.guilds where id = 1;`.
 
 ## Pets no perfil público

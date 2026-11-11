@@ -293,9 +293,10 @@ begin
                      when 'wave0' then 'w0' when 'wave1' then 'w1' when 'wave2' then 'w2' when 'wave3' then 'w3' when 'wave4' then 'w4' when 'wave5' then 'w5' end;
   if col is null then return jsonb_build_object('ok', false, 'error', 'bad_stat'); end if;
   execute format($q$
-    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'title', title, 'gtag', gtag, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
+    select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'title', title, 'gtag', gtag, 'gcol', gcol, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
       select nick, cls, gender, country, level as lv, coalesce((build->>'skin')::int, 0) as skin, build->>'title' as title,
-        (select g.tag from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(gog.players.owner, gog.players.id)) as gtag, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
+        (select g.tag from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(gog.players.owner, gog.players.id)) as gtag,
+        (select g.color from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(gog.players.owner, gog.players.id)) as gcol, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
       from gog.players where active and %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
@@ -633,7 +634,8 @@ begin
   if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
   return jsonb_build_object('ok', true, 'nick', v.nick, 'cls', v.cls, 'level', v.level, 'kills', v.kills, 'gold', v.gold, 'bosses', v.bosses, 'raids', v.raids,
     'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build, 'gender', v.gender, 'country', v.country,
-    'guild', (select jsonb_build_object('name', g.name, 'tag', g.tag) from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(v.owner, v.id)));
+    'guild', (select jsonb_build_object('id', g.id, 'name', g.name, 'tag', g.tag, 'color', g.color, 'emblem', g.emblem) from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(v.owner, v.id)),
+    'account', (select o.nick from gog.players o where o.id = v.owner));   -- personagens extra mostram a conta principal
 end $$;
 
 do $$
@@ -768,6 +770,9 @@ create table if not exists gog.guilds (
   id bigserial primary key, name text not null, name_key text not null unique, tag text not null, tag_key text not null unique,
   leader bigint not null references gog.players(id) on delete cascade, created_at timestamptz not null default now(),
   xp bigint not null default 0, p_xp int not null default 0, p_gold int not null default 0, p_drop int not null default 0, p_attr int not null default 0);
+alter table gog.guilds add column if not exists color int not null default 0;     -- 0..7
+alter table gog.guilds add column if not exists emblem int not null default 0;    -- 0..11
+alter table gog.guilds add column if not exists motto text not null default '';   -- ate 40 caracteres, filtrado
 create table if not exists gog.guild_members (
   root bigint primary key references gog.players(id) on delete cascade, guild_id bigint not null references gog.guilds(id) on delete cascade,
   joined_at timestamptz not null default now(), contrib bigint not null default 0);
@@ -841,7 +846,7 @@ begin
     into mem from gog.guild_members m join gog.players p on p.id = m.root where m.guild_id = g.id;
   return jsonb_build_object('id', g.id, 'name', g.name, 'tag', g.tag, 'level', lvl, 'xp', rem, 'need', case when lvl >= 40 then 0 else gog._gneed(lvl) end,
     'perks', jsonb_build_object('xp', g.p_xp, 'gold', g.p_gold, 'drop', g.p_drop, 'attr', g.p_attr), 'free', lvl - (g.p_xp + g.p_gold + g.p_drop + g.p_attr),
-    'leader', g.leader = p_root, 'members', mem);
+    'leader', g.leader = p_root, 'members', mem, 'color', g.color, 'emblem', g.emblem, 'motto', g.motto, 'leader_nick', (select p.nick from gog.players p where p.id = g.leader));
 end $$;
 
 -- ----- RPCs (todas com sessao; o servidor decide tudo) -----
@@ -866,8 +871,8 @@ declare pid bigint; rows jsonb;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(jsonb_agg(jsonb_build_object('id', s.id, 'name', s.name, 'tag', s.tag, 'level', s.lv, 'members', s.n, 'leader', s.ln) order by s.xp desc, s.id), '[]'::jsonb) into rows from (
-    select g.id, g.name, g.tag, g.xp, gog._glevel(g.xp) as lv, (select count(*) from gog.guild_members m where m.guild_id = g.id) as n, (select p.nick from gog.players p where p.id = g.leader) as ln
+  select coalesce(jsonb_agg(jsonb_build_object('id', s.id, 'name', s.name, 'tag', s.tag, 'level', s.lv, 'members', s.n, 'leader', s.ln, 'color', s.color, 'emblem', s.emblem) order by s.xp desc, s.id), '[]'::jsonb) into rows from (
+    select g.id, g.name, g.tag, g.xp, g.color, g.emblem, gog._glevel(g.xp) as lv, (select count(*) from gog.guild_members m where m.guild_id = g.id) as n, (select p.nick from gog.players p where p.id = g.leader) as ln
     from gog.guilds g order by g.xp desc, g.id limit 12 offset greatest(coalesce(p_offset, 0), 0)) s;
   return jsonb_build_object('ok', true, 'rows', rows);
 end $$;
@@ -999,6 +1004,61 @@ begin
   end loop;
   foreach f in array array['public.gog_guild_get(text)', 'public.gog_guild_list(text,int)', 'public.gog_guild_create(text,text,text)', 'public.gog_guild_join(text,bigint)', 'public.gog_guild_leave(text)',
     'public.gog_guild_kick(text,text)', 'public.gog_guild_transfer(text,text)', 'public.gog_guild_upgrade(text,text)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
+  end loop;
+end $$;
+
+
+-- ====================================================== guildas: personalizacao e ranking de guildas
+create or replace function public.gog_guild_style(p_token text, p_color int, p_emblem int, p_motto text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; v_root bigint; g gog.guilds; mt text := btrim(coalesce(p_motto, ''));
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  select g2.* into g from gog.guilds g2 join gog.guild_members m on m.guild_id = g2.id where m.root = v_root for update of g2;
+  if not found then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
+  if g.leader <> v_root then return jsonb_build_object('ok', false, 'error', 'not_leader'); end if;
+  if p_color is null or p_color < 0 or p_color > 7 or p_emblem is null or p_emblem < 0 or p_emblem > 11 then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  if length(mt) > 40 or mt !~ '^[A-Za-z0-9 .,!?_''-]*$' then return jsonb_build_object('ok', false, 'error', 'bad_name'); end if;
+  if mt <> '' and not gog._text_ok(mt) then return jsonb_build_object('ok', false, 'error', 'bad_word'); end if;
+  update gog.guilds set color = p_color, emblem = p_emblem, motto = mt where id = g.id;
+  return jsonb_build_object('ok', true, 'guild', gog._ginfo(g.id, v_root));
+end $$;
+
+-- ranking de guildas (publico, como o dos jogadores)
+create or replace function public.gog_guild_board(p_token text default null, p_offset int default 0) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare rows jsonb; mine bigint; v_root bigint; pid bigint;
+begin
+  select coalesce(jsonb_agg(jsonb_build_object('rank', s.r, 'id', s.id, 'name', s.name, 'tag', s.tag, 'level', s.lv, 'members', s.n, 'color', s.color, 'emblem', s.emblem, 'xp', s.xp) order by s.r), '[]'::jsonb) into rows from (
+    select g.id, g.name, g.tag, g.xp, g.color, g.emblem, gog._glevel(g.xp) as lv, (select count(*) from gog.guild_members m where m.guild_id = g.id) as n, rank() over (order by g.xp desc, g.id) as r
+    from gog.guilds g order by g.xp desc, g.id limit 14 offset greatest(coalesce(p_offset, 0), 0)) s;
+  pid := gog._auth(p_token);
+  if pid is not null then
+    select coalesce(owner, id) into v_root from gog.players where id = pid;
+    select guild_id into mine from gog.guild_members where root = v_root;
+  end if;
+  return jsonb_build_object('ok', true, 'rows', rows, 'mine', mine);
+end $$;
+
+-- perfil publico de uma guilda
+create or replace function public.gog_guild_public(p_id bigint) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare info jsonb;
+begin
+  info := gog._ginfo(p_id, 0);
+  if info is null then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
+  return jsonb_build_object('ok', true, 'guild', info - 'free' - 'leader');
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['public.gog_guild_style(text,int,int,text)', 'public.gog_guild_board(text,int)', 'public.gog_guild_public(bigint)'] loop
     execute format('revoke all on function %s from public', f);
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
