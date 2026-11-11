@@ -265,6 +265,21 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   ok('no title is accepted for an empty save', nothing.length === 0, nothing);
   await db.exec('set role anon');
 }
+// pets na build publica e no anti-batota
+{
+  await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2)', ['pet_one', B]); const TP = r.token;
+  const SBP = pet => JSON.stringify({ cls: 'mage', level: 3, kills: 10, gold: 5, bosses: 0, raids: 0, w0: 1, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 0, pet } });
+  r = await q('select public.gog_submit($1,$2::jsonb)', [TP, SBP({ id: 'chicken', lv: 12, name: '<b>Clucky</b> The Great One!' })]); ok('submit with a pet', r.ok, r);
+  r = await q('select public.gog_profile($1)', ['pet_one']); const pt = r.build && r.build.pet;
+  ok('pet is whitelisted, level clamped and the name is sanitised', pt && pt.id === 'chicken' && pt.lv === 12 && /^[A-Za-z0-9 _-]{0,12}$/.test(pt.name) && pt.name.length <= 12 && !pt.name.includes('<'), pt);
+  await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
+  r = await q('select public.gog_submit($1,$2::jsonb)', [TP, SBP({ id: 'dragon', lv: 99, name: 'x' })]); r = await q('select public.gog_profile($1)', ['pet_one']); ok('unknown pet id is dropped', r.build && !('pet' in r.build), r.build);
+  await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
+  r = await q('select public.gog_submit($1,$2::jsonb)', [TP, SBP({ id: 'bird', lv: 500, name: 'Tweet' })]); r = await q('select public.gog_profile($1)', ['pet_one']); ok('pet level is capped at 30', r.build && r.build.pet && r.build.pet.lv === 30, r.build);
+  await db.exec('reset role'); const bad = (await db.query(`select gog._check_save(null, '{"cls":"mage","pl":{"lv":1},"pets":{"lv":{"dog":99}}}'::jsonb, 5, 1) as x`)).rows[0].x; await db.exec('set role anon');
+  ok('anticheat: a pet above level 30 is an impossible value', bad === 'abs:pets', bad);
+}
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);

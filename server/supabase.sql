@@ -91,6 +91,11 @@ begin
     o := o || jsonb_build_object('weapon', jsonb_build_object('id', w->>'id',
       'lv', least(greatest(coalesce((w->>'lv')::int, 0), 0), 20), 'st', least(greatest(coalesce((w->>'st')::int, 0), 0), 3)));
   end if;
+  if jsonb_typeof(b->'pet') = 'object' and (b->'pet'->>'id') in ('dog', 'chicken', 'bird') then
+    o := o || jsonb_build_object('pet', jsonb_build_object('id', b->'pet'->>'id',
+      'lv', least(greatest(case when (b->'pet'->>'lv') ~ '^[0-9]{1,3}$' then (b->'pet'->>'lv')::int else 1 end, 1), 30),
+      'name', left(btrim(regexp_replace(coalesce(b->'pet'->>'name', ''), '[^A-Za-z0-9 _-]', '', 'g')), 12)));
+  end if;
   a := b->'attr';
   if jsonb_typeof(a) = 'object' then
     o := o || jsonb_build_object('attr', jsonb_build_object(
@@ -478,6 +483,7 @@ begin
   for i in 0..5 loop
     if gog._nv(gog._idx(nw->'farmBest', i)) > 2000 or gog._nv(gog._idx(nw->'pres', i)) > 5 then return 'abs:waves'; end if;
   end loop;
+  if jsonb_typeof(nw->'pets'->'lv') = 'object' and exists (select 1 from jsonb_each(nw->'pets'->'lv') e where gog._nv(e.value) > 30) then return 'abs:pets'; end if;   -- os pets vao ate ao nivel 30
   lv1 := gog._n(nw, 'pl', 'lv'); g1 := gog._n(nw, 'gems');
   if gog._n(nw, 'chestDone') > lv1 + 1 then return 'chests'; end if;
   -- conquistas: so as novas precisam de prova no proprio save
