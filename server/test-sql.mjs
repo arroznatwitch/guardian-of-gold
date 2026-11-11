@@ -177,6 +177,8 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   await db.exec('reset role'); await db.exec("update gog.players set locked_until = null, failed = 0"); await db.exec('set role anon');
   r = await q('select public.gog_set_profile($1,$2,$3)', [TM2, 'f', 'BR']); ok('profile change applies to every character', r.ok, r);
   r = await q('select public.gog_profile($1)', ['mc_mage']); ok('other characters share gender and country', r.gender === 'f' && r.country === 'BR', r);
+  r = await q('select public.gog_profile($1)', ['mc_mage']); ok('an extra character shows its main account', r.account === 'mc_main', r);
+  r = await q('select public.gog_profile($1)', ['mc_main']); ok('the main character has no account line', r.account === null, r);
   r = await q('select public.gog_board($1,50,null)', ['level']); ok('board lists characters separately by nick', Array.isArray(r.rows), r);
   await db.exec('reset role'); await db.exec("select gog.set_active('mc_arch', false)"); await db.exec('set role anon');
   r = await q('select public.gog_login($1,$2)', ['mc_main', B]); ok('deactivating one nick deactivates the whole account', r.error === 'inactive', r);
@@ -361,6 +363,21 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_submit($1,$2::jsonb)', [L1, JSON.stringify({ cls: 'knight', level: 45, kills: 10, gold: 5, bosses: 0, raids: 0, w0: 1, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 0 } })]);
   r = await q('select public.gog_board($1,20,null)', ['level']); const rowg = r.rows.find(x => x.nick === 'gl_lead'); ok('guild: the board rows carry the guild tag', rowg && rowg.gtag === 'DRG', r);
   r = await q('select public.gog_profile($1)', ['gl_lead']); ok('guild: the public profile carries the guild', r.guild && r.guild.tag === 'DRG' && r.guild.name === 'Dragon Slayers', r);
+  // personalizacao e ranking de guildas
+  r = await ga('gog_guild_get', L1); ok('guild: default style is color 0, emblem 0 and no motto', r.guild.color === 0 && r.guild.emblem === 0 && r.guild.motto === '', r.guild);
+  r = await ga('gog_guild_style', L1, 3, 5, 'We farm. We win!'); ok('guild: the leader customises color, emblem and motto', r.ok && r.guild.color === 3 && r.guild.emblem === 5 && r.guild.motto === 'We farm. We win!', r);
+  r = await ga('gog_guild_style', L2, 1, 1, 'x'); ok('guild: a member cannot customise', r.error === 'not_leader' || r.error === 'no_guild', r);
+  r = await ga('gog_guild_style', L1, 9, 1, 'x'); ok('guild: color must be 0-7', r.error === 'bad_request', r);
+  r = await ga('gog_guild_style', L1, 1, 12, 'x'); ok('guild: emblem must be 0-11', r.error === 'bad_request', r);
+  r = await ga('gog_guild_style', L1, 1, 1, 'n1gger power'); ok('guild: the motto goes through the profanity filter', r.error === 'bad_word', r);
+  r = await ga('gog_guild_style', L1, 1, 1, '<script>alert(1)</script>'); ok('guild: the motto only allows simple characters', r.error === 'bad_name', r);
+  r = await ga('gog_guild_style', L1, 1, 1, 'x'.repeat(41)); ok('guild: the motto is at most 40 characters', r.error === 'bad_name', r);
+  r = await ga('gog_guild_board', L1, 0); ok('guild board lists the guilds with their style', r.ok && r.rows.length >= 1 && r.rows[0].name === 'Dragon Slayers' && r.rows[0].rank === 1 && r.rows[0].color === 3 && r.mine === r.rows[0].id, r);
+  r = await q('select public.gog_guild_board(null, 0)'); ok('guild board is public (no session needed)', r.ok && r.rows.length >= 1, r);
+  r = await q('select public.gog_board($1,20,null)', ['level']); { const rg = r.rows.find(x => x.nick === 'gl_lead'); ok('board rows carry the guild color', rg && rg.gcol === 3, rg); }
+  r = await q('select public.gog_profile($1)', ['gl_lead']); ok('profile guild carries id, color and emblem', r.guild && r.guild.color === 3 && r.guild.emblem === 5 && r.guild.id === gid, r.guild);
+  r = await q('select public.gog_guild_public($1)', [gid]); ok('guild public profile shows members, style and the leader', r.ok && r.guild.name === 'Dragon Slayers' && r.guild.motto === 'We farm. We win!' && r.guild.members.length >= 1 && typeof r.guild.leader_nick === 'string' && !('free' in r.guild), r);
+  r = await q('select public.gog_guild_public($1)', [999999]); ok('guild public profile of an unknown guild', r.error === 'not_found', r);
   let dg = false; try { await db.query('select * from gog.guilds'); } catch (e) { dg = true; } ok('guild: anon cannot read the guild tables', dg);
   let dg2 = false; try { await db.query("select gog._text_ok('x')"); } catch (e) { dg2 = true; } ok('guild: anon cannot call the filter directly', dg2);
 }
