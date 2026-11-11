@@ -3228,7 +3228,7 @@ function addPetXp(id, n) {   // devolve quantos niveis subiu
   if (l >= PET_MAX) x = 0; P.lv[id] = l; P.xp[id] = x; return up;
 }
 const petStats = (id, L) => ({
-  dog: { spd: .12 + .002 * (L - 1), atk: .10 + .0017 * (L - 1) },
+  dog: { spd: .06 + .001 * (L - 1), atk: .05 + .00085 * (L - 1) },
   chicken: { egg: Math.max(1.1, 2 - .03 * (L - 1)), r: 34 + .8 * (L - 1), dmg: .6 + .03 * (L - 1), spd: 130 + 2 * (L - 1) },
   bird: { regen: .004 + .00025 * (L - 1) },
 })[id];
