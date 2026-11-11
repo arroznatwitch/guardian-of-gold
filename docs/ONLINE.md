@@ -66,6 +66,16 @@ Uma conta pode ter **até 3 personagens, um por classe** (Cavaleiro, Arqueiro e 
 - O **sexo e o país** valem para a conta toda. Desativar um nick (`gog.set_active`) desativa a conta inteira, com todos os personagens.
 - **Segurança do save:** antes de trocar, o personagem atual é guardado na nuvem (se falhar, a troca não acontece). O save do browser só é usado se pertencer ao personagem que entrou (id do personagem); o de outro personagem fica de lado e nunca passa para outro.
 
+## Códigos promocionais e títulos
+
+Os códigos vivem na tabela `gog.promo` (código, diamantes e título) e são validados no servidor por `gog_redeem`. Cada código só se usa **uma vez por conta** (os personagens extra partilham o uso do principal). O código `beta` dá o título **Beta Tester** e 10 diamantes. Para criar outro código:
+
+```sql
+insert into gog.promo (code, gems, title) values ('meucodigo', 25, null);
+```
+
+O título escolhido vai na build pública (`build.title`, só um código curto) e aparece no Ranking e no perfil público.
+
 ## O save local pertence a uma conta
 
 O save guardado no browser fica ligado ao **id da conta** (`uid`), não ao nick. Se entrares com **outra conta** (ou criares uma conta nova, mesmo com o mesmo nick depois de a base de dados ser limpa), o save antigo **não é usado**: fica guardado à parte (`bladehunter_orphan`) e a conta nova começa com um personagem novo. Além disso, o servidor só aceita como primeiro save de uma conta um **personagem novo** (nível 1 ou 2, com muito pouco ouro). Assim ninguém leva o progresso de uma conta para outra.

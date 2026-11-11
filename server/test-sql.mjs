@@ -78,7 +78,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
 // build publica e perfil
 {
   r = await q('select public.gog_register($1,$2)', ['builder', A]); const TB = r.token;
-  const BUILD = { skin: 2, weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
+  const BUILD = { skin: 2, title: 'reaper', weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
     gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, junk: 'x'.repeat(50) };
   const SB = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: BUILD });
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, SB]); ok('submit with build', r.ok, r);
@@ -86,10 +86,12 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && bd.attr.str === 99999 && !('evil' in bd.attr) && !('junk' in bd), r);
   ok('gear slots whitelisted and clamped', Object.keys(bd.gear).sort().join() === 'chest,head' && bd.gear.chest.r === 4 && bd.gear.chest.e === 0 && bd.gear.head.sp === 'Ígneoscript', bd);
   r = await q('select public.gog_board($1,5,null)', ['level']); const row = r.rows.find(x => x.nick === 'builder'); ok('board rows carry class, level and skin', row && row.cls === 'mage' && row.lv === 10 && row.skin === 2, r);
+  ok('title travels in the build and in the board rows', bd.title === 'reaper' && row.title === 'reaper', row);
   await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
-  const EVIL = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 1, weapon: { id: "x';drop table gog.players;--" } } });
+  const EVIL = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 1, title: 'Bad Title!', weapon: { id: "x';drop table gog.players;--" } } });
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, EVIL]);
   r = await q('select public.gog_profile($1)', ['builder']); ok('invalid weapon id is dropped, skin updates', r.build.skin === 1 && !r.build.weapon, r);
+  ok('invalid title is dropped', !('title' in r.build), r.build);
   r = await q('select public.gog_profile($1)', ['nobody_here']); ok('profile of unknown nick', r.error === 'not_found', r);
   r = await q('select public.gog_profile($1)', ["a'; drop"]); ok('profile rejects bad nick', r.error === 'bad_nick', r);
   let d2 = false; try { await db.query("select gog._clean_build('{}'::jsonb)"); } catch (e) { d2 = true; } ok('anon cannot call _clean_build', d2);
@@ -177,6 +179,23 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_save_get($1)', [TMG]); ok('sessions of every character are killed', !r.ok, r);
   await db.exec('reset role'); await db.exec("select gog.set_active('mc_main', true)"); await db.exec('set role anon');
   r = await q('select public.gog_login($1,$2)', ['mc_mage', B]); ok('reactivation restores every character', r.ok, r);
+}
+// codigos promocionais: 1 uso por conta
+{
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2)', ['promo_a', B]); const PA = r.token;
+  r = await q('select public.gog_redeem($1,$2)', ['0'.repeat(64), 'beta']); ok('redeem needs a session', r.error === 'auth', r);
+  r = await q('select public.gog_redeem($1,$2)', [PA, 'nope']); ok('unknown code is refused', r.error === 'bad_code', r);
+  r = await q('select public.gog_redeem($1,$2)', [PA, "x'; drop"]); ok('malformed code is refused', r.error === 'bad_code', r);
+  r = await q('select public.gog_redeem($1,$2)', [PA, '  BeTa ']); ok('code works, any case, gives 10 gems and the title', r.ok && r.gems === 10 && r.title === 'beta', r);
+  r = await q('select public.gog_redeem($1,$2)', [PA, 'beta']); ok('code can only be used once per account', r.error === 'used', r);
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [PA, JSON.stringify({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0 }), 0, 'dev']); ok('promo account can save a first character', r.ok, r);
+  r = await q('select public.gog_char_create($1,$2,$3)', [PA, 'archer', 'promo_arch']); const PC = r.token; ok('promo account creates another character', r.ok, r);
+  r = await q('select public.gog_redeem($1,$2)', [PC, 'beta']); ok('other characters of the same account cannot reuse the code', r.error === 'used', r);
+  r = await q('select public.gog_register($1,$2)', ['promo_b', B]); const PB = r.token;
+  r = await q('select public.gog_redeem($1,$2)', [PB, 'beta']); ok('a different account can use it', r.ok, r);
+  let d3 = false; try { await db.query('select * from gog.promo_used'); } catch (e) { d3 = true; } ok('anon cannot read the promo tables', d3);
 }
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
