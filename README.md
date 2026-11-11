@@ -22,7 +22,7 @@ Jogo de ação e RPG em pixel-art que corre no browser, sem instalação.
 
 ## Visão geral
 
-O jogador escolhe uma classe e alterna entre dois modos: **Farm**, com ondas infinitas de inimigos para ganhar nível, ouro e equipamento, e **Raids**, combates contra bosses de dificuldade crescente. A progressão assenta em equipamento, armas e atributos, e há uma conta opcional com save na nuvem e ranking.
+O jogador escolhe uma classe e alterna entre dois modos: **Campanha**, com ondas infinitas de inimigos para ganhar nível, ouro e equipamento, e **Raids**, combates contra bosses de dificuldade crescente. A progressão assenta em equipamento, armas e atributos, e há uma conta opcional com save na nuvem e ranking.
 
 O jogo é um único ficheiro HTML. Os gráficos são desenhados por código e a música é sintetizada em tempo real, pelo que não há imagens, sons nem bibliotecas externas.
 
@@ -35,7 +35,7 @@ O jogo é um único ficheiro HTML. Os gráficos são desenhados por código e a 
 ## Funcionalidades
 
 - **Três classes** (Cavaleiro, Arqueiro e Mago), cada uma com uma habilidade especial e cinco armas com habilidades próprias.
-- **Farm** com ondas infinitas, um boss a cada 5 ondas, uma horda a cada 10 e seis mapas que se desbloqueiam por progressão.
+- **Campanha** com ondas infinitas, um semi-boss a cada 5 ondas, um boss e uma horda a cada 10 e seis mapas que se desbloqueiam por progressão. Em cada mapa, ao chegares à onda 30, podes dar **prestígio** (até 5 estrelas): os monstros ficam mais fortes e o nível recomendado sobe 10 por estrela, até ao nível 120 no Abismo Final.
 - **Raids** com seis bosses e cinco dificuldades, até ao Inferno. Cada dificuldade abre depois de concluídas todas as raids da anterior.
 - **Equipamento** em quatro ranhuras e cinco raridades, com refino, encantamentos especiais e evolução por pedras obtidas em raids.
 - **Armas** melhoráveis na Bigorna (até +12) e por Fusão (até 3 estrelas).
