@@ -633,6 +633,13 @@ function newSave(cls) {
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
+// reembolso (uma vez) das skins compradas antes de serem removidas: 1.ª extra = 5000 de ouro; as restantes 300/600/900 diamantes
+const SK_GEMS = { knight: [0, 0, 300, 600, 900], archer: [0, 0, 300, 600], mage: [0, 0, 300, 600] };
+function refundSkins(s) {
+  if (s.skRef) return; let g = 0, d = 0;
+  for (const c in SK_GEMS) { const a = (s.sk && s.sk[c]) || []; SK_GEMS[c].forEach((cost, i) => { if (i > 0 && a[i] === 1) { if (i === 1) g += 5000; else d += cost; } }); }
+  s.skRef = 1; if (g || d) { s.gold = Math.min(999999, (s.gold | 0) + g); s.gems = (s.gems | 0) + d; window.__skRef = [g, d]; }
+}
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
   s.stones = Array.from({ length: 5 }, (_, i) => (s.stones && s.stones[i]) | 0); s.bagSlots = Math.max(1, Math.min(5, s.bagSlots | 0 || 1));
@@ -650,6 +657,7 @@ function normalize(s) {
     const old = s.wst[w.id] || []; s.wst[w.id] = [0, 0, 0, 0, 0, 0, 0].map((_, k) => k < 3 ? (old[k] || 0) : k === 3 ? (old[3] || 0) + (old[4] || 0) + (old[5] || 0) + (old[6] || 0) : 0);
     if (!s.wst[w.id].some(x => x)) s.wst[w.id][0] = (s.own[c] && s.own[c][i]) ? 1 : 0;
   });
+  refundSkins(s);
   return s;
 }
 let save = null;
@@ -3735,7 +3743,7 @@ function frame(now) {
   try {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  ui = []; confirmTick(dt); cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
+  ui = []; confirmTick(dt); cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (state === 'hub' && window.__skRef) { const r = window.__skRef; window.__skRef = null; hubToast = { t: 7, s: T2('Skins reembolsadas: ', 'Skins refunded: ') + (r[0] ? '¢' + gfmt(r[0]) + ' ' : '') + (r[1] ? '◆' + r[1] : ''), col: '#ffd34a' }; } if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
   if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawGuildProfile(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawPetRename(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
