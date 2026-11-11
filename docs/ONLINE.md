@@ -66,6 +66,32 @@ Uma conta pode ter **até 3 personagens, um por classe** (Cavaleiro, Arqueiro e 
 - O **sexo e o país** valem para a conta toda. Desativar um nick (`gog.set_active`) desativa a conta inteira, com todos os personagens.
 - **Segurança do save:** antes de trocar, o personagem atual é guardado na nuvem (se falhar, a troca não acontece). O save do browser só é usado se pertencer ao personagem que entrou (id do personagem); o de outro personagem fica de lado e nunca passa para outro.
 
+## Anti-batota (o servidor valida o save)
+
+Cada vez que o jogo guarda na nuvem (`gog_save_put`), o servidor confere o save antes de o aceitar:
+
+- **Saltos impossíveis** face ao save anterior, tendo em conta o tempo passado: nível, mobs, bosses, ouro, ouro gasto, diamantes, ondas, raids, fusões, prestígio.
+- **Diamantes**: só podem subir por subir de nível (a cada 10), abrir baús, receber conquistas (máx. 75 cada) e pelo código promocional.
+- **Conquistas**: cada conquista nova tem de ser justificada pelo próprio save (por exemplo, `kills10000` exige 10 000 mobs mortos).
+- **Títulos**: só se aceita um título que venha de uma conquista recebida (ou o `beta`, se o código foi usado). O título mostrado no Ranking vem do save verificado, nunca do pedido de ranking.
+- Uma conta nova só pode começar com um personagem novo (nível 1 ou 2, ouro e diamantes quase a zero).
+
+O que acontece:
+
+- O save é **recusado** (o jogo mostra um aviso e tenta outra vez ao fim de 1 minuto: se foi um falso alarme, passa quando o tempo permitir o salto).
+- Fica uma linha em `gog.violations`. Repetições seguidas em menos de 10 minutos contam como uma só.
+- Valores **impossíveis** (mais de 1 000 000 de ouro, mais de 60 000 diamantes, nível acima de 400, ondas acima de 2000...) **desativam a conta logo**. Nos outros casos, a **3.ª ocorrência** desativa a conta (todos os personagens).
+
+Para ver as ocorrências e reativar uma conta desativada por engano, no SQL Editor:
+
+```sql
+select v.at, p.nick, v.kind from gog.violations v join gog.players p on p.id = v.root order by v.at desc limit 50;
+select gog.set_active('nick', true);   -- reativa
+delete from gog.violations where root = (select id from gog.players where nick_key = lower('nick'));   -- limpa o historico
+```
+
+Limites: quem altera os valores aos poucos, ou só durante a sessão (por exemplo, vida e dano na consola), não é apanhado. A vida e o dano do combate não passam pelo servidor.
+
 ## Códigos promocionais e títulos
 
 Os códigos vivem na tabela `gog.promo` (código, diamantes e título) e são validados no servidor por `gog_redeem`. Cada código só se usa **uma vez por conta** (os personagens extra partilham o uso do principal). O código `beta` dá o título **Beta Tester** e 10 diamantes. Para criar outro código:
