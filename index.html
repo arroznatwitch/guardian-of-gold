@@ -567,16 +567,6 @@ const CLASSES = {
       { id: 'm_arcane', n: 'Cajado Arcano',   price: 10500, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
       { id: 'm_dark',   n: 'Cajado Sombrio',  price: 30000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
-const UPGRADES = [
-  { k: 'hp',  n: 'Vitalidade', icon: 'heart', per: 20, sign: '+', unit: '', label: ' vida máxima' },
-  { k: 'dmg', n: 'Força',      icon: 'w:k_sword', per: 15, sign: '+', unit: '%', label: ' de dano' },
-  { k: 'spd', n: 'Agilidade',  icon: 'boot', per: 6, sign: '+', unit: '%', label: ' de velocidade' },
-  { k: 'cd',  n: 'Perícia',    icon: 'clock', per: 7, sign: '-', unit: '%', label: ' tempo entre ataques' },
-];
-const UP_LIM = { hp: 15, dmg: 15, spd: 10, cd: 8 };
-const upCost = l => l < 5 ? 40 + 35 * l : l < 10 ? 500 + 300 * (l - 5) : 2500 + 800 * (l - 10);
-const upReq = l => l >= 10 ? 20 : l >= 5 ? 10 : 0;      // nivel de jogador necessario para os prestigios
-const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#d070ff']];
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
@@ -1295,25 +1285,23 @@ if (document.fonts) { document.fonts.load("16px 'Jersey 10'"); }
 const ICON_DEF = {
   coin: { rows: ['..oooo..','.oyyyyo.','oyyyYyyo','oyyyYyyo','oyyyYyyo','oyyyYyyo','.oyyyyo.','..oooo..'], pal: { o:'#a86a00', y:'#ffd040', Y:'#fff0a0' } },
   heart: { rows: ['........','.rr..rr.','rrrrrrwr','rrrrrwrr','rrrrrrrr','.rrrrrr.','..rrrr..','...rr...'], pal: { r:'#ff0000', w:'#ffffff' } },   // coracao novo (8x8, desenhado a mao)
-  lock: { rows: ['..kkkk..','.k....k.','.k....k.','gggggggg','gGGGGGGg','gGGddGGg','gGGddGGg','gGGGGGGg','gggggggg'], pal: { k:'#aab', g:'#d0a030', G:'#a07820', d:'#222' } },
+  lock: { rows: ['................', '.....abbbbb.....', '....aaaaaaab....', '....aaa..aab....', '....aa....ab....', '....aa....ab....', '..cccccccccccc..', '..cdddddddddde..', '..cdddddddddde..', '..cdddffffddde..', '..cdddffffddde..', '..cddddffdddde..', '..cddddffdddde..', '..cdddddddddde..', '..cdddddddddde..', '..eeeeeeeeeeee..'], pal: { a: '#9b9999', b: '#626060', c: '#f0c860', d: '#c9962a', e: '#8a6418', f: '#2a1a08' } },   // desenhado a mao (16x16)
   check: { rows: ['.......c','......cc','c....cc.','cc..cc..','.cccc...','..cc....'], pal: { c:'#60ff80' } },
-  flame: { rows: ['..o...','..oo..','.ooyo.','.oyyo.','ooyyoo','ooyyoo','.oyyo.','..oo..'], pal: { o:'#ff6a1a', y:'#ffe066' } },
-  stun: { rows: ['..y...y..','.yyy.yyy.','..y...y..'], pal: { y:'#ffe040' } },
+  flame: { rows: ['................', '................', '................', '.........a......', '......b..b......', '...b...c..c.a...', '....cc..cc..b...', '.....bccbbcc....', '....cbbbaabc....', '.....cbbabc.....', '.....cbaaabc....', '...ccbbaaabc....', '..ccbbaaddabbc..', '...cbaaddeebc...', '....ccadeebc....', '......cbbbc.....'], pal: { a: '#c1670b', b: '#c1550b', c: '#c12d0b', d: '#c1920b', e: '#c1ab0b' } },   // desenhado a mao (16x16)
+  stun: { rows: ['................', '................', '................', '................', '................', '................', '....aa....aa....', '...aaaa..aaaa...', '...aaab..aaab...', '....bb....bb....', '................', '................', '................', '................', '................', '................'], pal: { a: '#fbf236', b: '#e1fb36' } },   // desenhado a mao (16x16)
   skull: { rows: ['.wwwwww.','wwwwwwww','wkkwwkkw','wkkwwkkw','wwwkkwww','.wwwwww.','.wkwkwk.','..wwww..'], pal: { w:'#e8e0f0', k:'#2a2040' } },
-  boot: { rows: ['..bbb...','..bbb...','..bbb...','..bbbb..','..bbbbb.','bbbbbbbb','bkkkkkkb','kkkkkkkk'], pal: { b:'#c07a38', k:'#5a3414' } },
   gem: { rows: ['..cccc..', '.cwCCCc.', 'cwCCCCCc', '.cCCCCc.', '..cCCc..', '...cc...'], pal: { c: '#2a9ad8', C: '#6fe8ff', w: '#ffffff' } },
   star: { rows: ['...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', '.y...y.'], pal: { y: '#ffd34a' } },
-  clock: { rows: ['..cccc..','.cwwwwc.','cwwwkwwc','cwwwkwwc','cwwkkwwc','cwwwwwwc','.cwwwwc.','..cccc..'], pal: { c:'#80a0ff', w:'#e8f0ff', k:'#202040' } },
 };
 const ICN = {}; for (const k in ICON_DEF) ICN[k] = makeSprite(ICON_DEF[k].rows, ICON_DEF[k].pal, 1, false);
+const icS = im => im.width >= 16 ? .5 : 1;   // os icones de 16x16 desenhados a mao ocupam o mesmo espaco que os antigos de 8x8
 function drawIcon(name, cx, cy, k) {
-  if (name.startsWith('w:')) { weaponIcon(name.slice(2), cx, cy, k * .5); return; }
-  const im = ICN[name]; ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k);
+  const im = ICN[name]; k *= icS(im); ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k);
 }
 const TOK = { '¢': 'coin', '✓': 'check', '♥': 'heart', '¤': 'lock', '◆': 'gem', '★': 'star' };
 function txtParts(s, size) {
   const parts = s.split(/([¢✓♥¤◆★])/).filter(p => p !== ''), k = Math.max(1, Math.round(size / 9));
-  return { parts, k, wd: parts.map(p => TOK[p] ? ICN[TOK[p]].width * k + 3 : ctx.measureText(p).width) };
+  return { parts, k, wd: parts.map(p => TOK[p] ? ICN[TOK[p]].width * k * icS(ICN[TOK[p]]) + 3 : ctx.measureText(p).width) };
 }
 function txtW(s, size, w = 'normal') { ctx.font = `normal ${Math.round(size * FS)}px ${FONT}`; return txtParts(L(s), size).wd.reduce((a, b) => a + b, 0); }
 function txt(s, x, y, size, col, al, w) { txtR(L(s), x, y, size, col, al, w); }
@@ -1322,7 +1310,7 @@ function txtR(s, x, y, size = 16, col = '#fff', al = 'left', w = 'normal') {
   const { parts, k, wd } = txtParts(s, size), total = wd.reduce((a, b) => a + b, 0);
   let cx = al === 'center' ? x - total / 2 : al === 'right' ? x - total : x; ctx.textAlign = 'left';
   parts.forEach((p, i) => {
-    if (TOK[p]) { const im = ICN[TOK[p]]; ctx.drawImage(im, Math.round(cx), Math.round(y - im.height * k + 1), im.width * k, im.height * k); }
+    if (TOK[p]) { const im = ICN[TOK[p]], kk = k * icS(im); ctx.drawImage(im, Math.round(cx), Math.round(y - im.height * kk + 1), im.width * kk, im.height * kk); }
     else { ctx.fillStyle = '#0009'; ctx.fillText(p, cx + 1, y + 1); ctx.fillStyle = col; ctx.fillText(p, cx, y); }
     cx += wd[i];
   });
@@ -3621,7 +3609,7 @@ function drawWorld() {
     ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r, e.r, e.r * .4, 0, 0, 7); ctx.fill();
     drawSpr(EN[e.type].spr, e.x, e.y, p.x < e.x, e.hit > 0, Math.sin(R.time * 8 + e.ph) * 1.5);
     if (e.slow > 0) { ctx.fillStyle = '#8cf6'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 3, 0, 7); ctx.fill(); }
-    if (e.wind > 0) txt('!', e.x, e.y - e.r - 14, 18, '#f44', 'center', 'bold'); if (e.stun > 0) drawIcon('stun', e.x, e.y - e.r - 12, 1.5); if (e.burn > 0) drawIcon('flame', e.x + e.r, e.y - e.r, 1.5);
+    if (e.wind > 0) txt('!', e.x, e.y - e.r - 14, 18, '#f44', 'center', 'bold'); if (e.stun > 0) drawIcon('stun', e.x, e.y - e.r - 21, 1.5); if (e.burn > 0) drawIcon('flame', e.x + e.r, e.y - e.r, 1.5);
     if (e.hp < e.max) bar(e.x - 14, e.y - e.r - 12, 28, 4, e.hp / e.max, '#e44');
   } });
   if (R.boss) { const b = R.boss; list.push({ y: b.y, f: () => {
