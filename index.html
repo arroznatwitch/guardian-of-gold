@@ -2449,7 +2449,7 @@ function hubAnvil() {
   txt(`Falhas seguidas: ${pf}`, 600, 160, 13, pf ? '#ffd34a' : '#778', 'center');
   drawAnvil(615, 335, w.id, lv);
   txt('Histórico:', 470, 409, 12, '#aab');
-  anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 528 + i * 34, 388, 32, 32));   // icones 16x16 desenhados a mao, a 2x
+  anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 530 + i * 28, 392, 24, 24));   // icones 16x16 desenhados a mao, a 1.5x
   if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 440, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 460, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
   txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 478, 11, '#aab', 'center');
 }
