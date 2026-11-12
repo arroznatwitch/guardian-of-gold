@@ -601,8 +601,8 @@ const RAID_D = [
   { n: 'Inferno',  col: '#c040ff', hp: 65,  dmg: 7.5, gold: 15, spd: 1.25 },
 ];
 // nas raids os monstros pequenos sao mais fortes e aparecem em maior numero (o boss nao muda)
-// nivel recomendado de cada raid: de 8 (1a Facil) ate 166 (ultima Inferno); cada dificuldade sobe 32 niveis
-const raidRec = (i, d) => 8 + 6 * i + 32 * d;
+// nivel recomendado de cada raid: de 15 (1a Facil) ate 173 (ultima Inferno); cada dificuldade sobe 32 niveis
+const raidRec = (i, d) => 15 + 6 * i + 32 * d;
 // vida e dano dos monstros: base por dificuldade, crescendo ao longo das 6 raids (nas dificuldades altas a subida por raid e menor)
 const RAID_H0 = [3.2, 14, 34, 65, 105], RAID_HZ = [7, 2.2, 1.4, .6, .1], RAID_M0 = [.54, 1.4, 2.4, 6.5, 6.6], RAID_MZ = [1.7, 1.1, .8, -.5, -.35];   // Pesadelo e Inferno recalibrados com o simulador
 const raidHP = (i, d) => RAID_H0[d] * (1 + RAID_HZ[d] * i / 5), raidDM = (i, d) => RAID_M0[d] * (1 + RAID_MZ[d] * i / 5);
