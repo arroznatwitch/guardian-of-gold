@@ -1287,6 +1287,8 @@ const ICON_DEF = {
   heart: { rows: ['........','.rr..rr.','rrrrrrwr','rrrrrwrr','rrrrrrrr','.rrrrrr.','..rrrr..','...rr...'], pal: { r:'#ff0000', w:'#ffffff' } },   // coracao novo (8x8, desenhado a mao)
   lock: { rows: ['................', '.....abbbbb.....', '....aaaaaaab....', '....aaa..aab....', '....aa....ab....', '....aa....ab....', '..cccccccccccc..', '..cdddddddddde..', '..cdddddddddde..', '..cdddffffddde..', '..cdddffffddde..', '..cddddffdddde..', '..cddddffdddde..', '..cdddddddddde..', '..cdddddddddde..', '..eeeeeeeeeeee..'], pal: { a: '#9b9999', b: '#626060', c: '#f0c860', d: '#c9962a', e: '#8a6418', f: '#2a1a08' } },   // desenhado a mao (16x16)
   check: { rows: ['................', '................', '................', '...........abcc.', '..........abccc.', '.........abcc...', '.........bcc....', '..bb....bcc.....', '..cbb...bcd.....', '...ccc.ccc......', '....cccccd......', '.....cccc.......', '......ccd.......', '.......d........', '................', '................'], pal: { a: '#dcedc8', b: '#aed581', c: '#9ccc65', d: '#7cb342' } },   // desenhado a mao (16x16)
+  cross: { rows: ['................', '................', '................', '.........aabb...', '...ab...acccc...', '...bc..bccc.....', '...bcc.ccc......', '....ccccd.......', '.....cccd.......', '......cccc......', '.....ccdcccc....', '...cccdd.dcccd..', '...cddd...dddd..', '................', '................', '................'], pal: { a: '#ffb74d', b: '#ffa726', c: '#fb8c00', d: '#f57c00' } },   // desenhado a mao (16x16)
+  cross_down: { rows: ['................', '................', '................', '.........aabb...', '...ab...acccc...', '...bc..bccc.....', '...bcc.ccc......', '....ccccd.......', '.....cccd.......', '......cccc......', '.....ccdcccc....', '...cccdd.dcccd..', '...cddd...dddd..', '................', '................', '................'], pal: { a: '#f4511e', b: '#e64a19', c: '#d84315', d: '#bf360c' } },   // desenhado a mao (16x16)
   flame: { rows: ['................', '................', '................', '.........a......', '......b..b......', '...b...c..c.a...', '....cc..cc..b...', '.....bccbbcc....', '....cbbbaabc....', '.....cbbabc.....', '.....cbaaabc....', '...ccbbaaabc....', '..ccbbaaddabbc..', '...cbaaddeebc...', '....ccadeebc....', '......cbbbc.....'], pal: { a: '#c1670b', b: '#c1550b', c: '#c12d0b', d: '#c1920b', e: '#c1ab0b' } },   // desenhado a mao (16x16)
   stun: { rows: ['................', '................', '................', '................', '................', '................', '....aa....aa....', '...aaaa..aaaa...', '...aaab..aaab...', '....bb....bb....', '................', '................', '................', '................', '................', '................'], pal: { a: '#fbf236', b: '#e1fb36' } },   // desenhado a mao (16x16)
   skull: { rows: ['.wwwwww.','wwwwwwww','wkkwwkkw','wkkwwkkw','wwwkkwww','.wwwwww.','.wkwkwk.','..wwww..'], pal: { w:'#e8e0f0', k:'#2a2040' } },
@@ -2424,18 +2426,18 @@ function hubAnvil() {
   weaponIcon(w.id, 220, 158, 1.5); txt(w.n, 244, 165, 19, '#fff', 'left', 'bold');
   txt(`Nível +${lv}${max ? '  (MÁXIMO)' : ` > +${lv + 1}`}`, 205, 188, 16, '#f0c060', 'left', 'bold');
   const d0 = Math.round(w.dmg * 10 * wlm(lv)), d1 = Math.round(w.dmg * 10 * wlm(lv + 1));
-  txt(max ? `Dano ${d0}` : `Dano ${d0} > ${d1}`, 205, 208, 14, '#9cf'); txt(T2(`Máx. +${ANV_MAX} · agora até +${anvCap()} (nível ÷ 3)`, `Max +${ANV_MAX} · now up to +${anvCap()} (level ÷ 3)`), 205, 228, 11, '#778');
+  txt(max ? `Dano ${d0}` : `Dano ${d0} > ${d1}`, 205, 208, 14, '#9cf'); txt(T2(`Máx. +${ANV_MAX} · agora até +${anvCap()} (nível ÷ 3)`, `Max +${ANV_MAX} · now up to +${anvCap()} (level ÷ 3)`), 205, 224, 11, '#778');
   if (max) txt('Nível máximo!', 205, 250, 18, '#ffd34a', 'left', 'bold');
   else if (lcap) { txt(T2(`Requer nível ${3 * (lv + 1)} para +${lv + 1}`, `Requires level ${3 * (lv + 1)} for +${lv + 1}`), 205, 252, 16, '#f88', 'left', 'bold'); wrap('A Bigorna só melhora a arma até ao nível do jogador ÷ 3. Sobe de nível para continuar.', 205, 278, 215, 15, 12, '#9ab'); }
   else {
     if (anvLucky && !luckOk(lv, w.id)) anvLucky = false;
     const base = ANV_CH[lv], pity = Math.min(25, 5 * (save.pity[w.id] || 0)), lucky = anvLucky ? LUCKY_BONUS : 0, ch = Math.min(100, base + pity + lucky);
     const lc = luckyCost(lv), pc = protCost(lv), useP = anvProt && lv >= 5, total = anvCost(lv) + (anvLucky ? lc : 0) + (useP ? pc : 0);
-    txt(`Chance total: ${ch}%`, 205, 234, 17, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold');
-    const bw = 196; ctx.fillStyle = '#05050a'; ctx.fillRect(204, 241, bw + 2, 12); ctx.fillStyle = '#1a1a28'; ctx.fillRect(205, 242, bw, 10);
-    let px = 205; for (const [v, col] of [[base, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'], [pity, '#ffd34a'], [lucky, '#6cf']]) { const ww = Math.min(bw * v / 100, 205 + bw - px); ctx.fillStyle = col; ctx.fillRect(px, 242, ww, 10); px += ww; }
-    txt(`Chance base: ${base}% · Bónus de azar: +${pity}%`, 205, 266, 11, '#9ab');
-    wrap(lv >= 5 ? 'Se falhar: perdes o ouro e há 35% de a arma descer 1 nível (evitável com Proteção).' : 'Se falhar: perdes só o ouro.', 205, 284, 205, 14, 11, lv >= 5 ? '#f99' : '#9ab');
+    txt(`Chance total: ${ch}%`, 205, 241, 17, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold');
+    const bw = 196; ctx.fillStyle = '#05050a'; ctx.fillRect(204, 247, bw + 2, 12); ctx.fillStyle = '#1a1a28'; ctx.fillRect(205, 248, bw, 10);
+    let px = 205; for (const [v, col] of [[base, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'], [pity, '#ffd34a'], [lucky, '#6cf']]) { const ww = Math.min(bw * v / 100, 205 + bw - px); ctx.fillStyle = col; ctx.fillRect(px, 248, ww, 10); px += ww; }
+    txt(`Chance base: ${base}% · Bónus de azar: +${pity}%`, 205, 272, 11, '#9ab');
+    wrap(lv >= 5 ? 'Se falhar: perdes o ouro e há 35% de a arma descer 1 nível (evitável com Proteção).' : 'Se falhar: perdes só o ouro.', 205, 288, 205, 13, 11, lv >= 5 ? '#f99' : '#9ab');
     const lOk = luckOk(lv, w.id);
     btn(205, 316, 200, 28, lOk ? `${anvLucky ? '✓' : '·'} Amuleto da Sorte (+15%) ¢${lc}` : 'Sorte indisponível (85%+)', () => { if (lOk) anvLucky = !anvLucky; else lockClick('lucky'); }, { size: 11, off: anv.t > 0, col: !lOk ? '#26262f' : anvLucky ? '#2f6a8a' : '#2a2a48' });
     if (lv >= 5) btn(205, 348, 200, 28, `${anvProt ? '✓' : '·'} Pergaminho de Proteção ¢${pc}`, () => anvProt = !anvProt, { size: 11, off: anv.t > 0, col: anvProt ? '#2f7a4a' : '#2a2a48' });
@@ -2446,8 +2448,8 @@ function hubAnvil() {
   const pf = save.pity[w.id] || 0;
   txt(`Falhas seguidas: ${pf}`, 600, 160, 13, pf ? '#ffd34a' : '#778', 'center');
   drawAnvil(615, 335, w.id, lv);
-  txt('Histórico:', 470, 412, 12, '#aab');
-  anvHist.slice(-7).forEach((h, i) => { const hx = 535 + i * 24, hy = 404; if (h.ok) ctx.drawImage(ICN.check, hx - 1, hy - 3, 16, 16); else { ctx.strokeStyle = h.down ? '#f55' : '#f96'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx + 2, hy); ctx.lineTo(hx + 12, hy + 10); ctx.moveTo(hx + 12, hy); ctx.lineTo(hx + 2, hy + 10); ctx.stroke(); } });
+  txt('Histórico:', 470, 409, 12, '#aab');
+  anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 528 + i * 34, 388, 32, 32));   // icones 16x16 desenhados a mao, a 2x
   if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 440, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 460, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
   txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 478, 11, '#aab', 'center');
 }
