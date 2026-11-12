@@ -2059,8 +2059,8 @@ function hubChar() {
   if (top >= 0) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createRadialGradient(cx, cy, 10, cx, cy, 100); gr.addColorStop(0, RAR[top][1] + '55'); gr.addColorStop(1, RAR[top][1] + '00'); ctx.fillStyle = gr; ctx.fillRect(cx - 100, cy - 100, 200, 200); ctx.globalCompositeOperation = 'source-over'; }
   ctx.fillStyle = '#0a0a14'; ctx.beginPath(); ctx.ellipse(cx, cy + 64, 58, 12, 0, 0, 7); ctx.fill();
   const k = 3.3; drawSprBig(heroSpr(), cx, cy + Math.sin(T * 2) * 1.5, k);
-  const base = w.t === 'melee' ? -.9 : w.t === 'arrow' ? -.12 : -1.3, ang = base + Math.sin(T * 2) * .05, hh = HAND[save.cls], hx = cx + hh[0] * 3 * k, hy = cy + Math.sin(T * 2) * 1.5 + hh[1] * 3 * k; drawWeapon(w.id, hx, hy, ang, k, k);
-  if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * wGlowD(w.id, k, 27 * k / 3), hy + Math.sin(ang) * wGlowD(w.id, k, 27 * k / 3), wGlowR(w.id, k, 14), 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  const base = w.t === 'melee' ? -.9 : w.t === 'arrow' ? -.12 : -1.3, ang = base + Math.sin(T * 2) * .05, hh = HAND[save.cls], hx = cx + hh[0] * 3 * k, hy = cy + Math.sin(T * 2) * 1.5 + hh[1] * 3 * k; const whs = k * .6; drawWeapon(w.id, hx, hy, ang, k, whs);   // no ecra da personagem as armas novas ficam mais pequenas (.6)
+  if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * wGlowD(w.id, whs, 27 * k / 3), hy + Math.sin(ang) * wGlowD(w.id, whs, 27 * k / 3), wGlowR(w.id, whs, 14), 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   const go = (sl) => () => { if (keys.ShiftLeft || keys.ShiftRight) { equipBest(sl); return; } bagFilter = sl; bagSel = -1; tab = 'bag'; };
   slotBtn(237, 128, 'head', 'Capacete', save.gear.head, null, go('head'));
   slotBtn(237, 190, 'chest', 'Armadura', save.gear.chest, null, go('chest'));
