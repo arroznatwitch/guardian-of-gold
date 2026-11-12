@@ -2447,7 +2447,7 @@ function hubAnvil() {
   txt(`Falhas seguidas: ${pf}`, 600, 160, 13, pf ? '#ffd34a' : '#778', 'center');
   drawAnvil(615, 335, w.id, lv);
   txt('Histórico:', 470, 412, 12, '#aab');
-  anvHist.slice(-7).forEach((h, i) => { const hx = 535 + i * 24, hy = 404; if (h.ok) ctx.drawImage(ICN.check, hx, hy, 16, 12); else { ctx.strokeStyle = h.down ? '#f55' : '#f96'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx + 2, hy); ctx.lineTo(hx + 12, hy + 10); ctx.moveTo(hx + 12, hy); ctx.lineTo(hx + 2, hy + 10); ctx.stroke(); } });
+  anvHist.slice(-7).forEach((h, i) => { const hx = 535 + i * 24, hy = 404; if (h.ok) ctx.drawImage(ICN.check, hx - 1, hy - 3, 16, 16); else { ctx.strokeStyle = h.down ? '#f55' : '#f96'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hx + 2, hy); ctx.lineTo(hx + 12, hy + 10); ctx.moveTo(hx + 12, hy); ctx.lineTo(hx + 2, hy + 10); ctx.stroke(); } });
   if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 440, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 460, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
   txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 478, 11, '#aab', 'center');
 }
