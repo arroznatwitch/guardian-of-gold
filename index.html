@@ -567,16 +567,6 @@ const CLASSES = {
       { id: 'm_arcane', n: 'Cajado Arcano',   price: 10500, t: 'bolt', kind: 'arcane', dmg: 3, cd: .35, spd: 330, info: 'Orbes estelares que perseguem o alvo.', sk: { n: 'Escudo Arcano', cd: 12, d: '4s de invulnerabilidade.' } },
       { id: 'm_dark',   n: 'Cajado Sombrio',  price: 30000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
-const UPGRADES = [
-  { k: 'hp',  n: 'Vitalidade', icon: 'heart', per: 20, sign: '+', unit: '', label: ' vida máxima' },
-  { k: 'dmg', n: 'Força',      icon: 'w:k_sword', per: 15, sign: '+', unit: '%', label: ' de dano' },
-  { k: 'spd', n: 'Agilidade',  icon: 'boot', per: 6, sign: '+', unit: '%', label: ' de velocidade' },
-  { k: 'cd',  n: 'Perícia',    icon: 'clock', per: 7, sign: '-', unit: '%', label: ' tempo entre ataques' },
-];
-const UP_LIM = { hp: 15, dmg: 15, spd: 10, cd: 8 };
-const upCost = l => l < 5 ? 40 + 35 * l : l < 10 ? 500 + 300 * (l - 5) : 2500 + 800 * (l - 10);
-const upReq = l => l >= 10 ? 20 : l >= 5 ? 10 : 0;      // nivel de jogador necessario para os prestigios
-const PRES = [['', '#f0c060'], ['Prestígio I', '#7fd0ff'], ['Prestígio II', '#d070ff']];
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
@@ -1300,15 +1290,12 @@ const ICON_DEF = {
   flame: { rows: ['................', '................', '................', '.........a......', '......b..b......', '...b...c..c.a...', '....cc..cc..b...', '.....bccbbcc....', '....cbbbaabc....', '.....cbbabc.....', '.....cbaaabc....', '...ccbbaaabc....', '..ccbbaaddabbc..', '...cbaaddeebc...', '....ccadeebc....', '......cbbbc.....'], pal: { a: '#c1670b', b: '#c1550b', c: '#c12d0b', d: '#c1920b', e: '#c1ab0b' } },   // desenhado a mao (16x16)
   stun: { rows: ['................', '................', '................', '................', '................', '................', '....aa....aa....', '...aaaa..aaaa...', '...aaab..aaab...', '....bb....bb....', '................', '................', '................', '................', '................', '................'], pal: { a: '#fbf236', b: '#e1fb36' } },   // desenhado a mao (16x16)
   skull: { rows: ['.wwwwww.','wwwwwwww','wkkwwkkw','wkkwwkkw','wwwkkwww','.wwwwww.','.wkwkwk.','..wwww..'], pal: { w:'#e8e0f0', k:'#2a2040' } },
-  boot: { rows: ['..bbb...','..bbb...','..bbb...','..bbbb..','..bbbbb.','bbbbbbbb','bkkkkkkb','kkkkkkkk'], pal: { b:'#c07a38', k:'#5a3414' } },
   gem: { rows: ['..cccc..', '.cwCCCc.', 'cwCCCCCc', '.cCCCCc.', '..cCCc..', '...cc...'], pal: { c: '#2a9ad8', C: '#6fe8ff', w: '#ffffff' } },
   star: { rows: ['...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '..yyy..', '.yy.yy.', '.y...y.'], pal: { y: '#ffd34a' } },
-  clock: { rows: ['..cccc..','.cwwwwc.','cwwwkwwc','cwwwkwwc','cwwkkwwc','cwwwwwwc','.cwwwwc.','..cccc..'], pal: { c:'#80a0ff', w:'#e8f0ff', k:'#202040' } },
 };
 const ICN = {}; for (const k in ICON_DEF) ICN[k] = makeSprite(ICON_DEF[k].rows, ICON_DEF[k].pal, 1, false);
 const icS = im => im.width >= 16 ? .5 : 1;   // os icones de 16x16 desenhados a mao ocupam o mesmo espaco que os antigos de 8x8
 function drawIcon(name, cx, cy, k) {
-  if (name.startsWith('w:')) { weaponIcon(name.slice(2), cx, cy, k * .5); return; }
   const im = ICN[name]; k *= icS(im); ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k);
 }
 const TOK = { '¢': 'coin', '✓': 'check', '♥': 'heart', '¤': 'lock', '◆': 'gem', '★': 'star' };
