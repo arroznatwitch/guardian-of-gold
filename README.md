@@ -66,7 +66,7 @@ As teclas podem ser alteradas em **Opções > Teclas**.
 | `wiki.html` | Wiki estática com armas, equipamento, raids e inimigos. |
 | `docs/` | Guias: [`ONLINE.md`](docs/ONLINE.md) (contas, save e ranking) e [`BACKUP.md`](docs/BACKUP.md) (backups). |
 | `server/` | Esquema SQL do servidor (Supabase) e respetivos testes. |
-| `tools/` | `sim.js`: simulador de combate no terminal (`node tools/sim.js help`), com um bot que joga raids e o Farm e diz taxas de vitória e o nível mínimo de cada raid. `smoke-lab.js` testa o laboratório de batalha (só para admin, `js/96-lab.js`). `balance-sim.js` é o simulador antigo, para colar na consola do browser. |
+| `tools/` | `sim.js`: simulador de combate no terminal (`node tools/sim.js help`), com um bot que joga raids e o Farm e diz taxas de vitória e o nível mínimo de cada raid. `smoke.js` (`node tools/smoke.js`) desenha todos os separadores do campo com um personagem novo para apanhar erros. `smoke-lab.js` testa o laboratório de batalha (só para admin, `js/96-lab.js`). `balance-sim.js` é o simulador antigo, para colar na consola do browser. |
 | `.github/workflows/` | Backup diário encriptado da base de dados. |
 
 ## Estado do projeto
