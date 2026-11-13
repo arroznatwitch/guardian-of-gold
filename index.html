@@ -1270,7 +1270,7 @@ Object.assign(EN_DICT, {"Evoluir exige Nv": "Evolve needs Lv", "Evoluir": "Evolv
 Object.assign(EN_DICT, {"Escudo Férreo": "Iron Shield", "Ergue um escudo durante 10 segundos: recebes 60% menos dano. Recarrega a cada 22 segundos.": "Raises a shield for 10 seconds: you take 60% less damage. Recharges every 22 seconds.", "Renovação Arcana": "Arcane Renewal", "Recupera 10% da vida. Recarrega a cada 12 segundos.": "Restores 10% of your health. Recharges every 12 seconds.", "Guilda": "Guild", "A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.": "Your account was deactivated because of suspicious save values. Contact the administrator.", "O servidor recusou o save: valores suspeitos. Se jogaste normalmente, espera um pouco e tenta outra vez.": "The server refused the save: suspicious values. If you played normally, wait a moment and try again."});
 Object.assign(EN_DICT, {"O país vale para todos os teus personagens. O título é de cada personagem.": "Your country applies to all your characters. The title is per character."});
 Object.assign(EN_DICT, {"Capacete de Couro": "Leather Helmet", "Armadura de Couro": "Leather Armour", "Amuleto de Bronze": "Bronze Amulet", "Botas de Ferro": "Iron Boots"});
-Object.assign(EN_DICT, {"Anel de Prata": "Silver Ring", "Anel de Ouro": "Gold Ring", "Anel de Diamante": "Diamond Ring", "Anel Roxo": "Purple Ring", "Anel": "Ring", "do Topázio": "of Topaz", "da Safira": "of Sapphire", "do Rubi": "of Ruby", "do Âmbar": "of Amber", "Bónus de conjunto:": "Set bonus:", "Só fica ativo com 4 peças de armadura da mesma raridade (capacete, armadura, botas e amuleto).": "Only active with 4 armour pieces of the same rarity (helmet, armour, boots and amulet).", "Conjunto completo": "Set complete", "Conjunto incompleto": "Set incomplete", "Conjunto": "Set", "Com as 4 peças de armadura da mesma raridade, o anel dá +2% (Prata), +5% (Ouro), +7% (Diamante) ou +10% (Roxo) ao stat da cor da gema.": "With 4 armour pieces of the same rarity, the ring gives +2% (Silver), +5% (Gold), +7% (Diamond) or +10% (Purple) to the stat of its gem colour."});
+Object.assign(EN_DICT, {"Anel de Prata": "Silver Ring", "Anel de Ouro": "Gold Ring", "Anel de Diamante": "Diamond Ring", "Anel Roxo": "Purple Ring", "Anel": "Ring", "do Topázio": "of Topaz", "da Safira": "of Sapphire", "do Rubi": "of Ruby", "do Âmbar": "of Amber", "Bónus de conjunto:": "Set bonus:", "Só fica ativo com 4 peças de armadura da mesma raridade (capacete, armadura, botas e amuleto).": "Only active with 4 armour pieces of the same rarity (helmet, armour, boots and amulet).", "Conjunto completo": "Set complete", "Conjunto incompleto": "Set incomplete", "Conjunto": "Set", "Com as 4 peças de armadura da mesma raridade, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.": "With 4 armour pieces of the same rarity, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring's level."});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -1599,13 +1599,14 @@ const RING_ART = [[{ rows: ['..aab..', '.cadac.', 'c.....c', 'c.....c', 'c.....c
 const RING_SPR = RING_ART.map(b => b.map(a => makeSprite(a.rows, a.pal, 1, false)));
 const GEM_STAT = ['cdr', 'spd', 'hp', 'dmg'];   // amarelo = vel. de ataque, azul = velocidade, vermelho = vida, laranja = dano
 const GEM_NM = ['do Topázio', 'da Safira', 'do Rubi', 'do Âmbar'];
-const RING_PCT = [2, 5, 7, 10], RING_DROP = .12;   // % de bonus por raridade do anel; 12% dos drops de equipamento sao aneis
+const RING_BASE = [3, 6.5, 9, 13], RING_DROP = .12;   // bonus maximo (nivel de item 120) por raridade do anel; 12% dos drops de equipamento sao aneis
+const ringPct = (r, il) => +(RING_BASE[Math.min(3, r | 0)] * (.5 + .5 * Math.min(120, Math.max(1, il | 0)) / 120)).toFixed(1);   // metade do maximo no nivel 1, o maximo no nivel 120
 function ringIcon(r, g, cx, cy, k) { const im = RING_SPR[Math.min(3, r | 0)][(g | 0) % 4]; k = Math.max(1, Math.round(k));   // escala inteira: os pixeis ficam nitidos
   ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
 function itemIcon(it, cx, cy, k) { if (it.slot === 'ring') ringIcon(it.r, it.gem, cx, cy, k); else slotIcon(it.slot, it.r | 0, cx, cy, k); }
 // conjunto completo = as 4 pecas de armadura equipadas e todas da mesma raridade (qualquer raridade); o anel so da bonus nesse caso
 function setComplete() { const g = save && save.gear; if (!g || !g.head || !g.chest || !g.boots || !g.amulet) return false; return g.chest.r === g.head.r && g.boots.r === g.head.r && g.amulet.r === g.head.r; }
-function setBonus() { const g = save && save.gear; if (!g || !g.ring) return null; return { ring: g.ring, k: g.ring.main.k, p: RING_PCT[Math.min(3, g.ring.r)] / 100, on: setComplete() }; }
+function setBonus() { const g = save && save.gear; if (!g || !g.ring) return null; return { ring: g.ring, k: g.ring.main.k, p: g.ring.main.v / 100, on: setComplete() }; }
 const AFF = {
   hp: { n: 'Vida', u: '', b: 12, p: 3 }, dmg: { n: 'Dano', u: '%', b: 2.5, p: .25 }, spd: { n: 'Velocidade', u: '%', b: 1.5, p: .12 }, cdr: { n: 'Vel. de ataque', u: '%', b: 1.5, p: .12 },
   crit: { n: 'Crítico', u: '%', b: 1.5, p: .1 }, ls: { n: 'Roubo de vida', u: '%', b: .8, p: .05 }, dr: { n: 'Redução de dano', u: '%', b: 1, p: .08 },
@@ -1666,7 +1667,7 @@ function genItem(slot, r, il) {
 }
 function genRing(r, il) {   // anel: so tem o bonus de conjunto (+2/5/7/10% do stat da gema)
   r = Math.min(3, r); const gem = Math.floor(Math.random() * 4);
-  return { slot: 'ring', r, il, gem, ench: 0, rr: 0, st: 0, main: { k: GEM_STAT[gem], v: RING_PCT[r] }, aff: [], spec: null };
+  return { slot: 'ring', r, il, gem, ench: 0, rr: 0, st: 0, main: { k: GEM_STAT[gem], v: ringPct(r, il) }, aff: [], spec: null };
 }
 const genLoot = (r, il) => Math.random() < RING_DROP ? genRing(r, il) : genItem(SLOTS[Math.floor(Math.random() * 4)], r, il);
 function gearStats() {
@@ -2090,12 +2091,12 @@ function hubChar() {
   if (wlvl()) txt('+' + wlvl(), 460, 151, 11, '#fff', 'right', 'bold'); miniStars(wStar(w.id), 418, 109);
   slotBtn(437, 190, 'amulet', 'Amuleto', save.gear.amulet, null, go('amulet'));
   slotBtn(437, 252, 'ring', 'Anel', save.gear.ring, null, go('ring'));
-  { const sb = setBonus(); if (sb) { const c2 = sb.on ? '#6f6' : '#778'; txt(`Conjunto +${RING_PCT[Math.min(3, sb.ring.r)]}%`, 437, 290, 10, c2, 'center', 'bold'); txt(AFF[sb.k].n, 437, 301, 10, c2, 'center'); } }
+  { const sb = setBonus(); if (sb) { const c2 = sb.on ? '#6f6' : '#778'; txt(`Conjunto +${sb.ring.main.v}%`, 437, 290, 10, c2, 'center', 'bold'); txt(AFF[sb.k].n, 437, 301, 10, c2, 'center'); } }
   // informacao do slot
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && EQ_SLOTS.includes(hv) ? save.gear[hv] : null;
   if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
-  else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap('Com as 4 peças de armadura da mesma raridade, o anel dá +2% (Prata), +5% (Ouro), +7% (Diamante) ou +10% (Roxo) ao stat da cor da gema.', 208, 340, 262, 14, 12, '#9ab'); }
+  else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap('Com as 4 peças de armadura da mesma raridade, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
   else { txt('Passa o rato por um slot', 208, 318, 12, '#667'); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 346 + i * 20, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // tira da mochila para o slot sobre o qual estas
@@ -2961,7 +2962,7 @@ function statPayload() {
 }
 // build publica (so dados de jogo): skin, arma, atributos e equipamento
 function buildPayload() {
-  const g = {}; for (const sl of SLOTS) { const it = save.gear[sl]; if (it) g[sl] = { r: it.r, e: it.ench || 0, st: it.st || 0, sp: it.spec ? it.spec.nm : '' }; }
+  const g = {}; for (const sl of EQ_SLOTS) { const it = save.gear[sl]; if (it) { g[sl] = { r: it.r, e: it.ench || 0, st: it.st || 0, sp: it.spec ? it.spec.nm : '' }; if (sl === 'ring') g[sl].g = it.gem | 0; } }   // o anel leva a cor da gema (g)
   const w = curW(); return { pet: save.pets && save.pets.eq && save.pets.own[save.pets.eq] ? { id: save.pets.eq, lv: petLv(save.pets.eq), name: (save.pets.names && save.pets.names[save.pets.eq]) || '' } : null, skin: 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
 }
 async function openProfile(nick) {
@@ -3367,12 +3368,14 @@ function drawProfile() {
   else txt('Sem build partilhada', mx, y + 130, 12, '#778');
   // equipamento
   const ex = x + 334; sec('Equipamento', ex, y + 100, 146);
-  SLOTS.forEach((sl, i) => {
-    const it = b && b.gear ? b.gear[sl] : null, yy = y + 114 + i * 38;
-    if (!it) { ctx.globalAlpha = .3; slotIcon(sl, 0, ex + 14, yy + 18, 1.8); ctx.globalAlpha = 1; txt('—', ex + 36, yy + 22, 12, '#556'); return; }
-    const rc = RAR[it.r | 0][1]; ctx.fillStyle = rc; ctx.fillRect(ex, yy + 4, 2, 28); slotIcon(sl, it.r | 0, ex + 18, yy + 18, 1.8);
-    txt(ITEM_NAMES[sl][it.r | 0], ex + 38, yy + 15, 11, rc, 'left', 'bold');
-    { const t1 = `+${it.e | 0}${it.sp ? ' · ' + it.sp : ''}`; txt(t1, ex + 38, yy + 30, 10, '#9ab'); if (it.st) drawStars(it.st | 0, ex + 38 + txtW(t1, 10) + 9, yy + 26, 1); }
+  EQ_SLOTS.forEach((sl, i) => {
+    const it = b && b.gear ? b.gear[sl] : null, yy = y + 112 + i * 31;
+    if (!it) { ctx.globalAlpha = .3; slotIcon(sl, 0, ex + 14, yy + 14, 1.8); ctx.globalAlpha = 1; txt('—', ex + 36, yy + 19, 12, '#556'); return; }
+    const rc = RAR[it.r | 0][1]; ctx.fillStyle = rc; ctx.fillRect(ex, yy + 2, 2, 26);
+    if (sl === 'ring') { ringIcon(it.r | 0, it.g | 0, ex + 18, yy + 15, 2); txt(ITEM_NAMES.ring[Math.min(3, it.r | 0)], ex + 38, yy + 12, 11, rc, 'left', 'bold'); txt(T2('Conjunto: ', 'Set: ') + AFF[GEM_STAT[(it.g | 0) % 4]].n, ex + 38, yy + 25, 10, '#9ab'); return; }
+    slotIcon(sl, it.r | 0, ex + 18, yy + 15, 1.8);
+    txt(ITEM_NAMES[sl][it.r | 0], ex + 38, yy + 12, 11, rc, 'left', 'bold');
+    { const t1 = `+${it.e | 0}${it.sp ? ' · ' + it.sp : ''}`; txt(t1, ex + 38, yy + 25, 10, '#9ab'); if (it.st) drawStars(it.st | 0, ex + 38 + txtW(t1, 10) + 9, yy + 21, 1); }
   });
   // totais e recordes, em linhas simples
   const ty = y + 286; ctx.fillStyle = '#3a3a5a'; ctx.fillRect(x + 16, ty - 14, w - 32, 1);

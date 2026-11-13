@@ -103,12 +103,13 @@ begin
       'agi', least(greatest(coalesce((a->>'agi')::int, 0), 0), 99999), 'per', least(greatest(coalesce((a->>'per')::int, 0), 0), 99999)));
   end if;
   if jsonb_typeof(b->'gear') = 'object' then
-    foreach sl in array array['head', 'chest', 'boots', 'amulet'] loop
+    foreach sl in array array['head', 'chest', 'boots', 'amulet', 'ring'] loop
       it := b->'gear'->sl;
       if jsonb_typeof(it) = 'object' then
         g := g || jsonb_build_object(sl, jsonb_build_object('r', least(greatest(coalesce((it->>'r')::int, 0), 0), 4),
           'e', least(greatest(coalesce((it->>'e')::int, 0), 0), 10), 'st', least(greatest(coalesce((it->>'st')::int, 0), 0), 3),
-          'sp', left(regexp_replace(coalesce(it->>'sp', ''), '[^[:alpha:]]', '', 'g'), 14)));
+          'sp', left(regexp_replace(coalesce(it->>'sp', ''), '[^[:alpha:]]', '', 'g'), 14))
+          || case when sl = 'ring' then jsonb_build_object('g', least(greatest(coalesce((it->>'g')::int, 0), 0), 3)) else '{}'::jsonb end);   -- o anel guarda a cor da gema (0-3)
       end if;
     end loop;
     o := o || jsonb_build_object('gear', g);
