@@ -32,7 +32,7 @@ function hubChar() {
   if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap('Com as 4 peças de armadura da mesma raridade, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
-  else { txt('Passa o rato por um slot', 208, 318, 12, '#667'); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 346 + i * 20, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
+  else { drawSetInfo(208, 304); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 354 + i * 18, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // tira da mochila para o slot sobre o qual estas
   const inLeft = mouse.x - UIOX >= 195 && mouse.x - UIOX <= 480 && mouse.y >= 88 && mouse.y <= 478;
   if (hv && EQ_SLOTS.includes(hv)) charStrip = hv; else if (!inLeft) charStrip = null;

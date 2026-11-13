@@ -131,6 +131,7 @@ function gearStats() {
   const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
   if (!save || !save.gear) return g;
   for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
+  for (const b of armourSets()) if (b.k === 'crit') g.crit += b.p;   // conjuntos: o Critico soma pontos
   g.xpb = Math.min(25, g.xpb); g.ls = Math.min(6, g.ls);   // tetos   // XP extra tem teto
   return g;
 }
