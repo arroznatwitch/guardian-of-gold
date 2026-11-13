@@ -55,7 +55,7 @@ const attrCap = L => 15 + 1.2 * (L || (save && save.pl && save.pl.lv) || 1);
 const attrEff = (n, L) => { const T = attrCap(L); return n <= T ? n : n <= 2 * T ? T + (n - T) * .5 : 1.5 * T + (n - 2 * T) * .25; };
 const stats = () => {
   const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, ga = 1 + gb().attr, a = { vit: attrEff(save.attr.vit) * ga, str: attrEff(save.attr.str) * ga, agi: attrEff(save.attr.agi) * ga, per: attrEff(save.attr.per) * ga };
-  const sb = setBonus(), bm = k => sb && sb.on && sb.k === k ? 1 + sb.p : 1;   // bonus do anel (so com o conjunto completo)
+  const sb = setBonus(), bm = k => (sb && sb.on && sb.k === k ? 1 + sb.p : 1) * (1 + setPct(k));   // bonus do anel (so com o conjunto completo) e dos conjuntos de armadura (92-sets.js)
   return { hp: Math.round((c.hp + a.vit * 7 + 4 * (L - 1) + g.hp) * bm('hp')), spd: c.spd * (1 + (a.agi * .6 + g.spd) / 100) * bm('spd'), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .01) * (1 + g.dmg / 100) * bm('dmg'), cdm: Math.max(.3, (1 - a.per * .006 - g.cdr / 100) / bm('cdr')) };   // cada ponto vale metade do que valia
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];

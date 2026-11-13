@@ -260,6 +260,7 @@ function bossTick(b, dt, rage, sl) {
 function update(dt) {
   if (R.cine) { updateCine(dt); return; }   // cinematica de entrada do Guardiao: o jogo fica em pausa
   const p = R.p, M = MISSIONS[R.m]; R.time += dt;
+  if (R.endT === undefined && setHasFx('aegis')) { p.aegisT = (p.aegisT === undefined ? SET_AEGIS.every : p.aegisT) - dt; if (p.aegisT <= 0) { p.aegisT = SET_AEGIS.every; p.inv = Math.max(p.inv, SET_AEGIS.inv); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 34, t: .4, max: .4, col: '#ffd34a' }); R.texts.push({ x: p.x, y: p.y - 34, s: 'ÉGIDE', t: 1, col: '#ffd34a' }); } }   // conjunto Divino (4): Egide Divina
   p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; p.kshield = (p.kshield || 0) - dt; R.toastT -= dt; R.shake *= .9;
   const dead = R.endT !== undefined;
   p.face = Math.atan2(mouse.y - p.y, mouse.x - p.x); p.flip = mouse.x < p.x; updatePet(dt);
@@ -337,12 +338,14 @@ function update(dt) {
   }
   for (const e of R.enemies) if (e.hp <= 0) {
     const d0 = EN[e.type]; R.kills++; R.petXp = (R.petXp | 0) + 1; burst(e.x, e.y, '#9f9', 12); SFX.kill();
+    if (Math.random() < SET_BOOM.chance && setHasFx('boom')) (R.booms = R.booms || []).push({ x: e.x, y: e.y });   // conjunto Ancestral (4): Detonacao
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (R.farm && R.rec ? 4 + (R.rec - 1) / 3 : 4 + 2 * R.m) * (R.farm ? FARM_RATE * xpK(save.pl.lv, R.rec) : 1); R.waveKills++;
     { const tr = mobTier(e.type); if (Math.random() < (.012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) * (.5 + .5 * tr) * (1 + gb().drop)) giveLoot(e.x, e.y, 0, tr); }
     if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .04) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
+  if (R.booms && R.booms.length) { for (const b of R.booms) { areaDmg(b.x, b.y, SET_BOOM.r, SET_BOOM.dmg * DM()); R.fx.push({ k: 'ring', x: b.x, y: b.y, r: SET_BOOM.r, t: .3, max: .3, col: '#ff9a2a' }); burst(b.x, b.y, '#ff9a2a', 12); } R.booms = []; }
   if (R.raid && R.phase === 'hunt' && !dead) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
     if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < RAID_MINI.burst + 2 * R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
