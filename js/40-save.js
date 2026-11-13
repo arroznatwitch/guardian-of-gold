@@ -4,7 +4,7 @@
    ===================================================================== */
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
-  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '', lv: {}, xp: {}, names: {} }, bagSlots: 1 };
+  const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 1, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '', lv: {}, xp: {}, names: {} }, bagSlots: 1, tut: { on: true, skip: false, done: {}, claim: {} } };
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
@@ -22,6 +22,8 @@ function normalize(s) {
   s.pres = Array.from({ length: 6 }, (_, i) => Math.min(PRES_MAX, (Array.isArray(s.pres) && s.pres[i]) | 0)); s.presW = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.presW) && s.presW[i]) | 0);
   s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {}; s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
+  s.tut = s.tut && typeof s.tut === 'object' ? s.tut : { on: (s.pl.lv | 0) <= 3 && !(s.stats && s.stats.kills > 20), skip: false, done: {}, claim: {} };   // tutorial (94-tutorial.js): saves antigos avancados nao o veem
+  s.tut.done = s.tut.done || {}; s.tut.claim = s.tut.claim || {};
   s.buyN = Math.max(0, s.buyN | 0);   // pontos de atributo ja comprados com ouro (o preco sobe com cada um)
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {

@@ -26,9 +26,10 @@ function drawHub() {
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
   });
   if (on.token && (save.pl.lv > save.chestDone || achReady() > 0)) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(14, 54, 14, 14); txt('!', 21, 65, 11, '#000', 'center', 'bold'); }   // aviso no retrato: ha baus por abrir no Perfil
-  btn(20, 442, 150, 34, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
+  btn(20, 450, 150, 30, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
   if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, profile: hubProfile, rewards: () => { profileTabs(); hubRewards(); }, ach: () => { profileTabs(); hubAch(); }, pets: hubPets, guild: hubGuild, rank: hubRank })[tab]();
+  drawTutHub();   // passos guiados e lista "Primeiros passos" (94-tutorial.js)
 }
 let presAsk = -1;
 function drawPresAsk() {   // confirmacao do prestigio
