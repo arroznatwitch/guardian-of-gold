@@ -570,6 +570,8 @@ const CLASSES = {
       { id: 'm_dark',   n: 'Cajado Sombrio',  price: 30000, t: 'bolt', kind: 'dark', dmg: 4.6, cd: .5, spd: 400, pierce: 1, leech: .5, info: 'Atravessa, rouba vida e liberta almas.', sk: { n: 'Orbes Sombrios', cd: 11, d: '6s: orbes giram e bloqueiam tiros.' } } ] },
 };
 const MAXLV = Infinity, xpNeed = l => 60 + 40 * (l - 1) + (l > 40 ? 3 * (l - 40) ** 2 : 0);   // nivel infinito
+const attrBuyCost = n => Math.round((1000 + 200 * n + 2 * n * n) / 10) * 10;   // preco do n-esimo ponto de atributo comprado: 1000, 1200, 1410, 1620... sobe sempre (n = pontos ja comprados)
+const GOLD_MAX = 2147483647;   // limite do ouro: maior inteiro de 32 bits
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona para abrir a seguinte
@@ -664,7 +666,7 @@ const SK_GEMS = { knight: [0, 0, 300, 600, 900], archer: [0, 0, 300, 600], mage:
 function refundSkins(s) {
   if (s.skRef) return; let g = 0, d = 0;
   for (const c in SK_GEMS) { const a = (s.sk && s.sk[c]) || []; SK_GEMS[c].forEach((cost, i) => { if (i > 0 && a[i] === 1) { if (i === 1) g += 5000; else d += cost; } }); }
-  s.skRef = 1; if (g || d) { s.gold = Math.min(999999, (s.gold | 0) + g); s.gems = (s.gems | 0) + d; window.__skRef = [g, d]; }
+  s.skRef = 1; if (g || d) { s.gold = Math.min(GOLD_MAX, (s.gold | 0) + g); s.gems = (s.gems | 0) + d; window.__skRef = [g, d]; }
 }
 function normalize(s) {
   const d = newSave(s.cls || 'knight');
@@ -673,6 +675,7 @@ function normalize(s) {
   s.pres = Array.from({ length: 6 }, (_, i) => Math.min(PRES_MAX, (Array.isArray(s.pres) && s.pres[i]) | 0)); s.presW = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.presW) && s.presW[i]) | 0);
   s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {}; s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
+  s.buyN = Math.max(0, s.buyN | 0);   // pontos de atributo ja comprados com ouro (o preco sobe com cada um)
   if (s.pts === undefined) s.pts = Math.max(0, (s.pl.lv - 1) * 3 - Object.values(s.attr).reduce((a, b) => a + b, 0));
   for (const c in CLASSES) {
     s.own = s.own || {}; s.eq = s.eq || {}; s.sk = s.sk || {}; s.skE = s.skE || {};
@@ -1271,6 +1274,7 @@ Object.assign(EN_DICT, {"Escudo Férreo": "Iron Shield", "Ergue um escudo durant
 Object.assign(EN_DICT, {"O país vale para todos os teus personagens. O título é de cada personagem.": "Your country applies to all your characters. The title is per character."});
 Object.assign(EN_DICT, {"Capacete de Couro": "Leather Helmet", "Armadura de Couro": "Leather Armour", "Amuleto de Bronze": "Bronze Amulet", "Botas de Ferro": "Iron Boots"});
 Object.assign(EN_DICT, {"Anel de Prata": "Silver Ring", "Anel de Ouro": "Gold Ring", "Anel de Diamante": "Diamond Ring", "Anel Roxo": "Purple Ring", "Anel": "Ring", "do Topázio": "of Topaz", "da Safira": "of Sapphire", "do Rubi": "of Ruby", "do Âmbar": "of Amber", "Bónus de conjunto:": "Set bonus:", "Só fica ativo com 4 peças de armadura da mesma raridade (capacete, armadura, botas e amuleto).": "Only active with 4 armour pieces of the same rarity (helmet, armour, boots and amulet).", "Conjunto completo": "Set complete", "Conjunto incompleto": "Set incomplete", "Conjunto": "Set", "Com as 4 peças de armadura da mesma raridade, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.": "With 4 armour pieces of the same rarity, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring's level."});
+Object.assign(EN_DICT, {"+1 ponto": "+1 point"});
 const EN_KEYS = Object.keys(EN_DICT).sort((a, b) => b.length - a.length);
 let lang = 'pt'; try { const sv = localStorage.getItem('bladehunter_lang'); lang = sv || ((navigator.language || 'pt').toLowerCase().startsWith('en') ? 'en' : 'pt'); } catch (e) {}
 function setLang(l) { lang = l; try { localStorage.setItem('bladehunter_lang', l); } catch (e) {} document.documentElement.lang = l === 'en' ? 'en-GB' : 'pt-PT'; }
@@ -2127,7 +2131,8 @@ function hubChar() {
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
-  btn(504, 314, 267, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { spendG(rc); save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 13, off: used === 0, col: '#6a3a2a' });
+  btn(504, 314, 130, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { spendG(rc); save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: used === 0, col: '#6a3a2a' });
+  { const bc = attrBuyCost(save.buyN | 0); btn(641, 314, 130, 26, `+1 ponto ¢${gfmt(bc)}`, () => { if (save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo; cada compra torna o proximo mais caro
   txt('Estatísticas', 504, 362, 15, '#f0c060', 'left', 'bold');
   const s = stats(), E = [['Vida', s.hp], ['Dano', '+' + Math.round((s.dm - 1) * 100) + '%'], ['Velocidade', Math.round(s.spd)], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%'], ['Crítico', g.crit.toFixed(1) + '%'], ['Roubo de vida', g.ls.toFixed(1) + '%'], ['Redução de dano', g.dr.toFixed(1) + '%'], ['Ouro extra', g.gf.toFixed(0) + '%'], ['XP extra', g.xpb.toFixed(0) + '%'], ['Queimar', g.burn.toFixed(0) + '%'], ['Abrandar', g.slow.toFixed(0) + '%']];
   const SC = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a', '#ff7ae0', '#ff5a8a', '#6a9aff', '#ffd34a', '#7fe8ff', '#ff7a3a', '#a8e8ff'];   // uma cor por estatistica
@@ -2219,7 +2224,7 @@ function hubMaterials() {
   wrap(T2('Dica: nos itens da mochila, o cadeado no canto do painel bloqueia-os para não os venderes sem querer.', 'Tip: on backpack items, the padlock on the item panel locks them so you never sell them by accident.'), 514, 344, 252, 15, 11, '#7a8aa8');
 }
 let sellAsk = false, sellArm = null;
-function sellList(list) { list = list.filter(it => !it.lk); let g = 0; for (const it of list) { g += sellValue(it); if (enchItem === it) enchItem = null; bagPick.delete(it); } save.gold = Math.min(999999, save.gold + g); save.bag = save.bag.filter(it => !list.includes(it)); bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
+function sellList(list) { list = list.filter(it => !it.lk); let g = 0; for (const it of list) { g += sellValue(it); if (enchItem === it) enchItem = null; bagPick.delete(it); } save.gold = Math.min(GOLD_MAX, save.gold + g); save.bag = save.bag.filter(it => !list.includes(it)); bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
 const sellTargets = () => (sellAsk === 'pick' ? save.bag.filter(it => bagPick.has(it)) : save.bag).filter(it => !it.lk);
 function drawBagBuy() {
   if (state !== 'hub' || tab !== 'bag' || !bagBuy) return; const k = bagBuy - 1, c = BAG_COST[k], gem = c[0] === 'd', can = gem ? save.gems >= c[1] : save.gold >= c[1];
@@ -2780,7 +2785,7 @@ function openChests(n) {
     if (Math.random() < (g5 ? .5 : .06)) rw.gems += g5 ? 5 : 2;
     rw.n++;
   }
-  save.gold = Math.min(999999, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; chestAnim = 3.2; chestPops = 0; SFX.buy(); persist();
+  save.gold = Math.min(GOLD_MAX, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; chestAnim = 3.2; chestPops = 0; SFX.buy(); persist();
 }
 let chestPops = 0;
 function rewardTokens(r) {
@@ -3806,7 +3811,7 @@ function frame(now) {
   try {
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
   const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = false;
-  ui = []; confirmTick(dt); cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (state === 'hub' && window.__skRef) { const r = window.__skRef; window.__skRef = null; hubToast = { t: 7, s: T2('Skins reembolsadas: ', 'Skins refunded: ') + (r[0] ? '¢' + gfmt(r[0]) + ' ' : '') + (r[1] ? '◆' + r[1] : ''), col: '#ffd34a' }; } if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > 999999) save.gold = 999999;
+  ui = []; confirmTick(dt); cv.style.cursor = state === 'play' ? CUR.aim : CUR.arrow; updateAnvil(dt); updateEnchant(dt); updateFuse(dt); updateUnlock(dt); if (state === 'hub') checkUnlocks(); if (state === 'hub' && window.__skRef) { const r = window.__skRef; window.__skRef = null; hubToast = { t: 7, s: T2('Skins reembolsadas: ', 'Skins refunded: ') + (r[0] ? '¢' + gfmt(r[0]) + ' ' : '') + (r[1] ? '◆' + r[1] : ''), col: '#ffd34a' }; } if (chestAnim > 0) chestAnim -= dt; if (save && save.gold > GOLD_MAX) save.gold = GOLD_MAX;
   if (state === 'play') for (let i = 0; i < gameSpeed && state === 'play'; i++) { sfxQuiet = i > 0; update(dt * BASE_SPD); } sfxQuiet = false;
   if (ONLINE_URL && !on.token && ['menu', 'class', 'keys', 'hub', 'options', 'sync', 'syncerr', 'conflict'].includes(state)) state = 'login';
   if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawGuildProfile(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawPetRename(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }

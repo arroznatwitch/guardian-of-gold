@@ -260,7 +260,7 @@ begin
   o_w := array[v.w0, v.w1, v.w2, v.w3, v.w4, v.w5];
   -- limites de plausibilidade (o 1.o envio usa tetos fixos, os seguintes dependem do tempo passado)
   if first_time then
-    if n_level > 300 or n_kills > 500000 or n_gold > 50000000 or n_bosses > 5000 or n_raids > 1000 or greatest(n_w[1], n_w[2], n_w[3], n_w[4], n_w[5], n_w[6]) > 300 then
+    if n_level > 300 or n_kills > 500000 or n_gold > 1000000000000 or n_bosses > 5000 or n_raids > 1000 or greatest(n_w[1], n_w[2], n_w[3], n_w[4], n_w[5], n_w[6]) > 300 then
       return jsonb_build_object('ok', false, 'error', 'implausible');
     end if;
   else
@@ -480,8 +480,8 @@ language plpgsql security definer set search_path = '' as $$
 declare k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
 begin
   -- valores impossiveis (ban imediato)
-  if gog._n(nw, 'gold') > 1000000 or gog._n(nw, 'gems') > 60000 or gog._n(nw, 'pl', 'lv') > 400 or gog._n(nw, 'stats', 'kills') > 5000000
-     or gog._n(nw, 'stats', 'spent') > 50000000 or gog._n(nw, 'gold') < 0 or gog._n(nw, 'gems') < 0 or gog._n(nw, 'bagSlots') > 5 then
+  if gog._n(nw, 'gold') > 2147483647 or gog._n(nw, 'gems') > 60000 or gog._n(nw, 'pl', 'lv') > 400 or gog._n(nw, 'stats', 'kills') > 5000000
+     or gog._n(nw, 'stats', 'spent') > 1000000000000 or gog._n(nw, 'gold') < 0 or gog._n(nw, 'gems') < 0 or gog._n(nw, 'bagSlots') > 5 then
     return 'abs:values';
   end if;
   for i in 0..5 loop
