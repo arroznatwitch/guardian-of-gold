@@ -41,7 +41,8 @@ function normalize(s) {
 }
 let save = null;
 try { const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('bladehunter_v2'); if (raw) save = normalize(JSON.parse(raw)); } catch (e) { save = null; }
-function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} cloudMark(); }
+let labOn = false, labGod = false;   // laboratorio de batalha (96-lab.js): enquanto ligado nada e gravado nem enviado
+function persist() { if (labOn) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} cloudMark(); }
 
 const DEF_BINDS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', attack: 'Space', special: 'KeyQ', skill: 'KeyE', dash: 'ShiftLeft', auto: 'KeyT', speed: 'KeyG', pause: 'Escape' };
 const BIND_LABELS = [['up', 'Mover para cima'], ['down', 'Mover para baixo'], ['left', 'Mover para a esquerda'], ['right', 'Mover para a direita'],

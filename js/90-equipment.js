@@ -154,6 +154,7 @@ function giveLoot(x, y, minR = 0, tier = 1) {
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
+  if (labOn) { R.boss = null; R.phase = 'lab'; R.toast = 'Boss derrotado'; R.toastT = 1.5; return; }   // laboratorio: sem recompensas nem ondas
   R.petXp = (R.petXp | 0) + (b.guardian ? 60 : b.mini ? 12 : 25);   // o pet equipado ganha XP com os bosses
   if (b.guardian) { statUp('guard'); R.toast = 'GUARDIÃO DOURADO DERROTADO!'; R.toastT = 3.2; R.phase = 'hunt'; R.shake = 16; return; }   // por enquanto nao da recompensa
   if (b.mini) { giveLoot(b.x, b.y, 0); if (Math.random() < .4) giveWeaponCopy(b.x + 22, b.y + 22);

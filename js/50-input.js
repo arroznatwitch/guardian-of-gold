@@ -19,6 +19,7 @@ addEventListener('keydown', e => {
   if ((state === 'login' || (state === 'hub' && (tab === 'rank' || tab === 'profile' || tab === 'ach' || tab === 'pets' || tab === 'guild'))) && rk.focus && !capture && rankKey(e)) return;
   if (capture) { e.preventDefault(); if (e.code !== 'Escape') setBind(capture, e.code); capture = null; return; }
   keys[e.code] = true;
+  if (labOn && state === 'play' && labKey(e.code)) return;   // teclas do laboratorio (96-lab.js)
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
   if (e.code === 'KeyM') muted = !muted;
   if (e.code === 'KeyF') toggleFS();

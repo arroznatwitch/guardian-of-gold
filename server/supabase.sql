@@ -1073,3 +1073,28 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
   end loop;
 end $$;
+
+-- ------------------------------------------------------- administradores (laboratorio de batalha do jogo)
+-- gog.admins lista os nicks (em minusculas) que podem abrir o laboratorio. O cliente pergunta a gog_is_admin(token): o servidor responde
+-- com base na sessao, por isso editar o jogo no browser nao chega para ver o laboratorio. O laboratorio nao grava nem envia nada.
+create table if not exists gog.admins (nick_key text primary key);
+alter table gog.admins enable row level security;
+insert into gog.admins (nick_key) values ('admin') on conflict do nothing;
+
+create or replace function public.gog_is_admin(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare pid bigint; n text;
+begin
+  pid := gog._auth(p_token);
+  if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  select p.nick_key into n from gog.players p where p.id = pid;
+  return jsonb_build_object('ok', true, 'admin', exists (select 1 from gog.admins a where a.nick_key = n));
+end $$;
+
+do $$
+declare f text := 'public.gog_is_admin(text)';
+begin
+  execute format('revoke all on function %s from public', f);
+  if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); execute format('grant execute on function %s to anon', f); end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
+end $$;
