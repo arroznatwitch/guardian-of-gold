@@ -240,6 +240,7 @@ function drawHUD() {
   if (gameSpeed === 2) txt('VELOCIDADE x2', W - 12, 112, 13, '#ffd34a', 'right', 'bold');
   if (R.boss && !R.cine) { const b = R.boss, bw = 380, bx = W / 2 - bw / 2; txt(b.mini ? 'Semi-boss · ' + b.name : b.name, W / 2, 20, 15, '#fff', 'center', 'bold'); bar(bx, 26, bw, 14, Math.max(0, b.hp / b.max), b.col || '#e44'); txt(`${gfmt(Math.max(0, Math.ceil(b.hp * 10)))} / ${gfmt(Math.round(b.max * 10))}`, W / 2, 37, 11, '#fff', 'center', 'bold'); }
   if (R.toastT > 0) { ctx.globalAlpha = Math.min(1, R.toastT); txt(R.toast, W / 2, 80, 24, '#ffd66b', 'center', 'bold'); ctx.globalAlpha = 1; }
+  drawTutPlay();   // lembrete dos controlos nas primeiras missoes
 }
 function overlay(title, col, lines) {
   ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); txt(title, UW / 2, 190, 54, col, 'center', 'bold');
