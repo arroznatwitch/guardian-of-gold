@@ -112,6 +112,7 @@ const RK_MSG = {
 };
 function rkSay(code, extra) { const good = code === 'welcome' || code === 'sent' || code === 'deleted' || code === 'working'; rk.msg = (RK_MSG[code] || code) + (extra ? ' ' + extra + 's' : ''); rk.col = good ? '#7fe8a0' : '#f88'; }
 async function rpc(fn, args) {
+  if (labOn) return { ok: false, error: 'lab' };   // laboratorio: nada sai do jogo
   if (!ONLINE_URL || !ONLINE_KEY) return { ok: false, error: 'off' };
   try {
     const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 20000);

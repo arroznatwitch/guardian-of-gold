@@ -170,6 +170,7 @@ function drawOptions() {
   btn(215, 264, 370, 28, `Velocidade do jogo: x${gameSpeed}`, toggleSpeed, { size: 15, col: gameSpeed === 2 ? '#a06a20' : '#5c4a20' });
   btn(215, 298, 370, 28, 'Ecrã inteiro (F)', toggleFS, { size: 15 });
   btn(215, 332, 370, 28, 'Teclas', () => openKeys('options'), { size: 15 });
+  labCheck(); if (labAllowed() && optBack === 'hub') btn(215, 366, 370, 28, 'Laboratório de batalha (Admin)', labStart, { size: 15, col: '#2f6a8a', hot: '#3f8ab0' });   // so para a conta admin (96-lab.js)
   btn(300, 448, 200, 34, '< Voltar', () => { state = optBack; }, { size: 15 });
 }
 function drawKeys() {

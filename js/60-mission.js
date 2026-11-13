@@ -22,6 +22,7 @@ function startMission(i, rd, farm) {
   state = 'play'; setMusic(R.raid ? 'raid' : 'm' + R.m); mdown = false;
 }
 function endMission(win, mode) {
+  if (labOn) { labExit(); return; }   // laboratorio: sair da arena, o save verdadeiro nao foi tocado
   R.exitMode = mode || '';
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
@@ -68,6 +69,7 @@ function dmgE(e, d, ang, kb, quiet) {
 }
 function hurt(n) {
   const p = R.p;
+  if (labOn && labGod) return;
   if (p.inv > 0 || R.endT !== undefined) return;
   n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
   if (p.kshield > 0) n = Math.max(1, Math.round(n * .4));   // escudo do Cavaleiro: 60% menos dano
