@@ -24,7 +24,7 @@ Jogo de ação e RPG em pixel-art que corre no browser, sem instalação.
 
 O jogador escolhe uma classe e alterna entre dois modos: **Campanha**, com ondas infinitas de inimigos para ganhar nível, ouro e equipamento, e **Raids**, combates contra bosses de dificuldade crescente. A progressão assenta em equipamento, armas e atributos, e há uma conta opcional com save na nuvem e ranking.
 
-O jogo é um único ficheiro HTML. Os gráficos são desenhados por código e a música é sintetizada em tempo real, pelo que não há imagens, sons nem bibliotecas externas.
+O jogo é uma página `index.html` que carrega vários ficheiros JavaScript da pasta `js/`, sem bibliotecas nem passo de compilação. Os gráficos são desenhados por código e a música é sintetizada em tempo real, pelo que não há imagens, sons nem bibliotecas externas.
 
 <p align="center">
   <img src="docs/img/screen-character.jpg" width="32%" alt="Personagem">
@@ -61,7 +61,8 @@ As teclas podem ser alteradas em **Opções > Teclas**.
 
 | Caminho | Descrição |
 |---|---|
-| `index.html` | O jogo completo. |
+| `index.html` | A página do jogo: só carrega os ficheiros de `js/`, pela ordem. |
+| `js/` | O código, partido por temas e carregado por ordem: `00-core` (ecrã), `10-audio`, `20-sprites`, `30-data` (classes, armas, mapas), `40-save`, `50-input`, `60-mission` (combate), `70-ui`, `80-screens`, `90-equipment`, `a0`..`a5` (campo: guilda, equipamento, progresso, online, pets), `b0-draw` e `b9-loop`. Ao mudar um ficheiro, sobe o `?v=` no `index.html` para o browser não usar a versão antiga. |
 | `wiki.html` | Wiki estática com armas, equipamento, raids e inimigos. |
 | `docs/` | Guias: [`ONLINE.md`](docs/ONLINE.md) (contas, save e ranking) e [`BACKUP.md`](docs/BACKUP.md) (backups). |
 | `server/` | Esquema SQL do servidor (Supabase) e respetivos testes. |
