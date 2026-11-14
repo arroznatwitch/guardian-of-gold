@@ -294,20 +294,18 @@ const SHOP_FX = {
   a_bow(x, y, t) { // flechas a cruzar
     for (let i = 0; i < 2; i++) { const p = (t * .9 + i * .5) % 1, ax = x - 34 + p * 68, ay = y + 20 - p * 40 + i * 6; ctx.globalAlpha = Math.sin(p * Math.PI); ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 9, ay + 6); ctx.lineTo(ax, ay); ctx.stroke(); pxl(ax + 1, ay - 1, 3, '#fff'); } ctx.globalAlpha = 1;
   },
-  a_triple(x, y, t) { // folhas em espiral
-    for (let i = 0; i < 6; i++) { const p = (t * .5 + i / 6) % 1, a = i * 1.05 + t, r = 6 + p * 24; pxl(x + Math.cos(a) * r, y + 22 - p * 44 + Math.sin(a * 2) * 3, 3, i % 2 ? '#7cff8a' : '#2fbf4a', Math.sin(p * Math.PI)); }
+  a_triple(x, y, t) { // flecha longa que voa longe
+    const p = (t * .8) % 1, ax = x - 40 + p * 90, ay = y + 18 - p * 30; ctx.globalAlpha = Math.sin(p * Math.PI); ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ax - 22, ay + 11); ctx.lineTo(ax, ay); ctx.stroke(); pxl(ax + 1, ay - 1, 4, '#fff'); ctx.globalAlpha = 1;
   },
-  a_cross(x, y, t) { // virote com rasto + impacto
-    const p = (t * 1.1) % 1.3, bx = x - 34 + p * 80;
-    if (p < 1) { ctx.fillStyle = '#e8e8ff'; ctx.fillRect(Math.round(bx), Math.round(y + 12), 10, 2); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#99ccff'; ctx.globalAlpha = .4; ctx.fillRect(Math.round(bx - 22), Math.round(y + 12), 22, 2); ctx.restore(); }
-    else { const q = (p - 1) / .3; starfx(x + 40, y + 12, 3 + Math.round(q * 5), '#fff', 1 - q); }
+  a_cross(x, y, t) { // rajada de virotes em leque
+    for (let i = 0; i < 7; i++) { const p = (t * 1.1 + i * .04) % 1, a = -.6 + i * .2 - .3, d = p * 52; ctx.globalAlpha = Math.sin(p * Math.PI); ctx.fillStyle = '#e8e8ff'; ctx.fillRect(Math.round(x - 20 + Math.cos(a) * d), Math.round(y + 14 + Math.sin(a) * d), 5, 2); } ctx.globalAlpha = 1;
   },
-  a_fire(x, y, t) { // chamas a subir
-    for (let i = 0; i < 8; i++) { const p = (t * 1.1 + i / 8) % 1; pxl(x - 16 + i * 4.5 + Math.sin(t * 6 + i) * 2, y + 28 - p * 52, 5 * (1 - p) + 1, p < .5 ? '#ffd34a' : '#ff6a1a', 1 - p * .6); }
+  a_fire(x, y, t) { // virotes a ricochetear
+    const pts = [[-30, 20], [-6, -8], [16, 12], [34, -14]], k = (t * 1.6) % 3, i = Math.floor(k), f = k - i, a = pts[i], b = pts[i + 1]; ctx.strokeStyle = '#ffe27a'; ctx.globalAlpha = .5; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x + pts[0][0], y + pts[0][1]); for (let j = 1; j <= i; j++) ctx.lineTo(x + pts[j][0], y + pts[j][1]); ctx.lineTo(x + a[0] + (b[0] - a[0]) * f, y + a[1] + (b[1] - a[1]) * f); ctx.stroke(); ctx.globalAlpha = 1; pxl(x + a[0] + (b[0] - a[0]) * f, y + a[1] + (b[1] - a[1]) * f, 4, '#fff', 1); if (f < .2) starfx(x + a[0], y + a[1], 3, '#ffe27a', 1 - f * 5);
   },
-  a_dark(x, y, t) { // sombras a rodar + onda escura
-    for (let i = 0; i < 6; i++) { const a = -t * 1.8 + i * 1.047, r = 22 - ((t * .6 + i / 6) % 1) * 12; pxl(x + Math.cos(a) * r, y + Math.sin(a) * r * .8, 3, i % 2 ? '#c030ff' : '#3a0a5a', .9); }
-    const b = (t * .5) % 1; ctx.strokeStyle = '#8a2ad0'; ctx.globalAlpha = (1 - b) * .6; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 4 + b * 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+  a_dark(x, y, t) { // canhao a carregar e explosao
+    const c = (t * .5) % 1; if (c < .6) { ctx.strokeStyle = '#ffb020'; ctx.globalAlpha = .8; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 30 * (1 - c / .6) + 4, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; pxl(x, y, 5, '#ffb020', 1); }
+    else { const q = (c - .6) / .4; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ff7a1a'; ctx.globalAlpha = (1 - q) * .5; ctx.beginPath(); ctx.arc(x, y, 8 + q * 34, 0, 7); ctx.fill(); ctx.restore(); starfx(x, y, 4 + Math.round(q * 6), '#ffe27a', 1 - q); }
   },
   m_fire(x, y, t) { // espiral de brasas + chama pulsante
     for (let i = 0; i < 10; i++) { const a = t * 3 + i * .63, p = (t * .8 + i / 10) % 1, r = 6 + p * 22; pxl(x + Math.cos(a) * r, y + Math.sin(a) * r * .9 - p * 8, 4 * (1 - p) + 1, i % 3 ? '#ff9a2a' : '#ffe066', 1 - p); }
@@ -333,7 +331,7 @@ const SHOP_FX = {
   },
 };
 const TIERS = [['Comum', '#9aa4b8'], ['Raro', '#5aa8ff'], ['Épico', '#b06aff'], ['Lendário', '#ff9a2a'], ['Mítico', '#ff4a6a']];
-const WCOL = Object.assign({ k_sword: '#cfe0ff', k_axe: '#ffb070', k_spear: '#bfe8ff', k_hammer: '#ffe14a', k_blade: '#ff4060', a_bow: '#ffcf80', a_triple: '#7cff8a', a_cross: '#c0c8ff', a_fire: '#ff7a1a', a_dark: '#c030ff' }, GLOWW);
+const WCOL = Object.assign({ k_sword: '#cfe0ff', k_axe: '#ffb070', k_spear: '#bfe8ff', k_hammer: '#ffe14a', k_blade: '#ff4060', a_bow: '#ffcf80', a_triple: '#f0cc88', a_cross: '#c0c8ff', a_fire: '#ffe27a', a_dark: '#ffb020' }, GLOWW);
 function weaponReq(i) {
   const r = WEAPON_REQ[i], needRaid = r.raid !== undefined && !(((save.raids[r.raid] || [])[r.d || 0] | 0) > 0), ok = save.pl.lv >= r.lv && !needRaid;
   return { ok, text: i === 0 ? '' : `Requer Nv ${r.lv}` + (r.raid !== undefined ? ` · Raid ${RAID_D[r.d || 0].n}: ${MISSIONS[r.raid].name}` : '') };

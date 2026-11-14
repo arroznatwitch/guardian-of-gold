@@ -45,6 +45,7 @@ function labKey(code) {
   const types = labTypes(); let used = true;
   switch (code) {
     case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5': { const i = +code.slice(5) - 1, cls = save.cls; save.own[cls][i] = 1; save.eq[cls] = i; labBuild(); labToast(CLASSES[cls].weapons[i].n); break; }
+    case 'KeyY': { const ks = Object.keys(CLASSES); save.cls = ks[(ks.indexOf(save.cls) + 1) % ks.length]; save.own[save.cls] = save.own[save.cls] || []; save.own[save.cls][0] = 1; save.eq[save.cls] = save.eq[save.cls] | 0; startMission(0, undefined, true); R.phase = 'lab'; R.lab = true; R.need = 1e9; labBuild(); labToast('Classe: ' + CLASSES[save.cls].name); break; }   // troca de classe (recomeca a arena)
     case 'BracketLeft': save.pl.lv = Math.max(1, save.pl.lv - 5); labBuild(); labToast('Nível ' + save.pl.lv); break;
     case 'BracketRight': save.pl.lv += 5; labBuild(); labToast('Nível ' + save.pl.lv); break;
     case 'KeyL': LAB.rar = (LAB.rar + 1) % 5; labBuild(); labToast('Equipamento ' + LAB_RAR[LAB.rar]); break;
@@ -70,7 +71,7 @@ function drawLab() {
   if (!labOn || !R || !LAB.show) return;
   const types = labTypes(), w = curW(), x = 10, y = 118, wd = 236, ln = [
     ['LABORATÓRIO (nada é guardado)', '#7fe8ff', 12],
-    [`Nível ${save.pl.lv}   ( [ ] = ±5 )`, '#fff', 11], [`Arma: ${w.n}   ( 1-5 )`, '#fff', 11], [`Equipamento: ${LAB_RAR[LAB.rar]}   ( L )`, '#fff', 11],
+    [`Nível ${save.pl.lv}   ( [ ] = ±5 )`, '#fff', 11], [`Classe: ${CLASSES[save.cls].name}   ( Y )`, '#fff', 11], [`Arma: ${w.n}   ( 1-5 )`, '#fff', 11], [`Equipamento: ${LAB_RAR[LAB.rar]}   ( L )`, '#fff', 11],
     [`Inimigo: ${types[LAB.typeI]}   ( V troca · B faz 5 )`, '#fd5', 11], ['Boss: N · Semi-boss: ;', '#fd5', 11],
     [`Vida ×${LAB.hpM}  ( J K )   Dano ×${LAB.dmM}  ( U I )`, '#fff', 11], [`Velocidade ×${gameSpeed}   ( O )`, '#fff', 11],
     [`Invencível: ${labGod ? 'SIM' : 'não'}   ( Z )   Curar X · Limpar C`, labGod ? '#6f6' : '#f88', 11], ['0 = sair   ·   ` = esconder', '#9ab', 11],
