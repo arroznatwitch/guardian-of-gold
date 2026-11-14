@@ -280,17 +280,16 @@ const SHOP_FX = {
     for (let i = 0; i < 2; i++) { const p = (t * .8 + i * .5) % 1; ctx.strokeStyle = '#ff8a4a'; ctx.globalAlpha = (1 - p) * .8; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 6 + p * 28, 0, 7); ctx.stroke(); } ctx.globalAlpha = 1;
     for (let i = 0; i < 4; i++) { const p = (t * 1.2 + i * .25) % 1, a = i * 1.57 + .8; pxl(x + Math.cos(a) * (8 + p * 24), y + Math.sin(a) * (8 + p * 24), 3, '#ffb070', 1 - p); }
   },
-  k_spear(x, y, t) { // linhas de velocidade
-    ctx.fillStyle = '#dff';
-    for (let i = 0; i < 5; i++) { const p = (t * 1.6 + rn(i)) % 1, yy = y - 24 + rn(i + 9) * 48; ctx.globalAlpha = Math.sin(p * Math.PI) * .7; ctx.fillRect(Math.round(x - 30 + p * 60), Math.round(yy), 10 + Math.round(rn(i + 3) * 8), 1); } ctx.globalAlpha = 1;
+  k_spear(x, y, t) { // onda de corte a avancar
+    for (let i = 0; i < 3; i++) { const p = (t * .9 + i * .33) % 1; ctx.globalAlpha = Math.sin(p * Math.PI) * .9; ctx.strokeStyle = i === 0 ? '#fff' : '#9cf'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x - 20 + p * 40, y, 16, -1.05, 1.05); ctx.stroke(); } ctx.globalAlpha = 1;
   },
-  k_hammer(x, y, t) { // faiscas eletricas
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = '#ffe14a'; ctx.lineWidth = 1.5; const k = Math.floor(t * 8);
-    for (let i = 0; i < 3; i++) { const a = rn(k + i * 7) * 6.283, r1 = 8 + rn(k + i) * 6; ctx.globalAlpha = .5 + .5 * rn(k * 3 + i); zig(x + Math.cos(a) * r1, y + Math.sin(a) * r1, x + Math.cos(a) * 28, y + Math.sin(a) * 28, 4, 8, k + i); } ctx.restore();
+  k_hammer(x, y, t) { // aneis dourados a cada abate
+    for (let i = 0; i < 3; i++) { const p = (t * 1.1 + i * .33) % 1; ctx.globalAlpha = (1 - p) * .85; ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 5 + p * 24, 0, 7); ctx.stroke(); } ctx.globalAlpha = 1;
+    for (let i = 0; i < 5; i++) { const p = (t * 1.6 + i * .2) % 1, a = i * 1.26; pxl(x + Math.cos(a) * (6 + p * 22), y + Math.sin(a) * (6 + p * 22), 3, '#fff2a0', 1 - p); }
   },
-  k_blade(x, y, t) { // gotas de sangue + pulso vermelho
-    for (let i = 0; i < 4; i++) { const p = (t * .9 + i * .27) % 1, bx = x - 18 + i * 12 + rn(i) * 4, by = y - 26 + p * 52; pxl(bx, by, 3, '#e0203a', 1 - p * .7); pxl(bx, by - 3, 2, '#e0203a', 1 - p * .7); }
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ff2040'; ctx.globalAlpha = .12 + .1 * Math.sin(t * 5); ctx.fillRect(x - 30, y - 30, 60, 60); ctx.restore();
+  k_blade(x, y, t) { // onda sanguinea que volta com vida
+    for (let i = 0; i < 3; i++) { const p = (t * .9 + i * .33) % 1; ctx.globalAlpha = Math.sin(p * Math.PI) * .9; ctx.strokeStyle = i === 0 ? '#ffd0d8' : '#ff4a6a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x - 20 + p * 40, y, 16, -1.05, 1.05); ctx.stroke(); } ctx.globalAlpha = 1;
+    for (let i = 0; i < 4; i++) { const p = (t * .8 + i * .25) % 1; pxl(x + 24 - p * 40, y - 10 + i * 7, 3, '#e0203a', 1 - p); }
   },
   a_bow(x, y, t) { // flechas a cruzar
     for (let i = 0; i < 2; i++) { const p = (t * .9 + i * .5) % 1, ax = x - 34 + p * 68, ay = y + 20 - p * 40 + i * 6; ctx.globalAlpha = Math.sin(p * Math.PI); ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 9, ay + 6); ctx.lineTo(ax, ay); ctx.stroke(); pxl(ax + 1, ay - 1, 3, '#fff'); } ctx.globalAlpha = 1;
