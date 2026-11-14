@@ -79,14 +79,14 @@ function hurt(n) {
 }
 
 /* ---- ataque básico ---- */
-function melee(range, arc, dmg, kb, leech) {
+function melee(range, arc, dmg, kb, leech, lsf) {
   const p = R.p;
   for (const e of targets()) {
     const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy);
     if (d > range + e.r) continue;
     let da = Math.atan2(dy, dx) - p.face; da = Math.atan2(Math.sin(da), Math.cos(da));
     if (Math.abs(da) > arc * Math.PI + e.r / Math.max(d, 1)) continue;
-    dmgE(e, dmg, Math.atan2(dy, dx), kb); if (leech) heal(leech);
+    dmgE(e, dmg, Math.atan2(dy, dx), kb); if (leech) heal(leech); if (lsf) heal(Math.min(p.max * .012, dmg * 10 * lsf));   // lifesteal: parte do dano
   }
 }
 function pProj(o) { R.projs.push(Object.assign({ r: 5, from: 'p', pierce: 0, hit: new Set(), life: 1.2 }, o)); }
@@ -94,9 +94,9 @@ function arrow(a, dmg, w, extra) { pProj(Object.assign({ x: R.p.x, y: R.p.y, vx:
 function attack() {
   const p = R.p, w = curW(), s = stats();
   if (p.cd > 0 || R.endT !== undefined) return;
-  p.cd = w.cd * s.cdm * (R.petBuff ? 1 - DOG_BUFF.atk : 1) * (p.rage > 0 ? .6 : 1) * (1 - .03 * wStar(w.id)); const dmg = w.dmg * DM(); p.swd = p.sw = w.t === 'melee' ? Math.min(.24, w.cd * .75) : .12;
+  p.cd = w.cd * s.cdm * (R.petBuff ? 1 - DOG_BUFF.atk : 1) * (p.rage > 0 ? .6 : 1) * (1 - .03 * wStar(w.id)) * (1 - .1 * (p.fz | 0)); const dmg = w.dmg * DM(); p.swd = p.sw = w.t === 'melee' ? Math.min(.24, w.cd * .75) : .12;
   if (w.t === 'melee') {
-    melee(w.range, w.arc, dmg, w.kb, (w.leech || 0) + (p.rage > 0 ? 1.2 : 0));
+    melee(w.range, w.arc, dmg, w.kb, (w.leech || 0) + (p.rage > 0 ? 1.2 : 0), w.lifesteal);
     R.fx.push({ k: 'arc', x: p.x, y: p.y, a: p.face, range: w.range, arc: w.arc, t: .15, max: .15, col: p.rage > 0 ? '255,80,80' : '255,255,255' }); SFX.slash();
   } else if (w.t === 'arrow') {
     const n = w.count || 1;
@@ -147,7 +147,7 @@ function special() {
 function aimPoint(maxD) { const p = R.p; let dx = mouse.x - p.x, dy = mouse.y - p.y; const d = Math.hypot(dx, dy); if (d > maxD) { dx *= maxD / d; dy *= maxD / d; } return { x: p.x + dx, y: p.y + dy }; }
 const sched = (t, fn) => R.sched.push({ t, fn });
 const SS = () => wStar(curW().id);
-const STAR_FX = {"k_sword": ["2 investidas", "3 investidas", "4 investidas"], "k_axe": ["2 ondas de choque", "3 ondas de choque", "4 ondas de choque"], "k_spear": ["3 lanças em leque", "5 lanças em leque", "7 lanças em leque"], "k_hammer": ["6 raios", "8 raios", "12 raios"], "k_blade": ["8s de duração", "10s de duração", "12s de duração"], "a_bow": ["10 flechas", "14 flechas", "20 flechas"], "a_triple": ["15 flechas no leque", "19 flechas no leque", "23 flechas no leque"], "a_cross": ["2 virotes", "3 virotes", "5 virotes"], "a_fire": ["explosão maior", "2 flechas de fogo", "3 flechas, explosão enorme"], "a_dark": ["2 armadilhas", "3 armadilhas", "5 armadilhas"], "m_fire": ["2 meteoros", "3 meteoros", "CHUVA DE METEOROS"], "m_ice": ["área maior", "área e gelo maiores", "nova gigante (5s de gelo)"], "m_bolt": ["10 raios", "14 raios", "20 raios"], "m_arcane": ["círculo de 7s", "círculo de 8s", "círculo enorme de 10s"], "m_dark": ["dreno de 6s", "dreno de 7s", "dreno de 8s e maior"]};
+const STAR_FX = {"k_sword": ["2 investidas", "3 investidas", "4 investidas"], "k_axe": ["2 ondas de choque", "3 ondas de choque", "4 ondas de choque"], "k_spear": ["onda maior", "2 ondas", "3 ondas"], "k_hammer": ["frenesim de 7s", "frenesim de 8s", "frenesim de 10s"], "k_blade": ["onda maior", "2 ondas", "3 ondas"], "a_bow": ["10 flechas", "14 flechas", "20 flechas"], "a_triple": ["15 flechas no leque", "19 flechas no leque", "23 flechas no leque"], "a_cross": ["2 virotes", "3 virotes", "5 virotes"], "a_fire": ["explosão maior", "2 flechas de fogo", "3 flechas, explosão enorme"], "a_dark": ["2 armadilhas", "3 armadilhas", "5 armadilhas"], "m_fire": ["2 meteoros", "3 meteoros", "CHUVA DE METEOROS"], "m_ice": ["área maior", "área e gelo maiores", "nova gigante (5s de gelo)"], "m_bolt": ["10 raios", "14 raios", "20 raios"], "m_arcane": ["círculo de 7s", "círculo de 8s", "círculo enorme de 10s"], "m_dark": ["dreno de 6s", "dreno de 7s", "dreno de 8s e maior"]};
 const SK = {
   k_sword() {
     const n = 1 + SS(), lunge = () => { const p = R.p; p.lunge = { t: .22, hit: new Set(), dm: DM() * (n > 1 ? .8 : 1) }; p.dashT = .22; p.vx = Math.cos(p.face) * 760; p.vy = Math.sin(p.face) * 760; p.inv = Math.max(p.inv, .35); };
@@ -157,14 +157,9 @@ const SK = {
     const n = 1 + SS();
     for (let i = 0; i < n; i++) { const f = () => { const p = R.p, r = 125 + i * 50; areaDmg(p.x, p.y, r, 3 * DM() * (n > 1 ? .8 : 1), { kb: 300, stun: 1.3 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r, t: .4, max: .4, col: '#c93' }); burst(p.x, p.y, '#a86', 25); R.shake = 14; SFX.boom(); }; if (i) sched(i * .32, f); else f(); }
   },
-  k_spear() { const p = R.p, n = [1, 3, 5, 7][SS()]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .14; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 780, vy: Math.sin(a) * 780, a, r: 9, dmg: 5 * DM() * (n > 1 ? .7 : 1), kind: 'spear', pierce: 99, life: 1.1 }); } SFX.slash(); },
-  k_hammer() {
-    const p = R.p, st = SS(), t = targets().filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 400).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y)).slice(0, [4, 6, 8, 12][st]);
-    if (!t.length) R.fx.push({ k: 'bolt', x: mouse.x, y: mouse.y, t: .3, max: .3 });
-    for (const e of t) { dmgE(e, 4 * DM() * (st ? .85 : 1), 0, 0); stunE(e, .9); R.fx.push({ k: 'bolt', x: e.x, y: e.y, t: .3, max: .3 }); burst(e.x, e.y, '#ff6', 8); }
-    R.shake = 10; SFX.thunder();
-  },
-  k_blade() { R.p.rage = 6 + 2 * SS(); R.texts.push({ x: R.p.x, y: R.p.y - 34, s: 'SEDE DE SANGUE!', t: 1.2, col: '#f55' }); },
+  k_spear() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .24; pProj({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, a, r: 34, dmg: 5.5 * DM() * (n > 1 ? .75 : 1), kind: 'wave', pierce: 99, life: 1.1 }); } R.shake = 8; SFX.slash(); },   // Lamina Gemea: onda de corte
+  k_hammer() { const st = SS(); R.p.frenzy = [6, 7, 8, 10][st]; R.p.fz = 0; R.texts.push({ x: R.p.x, y: R.p.y - 34, s: 'FRENESIM!', t: 1.2, col: '#ffd34a' }); R.fx.push({ k: 'ring', x: R.p.x, y: R.p.y, r: 46, t: .45, max: .45, col: '#ffd34a' }); SFX.slash(); },   // Espada Dourada
+  k_blade() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .24; pProj({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, a, r: 34, dmg: 5 * DM() * (n > 1 ? .75 : 1), kind: 'wave', tone: 'blood', lsf: .1, pierce: 99, life: 1.1 }); } R.shake = 8; SFX.slash(); },   // Espada Vampirica: onda que rouba vida
   a_bow() { const st = SS(), n = [7, 10, 14, 20][st]; for (let i = 0; i < n; i++) sched(i * (n > 14 ? .05 : .07), () => { arrow(R.p.face, 1.1 * DM() * (st ? .85 : 1), { spd: 700, pierce: 0 }); SFX.arrow(); }); },
   a_triple() { const p = R.p, st = SS(), n = 11 + 4 * st; for (let i = 0; i < n; i++) arrow(p.face + (i - (n - 1) / 2) * .15, .9 * DM() * (st ? .85 : 1), { spd: 600, pierce: 0 }); SFX.arrow(); },
   a_cross() { const p = R.p, n = [1, 2, 3, 5][SS()]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .1; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 950, vy: Math.sin(a) * 950, a, r: 9, dmg: 6 * DM() * (n > 1 ? .8 : 1), kind: 'bigbolt', pierce: 99, life: 1.1 }); } SFX.slash(); },
@@ -263,6 +258,7 @@ function update(dt) {
   if (R.cine) { updateCine(dt); return; }   // cinematica de entrada do Guardiao: o jogo fica em pausa
   const p = R.p, M = MISSIONS[R.m]; R.time += dt;
   if (R.endT === undefined && setHasFx('aegis')) { p.aegisT = (p.aegisT === undefined ? SET_AEGIS.every : p.aegisT) - dt; if (p.aegisT <= 0) { p.aegisT = SET_AEGIS.every; p.inv = Math.max(p.inv, SET_AEGIS.inv); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 34, t: .4, max: .4, col: '#ffd34a' }); R.texts.push({ x: p.x, y: p.y - 34, s: 'ÉGIDE', t: 1, col: '#ffd34a' }); } }   // conjunto Divino (4): Egide Divina
+  if (p.frenzy > 0) p.frenzy -= dt; if (p.fzT > 0) { p.fzT -= dt; if (p.fzT <= 0) p.fz = 0; }
   p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; p.kshield = (p.kshield || 0) - dt; R.toastT -= dt; R.shake *= .9;
   const dead = R.endT !== undefined;
   p.face = Math.atan2(mouse.y - p.y, mouse.x - p.x); p.flip = mouse.x < p.x; updatePet(dt);
@@ -340,6 +336,7 @@ function update(dt) {
   }
   for (const e of R.enemies) if (e.hp <= 0) {
     const d0 = EN[e.type]; R.kills++; R.petXp = (R.petXp | 0) + 1; burst(e.x, e.y, '#9f9', 12); SFX.kill();
+    if (R.p.frenzy > 0) { R.p.fz = Math.min(5, (R.p.fz | 0) + 1); R.p.fzT = 3; R.fx.push({ k: 'ring', x: R.p.x, y: R.p.y, r: 28 + 8 * R.p.fz, t: .35, max: .35, col: '#ffd34a' }); }   // Espada Dourada: cada abate da uma carga de velocidade de ataque
     if (Math.random() < SET_BOOM.chance && setHasFx('boom')) (R.booms = R.booms || []).push({ x: e.x, y: e.y });   // conjunto Ancestral (4): Detonacao
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (R.farm && R.rec ? 4 + (R.rec - 1) / 3 : 4 + 2 * R.m) * (R.farm ? FARM_RATE * xpK(save.pl.lv, R.rec) : 1); R.waveKills++;
@@ -417,7 +414,7 @@ function update(dt) {
         if (q.life <= 0) break;
         if (q.hit.has(e) || Math.hypot(e.x - q.x, e.y - q.y) > e.r + q.r) continue;
         q.hit.add(e); dmgE(e, q.dmg, q.a, 120);
-        if (q.burn) e.burn = 3; if (q.kind === 'ice') e.slow = Math.max(e.slow, q.slow || 2); if (q.leech && q.kind !== 'blood') heal(q.leech);
+        if (q.burn) e.burn = 3; if (q.kind === 'ice') e.slow = Math.max(e.slow, q.slow || 2); if (q.leech && q.kind !== 'blood') heal(q.leech); if (q.lsf) heal(Math.min(R.p.max * .012, q.dmg * 10 * q.lsf));
         if (q.kind === 'poison') { e.psn = 4; e.pd = Math.max(e.pd || 0, q.dmg * .45); }   // veneno: dano ao longo do tempo (renova, nao acumula)
         if (q.kind === 'blood') heal(Math.min(R.p.max * .012, q.dmg * 10 * q.leech));   // rouba vida em cada acerto
         if (q.kind === 'ice') { spark(e.x, e.y, '#d8ffff', 14, 220, .55, 3, 220); spark(e.x, e.y, '#6ad0ff', 8, 120, .5, 4, 0); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: 34, t: .3, max: .3, col: '#8cf' }); }

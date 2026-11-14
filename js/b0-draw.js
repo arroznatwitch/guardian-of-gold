@@ -170,6 +170,7 @@ function drawWorld() {
     else if (q.kind === 'earrow') { ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(6, 0); ctx.stroke(); ctx.fillStyle = '#f66'; ctx.fillRect(6, -2, 4, 4); }
     else if (q.kind === 'fire') { ctx.fillStyle = '#f80'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#ff6'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill(); }
     else if (q.kind === 'ice') { ctx.fillStyle = '#9ef'; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(0, -6); ctx.lineTo(-8, 0); ctx.lineTo(0, 6); ctx.fill(); }
+    else if (q.kind === 'wave') { const k = Math.min(1, q.life * 2), col = q.tone === 'blood' ? ['#ffd0d8', '#ff4a6a', '#8a0f2a'] : ['#ffffff', '#bfe0ff', '#6a9aff']; ctx.globalAlpha = .9 * k; for (let i = 0; i < 3; i++) { ctx.strokeStyle = col[i]; ctx.lineWidth = 7 - i * 2.2; ctx.beginPath(); ctx.arc(-14 - i * 3, 0, 34, -1.05, 1.05); ctx.stroke(); } ctx.globalAlpha = 1; }
     else if (q.kind === 'poison') { ctx.fillStyle = '#5aa820'; ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#e8ffb0'; ctx.beginPath(); ctx.arc(-1, -1, 3, 0, 7); ctx.fill(); }
     else if (q.kind === 'blood') { ctx.fillStyle = '#8a0f2a'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 7); ctx.fill(); ctx.strokeStyle = '#ff4a6a'; ctx.lineWidth = 2; ctx.stroke(); }
     else { ctx.fillStyle = q.col; ctx.globalAlpha = .9; ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, 7); ctx.fill(); }

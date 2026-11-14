@@ -6,10 +6,10 @@ const CLASSES = {
   knight: { name: 'Cavaleiro', hp: 140, spd: 165, sp: 'Escudo Férreo', desc: 'Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.', spDesc: 'Ergue um escudo durante 10 segundos: recebes 60% menos dano. Recarrega a cada 22 segundos.',
     weapons: [
       { id: 'k_sword',  n: 'Espada de Ferro',    price: 0,   t: 'melee', dmg: 1,   cd: .35, range: 70,  arc: .45, kb: 240, info: 'Rápida e equilibrada.', sk: { n: 'Investida', cd: 6, d: 'Lança-te em frente ferindo tudo no caminho.' } },
-      { id: 'k_axe',    n: 'Machado de Guerra',  price: 600, t: 'melee', dmg: 3.4, cd: .7,  range: 82,  arc: .75, kb: 380, info: 'Lento, arco enorme.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
-      { id: 'k_spear',  n: 'Lança do Caçador',   price: 2700, t: 'melee', dmg: 2, cd: .42, range: 125, arc: .16, kb: 200, info: 'Alcance muito longo.', sk: { n: 'Lança Arremessada', cd: 5, d: 'Atira a lança, atravessa tudo.' } },
-      { id: 'k_hammer', n: 'Martelo do Trovão',  price: 10500, t: 'melee', dmg: 4.9, cd: .9,  range: 72,  arc: .55, kb: 520, info: 'Pesadíssimo, grande recuo.', sk: { n: 'Trovão', cd: 9, d: 'Raios caem nos 4 inimigos mais próximos.' } },
-      { id: 'k_blade',  n: 'Lâmina Vampírica',   price: 30000, t: 'melee', dmg: 3.4, cd: .26, range: 66,  arc: .45, kb: 150, leech: .8, info: 'Muito rápida, rouba vida.', sk: { n: 'Sede de Sangue', cd: 12, d: '6s: ataques +60% rápidos e roubo de vida.' } } ] },
+      { id: 'k_axe',    n: 'Espada Gigante',     price: 600, t: 'melee', dmg: 5, cd: 1.05,  range: 90,  arc: .8, kb: 440, info: 'Enorme e muito lenta: dano altíssimo.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
+      { id: 'k_spear',  n: 'Lâmina Gémea',       price: 2700, t: 'melee', dmg: 3.2, cd: .5, range: 80, arc: .5, kb: 200, info: 'Afiadíssima: dano alto e golpes certeiros.', sk: { n: 'Onda de Corte', cd: 7, d: 'Lança uma onda de choque que atravessa tudo.' } },
+      { id: 'k_hammer', n: 'Espada Dourada',     price: 10500, t: 'melee', dmg: 1.7, cd: .2, range: 68, arc: .42, kb: 90, info: 'Rapidíssima.', sk: { n: 'Frenesim Dourado', cd: 12, d: '6s: cada abate acelera os teus ataques.' } },
+      { id: 'k_blade',  n: 'Espada Vampírica',   price: 30000, t: 'melee', dmg: 3.2, cd: .3, range: 78, arc: .5, kb: 160, lifesteal: .12, info: 'Rouba vida em cada golpe.', sk: { n: 'Onda Sanguínea', cd: 11, d: 'Onda de choque que rouba vida.' } } ] },
   archer: { name: 'Arqueiro', hp: 95, spd: 195, sp: 'Chuva de Flechas', desc: 'Ataca de longe. Rápido mas frágil.', spDesc: 'Dispara 14 flechas em todas as direções.',
     weapons: [
       { id: 'a_bow',    n: 'Arco Curto',   price: 0,   t: 'arrow', dmg: 1,  cd: .38, count: 1, spread: 0,  spd: 560, pierce: 0, info: 'Flecha rápida e certeira.', sk: { n: 'Salva Rápida', cd: 6, d: '7 flechas em rápida sequência.' } },
