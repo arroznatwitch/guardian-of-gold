@@ -466,7 +466,7 @@ const gFuseFee = it => Math.round(150 * (1 + it.il * .12) * (1 + it.r) * (1 + gS
 function doFuse(id, t, all) {
   if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
   const a = save.wst[id]; let n = 0;
-  const step = tt => { const fee = wFuseFee(id, tt); if (tt < STAR_MAX && a[tt] >= FUSE_N && save.gold >= fee) { spendG(fee); a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
+  const step = tt => { const fee = wFuseFee(id, tt); if (tt < STAR_MAX && a[tt] >= FUSE_N && save.gold >= fee && wReq(id, tt).ok) { const q = WSTAR_REQ[tt]; spendG(fee); save.stones[q.stone] -= q.n; a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
   if (all) { for (let tt = 0; tt < STAR_MAX; tt++) while (step(tt)); } else step(t);
   if (!n) { SFX.error(); return; }
   const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
@@ -507,7 +507,7 @@ function hubFuse() {
       if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
       ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
       txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-      if (t < STAR_MAX) btn(x, y + 90, 140, 22, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t), col: '#2f7a4a', hot: '#3fa061' });
+      if (t < STAR_MAX) btn(x, y + 90, 140, 22, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t) || !wReq(w.id, t).ok, col: '#2f7a4a', hot: '#3fa061' });
     }
     panel(197, 284, 585, 192, '#16162a');
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
@@ -516,6 +516,7 @@ function hubFuse() {
     txt('Efeito da habilidade (E):', 212, 378, 13, '#f0c060', 'left', 'bold');
     for (let q = 1; q <= STAR_MAX; q++) txt(`${q}★ ${STAR_FX[w.id][q - 1]}`, 212, 380 + q * 17, 13, st >= q ? '#6f6' : '#778');
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
+    if (st < STAR_MAX) { const rq2 = wReq(w.id, st); txt(`Para ${st + 1}★ precisas de:`, 470, 404, 12, '#f0c060', 'left', 'bold'); txt(`${FUSE_N} cópias de ${st}★ + ouro`, 470, 421, 12, a[st] >= FUSE_N ? '#6f6' : '#f88'); rq2.lines.forEach((l, i) => txt((l.ok ? '✔ ' : '✘ ') + l.t, 470, 438 + i * 17, 12, l.ok ? '#6f6' : '#f88')); }
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {

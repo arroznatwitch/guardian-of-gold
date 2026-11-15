@@ -23,7 +23,7 @@ function startMission(i, rd, farm) {
 }
 function endMission(win, mode) {
   if (labOn) { labExit(); return; }   // laboratorio: sair da arena, o save verdadeiro nao foi tocado
-  R.exitMode = mode || '';
+  R.exitMode = mode || ''; wpAdd(!!(win && R.raid));   // progresso da arma (abates e raids) para as estrelas
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
   if (R.farm) {
