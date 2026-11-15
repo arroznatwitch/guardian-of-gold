@@ -225,8 +225,8 @@ function abilBox(x, y, key, name, cd, max, ready, col) {
   txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
 function drawDmgLog() {   // opcao "Logs de Dano": de onde vem o dano e a cura
-  const L = R.dl; if (!L) return; const x = 14, y0 = 62, t = Math.max(1, R.time || 1), tk = rowsT(L.taken), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
-  const rowsT = o => Object.entries(o || {}).sort((a, b) => b[1].v - a[1].v).slice(0, 4).map(([k, v]) => ({ k, v: v.v })), rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
+  const L = R.dl; if (!L) return; const rowsT = o => Object.entries(o || {}).sort((a, b) => b[1].v - a[1].v).slice(0, 4).map(([k, v]) => ({ k, v: v.v })), x = 14, y0 = 62, t = Math.max(1, R.time || 1), tk = rowsT(L.taken), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
+  const rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
   const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length + tk.length) * 14 + (h.length ? 22 : 0) + (tk.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
   const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), f = v => fmt(v * 10);   // o jogo mostra o dano x10
   txt(`${T2('Dano', 'Damage')}: ${f(tot)}  (${f(tot / t)}/s)`, x, y0, 11, '#ffd34a', 'left', 'bold'); let y = y0 + 14;
