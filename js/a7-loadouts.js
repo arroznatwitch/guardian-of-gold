@@ -26,7 +26,7 @@ function loBuy(i) {
   save.gems -= LO_COST; l.own[i] = 1; return loSwitch(i);
 }
 let loAsk = false;
-function drawLoadouts() {   // faixa no topo do ecra Personagem (esquerda)
+function drawLoadouts() {   // seletor de builds no painel direito do ecra Personagem (ao lado do XP)
   const l = loState();
   if (loAsk) {
     ctx.fillStyle = '#000c'; ctx.fillRect(195, 88, 590, 390); ui.push({ x: 195, y: 88, w: 590, h: 390, fn() {} }); bevel(300, 190, 380, 130, '#14142a', '#a8821f', '#05050a');
@@ -36,12 +36,12 @@ function drawLoadouts() {   // faixa no topo do ecra Personagem (esquerda)
     return;
   }
   for (let i = 0; i < LO_N; i++) {
-    const x = 205 + i * 70, act = l.cur === i, own = !!l.own[i];
-    btn(x, 94, 66, 22, !own && i === 2 ? '' : `Build ${i + 1}`, () => {
+    const x = 606 + i * 55, act = l.cur === i, own = !!l.own[i];
+    btn(x, 134, 52, 20, !own && i === 2 ? '' : `Build ${i + 1}`, () => {
       if (act) return;
       if (!own && i === 2) { loAsk = true; SFX.click(); return; }
       if (loSwitch(i)) { SFX.buy(); hubToast = { t: 2, s: T2(`Build ${i + 1} ativa`, `Build ${i + 1} active`), col: '#9fe' }; }
-    }, { size: 11, col: act ? '#a8821f' : own || i === 1 ? '#2a2a48' : '#26262f', hot: '#d2a73a' });
-    if (!own && i === 2) { drawIcon('lock', x + 14, 105, 1); txt(`${LO_COST} ◆`, x + 44, 109, 10, '#7fe8ff', 'center', 'bold'); }
+    }, { size: 10, col: act ? '#a8821f' : own || i === 1 ? '#2a2a48' : '#26262f', hot: '#d2a73a' });
+    if (!own && i === 2) { drawIcon('lock', x + 11, 144, .9); txt(`${LO_COST} ◆`, x + 35, 148, 9, '#7fe8ff', 'center', 'bold'); }
   }
 }

@@ -51,7 +51,7 @@ function hubChar() {
   panel(490, 88, 295, 390, '#16162a', '#3a3a5a');
   const pn = on && on.nick ? on.nick : c.name;
   txt(pn, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(pn, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
-  bar(504, 122, 267, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 771, 144, 11, '#8ab', 'right');
+  bar(504, 122, 267, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 504, 148, 11, '#8ab', 'left');
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
@@ -475,7 +475,7 @@ function doFuse(id, t, all) {
 }
 const itemBand = it => Math.floor((Math.max(1, it.il) - 1) / 10), bandName = b => `${b * 10 + 1}–${b * 10 + 10}`;   // faixas de nivel de item
 const fuseKeyOf = it => it.slot + '|' + it.r + '|' + gSt(it) + '|' + itemBand(it);
-const fuseNewIl = pick => Math.round(pick.reduce((a, q) => a + q.il, 0) / Math.max(1, pick.length));   // o nivel final e a media dos itens usados
+const FUSE_IL_BONUS = 2, fuseNewIl = pick => Math.min(120, Math.round(pick.reduce((a, q) => a + q.il, 0) / Math.max(1, pick.length)) + FUSE_IL_BONUS);   // o nivel final e a media dos itens usados + 2 (alem da estrela)
 function gearGroups() {
   const m = {}; save.bag.forEach(it => { if (it.slot === 'ring' || gSt(it) >= STAR_MAX || it.lk) return;   // o anel nao se funde
     (m[fuseKeyOf(it)] = m[fuseKeyOf(it)] || []).push(it); });
@@ -555,7 +555,7 @@ function hubFuse() {
       const rx = 500, ry = cy0 - 10, rw = 282, rh = 172; panel(rx, ry, rw, rh, '#16162a', '#3a3a5a'); txt(lang === 'en' ? 'Result' : 'Resultado', rx + 12, ry + 20, 13, '#f0c060', 'left', 'bold');
       if (fuseKeep) {
         const k = fuseKeep, m0 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[gSt(k)], m1 = (1 + ENC_K * (k.ench | 0)) * GEAR_STAR[Math.min(STAR_MAX, gSt(k) + 1)], col = RAR[k.r][1];
-        itemIcon(k, rx + 26, ry + 48, 2.2); txt(ITEM_NAMES[k.slot][k.r] + (k.ench ? ' +' + k.ench : ''), rx + 50, ry + 44, 12, col, 'left', 'bold'); txt(`Fica este · ${gSt(k)}★ > ${gSt(k) + 1}★ · ${lang === 'en' ? 'bonus' : 'bónus'} ×${m0.toFixed(2)} > ×${m1.toFixed(2)}`, rx + 50, ry + 60, 10, '#9cf'); txt(`${lang === 'en' ? 'Item level' : 'Nível do item'}: ${k.il} > ${fuseNewIl(fusePick)} (${lang === 'en' ? 'average of the 5' : 'média dos 5'})`, rx + 50, ry + 73, 10, '#fd5');
+        itemIcon(k, rx + 26, ry + 48, 2.2); txt(ITEM_NAMES[k.slot][k.r] + (k.ench ? ' +' + k.ench : ''), rx + 50, ry + 44, 12, col, 'left', 'bold'); txt(`Fica este · ${gSt(k)}★ > ${gSt(k) + 1}★ · ${lang === 'en' ? 'bonus' : 'bónus'} ×${m0.toFixed(2)} > ×${m1.toFixed(2)}`, rx + 50, ry + 60, 10, '#9cf'); txt(`${lang === 'en' ? 'Item level' : 'Nível do item'}: ${k.il} > ${fuseNewIl(fusePick)} (${lang === 'en' ? 'average of the 5, +2' : 'média dos 5, +2'})`, rx + 50, ry + 73, 10, '#fd5');
         const lines = [[k.main.k, k.main.v]].concat(k.aff.map(a => [a.k, a.v])); lines.slice(0, 4).forEach(([kk, v], i) => txt(`${statLine(kk, ev(kk, v, m0))}  >  ${statLine(kk, ev(kk, v, m1))}`, rx + 14, ry + 84 + i * 15, 11, i ? '#7cf' : '#fff'));
         txt(`Os outros ${Math.max(0, fusePick.length - 1)} itens desaparecem.`, rx + 14, ry + 150, 10, '#f99');
       } else txt('Marca itens para ver o resultado.', rx + rw / 2, ry + 90, 12, '#667', 'center');
