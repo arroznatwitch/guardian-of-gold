@@ -13,7 +13,7 @@ function startMission(i, rd, farm) {
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
-    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = raidHP(i, rd) * RAID_MINI.hp; R.bossM = raidHP(i, rd) * .8; R.dmgM = raidDM(i, rd) * RAID_MINI.dmg; R.goldM = D.gold;
+    const D = RAID_D[rd]; R.raid = { d: rd }; R.hpM = raidHP(i, rd) * RAID_MINI.hp; R.bossM = raidHP(i, rd) * .8; R.dmgM = raidDM(i, rd) * RAID_MINI.dmg; R.goldM = D.gold * (1 + .02 * (Math.min(100, raidRec(i, rd)) - 1));   // o ouro das raids sobe com o nivel recomendado (como na Campanha)
     { const ov = Math.min(RAID_OVER.cap, Math.max(0, (save.pl.lv || 1) - raidRec(i, rd))); R.hpM *= 1 + RAID_OVER.hp * ov; R.bossM *= 1 + RAID_OVER.hp * ov; R.dmgM *= 1 + RAID_OVER.dmg * ov; }   // quem vai muito acima do nivel recomendado encontra monstros mais fortes R.spdM = D.spd; R.bossDM = 1 + .07 * (raidRec(i, rd) - 8);
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
@@ -34,13 +34,14 @@ function endMission(win, mode) {
     if (!win) { g = Math.floor(g * .1); xp = Math.floor(xp * .4); R.loot = []; R.wloot = []; }           // morrer no Farm: ficas com 10% do ouro e 40% do XP (os itens perdem-se)
     else if (mode === 'quit') { g = Math.floor(g * .3); xp = Math.floor(xp * .3); R.loot = R.loot.filter(() => Math.random() < .3); R.wloot = R.wloot.filter(() => Math.random() < .3); }   // sair a meio (Esc): so 30%
   }
-  else if (win) { g += Math.round(M.reward * R.goldM * 1.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += 60 + 30 * R.m + 25 * R.raid.d; }
+  else if (win) { g += Math.round(M.reward * R.goldM * 2.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += Math.round((60 + 30 * R.m + 25 * R.raid.d) * (1 + raidRec(R.m, R.raid.d) / 10)); }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
   R.petGain = 0; R.petUp = 0; if (R.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { R.petGain = R.petXp; R.petUp = addPetXp(save.pets.eq, R.petXp); }
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
-  if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; } }   // pedras de evolucao: a raridade segue a dificuldade
+  if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; }
+    const rg = 1 + R.raid.d; save.gems += rg; R.gemGain = (R.gemGain | 0) + rg; }   // diamantes por raid ganha: 1 (Facil) ate 5 (Inferno)   // pedras de evolucao: a raridade segue a dificuldade
   R.lootN = R.loot.length; save.gold += g; R.earned = g; dailyAll(win, g, mode === 'cash' ? R.wave : R.wave - 1); statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
