@@ -9,7 +9,7 @@ function mkDeco() {
 function startMission(i, rd, farm) {
   const M = MISSIONS[i], s = stats();
   R = { m: i, p: { x: W / 2, y: H / 2 + 90, hp: s.hp, max: s.hp, face: 0, cd: 0, sp: 0, sk: 0, spR: true, skR: true, dashT: 0, dashCd: 0, inv: 0, vx: 0, vy: 0, mv: 0, flip: false, rage: 0, shield: 0, lunge: null, aura: null, sw: 0, swd: 1 },
-    dl: { dmg: {}, heal: {}, t0: 0 }, enemies: [], boss: null, projs: [], coins: [], hearts: [], parts: [], texts: [], fx: [], tels: [], traps: [], zones: [], sched: [],
+    dl: { dmg: {}, heal: {}, taken: {}, t0: 0 }, enemies: [], boss: null, projs: [], coins: [], hearts: [], parts: [], texts: [], fx: [], tels: [], traps: [], zones: [], sched: [],
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
@@ -76,12 +76,13 @@ function dmgE(e, d, ang, kb, quiet) {
   R.texts.push({ x: e.x + (Math.random() - .5) * 14, y: e.y - e.r, s: String(Math.max(1, Math.round(d * 10))), t: .6, col: quiet ? '#fa6' : crit ? '#ffd34a' : '#fff', sz: crit ? 20 : 15 });
   burst(e.x, e.y, e.boss ? '#d9a' : '#8f8', quiet ? 1 : 4); if (!quiet) SFX.hit();
 }
-function hurt(n) {
+function hurt(n, src) {
   const p = R.p;
   if (labOn && labGod) return;
   if (p.inv > 0 || R.endT !== undefined) return;
   n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(60, (R.G ? R.G.dr : 0) + TUNE.dr[save.cls]) / 100)));
   if (p.kshield > 0) n = Math.max(1, Math.round(n * .4));   // escudo do Cavaleiro: 60% menos dano
+  dlAdd('taken', src || 'Outros', n); (R.lastHits = R.lastHits || []).push({ src: src || 'Outros', n }); if (R.lastHits.length > 3) R.lastHits.shift();
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, p.kshield > 0 ? '#9cf' : '#f55', 10);
   R.texts.push({ x: p.x, y: p.y - 24, s: '-' + n, t: .8, col: '#f66' });
   if (p.hp <= 0) { p.hp = 0; R.endT = .9; R.endWin = false; }
@@ -257,7 +258,7 @@ function bossTick(b, dt, rage, sl) {
       if (b.mt >= .4 && b.mt < 1.5) { const k = (b.mt - .4) / 1.1; b.air = true; b.x += (b.lx - b.x) * Math.min(1, dt * 6); b.y += (b.ly - b.y) * Math.min(1, dt * 6); b.z = Math.sin(k * Math.PI) * 130; }
       else if (b.mt >= 1.5 && b.air) { b.air = false; b.z = 0; b.x = b.lx; b.y = b.ly; R.shake = 24; burst(b.x, b.y, '#ffd34a', 46); burst(b.x, b.y, '#fff', 20); SFX.boss(); } break;
     case 'spin':
-      b.spinT += dt; if (b.mt > .5) { b.x += (p.x - b.x) / d * 95 * sl * dt; b.y += (p.y - b.y) / d * 95 * sl * dt; if (b.spinT > b.f * .32 + .5) { b.f++; SFX.hit(); if (d < b.r + 112) hurt(28 * (R.bossDM || 1)); } } break;
+      b.spinT += dt; if (b.mt > .5) { b.x += (p.x - b.x) / d * 95 * sl * dt; b.y += (p.y - b.y) / d * 95 * sl * dt; if (b.spinT > b.f * .32 + .5) { b.f++; SFX.hit(); if (d < b.r + 112) hurt(28 * (R.bossDM || 1), 'Boss: giro'); } } break;
     case 'blink':
       if (b.f === 0 && b.mt > .5) { b.f = 1; burst(b.x, b.y, b.col, 20); const a = Math.random() * 6.283; b.x = Math.max(b.r, Math.min(W - b.r, p.x + Math.cos(a) * 150)); b.y = Math.max(b.r, Math.min(H - b.r, p.y + Math.sin(a) * 150)); burst(b.x, b.y, b.col, 20); SFX.dash(); }
       else if (b.f === 1 && b.mt > .85) { b.f = 2; const n = rage ? 9 : 7, a2 = Math.atan2(p.y - b.y, p.x - b.x); for (let i = 0; i < n; i++) eProj(b.x, b.y, a2 + (i - (n - 1) / 2) * .2, 270, 10, 'orb', b.col); SFX.fire(); } break;
@@ -343,7 +344,7 @@ function update(dt) {
       if (e.cd <= 0 && !dead) { eProj(e.x, e.y, Math.atan2(dy, dx), d0.pspd || 230, 8, d0.shot, d0.col || '#bdf'); e.cd = (d0.rate || 2) + Math.random(); }
     }
     const bst = e.dash > 0 ? 4.6 : 1; e.x += (mx * e.spd * sl * bst + e.kx) * dt; e.y += (my * e.spd * sl * bst + e.ky) * dt; e.kx *= .86; e.ky *= .86;
-    if (d < e.r + 12 && !dead && e.stun <= 0) hurt(d0.dmg);
+    if (d < e.r + 12 && !dead && e.stun <= 0) hurt(d0.dmg, 'Contacto: ' + (d0.n || e.type));
   }
   for (const e of R.enemies) if (e.hp <= 0) {
     const d0 = EN[e.type]; R.kills++; R.petXp = (R.petXp | 0) + 1; burst(e.x, e.y, '#9f9', 12); SFX.kill();
@@ -378,7 +379,7 @@ function update(dt) {
       if (b.t <= 0 && !dead) bossScaled(() => bossBegin(b, b.pattern[b.pi++ % b.pattern.length], rage));
     } else { bossScaled(() => bossTick(b, dt, rage, sl)); b.t -= dt; if (b.t <= 0) { b.st = 'walk'; b.t = (rage ? 1.1 : 1.9) * (R.raid ? .7 : 1) * (b.mini ? .6 : 1); } }
     b.x = Math.max(b.r, Math.min(W - b.r, b.x)); b.y = Math.max(b.r, Math.min(H - b.r, b.y));
-    if (d < b.r + 12 && !dead && !b.air) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1));
+    if (d < b.r + 12 && !dead && !b.air) hurt((b.st === 'charge' && b.mt > .7 ? 25 : 12) * (R.bossDM || 1), b.st === 'charge' ? 'Boss: investida' : 'Boss: contacto');
     if (b.hp <= 0) {
       burst(b.x, b.y, '#fc6', 60); burst(b.x, b.y, '#fff', 30); R.shake = 18; SFX.kill(); SFX.boss(); R.boss = null; R.bossK = (R.bossK || 0) + 1; R.xp += (R.farm && R.rec ? 40 + 25 * (R.rec - 1) / 6 : 40 + 25 * R.m) * (R.farm ? FARM_RATE * xpK(save.pl.lv, R.rec) : 1); R.tels = []; bossDown(b);
       for (let i = 0; i < 8; i++) R.coins.push({ x: b.x + (Math.random() - .5) * 90, y: b.y + (Math.random() - .5) * 90, v: Math.max(1, Math.round(8 * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1))) });
@@ -391,7 +392,7 @@ function update(dt) {
     R.fx.push({ k: 'ring', x: t.x, y: t.y, r: t.r, t: .3, max: .3, col: t.col }); burst(t.x, t.y, t.col, 12);
     if (t.from === 'p' && t.burn) { R.zones.push({ x: t.x, y: t.y, r: t.r * .85, t: 2.6 }); spark(t.x, t.y, '#ffa030', 40, 260, .8, 4, 120); spark(t.x, t.y, '#ffe9a0', 20, 160, .5, 3, 0); spark(t.x, t.y, '#555', 12, 70, 1.2, 6, -40); R.shake = 13; } R.shake = Math.max(R.shake, 7); SFX.boom();
     if (t.from === 'p') inSrc('Habilidade: ' + (R.skName || '?'), () => areaDmg(t.x, t.y, t.r, t.dmg, { kb: 250, burn: t.burn }));
-    else { if (Math.hypot(p.x - t.x, p.y - t.y) < t.r + 10) hurt(t.dmg); if (t.ring && R.boss) ringShots({ x: t.x, y: t.y, col: R.boss.col }, 8); }
+    else { if (Math.hypot(p.x - t.x, p.y - t.y) < t.r + 10) hurt(t.dmg, t.boom ? 'Explosão de inimigo' : 'Ataque do boss (zona)'); if (t.ring && R.boss) ringShots({ x: t.x, y: t.y, col: R.boss.col }, 8); }
   }
   R.tels = R.tels.filter(t => t.t > 0);
   // armadilhas
@@ -438,7 +439,7 @@ function update(dt) {
         if (q.bounce > 0) { let nb = null, bd = 300; for (const o of targets()) { if (q.hit.has(o)) continue; const dd = Math.hypot(o.x - q.x, o.y - q.y); if (dd < bd) { bd = dd; nb = o; } } if (nb) { q.bounce--; const sp = Math.hypot(q.vx, q.vy), a = Math.atan2(nb.y - q.y, nb.x - q.x); q.vx = Math.cos(a) * sp; q.vy = Math.sin(a) * sp; q.a = a; q.life = Math.max(q.life, .7); spark(q.x, q.y, '#ffe27a', 5, 120, .25, 2, 0); break; } }
         if (q.pierce-- <= 0) { q.life = 0; break; }
       }
-    } else if (!dead && Math.hypot(p.x - q.x, p.y - q.y) < q.r + 11) { hurt(q.dmg); q.life = 0; }
+    } else if (!dead && Math.hypot(p.x - q.x, p.y - q.y) < q.r + 11) { hurt(q.dmg, 'Projétil inimigo'); q.life = 0; }
   }
   R.projs = R.projs.filter(q => q.life > 0);
 

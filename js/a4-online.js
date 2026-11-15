@@ -53,7 +53,7 @@ async function saveEditProfile() {
   if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
 function profileTabs() {
-  const nChest = Math.max(0, save.pl.lv - save.chestDone);
+  const nChest = rwAvail();
   [['profile', 'Perfil'], ['rewards', 'Recompensas'], ['ach', 'Conquistas']].forEach(([k, l], i) => {
     const bx = 197 + i * 104; btn(bx, 87, 100, 20, l, () => { tab = k; }, { size: 12, col: tab === k ? '#a8821f' : '#2a2a48', hot: '#c9a030' });
     if ((k === 'rewards' && nChest > 0) || (k === 'ach' && achReady() > 0)) { const nn = k === 'ach' ? achReady() : nChest, s = nn > 99 ? '99+' : String(nn), w = Math.max(16, s.length * 8 + 6); ctx.fillStyle = '#05050a'; ctx.fillRect(bx + 100 - w - 1, 76, w + 2, 16); ctx.fillStyle = '#ffd34a'; ctx.fillRect(bx + 100 - w, 77, w, 14); txt(s, bx + 100 - w / 2, 88, 11, '#000', 'center', 'bold'); }   // aviso: ha baus por abrir
