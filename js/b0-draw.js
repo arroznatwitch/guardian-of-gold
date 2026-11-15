@@ -225,12 +225,13 @@ function abilBox(x, y, key, name, cd, max, ready, col) {
   txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
 function drawDmgLog() {   // opcao "Logs de Dano": de onde vem o dano e a cura
-  const L = R.dl; if (!L) return; const x = 14, y0 = 62, t = Math.max(1, R.time || 1), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
-  const rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
-  const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length) * 14 + (h.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
+  const L = R.dl; if (!L) return; const x = 14, y0 = 62, t = Math.max(1, R.time || 1), tk = rowsT(L.taken), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
+  const rowsT = o => Object.entries(o || {}).sort((a, b) => b[1].v - a[1].v).slice(0, 4).map(([k, v]) => ({ k, v: v.v })), rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
+  const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length + tk.length) * 14 + (h.length ? 22 : 0) + (tk.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
   const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), f = v => fmt(v * 10);   // o jogo mostra o dano x10
   txt(`${T2('Dano', 'Damage')}: ${f(tot)}  (${f(tot / t)}/s)`, x, y0, 11, '#ffd34a', 'left', 'bold'); let y = y0 + 14;
   d.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${f(r.v)}`, x + 250, y, 10, '#9cf', 'right'); y += 14; });
+  if (tk.length) { y += 8; txt(T2('Dano sofrido', 'Damage taken'), x, y, 11, '#f88', 'left', 'bold'); y += 14; tk.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(fmt(r.v), x + 250, y, 10, '#f99', 'right'); y += 14; }); }
   if (h.length) { y += 8; txt(`${T2('Cura', 'Healing')}: ${fmt(th)}  (${(th / t).toFixed(1)}/s)`, x, y, 11, '#6f6', 'left', 'bold'); y += 14; h.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${fmt(r.v)}`, x + 250, y, 10, '#8f8', 'right'); y += 14; }); }
 }
 function drawHUD() {
@@ -286,6 +287,7 @@ function drawResults(win) {
   const cw = 112, gp = 10, tw = chips.length * cw + (chips.length - 1) * gp; let cx = UW / 2 - tw / 2;
   chips.forEach(c => { bevel(cx, Y + 126, cw, 58, '#0f0f1e', c[2], '#05050a'); txt(c[0], cx + cw / 2, Y + 146, 12, '#8890a8', 'center'); txt(c[1], cx + cw / 2, Y + 172, 22, c[2], 'center', 'bold'); cx += cw + gp; });
   let y = Y + 214; const ln = (s, c) => { txt(s, UW / 2, y, 14, c, 'center'); y += 21; };
+  if (!win && R.lastHits && R.lastHits.length) { const h = R.lastHits[R.lastHits.length - 1]; ln(`${T2('Último golpe', 'Last hit')}: ${h.src} (-${h.n})`, '#f99'); }
   if (R.farm || !win || !raid) { const m = a[1]; if (m && !/^Ganhaste/.test(m)) ln(m, win ? '#cdd6f4' : '#f99'); }
   { const B = gb(); if (B.gold || B.xp) ln(E2(`Guild bonus: +${Math.round(B.gold * 1000) / 10}% gold, +${Math.round(B.xp * 1000) / 10}% XP`, `Bónus da guilda: +${Math.round(B.gold * 1000) / 10}% ouro, +${Math.round(B.xp * 1000) / 10}% XP`), '#9ab'); }
   if (R.petGain) ln(`${petDisplayName(save.pets.eq)}: +${R.petGain} XP` + (R.petUp ? T2(` · subiu para o nível ${petLv(save.pets.eq)}!`, ` · reached level ${petLv(save.pets.eq)}!`) : ''), '#9ab');
