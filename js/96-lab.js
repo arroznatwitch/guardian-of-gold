@@ -47,7 +47,7 @@ function labKey(code) {
     case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5': { const i = +code.slice(5) - 1, cls = save.cls; save.own[cls][i] = 1; save.eq[cls] = i; labBuild(); labToast(CLASSES[cls].weapons[i].n); break; }
     case 'KeyY': { const ks = Object.keys(CLASSES); save.cls = ks[(ks.indexOf(save.cls) + 1) % ks.length]; save.own[save.cls] = save.own[save.cls] || []; save.own[save.cls][0] = 1; save.eq[save.cls] = save.eq[save.cls] | 0; startMission(0, undefined, true); R.phase = 'lab'; R.lab = true; R.need = 1e9; labBuild(); labToast('Classe: ' + CLASSES[save.cls].name); break; }   // troca de classe (recomeca a arena)
     case 'BracketLeft': save.pl.lv = Math.max(1, save.pl.lv - 5); labBuild(); labToast('Nível ' + save.pl.lv); break;
-    case 'BracketRight': save.pl.lv += 5; labBuild(); labToast('Nível ' + save.pl.lv); break;
+    case 'BracketRight': save.pl.lv = Math.min(MAXLV, save.pl.lv + 5); labBuild(); labToast('Nível ' + save.pl.lv); break;
     case 'KeyL': LAB.rar = (LAB.rar + 1) % 5; labBuild(); labToast('Equipamento ' + LAB_RAR[LAB.rar]); break;
     case 'KeyV': LAB.typeI = (LAB.typeI + 1) % types.length; labToast('Inimigo: ' + types[LAB.typeI]); break;
     case 'KeyB': for (let i = 0; i < 5; i++) spawnEdge(types[LAB.typeI]); break;

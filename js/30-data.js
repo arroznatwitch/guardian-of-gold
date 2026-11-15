@@ -25,11 +25,11 @@ const CLASSES = {
       { id: 'm_arcane', n: 'Cajado Venenoso', price: 10500, t: 'bolt', kind: 'poison', dmg: 3, cd: .4, spd: 360, info: 'Dispara veneno que corrói os inimigos ao longo do tempo.', sk: { n: 'Círculo Tóxico', cd: 12, d: 'Círculo tóxico que fere quem se aproxima.' } },
       { id: 'm_dark',   n: 'Cajado Vampírico', price: 30000, t: 'bolt', kind: 'blood', dmg: 3.6, cd: .45, spd: 400, pierce: 1, leech: .12, info: 'Rouba vida enquanto dispara.', sk: { n: 'Dreno de Vida', cd: 11, d: 'Suga a vida dos inimigos próximos.' } } ] },
 };
-const MAXLV = Infinity, xpNeed = l => Math.round((60 + 40 * (l - 1)) * (l > 40 ? 1.12 ** (l - 40) : 1));   // nivel infinito
+const MAXLV = 120, xpNeed = l => Math.round((60 + 40 * (l - 1)) * (l <= 40 ? 1 : l <= 70 ? 1.12 ** (l - 40) : 1.12 ** 30 * 1.06 ** (l - 70)));   // nivel maximo 120; a partir do 40 o XP necessario cresce muito (12% por nivel ate ao 70, depois 6%)
 const attrBuyCost = n => Math.round((100 + 20 * n + .5 * n * n) / 5) * 5;   // preco do ponto de atributo n (n = pontos ja comprados): 100, 120, 140, 165, 190... sobe sempre
 const GOLD_MAX = 2147483647;   // limite do ouro: maior inteiro de 32 bits
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
+function addXP(n) { const pl = save.pl; if (pl.lv >= MAXLV) { pl.lv = MAXLV; pl.xp = 0; return; } pl.xp += n; while (pl.lv < MAXLV && pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };

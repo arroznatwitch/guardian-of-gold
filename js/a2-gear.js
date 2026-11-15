@@ -142,7 +142,7 @@ function hubMaterials() {
     const x = 197, y = 124 + r * 52, n = save.stones[r] | 0, col = RAR[r][1];
     bevel(x, y, 296, 46, '#12121f', n ? col : '#26263a', '#05050a');
     ctx.fillStyle = '#0c0c18'; ctx.fillRect(x + 5, y + 5, 36, 36);
-    ctx.save(); ctx.translate(x + 23, y + 23); ctx.rotate(Math.PI / 4); ctx.fillStyle = n ? col : '#3a3a4a'; ctx.fillRect(-9, -9, 18, 18); ctx.fillStyle = '#ffffff55'; ctx.fillRect(-9, -9, 18, 5); ctx.fillStyle = '#00000044'; ctx.fillRect(-9, 4, 18, 5); ctx.restore();
+    ctx.globalAlpha = n ? 1 : .35; ctx.drawImage(STONE_SPR[r], x + 7, y + 7, 32, 32); ctx.globalAlpha = 1;
     txt(`${T2('Pedra de evolução', 'Evolution stone')} · ${L(RAR[r][0])}`, x + 52, y + 21, 13, n ? '#fff' : '#778', 'left', 'bold'); txt(T2('Bloqueada: não se vende', 'Locked: cannot be sold'), x + 52, y + 37, 10, '#9a8a5a');
     txt('×' + n, x + 284, y + 28, 18, n ? col : '#667', 'right', 'bold');
   }

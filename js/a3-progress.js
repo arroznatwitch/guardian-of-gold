@@ -172,7 +172,7 @@ function hubRewards() {
   txt(T2('Recompensas por nível', 'Level rewards'), 490, 120, 18, '#ffd34a', 'center', 'bold');
   txt(avail ? T2(`${avail} por resgatar`, `${avail} to claim`) : T2('Sobe de nível para desbloqueares a próxima', 'Level up to unlock the next one'), 490, 140, 12, avail ? '#9fe' : '#9ab', 'center', 'bold');
   for (let i = 0; i < RW_PER; i++) {
-    const Lv = p0 + i, d = levelReward(Lv), done = Lv <= save.chestDone, can = !done && Lv <= save.pl.lv, big = Lv % 10 === 0, y = 150 + i * 46;
+    const Lv = p0 + i; if (Lv > MAXLV) break; const d = levelReward(Lv), done = Lv <= save.chestDone, can = !done && Lv <= save.pl.lv, big = Lv % 10 === 0, y = 150 + i * 46;
     bevel(X, y, WD, 42, done ? '#162216' : can ? '#2a2412' : '#12121f', done ? '#4a8a4a' : can ? '#f0c060' : big ? '#a8821f' : '#2a2a3a', '#05050a');
     txt(`${T2('Nível', 'Level')} ${Lv}`, X + 12, y + 26, 14, done ? '#7a7' : can ? '#ffd34a' : '#9ab', 'left', 'bold');
     let x = X + 100; ctx.globalAlpha = done ? .5 : 1;
@@ -182,7 +182,7 @@ function hubRewards() {
     else btn(X + WD - 104, y + 6, 94, 30, can ? T2('Resgatar', 'Claim') : T2('Bloqueado', 'Locked'), () => claimRewards(Lv), { off: !can, size: 13, col: '#a06a20', hot: '#c98a30' });
   }
   btn(X, 430, 50, 28, '<', () => { rwPage = Math.max(0, rwPage - 1); }, { off: rwPage === 0, size: 14 });
-  btn(X + WD - 50, 430, 50, 28, '>', () => { rwPage++; }, { size: 14 });
+  btn(X + WD - 50, 430, 50, 28, '>', () => { rwPage++; }, { off: p0 + RW_PER > MAXLV, size: 14 });
   btn(X + WD / 2 - 90, 430, 180, 28, T2('Resgatar tudo', 'Claim all'), () => { claimRewards(1e9); rwPage = Math.floor(save.chestDone / RW_PER); }, { off: !avail, size: 13, col: '#2f7a4a', hot: '#3fa061' });
   if (lastRw) { const r = lastRw, p = [`${r.from === r.to ? T2('Nível', 'Level') + ' ' + r.to : T2('Níveis', 'Levels') + ' ' + r.from + '-' + r.to}:`, '¢' + gfmt(r.gold)]; if (r.pts) p.push(`+${r.pts} pts`); if (r.gems) p.push('◆' + r.gems); r.stones.forEach((n, q) => { if (n) p.push(`${n}× ${L(RAR[q][0])}`); }); const nw = Object.values(r.wpn).reduce((a, b) => a + b, 0); if (nw) p.push(`${nw} ${T2('cópia(s)', 'copy(ies)')}`); if (r.items.length) p.push(`${r.items.length} ${lang === 'en' ? 'item(s)' : 'item(ns)'}`); txt(T2('Último resgate', 'Last claim') + ' · ' + p.join('  '), 490, 472, 11, '#9ab', 'center'); }
 }
