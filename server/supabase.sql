@@ -296,8 +296,8 @@ begin
   execute format($q$
     select coalesce(jsonb_agg(jsonb_build_object('rank', r, 'nick', nick, 'cls', cls, 'value', v, 'lv', lv, 'skin', skin, 'title', title, 'gtag', gtag, 'gcol', gcol, 'gender', gender, 'country', country) order by r), '[]'::jsonb) from (
       select nick, cls, gender, country, level as lv, coalesce((build->>'skin')::int, 0) as skin, build->>'title' as title,
-        (select g.tag from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(gog.players.owner, gog.players.id)) as gtag,
-        (select g.color from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(gog.players.owner, gog.players.id)) as gcol, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
+        (select g.tag from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = gog.players.id) as gtag,
+        (select g.color from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = gog.players.id) as gcol, %1$I::bigint as v, rank() over (order by %1$I desc, updated_at asc) as r
       from gog.players where active and %1$I > 0 order by %1$I desc, updated_at asc limit %2$s) s$q$, col, lim) into rows;
   pid := gog._auth(p_token);
   if pid is not null then
@@ -595,7 +595,7 @@ begin
   update gog.players set save = p_save, char_cls = coalesce(char_cls, c), save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
   if v.save is not null then   -- guilda: os mobs, bosses e raids novos (ja validados acima) dao pontos a guilda
     pts := greatest(0, gog._n(p_save, 'stats', 'kills') - gog._n(v.save, 'stats', 'kills')) + 10 * greatest(0, gog._n(p_save, 'stats', 'bosses') - gog._n(v.save, 'stats', 'bosses')) + 60 * greatest(0, gog._raids_total(p_save) - gog._raids_total(v.save));
-    if pts > 0 then perform gog._gcontrib(coalesce(v.owner, v.id), pts); end if;
+    if pts > 0 then perform gog._gcontrib(v.id, pts); end if;
   end if;
   return jsonb_build_object('ok', true, 'rev', newrev);
 end $$;
@@ -645,7 +645,7 @@ begin
   if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
   return jsonb_build_object('ok', true, 'nick', v.nick, 'cls', v.cls, 'level', v.level, 'kills', v.kills, 'gold', v.gold, 'bosses', v.bosses, 'raids', v.raids,
     'waves', jsonb_build_array(v.w0, v.w1, v.w2, v.w3, v.w4, v.w5), 'build', v.build, 'gender', v.gender, 'country', v.country,
-    'guild', (select jsonb_build_object('id', g.id, 'name', g.name, 'tag', g.tag, 'color', g.color, 'emblem', g.emblem) from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = coalesce(v.owner, v.id)),
+    'guild', (select jsonb_build_object('id', g.id, 'name', g.name, 'tag', g.tag, 'color', g.color, 'emblem', g.emblem) from gog.guild_members gm join gog.guilds g on g.id = gm.guild_id where gm.root = v.id),
     'account', (select o.nick from gog.players o where o.id = v.owner));   -- personagens extra mostram a conta principal
 end $$;
 
@@ -867,7 +867,7 @@ declare pid bigint; v_root bigint; gid bigint; cd double precision;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select guild_id into gid from gog.guild_members where root = v_root;
   if gid is null then
     select greatest(0, extract(epoch from l.at + interval '24 hours' - now())) into cd from gog.guild_left l where l.root = v_root;
@@ -897,7 +897,7 @@ begin
   select * into v from gog.players where id = pid for update;
   if v.guild_at is not null and v.guild_at > now() - interval '2 seconds' then return jsonb_build_object('ok', false, 'error', 'slow'); end if;
   update gog.players set guild_at = now() where id = pid;
-  v_root := coalesce(v.owner, v.id);
+  v_root := v.id;   -- cada personagem (classe) e um membro separado da guilda
   if exists (select 1 from gog.guild_members where root = v_root) then return jsonb_build_object('ok', false, 'error', 'in_guild'); end if;
   if exists (select 1 from gog.guild_left where root = v_root and at > now() - interval '24 hours') then return jsonb_build_object('ok', false, 'error', 'cooldown'); end if;
   if nm !~ '^[A-Za-z0-9][A-Za-z0-9 _-]{1,14}[A-Za-z0-9]$' or tg !~ '^[A-Za-z0-9]{2,4}$' then return jsonb_build_object('ok', false, 'error', 'bad_name'); end if;
@@ -923,7 +923,7 @@ begin
   select * into v from gog.players where id = pid for update;
   if v.guild_at is not null and v.guild_at > now() - interval '2 seconds' then return jsonb_build_object('ok', false, 'error', 'slow'); end if;
   update gog.players set guild_at = now() where id = pid;
-  v_root := coalesce(v.owner, v.id);
+  v_root := v.id;   -- cada personagem (classe) e um membro separado da guilda
   if exists (select 1 from gog.guild_members where root = v_root) then return jsonb_build_object('ok', false, 'error', 'in_guild'); end if;
   if exists (select 1 from gog.guild_left where root = v_root and at > now() - interval '24 hours') then return jsonb_build_object('ok', false, 'error', 'cooldown'); end if;
   if gog._n(v.save, 'pl', 'lv') < 10 then return jsonb_build_object('ok', false, 'error', 'need_level_join'); end if;
@@ -941,7 +941,7 @@ declare pid bigint; v_root bigint; gid bigint; g gog.guilds; nl bigint;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select guild_id into gid from gog.guild_members where root = v_root;
   if gid is null then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
   select * into g from gog.guilds where id = gid for update;
@@ -960,7 +960,7 @@ declare pid bigint; v_root bigint; g gog.guilds; t bigint;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select g2.* into g from gog.guilds g2 join gog.guild_members m on m.guild_id = g2.id where m.root = v_root;
   if not found then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
   if g.leader <> v_root then return jsonb_build_object('ok', false, 'error', 'not_leader'); end if;
@@ -978,7 +978,7 @@ declare pid bigint; v_root bigint; g gog.guilds; t bigint;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select g2.* into g from gog.guilds g2 join gog.guild_members m on m.guild_id = g2.id where m.root = v_root;
   if not found then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
   if g.leader <> v_root then return jsonb_build_object('ok', false, 'error', 'not_leader'); end if;
@@ -995,7 +995,7 @@ begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
   if p_perk is null or p_perk not in ('xp', 'gold', 'drop', 'attr') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select g2.* into g from gog.guilds g2 join gog.guild_members m on m.guild_id = g2.id where m.root = v_root for update of g2;
   if not found then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
   if g.leader <> v_root then return jsonb_build_object('ok', false, 'error', 'not_leader'); end if;
@@ -1029,7 +1029,7 @@ declare pid bigint; v_root bigint; g gog.guilds; mt text := btrim(coalesce(p_mot
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  select coalesce(owner, id) into v_root from gog.players where id = pid;
+  v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
   select g2.* into g from gog.guilds g2 join gog.guild_members m on m.guild_id = g2.id where m.root = v_root for update of g2;
   if not found then return jsonb_build_object('ok', false, 'error', 'no_guild'); end if;
   if g.leader <> v_root then return jsonb_build_object('ok', false, 'error', 'not_leader'); end if;
@@ -1050,7 +1050,7 @@ begin
     from gog.guilds g order by g.xp desc, g.id limit 14 offset greatest(coalesce(p_offset, 0), 0)) s;
   pid := gog._auth(p_token);
   if pid is not null then
-    select coalesce(owner, id) into v_root from gog.players where id = pid;
+    v_root := pid;   -- cada personagem (classe) e um membro separado da guilda
     select guild_id into mine from gog.guild_members where root = v_root;
   end if;
   return jsonb_build_object('ok', true, 'rows', rows, 'mine', mine);
