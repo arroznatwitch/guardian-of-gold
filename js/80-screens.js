@@ -172,6 +172,7 @@ function drawOptions() {
   btn(215, 332, 370, 28, 'Teclas', () => openKeys('options'), { size: 15 });
   btn(215, 366, 370, 28, dmgLog ? 'Logs de Dano: LIGADO' : 'Logs de Dano: DESLIGADO', () => { dmgLog = !dmgLog; try { localStorage.setItem('gog_dmglog', dmgLog ? '1' : '0'); } catch (e) {} }, { size: 15, col: dmgLog ? '#2f7a4a' : '#5c4a20' });   // mostra de onde vem o dano e a cura em combate
   labCheck(); if (labAllowed() && optBack === 'hub') btn(215, 400, 370, 28, 'Laboratório de batalha (Admin)', labStart, { size: 15, col: '#2f6a8a', hot: '#3f8ab0' });   // so para a conta admin (96-lab.js)
+  txt(`${T2('Versão', 'Build')} ${GAME_BUILD}`, UW / 2, 432, 10, '#667', 'center');
   btn(300, 448, 200, 34, '< Voltar', () => { state = optBack; }, { size: 15 });
 }
 function drawKeys() {
