@@ -57,7 +57,7 @@ const TAB_INFO = {
   raids: ['Raids', 'Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.'],
   anvil: ['Bigorna', 'Melhora as tuas armas até +20, com amuletos de sorte e pergaminhos de proteção.'],
   ench: ['Encantar', 'Refina o equipamento até +10 e sorteia encantamentos especiais.'],
-  fuse: ['Fusão', 'Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.'],
+  fuse: ['Fusão', 'Junta 5 armas iguais para ganhares estrelas, mais poder e habilidades melhoradas.'],
   pets: ['Pets', 'Companheiros que te seguem e te dão bónus enquanto estiverem perto.'],
 };
 function wrapC(str, cx, y, maxW, lh, size, col) {
