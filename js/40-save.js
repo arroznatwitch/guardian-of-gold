@@ -70,11 +70,17 @@ const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 /* ---- subir de estrela: alem das 5 copias e do ouro, cada estrela pede uma pedra de evolucao e um objetivo com ESTA arma ---- */
 const WSTAR_REQ = [{ stone: 0, n: 1, kills: 5000 }, { stone: 1, n: 2, raids: 20 }, { stone: 3, n: 1, nraids: 50 }];   // para ir de t para t+1: pedra Comum + 5000 abates / 2 pedras Raras + 20 raids / 1 pedra Lendaria + 50 raids Normal ou acima
-const wProg = id => { save.wp = save.wp || {}; return save.wp[id] = save.wp[id] || { k: 0, r: 0, n: 0 }; };
+const wProg = id => { save.wp = save.wp || {}; return save.wp[id] = save.wp[id] || { k: 0, r: 0, n: 0, u: 0 }; };
+/* cada estrela e uma missao que se faz UMA vez por arma: depois de desbloqueada, podes juntar copias para essa estrela as vezes que quiseres. Quem ja tem a estrela tem-na desbloqueada */
+const wUnlocked = id => Math.max(wProg(id).u | 0, wStar(id));
 function wpAdd(raidWon) {   // no fim de cada missao: o que fizeste conta para a arma equipada
-  if (!R || !save || R.lab) return; const w = curW(), p = wProg(w.id), st = wStar(w.id);
+  if (!R || !save || R.lab) return; const w = curW(), p = wProg(w.id), st = wUnlocked(w.id);
   p.k += R.kills | 0;
   if (R.raid && raidWon) { if (st >= 1) p.r++; if (st >= 2 && R.raid.d >= 1) p.n++; }
+}
+function wUnlock(id) {   // cumpre a missao da proxima estrela: gasta a(s) pedra(s) e desbloqueia
+  const t = wUnlocked(id), r = wReq(id, t); if (t >= STAR_MAX || !r.ok) return false;
+  save.stones[r.q.stone] -= r.q.n; wProg(id).u = t + 1; return true;
 }
 function wReq(id, t) {   // estado dos requisitos para a estrela t+1
   const q = WSTAR_REQ[t]; if (!q) return { ok: false, lines: [] }; const p = wProg(id), have = save.stones[q.stone] | 0, lines = [];
