@@ -96,7 +96,7 @@ function hubGuild() {
     const can = reqs.every(q => q[0]) && !gld.busy;
     btn(x0 + 14, 330, 234, 34, E2('Create guild', 'Criar guilda'), createGuild, { size: 15, col: can ? '#2f7a4a' : '#33333f', hot: '#3fa061', off: !can });
     if (gld.msg) wrap(gld.msg, x0 + 14, 386, 234, 14, 11, gld.col);
-    wrap(E2('A guild levels up by itself with its members\' kills, bosses and raids. Up to 10 members.', 'Uma guilda sobe sozinha com os mobs, bosses e raids dos membros. Até 10 membros.'), x0 + 14, 440, 234, 13, 10, '#778');
+    wrap(E2('A guild levels up by itself with its members\' kills, bosses and raids. Up to 10 members. Each character (class) joins on its own.', 'Uma guilda sobe sozinha com os mobs, bosses e raids dos membros. Até 10 membros. Cada personagem (classe) entra à parte.'), x0 + 14, 440, 234, 13, 10, '#778');
     // ---- entrar ----
     panel(470, 94, 310, 384, '#16162a'); txt(E2('Join a guild', 'Entrar numa guilda'), 625, 120, 17, '#f0c060', 'center', 'bold');
     if (gld.cd > 0) txt(E2(`Wait ${Math.ceil(gld.cd / 3600)}h before joining or creating`, `Espera ${Math.ceil(gld.cd / 3600)}h para entrar ou criar`), 625, 140, 11, '#f88', 'center');
