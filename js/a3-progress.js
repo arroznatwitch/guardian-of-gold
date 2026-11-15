@@ -128,68 +128,63 @@ function hubAch() {
   btn(720, 452, 60, 24, '>', () => { achPage = Math.min(pages - 1, achPage + 1); }, { size: 14, off: achPage >= pages - 1 });
 }
 
-/* ----- Recompensas: um baú por nível ----- */
-const CHEST_BASE = ['gggggggggggg', 'mMMMMggMMMMm', 'mMMMMggMMMMm', 'mMMMMMMMMMMm', 'mmmmmmmmmmmm'];
-const CHEST_LID = ['..mmmmmmmm..', '.mMMMMMMMMm.', 'mMMMMMMMMMMm'];
-const CHEST_SPR = [{ m: '#6b4a22', M: '#a06a30', g: '#f5c542' }, { m: '#a8821f', M: '#f5c542', g: '#fff2a8' }].map(pal => ({ base: makeSprite(CHEST_BASE, pal, 1, false), lid: makeSprite(CHEST_LID, pal, 1, false) }));
-let chestAnim = 0, lastRw = null;
-function openChests(n) {
-  const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, n: 0, sold: 0 };
+/* ----- Recompensas: premios FIXOS por nivel (sem baus, sem sorte) ----- */
+// cada nivel tem sempre o mesmo premio. Itens e armas ficam sempre do nivel/raridade do premio (um item do nivel 5 e nivel 5, mesmo que ja sejas nivel 65).
+const RW_SLOTS = ['head', 'chest', 'boots', 'amulet'];
+function levelReward(L) {
+  const r = { gold: Math.round(100 + 45 * L + 2 * L * L / 5), pts: 0, gems: 0, stone: null, item: null, wpn: -1 };
+  if (L % 2 === 0) r.pts = 1; if (L % 5 === 0) r.pts = 2; if (L % 10 === 0) r.pts = 4;
+  if (L % 5 === 0) r.gems = 5; if (L % 10 === 0) r.gems = 15;
+  if (L % 4 === 0) r.stone = { r: Math.min(4, Math.floor(L / 25)), n: L % 20 === 0 ? 2 : 1 };
+  if (L % 5 === 0) r.item = { slot: RW_SLOTS[(L / 5 - 1) % 4], r: Math.min(4, Math.floor(L / 20) + (L % 10 === 0 ? 1 : 0)), il: Math.min(120, L) };
+  if (L % 10 === 5) r.wpn = Math.min(4, Math.floor(L / 15));
+  return r;
+}
+let chestAnim = 0, lastRw = null, rwScroll = 0;   // chestAnim: so para o ciclo principal nao falhar
+const rwWeaponIdx = tier => { const c = CLASSES[save.cls]; for (let i = Math.min(tier, c.weapons.length - 1); i >= 0; i--) if (weaponReq(i).ok) return i; return 0; };
+function openChests(n) {   // recebe os premios dos proximos niveis por receber
+  const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, stones: [0, 0, 0, 0, 0], n: 0, sold: 0, from: save.chestDone + 1, to: save.chestDone };
   for (let i = 0; i < n && save.chestDone < save.pl.lv; i++) {
-    const L = ++save.chestDone, g5 = L % 10 === 0;
-    rw.gold += Math.round((60 + 30 * L) * (.8 + Math.random() * .6) * (g5 ? 5 : 1));
-    if (Math.random() < (g5 ? 1 : .45)) rw.pts += g5 ? 3 : (Math.random() < .3 ? 2 : 1);
-    if (g5 || Math.random() < .18) { const it = genLoot(rollRarity(Math.floor(L / 8), g5 ? 2 : 0), Math.min(120, 1 + Math.floor(L * .8))); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
-    if (g5 || Math.random() < .15) { const ok = CLASSES[save.cls].weapons.map((w, k) => k).filter(k => weaponReq(k).ok), wi = ok[Math.floor(Math.random() * ok.length)], id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
-    if (Math.random() < (g5 ? .5 : .06)) rw.gems += g5 ? 5 : 2;
+    const L = ++save.chestDone, d = levelReward(L); rw.to = L;
+    rw.gold += d.gold; rw.pts += d.pts; rw.gems += d.gems;
+    if (d.stone) { save.stones[d.stone.r] = (save.stones[d.stone.r] | 0) + d.stone.n; rw.stones[d.stone.r] += d.stone.n; }
+    if (d.item) { const it = genItem(d.item.slot, d.item.r, d.item.il); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
+    if (d.wpn >= 0) { const wi = rwWeaponIdx(d.wpn), id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
     rw.n++;
   }
-  save.gold = Math.min(GOLD_MAX, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; chestAnim = 3.2; chestPops = 0; SFX.buy(); persist();
+  save.gold = Math.min(GOLD_MAX, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; chestAnim = 1.2; SFX.buy(); persist();
 }
-let chestPops = 0;
-function rewardTokens(r) {
-  const t = [];
-  if (r.gold) t.push({ txt: '¢' + gfmt(r.gold), col: '#fd5', r: 0, icon: (x, y) => drawIcon('coin', x, y, 1.2) });
-  if (r.pts) t.push({ txt: lang === 'en' ? `+${r.pts} points` : `+${r.pts} pontos`, col: '#9fe', r: 0 });
-  if (r.gems) t.push({ txt: '◆ ' + r.gems, col: '#7fe8ff', r: 1 });
-  for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); t.push({ txt: `${L(w.n)} ×${r.wpn[id]}`, col: '#ffd34a', r: 2, icon: (x, y) => weaponIcon(id, x, y, .9) }); }
-  r.items.slice().sort((a, b) => a.r - b.r).forEach(it => t.push({ txt: L(it.slot === 'ring' ? itemName(it) : ITEM_NAMES[it.slot][it.r]), col: RAR[it.r][1], r: it.r, icon: (x, y) => itemIcon(it, x, y, 1.4) }));
+// linhas de texto do premio (para a lista e para o resumo)
+function rewardLines(d, il) {
+  const t = [{ txt: '¢' + gfmt(d.gold), col: '#fd5', icon: (x, y) => drawIcon('coin', x, y, 1) }];
+  if (d.pts) t.push({ txt: lang === 'en' ? `+${d.pts} attribute points` : `+${d.pts} pontos de atributo`, col: '#9fe' });
+  if (d.gems) t.push({ txt: '◆ ' + d.gems, col: '#7fe8ff' });
+  if (d.stone) t.push({ txt: `${d.stone.n}× ${T2('Pedra de evolução', 'Evolution stone')} · ${L(RAR[d.stone.r][0])}`, col: RAR[d.stone.r][1] });
+  if (d.item) t.push({ txt: `${L(ITEM_NAMES[d.item.slot][d.item.r])} · ${T2('Nível', 'Level')} ${d.item.il}`, col: RAR[d.item.r][1] });
+  if (d.wpn >= 0) { const w = CLASSES[save.cls].weapons[rwWeaponIdx(d.wpn)]; t.push({ txt: `${T2('Cópia', 'Copy')}: ${L(w.n)}`, col: '#ffd34a', icon: (x, y) => weaponIcon(w.id, x, y, .8) }); }
   return t;
 }
 function hubRewards() {
-  const avail = Math.max(0, save.pl.lv - save.chestDone), next = save.chestDone + 1, g5 = next % 10 === 0, sp = CHEST_SPR[g5 ? 1 : 0];
-  txt(g5 ? `Baú dourado: nível ${next}` : `Baú do nível ${next}`, 350, 128, 16, g5 ? '#ffd34a' : '#fff', 'center', 'bold');
-  const k = 7, bx = 350 - 6 * k, by = 252, el = chestAnim > 0 ? 3.2 - chestAnim : 9, open = chestAnim > 0 ? Math.max(0, Math.min(1, (el - .5) * 3, chestAnim * 1.2)) : 0, pop = (el - .95) / .28;
-  const best = lastRw ? Math.max(-1, ...lastRw.items.map(i => i.r), lastRw.gems ? 1 : -1) : -1, rc = best >= 0 ? RAR[Math.min(4, best)][1] : '#ffd34a';
-  if (open > 0 && el < 8) { ctx.globalCompositeOperation = 'lighter'; const gr = ctx.createRadialGradient(350, by, 5, 350, by, 150); gr.addColorStop(0, `rgba(255,220,120,${.55 * open})`); gr.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gr; ctx.fillRect(200, by - 150, 300, 300);
-    ctx.fillStyle = rc; for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + (i - 6.5) * .16, L = (60 + 70 * rn(i + 3)) * open * Math.max(0, 1 - (el - .6) / 2.6); ctx.globalAlpha = .35 * open; ctx.save(); ctx.translate(350, by + 6); ctx.rotate(a + Math.PI / 2); ctx.fillRect(-2, -L, 4, L); ctx.restore(); }
-    for (let i = 0; i < 26; i++) { const t = ((el - .6) * .6 + rn(i) * 3) % 1.4, x = 350 + (rn(i + 9) - .5) * 140 * t, y = by - 20 - t * 120 + 80 * t * t; ctx.globalAlpha = Math.max(0, 1 - t / 1.4); ctx.fillRect(Math.round(x), Math.round(y), 3, 3); }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
-  const sh = !avail && el > 3 ? 0 : (el < .5 ? Math.sin(T * 55) * (2 + el * 5) : !avail ? 0 : Math.sin(T * 8) * 1.5);
-  ctx.drawImage(sp.base, bx + sh, by, 12 * k, 5 * k);
-  ctx.save(); ctx.translate(bx + sh, by); ctx.rotate(-open * 1.15); ctx.drawImage(sp.lid, 0, -3 * k, 12 * k, 3 * k); ctx.restore();
-  // recompensas a saltar do bau, uma a uma
-  if (lastRw && chestAnim > -1 && el < 7.5) {
-    const toks = rewardTokens(lastRw), shown = toks.slice(-6), n = shown.length, fade = chestAnim > 0 ? 1 : 0;
-    if (pop >= 0) { const cnt = Math.min(n, Math.floor(pop) + 1); if (cnt > chestPops) { for (let q = chestPops; q < cnt; q++) { const tk = shown[q]; tk && tk.r >= 3 ? SFX.special() : SFX.heal(); } chestPops = cnt; } }
-    shown.forEach((tk, i) => {
-      const t = Math.max(0, Math.min(1, pop - i)); if (t <= 0) return; const e = 1 - Math.pow(1 - t, 3), cols = 2, cx = 350 + ((i % cols) - .5) * 136, rowY = 142 + Math.floor(i / cols) * 34, yy = by + 10 + (rowY - by - 10) * e;
-      ctx.globalAlpha = Math.min(1, t * 2) * (el > 3.2 ? Math.max(0, 1 - (el - 3.2) * 2) : 1); bevel(cx - 62, yy - 14, 124, 28, '#12121f', tk.col, '#05050a'); if (tk.icon) tk.icon(cx - 48, yy); { let fs = 12; while (fs > 8 && txtW(tk.txt, fs, 'bold') > 82) fs--; txt(tk.txt, cx - 34, yy + 5, fs, tk.col, 'left', 'bold'); } ctx.globalAlpha = 1;
-    });
-    if (best >= 3 && pop > n - 1 && el < 4.2) { ctx.globalAlpha = .6 + .4 * Math.sin(T * 10); txt(best >= 4 ? 'ITEM MÍTICO!' : 'ITEM LENDÁRIO!', 350, 134, 18, RAR[best][1], 'center', 'bold'); ctx.globalAlpha = 1; }
+  const avail = Math.max(0, save.pl.lv - save.chestDone), next = save.chestDone + 1;
+  txt(T2('Recompensas por nível', 'Level rewards'), 350, 128, 18, '#ffd34a', 'center', 'bold');
+  txt(avail ? T2(`${avail} por receber`, `${avail} to claim`) : T2('Sem recompensas por receber', 'Nothing to claim'), 350, 152, 14, avail ? '#9fe' : '#778', 'center', 'bold');
+  const rows = 8; rwScroll = Math.max(0, Math.min(rwScroll, 9999));
+  for (let i = 0; i < rows; i++) {
+    const Lv = next + i, d = levelReward(Lv), got = Lv <= save.pl.lv, y = 166 + i * 34, ln = rewardLines(d), big = Lv % 10 === 0;
+    bevel(200, y, 300, 30, got ? '#1d2a1d' : '#12121f', got ? '#6c6' : (big ? '#a8821f' : '#33334a'), '#05050a');
+    txt(`${T2('Nv', 'Lv')} ${Lv}`, 210, y + 20, 13, got ? '#9f9' : (big ? '#ffd34a' : '#9ab'), 'left', 'bold');
+    let x = 262; ln.forEach((t, k) => { if (k > 3) return; const s = k === 0 ? t.txt : t.txt.replace(/^\d+× /, m => m).replace(T2('Pedra de evolução', 'Evolution stone'), T2('Pedra', 'Stone')); let fs = 11; while (fs > 8 && txtW(s, fs, 'bold') > 70) fs--; txt(s, x, y + 19, fs, t.col, 'left', 'bold'); x += Math.min(76, txtW(s, fs, 'bold') + 8); });
   }
-  txt(avail ? `${avail} baús por abrir` : 'Sem baús por abrir', 350, 322, 18, avail ? '#ffd34a' : '#778', 'center', 'bold');
-  btn(235, 340, 230, 36, 'Abrir baú', () => openChests(1), { off: !avail, size: 17, col: '#a06a20', hot: '#c98a30' });
-  btn(235, 384, 230, 34, 'Abrir todos (25)', () => openChests(25), { off: avail < 2, size: 15, col: '#2f7a4a', hot: '#3fa061' });
-  txt(avail ? `Próximo baú dourado: nível ${next + (10 - next % 10) % 10}` : 'Sobe de nível para ganhares mais baús.', 350, 446, 13, '#9ab', 'center');
-  panel(520, 118, 262, 358, '#16162a'); txt('Última abertura', 651, 144, 16, '#f0c060', 'center', 'bold');
-  if (!lastRw) { txt('Ainda não abriste nenhum baú.', 651, 270, 13, '#667', 'center'); return; }
-  const r = lastRw; let y = 172; txt(`${r.n} baú(s)`, 534, y, 13, '#9ab'); y += 24;
+  btn(235, 448, 110, 30, T2('Receber', 'Claim'), () => openChests(1), { off: !avail, size: 15, col: '#a06a20', hot: '#c98a30' });
+  btn(355, 448, 130, 30, T2('Receber todas (25)', 'Claim all (25)'), () => openChests(25), { off: avail < 2, size: 13, col: '#2f7a4a', hot: '#3fa061' });
+  panel(520, 118, 262, 358, '#16162a'); txt(T2('Último recebido', 'Last claimed'), 651, 144, 16, '#f0c060', 'center', 'bold');
+  if (!lastRw) { txt(T2('Ainda não recebeste nada.', 'Nothing claimed yet.'), 651, 270, 13, '#667', 'center'); return; }
+  const r = lastRw; let y = 172; txt(r.from === r.to ? `${T2('Nível', 'Level')} ${r.to}` : `${T2('Níveis', 'Levels')} ${r.from}-${r.to}`, 534, y, 13, '#9ab'); y += 24;
   txt('¢' + gfmt(r.gold) + (r.sold ? ` (+${gfmt(r.sold)} ${lang === 'en' ? 'sales' : 'vendas'})` : ''), 534, y, 16, '#fd5', 'left', 'bold'); y += 22;
   if (r.pts) { txt(`+${r.pts} pontos de atributo`, 534, y, 14, '#9fe', 'left', 'bold'); y += 20; }
   if (r.gems) { txt('◆+' + r.gems, 534, y, 16, '#7fe8ff', 'left', 'bold'); y += 22; }
+  r.stones.forEach((n, q) => { if (n) { txt(`${n}× ${T2('Pedra', 'Stone')} ${L(RAR[q][0])}`, 534, y, 13, RAR[q][1], 'left', 'bold'); y += 20; } });
   for (const id in r.wpn) { const w = CLASSES[save.cls].weapons.find(q => q.id === id); weaponIcon(id, 546, y - 4, 1.2); txt(`${w.n} ×${r.wpn[id]}`, 566, y, 13, '#ffd34a'); y += 22; }
-  r.items.slice(0, 6).forEach(it => { itemIcon(it, 546, y - 4, 1.6); txt(itemName(it), 566, y, 13, RAR[it.r][1], 'left', 'bold'); y += 22; });
+  r.items.slice(0, 6).forEach(it => { itemIcon(it, 546, y - 4, 1.6); txt(`${itemName(it)} · ${T2('Nv', 'Lv')} ${it.il}`, 566, y, 12, RAR[it.r][1], 'left', 'bold'); y += 22; });
   if (r.items.length > 6) txt(`+${r.items.length - 6} ${lang === 'en' ? 'items' : 'itens'}`, 534, y, 12, '#889');
 }
-
