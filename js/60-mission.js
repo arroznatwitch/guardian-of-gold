@@ -28,7 +28,7 @@ function endMission(win, mode) {
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
   if (R.farm) {
     if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
-    save.presW = save.presW || [0, 0, 0, 0, 0, 0]; if (R.wave > (save.presW[R.m] | 0)) save.presW[R.m] = R.wave;   // melhor onda neste prestigio
+    save.presW = save.presW || [0, 0, 0, 0, 0, 0]; const doneW = mode === 'cash' ? R.wave : R.wave - 1; if (doneW > (save.presW[R.m] | 0)) save.presW[R.m] = doneW;   // melhor onda CONCLUIDA neste prestigio (morrer ou sair a meio da onda 30 nao conta)
     if (R.wave >= 10) { save.farmN = save.farmN || [0, 0, 0, 0, 0, 0]; save.farmN[R.m] = (save.farmN[R.m] | 0) + 1; }   // Farm concluida (chegou a onda 10)
     if (!win) { g = Math.floor(g * .1); xp = Math.floor(xp * .4); R.loot = []; R.wloot = []; }           // morrer no Farm: ficas com 10% do ouro e 40% do XP (os itens perdem-se)
     else if (mode === 'quit') { g = Math.floor(g * .3); xp = Math.floor(xp * .3); R.loot = R.loot.filter(() => Math.random() < .3); R.wloot = R.wloot.filter(() => Math.random() < .3); }   // sair a meio (Esc): so 30%
