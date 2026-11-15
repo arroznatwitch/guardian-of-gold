@@ -142,7 +142,7 @@ function hubMaterials() {
     const x = 197, y = 124 + r * 52, n = save.stones[r] | 0, col = RAR[r][1];
     bevel(x, y, 296, 46, '#12121f', n ? col : '#26263a', '#05050a');
     ctx.fillStyle = '#0c0c18'; ctx.fillRect(x + 5, y + 5, 36, 36);
-    ctx.save(); ctx.translate(x + 23, y + 23); ctx.rotate(Math.PI / 4); ctx.fillStyle = n ? col : '#3a3a4a'; ctx.fillRect(-9, -9, 18, 18); ctx.fillStyle = '#ffffff55'; ctx.fillRect(-9, -9, 18, 5); ctx.fillStyle = '#00000044'; ctx.fillRect(-9, 4, 18, 5); ctx.restore();
+    ctx.globalAlpha = n ? 1 : .35; ctx.drawImage(STONE_SPR[r], x + 7, y + 7, 32, 32); ctx.globalAlpha = 1;
     txt(`${T2('Pedra de evolução', 'Evolution stone')} · ${L(RAR[r][0])}`, x + 52, y + 21, 13, n ? '#fff' : '#778', 'left', 'bold'); txt(T2('Bloqueada: não se vende', 'Locked: cannot be sold'), x + 52, y + 37, 10, '#9a8a5a');
     txt('×' + n, x + 284, y + 28, 18, n ? col : '#667', 'right', 'bold');
   }
@@ -261,6 +261,7 @@ function hubEnchant() {
   txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
   { const have = save.stones[it.r], capIl = it.il >= 120, needLv = Math.ceil((it.il + 2) / 2), lvLock = !capIl && needLv > save.pl.lv;
     btn(432, 452, 200, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir ${it.il}>${Math.min(120, it.il + 2)} · Pedra (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 12, col: '#2a5a7a', hot: '#3a7aa0' });
+    if (!capIl && !lvLock) { ctx.globalAlpha = have ? 1 : .4; ctx.drawImage(STONE_SPR[it.r], 436, 454, 20, 20); ctx.globalAlpha = 1; }
     const rfc = reforgeCost(it); btn(638, 452, 134, 24, `Reforjar ¢${gfmt(rfc)}`, () => reforgeItem(it), { off: enc.t > 0 || !it.aff.length || save.gold < rfc, size: 12, col: '#7a4a2a', hot: '#a0643a' }); }
   if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 383, 13, '#f88', 'center', 'bold'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 383, 13, '#f88', 'center', 'bold');
 }
@@ -466,7 +467,7 @@ const gFuseFee = it => Math.round(150 * (1 + it.il * .12) * (1 + it.r) * (1 + gS
 function doFuse(id, t, all) {
   if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
   const a = save.wst[id]; let n = 0;
-  const step = tt => { const fee = wFuseFee(id, tt); if (tt < STAR_MAX && a[tt] >= FUSE_N && save.gold >= fee) { spendG(fee); a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
+  const step = tt => { const fee = wFuseFee(id, tt); if (tt < STAR_MAX && a[tt] >= FUSE_N && save.gold >= fee && wReq(id, tt).ok) { const q = WSTAR_REQ[tt]; spendG(fee); save.stones[q.stone] -= q.n; a[tt] -= FUSE_N; a[tt + 1]++; n++; return true; } return false; };
   if (all) { for (let tt = 0; tt < STAR_MAX; tt++) while (step(tt)); } else step(t);
   if (!n) { SFX.error(); return; }
   const st = wStar(id); fxBurst(st >= STAR_MAX ? 'MAX!' : `FUSÃO! ${st}★`, st >= STAR_MAX ? '#ffd34a' : '#9fe');
@@ -507,7 +508,7 @@ function hubFuse() {
       if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
       ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
       txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-      if (t < STAR_MAX) btn(x, y + 90, 140, 22, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t), col: '#2f7a4a', hot: '#3fa061' });
+      if (t < STAR_MAX) btn(x, y + 90, 140, 22, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t) || !wReq(w.id, t).ok, col: '#2f7a4a', hot: '#3fa061' });
     }
     panel(197, 284, 585, 192, '#16162a');
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
@@ -516,6 +517,7 @@ function hubFuse() {
     txt('Efeito da habilidade (E):', 212, 378, 13, '#f0c060', 'left', 'bold');
     for (let q = 1; q <= STAR_MAX; q++) txt(`${q}★ ${STAR_FX[w.id][q - 1]}`, 212, 380 + q * 17, 13, st >= q ? '#6f6' : '#778');
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
+    if (st < STAR_MAX) { const rq2 = wReq(w.id, st); txt(`Para ${st + 1}★ precisas de:`, 470, 404, 12, '#f0c060', 'left', 'bold'); txt(`${FUSE_N} cópias de ${st}★ + ouro`, 470, 421, 12, a[st] >= FUSE_N ? '#6f6' : '#f88'); rq2.lines.forEach((l, i) => txt((l.ok ? '✔ ' : '✘ ') + l.t, 470, 438 + i * 17, 12, l.ok ? '#6f6' : '#f88')); }
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
   } else {

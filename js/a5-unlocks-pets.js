@@ -184,7 +184,7 @@ const petImg = (id, t) => id === 'dog' ? PET_DOG[Math.floor(t * 4) % 2] : id ===
 function updatePet(dt) {
   ensurePets(); const p = R.p, id = save.pets.eq; R.petBuff = 0;
   if (R.eggs && R.eggs.length) {   // os ovos da galinha explodem passado um bocadinho
-    for (const e of R.eggs) { e.t += dt; if (e.t >= e.max && !e.done) { e.done = true; areaDmg(e.x, e.y, e.r, e.d * DM(), { kb: 90 }); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r, t: .25, max: .25, col: '#ffe9a0' }); burst(e.x, e.y, '#fff3b0', 9); SFX.hit(); } }
+    for (const e of R.eggs) { e.t += dt; if (e.t >= e.max && !e.done) { e.done = true; inSrc('Pet: ovos', () => areaDmg(e.x, e.y, e.r, e.d * DM(), { kb: 90 })); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r, t: .25, max: .25, col: '#ffe9a0' }); burst(e.x, e.y, '#fff3b0', 9); SFX.hit(); } }
     R.eggs = R.eggs.filter(e => !e.done);
   }
   if (!id || !save.pets.own[id]) { R.pet = null; return; }
@@ -206,13 +206,13 @@ function updatePet(dt) {
     if (tg && d < 14) {
       tg.got = true;
       if (kind === 'c') { R.gold += tg.v; SFX.coin(); R.texts.push({ x: tg.x, y: tg.y - 8, s: '+' + tg.v, t: .6, col: '#fd5' }); }
-      else { const n = heartHeal(); heal(n); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); }
+      else { const n = heartHeal(); heal(n, 'Corações'); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); }
     } else if (d > 3) { const st = Math.min(d, sp * dt); q.x += (tx - q.x) / d * st; q.y += (ty - q.y) / d * st; q.t += dt; if (Math.abs(tx - q.x) > 2) q.flip = tx < q.x; q.egg -= dt;
       if (q.egg <= 0) { q.egg = S.egg; R.eggs = R.eggs || []; R.eggs.push({ x: q.x, y: q.y + 8, t: 0, max: .7, r: S.r, d: S.dmg }); }   // so poe ovos quando anda
     }
   } else if (id === 'bird') {
     q.ang += dt * (1.8 + .02 * L); q.t += dt; const px = p.x + Math.cos(q.ang) * 52, py = p.y - 20 + Math.sin(q.ang) * 20; q.flip = Math.cos(q.ang + 1.57) < 0; q.x = px; q.y = py;
-    if (p.hp > 0 && p.hp < p.max * .5 && R.endT === undefined) { heal(p.max * S.regen * dt); q.hs = (q.hs || 0) - dt; if (q.hs <= 0) { q.hs = .9; spark(p.x, p.y - 10, '#6f6', 3, 40, .6, 3, -30); } }
+    if (p.hp > 0 && p.hp < p.max * .5 && R.endT === undefined) { heal(p.max * S.regen * dt, 'Pet: regeneração'); q.hs = (q.hs || 0) - dt; if (q.hs <= 0) { q.hs = .9; spark(p.x, p.y - 10, '#6f6', 3, 40, .6, 3, -30); } }
   }
 }
 function drawPet(q) {

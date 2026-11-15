@@ -9,13 +9,13 @@ const CLASSES = {
       { id: 'k_axe',    n: 'Espada Gigante',     price: 600, t: 'melee', dmg: 5, cd: 1.05,  range: 90,  arc: .8, kb: 440, info: 'Enorme e muito lenta: dano altíssimo.', sk: { n: 'Terremoto', cd: 8, d: 'Abala o chão: dano em área e atordoa.' } },
       { id: 'k_spear',  n: 'Lâmina Gémea',       price: 2700, t: 'melee', dmg: 3.2, cd: .5, range: 80, arc: .5, kb: 200, info: 'Afiadíssima: dano alto e golpes certeiros.', sk: { n: 'Onda de Corte', cd: 7, d: 'Lança uma onda de choque que atravessa tudo.' } },
       { id: 'k_hammer', n: 'Espada Dourada',     price: 10500, t: 'melee', dmg: 1.7, cd: .2, range: 68, arc: .42, kb: 90, info: 'Rapidíssima.', sk: { n: 'Frenesim Dourado', cd: 12, d: '6s: cada abate acelera os teus ataques.' } },
-      { id: 'k_blade',  n: 'Espada Vampírica',   price: 30000, t: 'melee', dmg: 3.2, cd: .3, range: 78, arc: .5, kb: 160, lifesteal: .12, info: 'Rouba vida em cada golpe.', sk: { n: 'Onda Sanguínea', cd: 11, d: 'Onda de choque que rouba vida.' } } ] },
+      { id: 'k_blade',  n: 'Espada Vampírica',   price: 30000, t: 'melee', dmg: 3.2, cd: .3, range: 78, arc: .5, kb: 160, lifesteal: .06, info: 'Rouba vida em cada golpe.', sk: { n: 'Onda Sanguínea', cd: 11, d: 'Onda de choque que rouba vida.' } } ] },
   archer: { name: 'Arqueiro', hp: 95, spd: 195, sp: 'Chuva de Flechas', desc: 'Ataca de longe. Rápido mas frágil.', spDesc: 'Dispara 14 flechas em todas as direções.',
     weapons: [
       { id: 'a_bow',    n: 'Arco Curto',   price: 0,   t: 'arrow', dmg: 1,  cd: .38, count: 1, spread: 0,  spd: 560, pierce: 0, info: 'Flecha rápida e certeira.', sk: { n: 'Salva Rápida', cd: 6, d: '7 flechas em rápida sequência.' } },
       { id: 'a_triple', n: 'Arco Longo',  price: 600, t: 'arrow', dmg: 1.8, cd: .5, count: 1, spread: 0, spd: 800, life: 2.1, pierce: 1, info: 'Alcança muito mais longe e dá mais dano.', sk: { n: 'Tiro Certeiro', cd: 7, d: 'Flecha gigante de longo alcance que atravessa tudo.' } },
       { id: 'a_cross',  n: 'Besta',        price: 2700, t: 'arrow', dmg: 5.4, cd: 1.15, count: 1, spread: 0, spd: 820, pierce: 2, info: 'Um pouco lenta, mas com bom dano.', sk: { n: 'Rajada de Virotes', cd: 8, d: 'Dispara uma chuva de virotes em leque.' } },
-      { id: 'a_fire',   n: 'Canhão de Mão', price: 10500, t: 'arrow', dmg: 18, cd: 2.5, count: 1, spread: 0, spd: 520, pierce: 0, kind: 'ball', aoe: 60, info: 'Muito lento, mas com dano absurdo.', sk: { n: 'Bomba Carregada', cd: 12, d: 'Carrega o canhão e explode numa área enorme.' } },
+      { id: 'a_fire',   n: 'Canhão de Mão', price: 10500, t: 'arrow', dmg: 11, cd: 2.5, count: 1, spread: 0, spd: 520, pierce: 0, kind: 'ball', aoe: 60, info: 'Muito lento, mas com dano absurdo.', sk: { n: 'Bomba Carregada', cd: 12, d: 'Carrega o canhão e explode numa área enorme.' } },
       { id: 'a_dark',   n: 'Besta de Repetição', price: 30000, t: 'arrow', dmg: .95, cd: .22, count: 1, spread: .05, spd: 700, bounce: 2, pierce: 0, info: 'Muito rápida, dano baixo. Flechas ricocheteiam.', sk: { n: 'Rajada Ricochete', cd: 8, d: 'Salva de virotes que ricocheteiam entre inimigos.' } }, ] },
   mage: { name: 'Mago', hp: 80, spd: 175, sp: 'Renovação Arcana', desc: 'Magia à distância com efeitos especiais.', spDesc: 'Recupera 10% da vida. Recarrega a cada 12 segundos.',
     weapons: [
@@ -23,13 +23,13 @@ const CLASSES = {
       { id: 'm_ice',    n: 'Cajado de Gelo',  price: 600, t: 'bolt', kind: 'ice',  dmg: 2.1,   cd: .4, spd: 430, slow: 2, info: 'Congela e deixa um rasto gelado.', sk: { n: 'Prisão de Gelo', cd: 9, d: 'Prende tudo em cristais de gelo.' } },
       { id: 'm_bolt',   n: 'Cajado de Raios', price: 2700, t: 'zap',  dmg: 1.7, cd: .5, range: 300, chain: 3, info: 'Raio com faíscas que salta entre inimigos.', sk: { n: 'Tempestade', cd: 10, d: '7 raios caem sobre os inimigos.' } },
       { id: 'm_arcane', n: 'Cajado Venenoso', price: 10500, t: 'bolt', kind: 'poison', dmg: 3, cd: .4, spd: 360, info: 'Dispara veneno que corrói os inimigos ao longo do tempo.', sk: { n: 'Círculo Tóxico', cd: 12, d: 'Círculo tóxico que fere quem se aproxima.' } },
-      { id: 'm_dark',   n: 'Cajado Vampírico', price: 30000, t: 'bolt', kind: 'blood', dmg: 3.6, cd: .45, spd: 400, pierce: 1, leech: .12, info: 'Rouba vida enquanto dispara.', sk: { n: 'Dreno de Vida', cd: 11, d: 'Suga a vida dos inimigos próximos.' } } ] },
+      { id: 'm_dark',   n: 'Cajado Vampírico', price: 30000, t: 'bolt', kind: 'blood', dmg: 3.6, cd: .45, spd: 400, pierce: 1, leech: .06, info: 'Rouba vida enquanto dispara.', sk: { n: 'Dreno de Vida', cd: 11, d: 'Suga a vida dos inimigos próximos.' } } ] },
 };
-const MAXLV = Infinity, xpNeed = l => Math.round((60 + 40 * (l - 1)) * (l > 40 ? 1.12 ** (l - 40) : 1));   // nivel infinito
+const MAXLV = 120, xpNeed = l => Math.round((60 + 40 * (l - 1)) * (l <= 40 ? 1 : l <= 70 ? 1.12 ** (l - 40) : 1.12 ** 30 * 1.06 ** (l - 70)));   // nivel maximo 120; a partir do 40 o XP necessario cresce muito (12% por nivel ate ao 70, depois 6%)
 const attrBuyCost = n => Math.round((100 + 20 * n + .5 * n * n) / 5) * 5;   // preco do ponto de atributo n (n = pontos ja comprados): 100, 120, 140, 165, 190... sobe sempre
 const GOLD_MAX = 2147483647;   // limite do ouro: maior inteiro de 32 bits
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-function addXP(n) { const pl = save.pl; pl.xp += n; while (pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
+function addXP(n) { const pl = save.pl; if (pl.lv >= MAXLV) { pl.lv = MAXLV; pl.xp = 0; return; } pl.xp += n; while (pl.lv < MAXLV && pl.xp >= xpNeed(pl.lv)) { pl.xp -= xpNeed(pl.lv); pl.lv++; save.pts += 3; if (pl.lv % 10 === 0) save.gems += 10; } }
 const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };

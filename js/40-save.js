@@ -22,6 +22,8 @@ function normalize(s) {
   s.pets = s.pets && typeof s.pets === 'object' ? s.pets : {}; s.pets.own = s.pets.own || {}; s.pets.eq = s.pets.eq || ''; for (const k of ['lv', 'xp', 'names']) s.pets[k] = s.pets[k] && typeof s.pets[k] === 'object' && !Array.isArray(s.pets[k]) ? s.pets[k] : {};
   s.pres = Array.from({ length: 6 }, (_, i) => Math.min(PRES_MAX, (Array.isArray(s.pres) && s.pres[i]) | 0)); s.presW = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.presW) && s.presW[i]) | 0);
   s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {}; s.ach = s.ach && typeof s.ach === 'object' ? s.ach : {}; s.title = typeof s.title === 'string' ? s.title : ''; s.farmN = Array.from({ length: 6 }, (_, i) => (Array.isArray(s.farmN) && s.farmN[i]) | 0);
+  if (s.pl && s.pl.lv > MAXLV) { s.pl.lv = MAXLV; s.pl.xp = 0; } if (s.chestDone > s.pl.lv) s.chestDone = s.pl.lv;   // nivel maximo 120
+  s.wp = s.wp && typeof s.wp === 'object' ? s.wp : {};   // progresso por arma (abates, raids) para subir de estrela
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 1 : s.chestDone; s.wst = s.wst || {};
   s.tut = s.tut && typeof s.tut === 'object' ? s.tut : { on: (s.pl.lv | 0) <= 3 && !(s.stats && s.stats.kills > 20), skip: false, done: {}, claim: {} };   // tutorial (94-tutorial.js): saves antigos avancados nao o veem
   s.tut.done = s.tut.done || {}; s.tut.claim = s.tut.claim || {};
@@ -64,8 +66,24 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .5 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .35 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
+/* ---- subir de estrela: alem das 5 copias e do ouro, cada estrela pede uma pedra de evolucao e um objetivo com ESTA arma ---- */
+const WSTAR_REQ = [{ stone: 0, n: 1, kills: 5000 }, { stone: 1, n: 2, raids: 20 }, { stone: 3, n: 1, nraids: 50 }];   // para ir de t para t+1: pedra Comum + 5000 abates / 2 pedras Raras + 20 raids / 1 pedra Lendaria + 50 raids Normal ou acima
+const wProg = id => { save.wp = save.wp || {}; return save.wp[id] = save.wp[id] || { k: 0, r: 0, n: 0 }; };
+function wpAdd(raidWon) {   // no fim de cada missao: o que fizeste conta para a arma equipada
+  if (!R || !save || R.lab) return; const w = curW(), p = wProg(w.id), st = wStar(w.id);
+  p.k += R.kills | 0;
+  if (R.raid && raidWon) { if (st >= 1) p.r++; if (st >= 2 && R.raid.d >= 1) p.n++; }
+}
+function wReq(id, t) {   // estado dos requisitos para a estrela t+1
+  const q = WSTAR_REQ[t]; if (!q) return { ok: false, lines: [] }; const p = wProg(id), have = save.stones[q.stone] | 0, lines = [];
+  lines.push({ ok: have >= q.n, t: `${q.n}× ${['Pedra Comum', 'Pedra Rara', 'Pedra Épica', 'Pedra Lendária', 'Pedra Mítica'][q.stone]} (${have})` });
+  if (q.kills) lines.push({ ok: p.k >= q.kills, t: `${Math.min(p.k, q.kills)}/${q.kills} abates com esta arma` });
+  if (q.raids) lines.push({ ok: p.r >= q.raids, t: `${Math.min(p.r, q.raids)}/${q.raids} raids (depois de ter ${t}★)` });
+  if (q.nraids) lines.push({ ok: p.n >= q.nraids, t: `${Math.min(p.n, q.nraids)}/${q.nraids} raids Normal+ (depois de ter ${t}★)` });
+  return { ok: lines.every(l => l.ok), lines, q };
+}
 const wTotal = id => ((save && save.wst && save.wst[id]) || []).reduce((a, b) => a + b, 0);
 const wlm = l => 1 + .15 * l + .006 * l * l;   // bonus de dano do nivel da Bigorna (+12 = x3,6)
 const DM = () => stats().dm * wlm(wlvl()) * STAR_MULT[wStar(curW().id)] * TUNE.cls[save.cls];
