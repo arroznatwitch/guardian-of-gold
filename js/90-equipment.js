@@ -210,8 +210,9 @@ function nextWave() {
   if (isHorde(R.wave)) { R.toastT = 3.2; R.shake = 14; SFX.boss(); hordeBurst(); }
   if (R.farm && guardHere(R.wave)) spawnGuardian();
 }
-function endTitle(win) { return R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DA CAMPANHA' : 'CAMPANHA GUARDADA') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
+function endTitle(win) { return R.eventRes ? T2('EVENTO CONCLUÍDO!', 'EVENT COMPLETE!') : R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DA CAMPANHA' : 'CAMPANHA GUARDADA') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
+  if (R.eventRes) return [T2('Estátua Dourada: tempo esgotado!', 'Golden Statue: time is up!'), ''];
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : `Morreste: ficaste com 40% do XP e 10% do ouro (¢${R.earned}) · itens perdidos`) : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));

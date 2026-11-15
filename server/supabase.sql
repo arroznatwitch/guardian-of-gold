@@ -400,6 +400,8 @@ begin
   end if;
   m := regexp_match(id, '^lv([0-9]+)$');
   if m is not null then return gog._n(s, 'pl', 'lv') >= m[1]::numeric; end if;
+  m := regexp_match(id, '^daily([0-9]+)$');   -- missoes diarias: so conta o que o save prova (contador d.n)
+  if m is not null then return gog._n(s, 'daily', 'n') >= m[1]::numeric; end if;
   if id = 'bag5' then return gog._n(s, 'bagSlots') >= 5; end if;
   m := regexp_match(id, '^anv([0-9]+)$');
   if m is not null then

@@ -26,6 +26,7 @@ function endMission(win, mode) {
   R.exitMode = mode || ''; wpAdd(!!(win && R.raid));   // progresso da arma (abates e raids) para as estrelas
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
+  if (isWeekend() && !labOn) { g *= WEEKEND_X; xp *= WEEKEND_X; R.boosted = true; }   // sabados e domingos: XP e ouro x2
   if (R.farm) {
     if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
     save.presW = save.presW || [0, 0, 0, 0, 0, 0]; const doneW = mode === 'cash' ? R.wave : R.wave - 1; if (doneW > (save.presW[R.m] | 0)) save.presW[R.m] = doneW;   // melhor onda CONCLUIDA neste prestigio (morrer ou sair a meio da onda 30 nao conta)
@@ -40,7 +41,7 @@ function endMission(win, mode) {
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
   if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; } }   // pedras de evolucao: a raridade segue a dificuldade
-  R.lootN = R.loot.length; save.gold += g; R.earned = g; statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
+  R.lootN = R.loot.length; save.gold += g; R.earned = g; dailyAll(win, g, mode === 'cash' ? R.wave : R.wave - 1); statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
 const GLOWW = { m_fire: '#ff7a1a', m_ice: '#6ad0ff', m_bolt: '#ffe14a', m_arcane: '#9be32f', m_dark: '#ff4a6a' };
@@ -71,7 +72,7 @@ function dmgE(e, d, ang, kb, quiet) {
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);
   }
-  e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d);
+  e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d); if (e.statue && R.event) R.event.dmg += d;
   if (kb) { const k = e.boss ? kb * .12 : kb; e.kx = Math.cos(ang) * k; e.ky = Math.sin(ang) * k; }
   R.texts.push({ x: e.x + (Math.random() - .5) * 14, y: e.y - e.r, s: String(Math.max(1, Math.round(d * 10))), t: .6, col: quiet ? '#fa6' : crit ? '#ffd34a' : '#fff', sz: crit ? 20 : 15 });
   burst(e.x, e.y, e.boss ? '#d9a' : '#8f8', quiet ? 1 : 4); if (!quiet) SFX.hit();
@@ -196,7 +197,7 @@ const SK = {
 function skill() {
   const p = R.p, w = curW();
   if (p.sk > 0 || R.endT !== undefined) return;
-  p.sk = w.sk.cd; p.swd = p.sw = .22; SFX.special(); R.skName = w.sk.n; inSrc('Habilidade: ' + w.sk.n, () => SK[w.id]());
+  p.sk = w.sk.cd; p.swd = p.sw = .22; SFX.special(); R.skName = w.sk.n; R.skillN = (R.skillN | 0) + 1; inSrc('Habilidade: ' + w.sk.n, () => SK[w.id]());
 }
 function dash() {
   const p = R.p;
@@ -268,7 +269,7 @@ function bossTick(b, dt, rage, sl) {
 /* ---- update ---- */
 function update(dt) {
   if (R.cine) { updateCine(dt); return; }   // cinematica de entrada do Guardiao: o jogo fica em pausa
-  const p = R.p, M = MISSIONS[R.m]; R.time += dt;
+  const p = R.p, M = MISSIONS[R.m]; R.time += dt; if (R.event) updateEvent(dt);
   if (R.endT === undefined && setHasFx('aegis')) { p.aegisT = (p.aegisT === undefined ? SET_AEGIS.every : p.aegisT) - dt; if (p.aegisT <= 0) { p.aegisT = SET_AEGIS.every; p.inv = Math.max(p.inv, SET_AEGIS.inv); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 34, t: .4, max: .4, col: '#ffd34a' }); R.texts.push({ x: p.x, y: p.y - 34, s: 'ÉGIDE', t: 1, col: '#ffd34a' }); } }   // conjunto Divino (4): Egide Divina
   if (p.frenzy > 0) p.frenzy -= dt; if (p.fzT > 0) { p.fzT -= dt; if (p.fzT <= 0) p.fz = 0; }
   p.sw -= dt; p.cd -= dt; p.sp -= dt; p.sk -= dt; p.dashCd -= dt; p.inv -= dt; p.rage -= dt; p.shield -= dt; p.kshield = (p.kshield || 0) - dt; R.toastT -= dt; R.shake *= .9;
@@ -366,7 +367,8 @@ function update(dt) {
 
   // boss
   const b = R.boss;
-  if (b) {
+  if (b && b.statue) { b.hit -= dt; b.slow -= dt; }   // estatua do evento: fica parada, so recebe dano
+  else if (b) {
     b.hit -= dt; b.slow -= dt; b.ob -= dt;
     if (b.burn > 0) { b.burn -= dt; b.bt -= dt; if (b.bt <= 0) { b.bt = .5; inSrc('Queimadura', () => dmgE(b, .3, 0, 0, true)); } }
     if (b.psn > 0) { b.psn -= dt; b.pt = (b.pt || 0) - dt; if (b.pt <= 0) { b.pt = .5; inSrc('Veneno', () => dmgE(b, b.pd || .3, 0, 0, true)); } }

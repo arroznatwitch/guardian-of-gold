@@ -250,7 +250,8 @@ function drawHUD() {
   if (R.farm && R.hordeB && R.phase === 'hunt') txt('HORDA!', W - 12, 134, 14, '#ff6a6a', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
   if (R.raid) txt(`Raid ${RAID_D[R.raid.d].n} · Onda ${R.wave}/4`, W - 12, 92, 13, RAID_D[R.raid.d].col, 'right', 'bold');
   if (gameSpeed === 2) txt('VELOCIDADE x2', W - 12, 112, 13, '#ffd34a', 'right', 'bold');
-  if (R.boss && !R.cine) { const b = R.boss, bw = 380, bx = W / 2 - bw / 2; txt(b.mini ? 'Semi-boss · ' + b.name : b.name, W / 2, 20, 15, '#fff', 'center', 'bold'); bar(bx, 26, bw, 14, Math.max(0, b.hp / b.max), b.col || '#e44'); txt(`${gfmt(Math.max(0, Math.ceil(b.hp * 10)))} / ${gfmt(Math.round(b.max * 10))}`, W / 2, 37, 11, '#fff', 'center', 'bold'); }
+  if (R.event && R.boss) { const E = R.event; txt(T2('Estátua Dourada', 'Golden Statue'), W / 2, 20, 15, '#ffd34a', 'center', 'bold'); bar(W / 2 - 190, 26, 380, 14, Math.max(0, E.t / E.secs), '#f5c542'); txt(`${Math.max(0, E.t).toFixed(1)}s · ${T2('Dano', 'Damage')}: ${gfmt(Math.round(E.dmg * 10))}`, W / 2, 37, 11, '#fff', 'center', 'bold'); }
+  else if (R.boss && !R.cine) { const b = R.boss, bw = 380, bx = W / 2 - bw / 2; txt(b.mini ? 'Semi-boss · ' + b.name : b.name, W / 2, 20, 15, '#fff', 'center', 'bold'); bar(bx, 26, bw, 14, Math.max(0, b.hp / b.max), b.col || '#e44'); txt(`${gfmt(Math.max(0, Math.ceil(b.hp * 10)))} / ${gfmt(Math.round(b.max * 10))}`, W / 2, 37, 11, '#fff', 'center', 'bold'); }
   if (R.toastT > 0) { ctx.globalAlpha = Math.min(1, R.toastT); txt(R.toast, W / 2, 80, 24, '#ffd66b', 'center', 'bold'); ctx.globalAlpha = 1; }
   drawTutPlay();   // lembrete dos controlos nas primeiras missoes
   drawLab();   // painel do laboratorio (so admin)
@@ -283,13 +284,14 @@ function drawResults(win) {
   txt(endTitle(win), UW / 2, Y + 58, 40, col, 'center', 'bold');
   txt(a[0], UW / 2, Y + 100, 17, '#cdd6f4', 'center');
   ctx.fillStyle = '#ffffff22'; ctx.fillRect(X + 24, Y + 112, PW - 48, 2);
-  const chips = [[T2('Ouro', 'Gold'), '¢' + gfmt(R.earned | 0), '#fd5'], ['XP', '+' + gfmt(R.xpGain | 0), '#7fe8ff'], [T2('Itens', 'Items'), String(R.lootN | 0), '#c9a0ff']]; if (R.wlootN) chips.push([T2('Cópias', 'Copies'), String(R.wlootN), '#ffd34a']);
+  const chips = R.eventRes ? [[T2('Dano', 'Damage'), gfmt(R.eventRes.dmg), '#ff9a6a'], [T2('Ouro', 'Gold'), '¢' + gfmt(R.earned | 0), '#fd5']] : [[T2('Ouro', 'Gold'), '¢' + gfmt(R.earned | 0), '#fd5'], ['XP', '+' + gfmt(R.xpGain | 0), '#7fe8ff'], [T2('Itens', 'Items'), String(R.lootN | 0), '#c9a0ff']]; if (R.wlootN) chips.push([T2('Cópias', 'Copies'), String(R.wlootN), '#ffd34a']);
   const cw = 112, gp = 10, tw = chips.length * cw + (chips.length - 1) * gp; let cx = UW / 2 - tw / 2;
   chips.forEach(c => { bevel(cx, Y + 126, cw, 58, '#0f0f1e', c[2], '#05050a'); txt(c[0], cx + cw / 2, Y + 146, 12, '#8890a8', 'center'); txt(c[1], cx + cw / 2, Y + 172, 22, c[2], 'center', 'bold'); cx += cw + gp; });
   let y = Y + 214; const ln = (s, c) => { txt(s, UW / 2, y, 14, c, 'center'); y += 21; };
+  if (R.boosted) ln(T2('Fim de semana: XP e ouro x2!', 'Weekend: XP and gold x2!'), '#ffd34a');
   if (!win && R.lastHits && R.lastHits.length) { const h = R.lastHits[R.lastHits.length - 1]; ln(`${T2('Último golpe', 'Last hit')}: ${h.src} (-${h.n})`, '#f99'); }
   if (R.farm || !win || !raid) { const m = a[1]; if (m && !/^Ganhaste/.test(m)) ln(m, win ? '#cdd6f4' : '#f99'); }
-  { const B = gb(); if (B.gold || B.xp) ln(E2(`Guild bonus: +${Math.round(B.gold * 1000) / 10}% gold, +${Math.round(B.xp * 1000) / 10}% XP`, `Bónus da guilda: +${Math.round(B.gold * 1000) / 10}% ouro, +${Math.round(B.xp * 1000) / 10}% XP`), '#9ab'); }
+  { const B = gb(); if (!R.eventRes && (B.gold || B.xp)) ln(E2(`Guild bonus: +${Math.round(B.gold * 1000) / 10}% gold, +${Math.round(B.xp * 1000) / 10}% XP`, `Bónus da guilda: +${Math.round(B.gold * 1000) / 10}% ouro, +${Math.round(B.xp * 1000) / 10}% XP`), '#9ab'); }
   if (R.petGain) ln(`${petDisplayName(save.pets.eq)}: +${R.petGain} XP` + (R.petUp ? T2(` · subiu para o nível ${petLv(save.pets.eq)}!`, ` · reached level ${petLv(save.pets.eq)}!`) : ''), '#9ab');
   if (R.lvUp) ln(`★ ${T2('Subiste para o nível', 'Reached level')} ${R.lvUp}! (+${R.ptsGain} ${T2('pontos', 'points')})`, '#6f6');
   if (R.gemGain) ln(`+${R.gemGain} ◆ ${T2('Diamantes', 'Diamonds')}`, '#7fe8ff');
