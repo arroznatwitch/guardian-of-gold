@@ -67,6 +67,7 @@ function hubChar() {
   const s = stats(), E = [['Vida', s.hp], ['Dano', '+' + Math.round((s.dm - 1) * 100) + '%'], ['Velocidade', Math.round(s.spd)], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%'], ['Crítico', g.crit.toFixed(1) + '%'], ['Roubo de vida', g.ls.toFixed(1) + '%'], ['Redução de dano', g.dr.toFixed(1) + '%'], ['Ouro extra', g.gf.toFixed(0) + '%'], ['XP extra', g.xpb.toFixed(0) + '%'], ['Queimar', g.burn.toFixed(0) + '%'], ['Abrandar', g.slow.toFixed(0) + '%']];
   const SC = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a', '#ff7ae0', '#ff5a8a', '#6a9aff', '#ffd34a', '#7fe8ff', '#ff7a3a', '#a8e8ff'];   // uma cor por estatistica
   E.forEach(([n, v], i) => { const col = i % 2, row = Math.floor(i / 2), x = 504 + col * 136, y = 380 + row * 16; ctx.fillStyle = SC[i]; ctx.fillRect(x - 6, y - 8, 3, 9); txt(n, x, y, 11, '#aab'); txt(String(v), x + 126, y, 11, SC[i], 'right', 'bold'); });
+  drawLoadouts();   // builds (a7-loadouts.js)
 }
 // ----- Mochila -----
 let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0;
