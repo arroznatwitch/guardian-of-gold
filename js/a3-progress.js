@@ -141,11 +141,11 @@ function levelReward(L) {
   return r;
 }
 let chestAnim = 0, lastRw = null, rwPage = -1;   // chestAnim: so para o ciclo principal nao falhar
-const RW_PER = 6, rwAvail = () => Math.max(0, save.pl.lv - save.chestDone);
+const RW_PER = 6, rwAvail = () => Math.max(0, Math.min(MAXLV, save.pl.lv) - save.chestDone);
 const rwWeaponIdx = tier => { const c = CLASSES[save.cls]; for (let i = Math.min(tier, c.weapons.length - 1); i >= 0; i--) if (weaponReq(i).ok) return i; return 0; };
 function claimRewards(upTo) {   // resgata, por ordem, os premios ate ao nivel pedido (cada nivel so se resgata uma vez)
   const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, stones: [0, 0, 0, 0, 0], n: 0, sold: 0, from: save.chestDone + 1, to: save.chestDone };
-  while (save.chestDone < save.pl.lv && save.chestDone < upTo) {
+  while (save.chestDone < Math.min(MAXLV, save.pl.lv) && save.chestDone < upTo) {
     const L = ++save.chestDone, d = levelReward(L); rw.to = L;
     rw.gold += d.gold; rw.pts += d.pts; rw.gems += d.gems;
     if (d.stone) { save.stones[d.stone.r] = (save.stones[d.stone.r] | 0) + d.stone.n; rw.stones[d.stone.r] += d.stone.n; }
@@ -167,7 +167,7 @@ function rewardLines(d) {
   return t;
 }
 function hubRewards() {
-  const avail = rwAvail(), first = save.chestDone + 1; if (rwPage < 0) rwPage = Math.floor((first - 1) / RW_PER);
+  const avail = rwAvail(), first = save.chestDone + 1; rwPage = Math.min(rwPage, Math.ceil(MAXLV / RW_PER) - 1); if (rwPage < 0) rwPage = Math.floor((first - 1) / RW_PER);
   const p0 = rwPage * RW_PER + 1, X = 200, WD = 582;
   txt(T2('Recompensas por nível', 'Level rewards'), 490, 120, 18, '#ffd34a', 'center', 'bold');
   txt(avail ? T2(`${avail} por resgatar`, `${avail} to claim`) : T2('Sobe de nível para desbloqueares a próxima', 'Level up to unlock the next one'), 490, 140, 12, avail ? '#9fe' : '#9ab', 'center', 'bold');
