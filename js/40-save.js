@@ -66,7 +66,7 @@ const stats = () => {
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
-const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .5 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
+const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .35 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 /* ---- subir de estrela: alem das 5 copias e do ouro, cada estrela pede uma pedra de evolucao e um objetivo com ESTA arma ---- */
 const WSTAR_REQ = [{ stone: 0, n: 1, kills: 5000 }, { stone: 1, n: 2, raids: 20 }, { stone: 3, n: 1, nraids: 50 }];   // para ir de t para t+1: pedra Comum + 5000 abates / 2 pedras Raras + 20 raids / 1 pedra Lendaria + 50 raids Normal ou acima

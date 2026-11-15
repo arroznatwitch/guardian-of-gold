@@ -261,6 +261,7 @@ function hubEnchant() {
   txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
   { const have = save.stones[it.r], capIl = it.il >= 120, needLv = Math.ceil((it.il + 2) / 2), lvLock = !capIl && needLv > save.pl.lv;
     btn(432, 452, 200, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir ${it.il}>${Math.min(120, it.il + 2)} · Pedra (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 12, col: '#2a5a7a', hot: '#3a7aa0' });
+    if (!capIl && !lvLock) { ctx.globalAlpha = have ? 1 : .4; ctx.drawImage(STONE_SPR[it.r], 436, 454, 20, 20); ctx.globalAlpha = 1; }
     const rfc = reforgeCost(it); btn(638, 452, 134, 24, `Reforjar ¢${gfmt(rfc)}`, () => reforgeItem(it), { off: enc.t > 0 || !it.aff.length || save.gold < rfc, size: 12, col: '#7a4a2a', hot: '#a0643a' }); }
   if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 383, 13, '#f88', 'center', 'bold'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 383, 13, '#f88', 'center', 'bold');
 }

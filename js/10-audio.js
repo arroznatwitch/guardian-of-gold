@@ -3,6 +3,7 @@
    ÁUDIO (sintetizado)
    ===================================================================== */
 let ac = null, master = null, sfxBus = null, musBus = null, muted = false, musicMode = 'calm', mi = 0;
+let dmgLog = false; try { dmgLog = localStorage.getItem('gog_dmglog') === '1'; } catch (e) {}   // opcao "Logs de Dano"
 let volSfx = .8, volMus = .6, volUi = .7, uiBus = null, uiSnd = false; try { const v = JSON.parse(localStorage.getItem('bladehunter_vol') || 'null'); if (v) { volSfx = v.s; volMus = v.m; if (typeof v.u === 'number') volUi = v.u; } } catch (e) {}
 function applyVol() { if (sfxBus) sfxBus.gain.value = volSfx; if (musBus) musBus.gain.value = volMus; if (uiBus) uiBus.gain.value = volUi; try { localStorage.setItem('bladehunter_vol', JSON.stringify({ s: volSfx, m: volMus, u: volUi })); } catch (e) {} }
 function initAudio() {

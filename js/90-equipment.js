@@ -132,7 +132,7 @@ function gearStats() {
   if (!save || !save.gear) return g;
   for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
   for (const b of armourSets()) if (b.k === 'crit') g.crit += b.p;   // conjuntos: o Critico soma pontos
-  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(6, g.ls);   // tetos   // XP extra tem teto
+  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(4, g.ls);   // tetos   // XP extra tem teto
   return g;
 }
 // pesos de raridade (Comum..Mitico): Lendario ronda 1% e Mitico 0,1% mesmo no melhor caso

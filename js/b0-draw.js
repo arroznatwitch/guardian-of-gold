@@ -224,8 +224,17 @@ function abilBox(x, y, key, name, cd, max, ready, col) {
   rr(x + 6, y + 6, 24, 24, 5); ctx.fillStyle = ready ? '#a80' : '#333'; ctx.fill(); txt(keyName(key).slice(0, 3), x + 18, y + 24, 15, ready ? '#000' : '#999', 'center', 'bold');
   txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
+function drawDmgLog() {   // opcao "Logs de Dano": de onde vem o dano e a cura
+  const L = R.dl; if (!L) return; const x = W - 262, y0 = 50, t = Math.max(1, R.time || 1), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
+  const rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
+  const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length) * 14 + (h.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
+  const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), f = v => fmt(v * 10);   // o jogo mostra o dano x10
+  txt(`${T2('Dano', 'Damage')}: ${f(tot)}  (${f(tot / t)}/s)`, x, y0, 11, '#ffd34a', 'left', 'bold'); let y = y0 + 14;
+  d.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${f(r.v)}`, x + 250, y, 10, '#9cf', 'right'); y += 14; });
+  if (h.length) { y += 8; txt(`${T2('Cura', 'Healing')}: ${fmt(th)}  (${(th / t).toFixed(1)}/s)`, x, y, 11, '#6f6', 'left', 'bold'); y += 14; h.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${fmt(r.v)}`, x + 250, y, 10, '#8f8', 'right'); y += 14; }); }
+}
 function drawHUD() {
-  const p = R.p, M = MISSIONS[R.m], w = curW();
+  const p = R.p, M = MISSIONS[R.m], w = curW(); if (dmgLog) drawDmgLog();
   ctx.globalAlpha = .85;
   drawIcon('heart', 20, 21, 2); bar(36, 12, 190, 16, p.hp / p.max, '#d33', '#0006'); txt(`${Math.ceil(p.hp)}/${p.max}`, 131, 25, 12, '#fff', 'center', 'bold');
   // bloco unico da arma (canto inferior direito): arma, dash e nivel/XP

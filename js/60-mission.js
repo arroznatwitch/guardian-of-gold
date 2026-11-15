@@ -9,7 +9,7 @@ function mkDeco() {
 function startMission(i, rd, farm) {
   const M = MISSIONS[i], s = stats();
   R = { m: i, p: { x: W / 2, y: H / 2 + 90, hp: s.hp, max: s.hp, face: 0, cd: 0, sp: 0, sk: 0, spR: true, skR: true, dashT: 0, dashCd: 0, inv: 0, vx: 0, vy: 0, mv: 0, flip: false, rage: 0, shield: 0, lunge: null, aura: null, sw: 0, swd: 1 },
-    enemies: [], boss: null, projs: [], coins: [], hearts: [], parts: [], texts: [], fx: [], tels: [], traps: [], zones: [], sched: [],
+    dl: { dmg: {}, heal: {}, t0: 0 }, enemies: [], boss: null, projs: [], coins: [], hearts: [], parts: [], texts: [], fx: [], tels: [], traps: [], zones: [], sched: [],
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
   R.need = M.kills; R.xp = 0; R.capB = 0; R.raid = null;
   if (rd !== undefined) {
@@ -52,17 +52,26 @@ function burst(x, y, color, n) {
 }
 const targets = () => R.boss ? R.enemies.concat([R.boss]) : R.enemies;
 function stunE(e, t) { if (e.boss) e.slow = Math.max(e.slow, t * .6); else e.stun = Math.max(e.stun || 0, t); }
-function heal(n) { const p = R.p; p.hp = Math.min(p.max, p.hp + n); }
+/* ---- registo de dano/cura por origem (opcao "Logs de Dano") ---- */
+let SRC = 'Outros';
+const inSrc = (s, f) => { const o = SRC; SRC = s; try { return f(); } finally { SRC = o; } };
+function dlAdd(kind, src, v) { const L = R && R.dl; if (!L || !(v > 0)) return; const o = L[kind]; (o[src] = o[src] || { v: 0, n: 0 }).v += v; o[src].n++; }
+function heal(n, src) { const p = R.p, h = Math.max(0, Math.min(p.max - p.hp, n)); p.hp += h; if (h > 0) dlAdd('heal', src || 'Outros', h); }
+/* roubo de vida: limite global (todas as fontes juntas) de 3% da vida maxima por segundo, com reserva de 6% */
+function lsHeal(n, src) {
+  const p = R.p, t = R.time || 0; R.lsTok = Math.min(p.max * .06, (R.lsTok === undefined ? p.max * .06 : R.lsTok) + (t - (R.lsT || t)) * p.max * .03); R.lsT = t;
+  const g = Math.min(n, R.lsTok); if (g > 0) { R.lsTok -= g; heal(g, src); }
+}
 function dmgE(e, d, ang, kb, quiet) {
   if (e.air) return;   // o Guardiao esta no ar durante o salto
   let crit = false; const g = R.G;
   if (g && !quiet) {
     if (Math.random() * 100 < Math.min(75, g.crit)) { d *= 1.75; crit = true; }
-    if (g.ls) heal(Math.min(R.p.max * .008, d * 10 * g.ls / 100 * .4));   // 40% do valor, no maximo 0,8% da vida por golpe
+    if (g.ls) lsHeal(Math.min(R.p.max * .003, d * 10 * g.ls / 100 * .2), 'Roubo de vida (equipamento)');   // 20% do valor, no maximo 0,3% da vida por golpe
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);
   }
-  e.hp -= d; e.hit = .1;
+  e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d);
   if (kb) { const k = e.boss ? kb * .12 : kb; e.kx = Math.cos(ang) * k; e.ky = Math.sin(ang) * k; }
   R.texts.push({ x: e.x + (Math.random() - .5) * 14, y: e.y - e.r, s: String(Math.max(1, Math.round(d * 10))), t: .6, col: quiet ? '#fa6' : crit ? '#ffd34a' : '#fff', sz: crit ? 20 : 15 });
   burst(e.x, e.y, e.boss ? '#d9a' : '#8f8', quiet ? 1 : 4); if (!quiet) SFX.hit();
@@ -86,12 +95,13 @@ function melee(range, arc, dmg, kb, leech, lsf) {
     if (d > range + e.r) continue;
     let da = Math.atan2(dy, dx) - p.face; da = Math.atan2(Math.sin(da), Math.cos(da));
     if (Math.abs(da) > arc * Math.PI + e.r / Math.max(d, 1)) continue;
-    dmgE(e, dmg, Math.atan2(dy, dx), kb); if (leech) heal(leech); if (lsf) heal(Math.min(p.max * .012, dmg * 10 * lsf));   // lifesteal: parte do dano
+    dmgE(e, dmg, Math.atan2(dy, dx), kb); if (leech) heal(leech, 'Fúria / sanguessuga'); if (lsf) lsHeal(Math.min(p.max * .005, dmg * 10 * lsf), 'Roubo de vida (arma)');   // lifesteal: parte do dano
   }
 }
-function pProj(o) { R.projs.push(Object.assign({ r: 5, from: 'p', pierce: 0, hit: new Set(), life: 1.2 }, o)); }
+function pProj(o) { R.projs.push(Object.assign({ r: 5, from: 'p', pierce: 0, hit: new Set(), life: 1.2, src: SRC }, o)); }
 function arrow(a, dmg, w, extra) { pProj(Object.assign({ x: R.p.x, y: R.p.y, vx: Math.cos(a) * (w ? w.spd : 600), vy: Math.sin(a) * (w ? w.spd : 600), a, dmg, kind: 'arrow', pierce: w ? w.pierce || 0 : 0, burn: w && w.burn }, w && w.life ? { life: w.life } : null, w && w.bounce ? { bounce: w.bounce } : null, w && w.kind ? { kind: w.kind, aoe: w.aoe, r: 9 } : null, extra)); }
-function attack() {
+function attack() { const w = curW(); return inSrc('Ataque: ' + w.n, attack0); }
+function attack0() {
   const p = R.p, w = curW(), s = stats();
   if (p.cd > 0 || R.endT !== undefined) return;
   p.cd = w.cd * s.cdm * (R.petBuff ? 1 - DOG_BUFF.atk : 1) * (p.rage > 0 ? .6 : 1) * (1 - .03 * wStar(w.id)) * (1 - .1 * (p.fz | 0)); const dmg = w.dmg * DM(); p.swd = p.sw = w.t === 'melee' ? Math.min(.24, w.cd * .75) : .12;
@@ -131,12 +141,13 @@ function areaDmg(x, y, r, dmg, o = {}) {
 }
 
 /* ---- Q: especial da classe ---- */
-function special() {
+function special() { return inSrc('Especial da classe', special0); }
+function special0() {
   const p = R.p, dm = DM();
   if (p.sp > 0 || R.endT !== undefined) return;
   p.sp = save.cls === 'mage' ? 12 : save.cls === 'knight' ? 22 : 8;
   if (save.cls === 'mage') {   // o Mago nao ataca com a habilidade: recupera 10% da vida
-    const h = Math.round(Math.min(p.max - p.hp, p.max * .10)); heal(p.max * .10); SFX.heal(); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 60, t: .5, max: .5, col: '#6f6' }); spark(p.x, p.y, '#8f8', 16, 90, .8, 3, -60); R.texts.push({ x: p.x, y: p.y - 30, s: '+' + h, t: 1, col: '#6f6' }); return;
+    const h = Math.round(Math.min(p.max - p.hp, p.max * .10)); heal(p.max * .10, 'Especial: Renovação Arcana'); SFX.heal(); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 60, t: .5, max: .5, col: '#6f6' }); spark(p.x, p.y, '#8f8', 16, 90, .8, 3, -60); R.texts.push({ x: p.x, y: p.y - 30, s: '+' + h, t: 1, col: '#6f6' }); return;
   }
   SFX.special(); R.shake = 7;
   if (save.cls === 'knight') { p.kshield = 10; areaDmg(p.x, p.y, 90, 1.2 * dm, { kb: 300 }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 90, t: .35, max: .35, col: '#9cf' }); burst(p.x, p.y, '#9cf', 16); }   // escudo: 10 s com 60% menos dano (e um pequeno empurrao ao erguer)
@@ -145,7 +156,7 @@ function special() {
 
 /* ---- E: habilidade da arma ---- */
 function aimPoint(maxD) { const p = R.p; let dx = mouse.x - p.x, dy = mouse.y - p.y; const d = Math.hypot(dx, dy); if (d > maxD) { dx *= maxD / d; dy *= maxD / d; } return { x: p.x + dx, y: p.y + dy }; }
-const sched = (t, fn) => R.sched.push({ t, fn });
+const sched = (t, fn) => { const s = SRC; R.sched.push({ t, fn: () => inSrc(s, fn) }); };
 const SS = () => wStar(curW().id);
 const STAR_FX = {"k_sword": ["2 investidas", "3 investidas", "4 investidas"], "k_axe": ["2 ondas de choque", "3 ondas de choque", "4 ondas de choque"], "k_spear": ["onda maior", "2 ondas", "3 ondas"], "k_hammer": ["frenesim de 7s", "frenesim de 8s", "frenesim de 10s"], "k_blade": ["onda maior", "2 ondas", "3 ondas"], "a_bow": ["10 flechas", "14 flechas", "20 flechas"], "a_triple": ["tiro maior", "tiro mais forte", "tiro gigante"], "a_cross": ["12 virotes", "15 virotes", "21 virotes"], "a_dark": ["11 virotes", "14 virotes, 5 ricochetes", "18 virotes, 5 ricochetes"], "a_fire": ["explosão maior", "explosão enorme", "explosão colossal"], "m_fire": ["2 meteoros", "3 meteoros", "CHUVA DE METEOROS"], "m_ice": ["área maior", "área e gelo maiores", "nova gigante (5s de gelo)"], "m_bolt": ["10 raios", "14 raios", "20 raios"], "m_arcane": ["círculo de 7s", "círculo de 8s", "círculo enorme de 10s"], "m_dark": ["dreno de 6s", "dreno de 7s", "dreno de 8s e maior"]};
 const SK = {
@@ -159,12 +170,12 @@ const SK = {
   },
   k_spear() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .24; pProj({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, a, r: 34, dmg: 5.5 * DM() * (n > 1 ? .75 : 1), kind: 'wave', pierce: 99, life: 1.1 }); } R.shake = 8; SFX.slash(); },   // Lamina Gemea: onda de corte
   k_hammer() { const st = SS(); R.p.frenzy = [6, 7, 8, 10][st]; R.p.fz = 0; R.texts.push({ x: R.p.x, y: R.p.y - 34, s: 'FRENESIM!', t: 1.2, col: '#ffd34a' }); R.fx.push({ k: 'ring', x: R.p.x, y: R.p.y, r: 46, t: .45, max: .45, col: '#ffd34a' }); SFX.slash(); },   // Espada Dourada
-  k_blade() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .24; pProj({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, a, r: 34, dmg: 5 * DM() * (n > 1 ? .75 : 1), kind: 'wave', tone: 'blood', lsf: .1, pierce: 99, life: 1.1 }); } R.shake = 8; SFX.slash(); },   // Espada Vampirica: onda que rouba vida
+  k_blade() { const p = R.p, st = SS(), n = [1, 1, 2, 3][st]; for (let i = 0; i < n; i++) { const a = p.face + (i - (n - 1) / 2) * .24; pProj({ x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * 560, vy: Math.sin(a) * 560, a, r: 34, dmg: 5 * DM() * (n > 1 ? .75 : 1), kind: 'wave', tone: 'blood', lsf: .05, pierce: 99, life: 1.1 }); } R.shake = 8; SFX.slash(); },   // Espada Vampirica: onda que rouba vida
   a_bow() { const st = SS(), n = [7, 10, 14, 20][st]; for (let i = 0; i < n; i++) sched(i * (n > 14 ? .05 : .07), () => { arrow(R.p.face, 1.1 * DM() * (st ? .85 : 1), { spd: 700, pierce: 0 }); SFX.arrow(); }); },
   a_triple() { const p = R.p, st = SS(); pProj({ x: p.x, y: p.y, vx: Math.cos(p.face) * 1100, vy: Math.sin(p.face) * 1100, a: p.face, r: 12 + 3 * st, dmg: [6.5, 8, 9.5, 12][st] * DM(), kind: 'bigbolt', pierce: 99, life: 2.4 }); R.shake = 4; SFX.arrow(); },   // Arco Longo: Tiro Certeiro
   a_cross() { const p = R.p, st = SS(), n = [9, 12, 15, 21][st]; for (let i = 0; i < n; i++) sched(i * .03, () => { const a = p.face + (i - (n - 1) / 2) * .075 + (Math.random() - .5) * .04; pProj({ x: p.x, y: p.y, vx: Math.cos(a) * 880, vy: Math.sin(a) * 880, a, r: 7, dmg: 2.6 * DM(), kind: 'bigbolt', pierce: 2, life: 1.2 }); SFX.arrow(); }); },   // Besta: Rajada de Virotes
   a_dark() { const p = R.p, st = SS(), n = [8, 11, 14, 18][st]; for (let i = 0; i < n; i++) sched(i * .06, () => { const a = p.face + (Math.random() - .5) * .5; arrow(a, 1.15 * DM(), { spd: 760, pierce: 0 }, { bounce: 3 + (st > 1 ? 1 : 0), life: 1.6 }); SFX.arrow(); }); },   // Besta de Repeticao: Rajada Ricochete
-  a_fire() { const p = R.p, st = SS(), r = [190, 215, 240, 280][st], q = aimPoint(320); R.texts.push({ x: p.x, y: p.y - 34, s: 'CARREGANDO...', t: .9, col: '#ffb020' }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: .8, max: .8, col: '#ffb020' }); R.tels.push({ x: q.x, y: q.y, r, t: 1, max: 1, dmg: 13 * DM(), from: 'p', col: '#fa4', burn: true }); SFX.boom && SFX.boom(); },   // Canhao de Mao: Bomba Carregada (explosao enorme)
+  a_fire() { const p = R.p, st = SS(), r = [190, 215, 240, 280][st], q = aimPoint(320); R.texts.push({ x: p.x, y: p.y - 34, s: 'CARREGANDO...', t: .9, col: '#ffb020' }); R.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: .8, max: .8, col: '#ffb020' }); R.tels.push({ x: q.x, y: q.y, r, t: 1, max: 1, dmg: 8 * DM(), from: 'p', col: '#fa4', burn: true }); SFX.boom && SFX.boom(); },   // Canhao de Mao: Bomba Carregada (explosao enorme)
   m_fire() {
     const st = SS(), n = [1, 2, 3, 9][st], mx = mouse.x, my = mouse.y, rain = st === 3;
     for (let i = 0; i < n; i++) sched(i * (rain ? .12 : .22), () => { const a = Math.random() * 6.283, d = i ? Math.random() * (rain ? 170 : 95) : 0; R.tels.push({ x: mx + Math.cos(a) * d, y: my + Math.sin(a) * d, r: rain ? 75 : 85, t: .8, max: .8, dmg: 5 * DM() * (n > 1 ? (rain ? .7 : .85) : 1), from: 'p', col: '#fa4', burn: true }); SFX.fire(); });
@@ -184,7 +195,7 @@ const SK = {
 function skill() {
   const p = R.p, w = curW();
   if (p.sk > 0 || R.endT !== undefined) return;
-  p.sk = w.sk.cd; p.swd = p.sw = .22; SFX.special(); SK[w.id]();
+  p.sk = w.sk.cd; p.swd = p.sw = .22; SFX.special(); R.skName = w.sk.n; inSrc('Habilidade: ' + w.sk.n, () => SK[w.id]());
 }
 function dash() {
   const p = R.p;
@@ -282,7 +293,7 @@ function update(dt) {
       const l = Math.hypot(dx, dy) || 1, sp = stats().spd * (R.petBuff ? 1 + DOG_BUFF.spd : 1); p.mv = dx || dy ? 1 : 0; p.x += dx / l * sp * dt; p.y += dy / l * sp * dt;
     }
     p.x = Math.max(14, Math.min(W - 14, p.x)); p.y = Math.max(14, Math.min(H - 14, p.y));
-    if (p.lunge) { p.lunge.t -= dt; for (const e of targets()) if (!p.lunge.hit.has(e) && Math.hypot(e.x - p.x, e.y - p.y) < 34 + e.r) { p.lunge.hit.add(e); dmgE(e, 3.5 * p.lunge.dm, Math.atan2(e.y - p.y, e.x - p.x), 500); } if (p.lunge.t <= 0) p.lunge = null; }
+    if (p.lunge) { p.lunge.t -= dt; for (const e of targets()) if (!p.lunge.hit.has(e) && Math.hypot(e.x - p.x, e.y - p.y) < 34 + e.r) { p.lunge.hit.add(e); inSrc('Habilidade: ' + (R.skName || 'investida'), () => dmgE(e, 3.5 * p.lunge.dm, Math.atan2(e.y - p.y, e.x - p.x), 500)); } if (p.lunge.t <= 0) p.lunge = null; }
   } else { R.endT -= dt; if (R.endT <= 0) { endMission(R.endWin); return; } }
 
   // auras da habilidade: circulo toxico (Cajado Venenoso) e dreno de vida (Cajado Vampirico)
@@ -292,11 +303,11 @@ function update(dt) {
       A.tick = A.every; let got = 0;
       for (const e of targets()) {
         if (Math.hypot(e.x - p.x, e.y - p.y) > A.r + e.r) continue;
-        const dm = A.dmg * DM(); dmgE(e, dm, Math.atan2(e.y - p.y, e.x - p.x), 0, true);
+        const dm = A.dmg * DM(); inSrc('Habilidade: ' + (R.skName || 'círculo'), () => dmgE(e, dm, Math.atan2(e.y - p.y, e.x - p.x), 0, true));
         if (A.k === 'tox') { e.psn = Math.max(e.psn || 0, 2); e.pd = Math.max(e.pd || 0, dm * .3); spark(e.x, e.y, '#9be32f', 3, 60, .4, 3, -40); }
         else { got += Math.min(p.max * .01, dm * 10 * .3); spark(e.x, e.y, '#ff4a6a', 3, 60, .4, 3, 0); }
       }
-      if (got) heal(Math.min(p.max * .05, got));
+      if (got) lsHeal(Math.min(p.max * .02, got), 'Dreno de Vida (habilidade)');
     }
     if (A.t <= 0) p.aura = null;
   }
@@ -314,8 +325,8 @@ function update(dt) {
   // inimigos
   for (const e of R.enemies) {
     const d0 = EN[e.type]; e.hit -= dt; e.slow -= dt; e.cd -= dt; e.ob -= dt;
-    if (e.burn > 0) { e.burn -= dt; e.bt -= dt; if (e.bt <= 0) { e.bt = .5; dmgE(e, .3, 0, 0, true); } }
-    if (e.psn > 0) { e.psn -= dt; e.pt = (e.pt || 0) - dt; if (e.pt <= 0) { e.pt = .5; dmgE(e, e.pd || .3, 0, 0, true); } }
+    if (e.burn > 0) { e.burn -= dt; e.bt -= dt; if (e.bt <= 0) { e.bt = .5; inSrc('Queimadura', () => dmgE(e, .3, 0, 0, true)); } }
+    if (e.psn > 0) { e.psn -= dt; e.pt = (e.pt || 0) - dt; if (e.pt <= 0) { e.pt = .5; inSrc('Veneno', () => dmgE(e, e.pd || .3, 0, 0, true)); } }
     const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1, sl = e.slow > 0 ? .4 : 1;
     let mx = 0, my = 0;
     if (e.stun > 0) e.stun -= dt;
@@ -344,7 +355,7 @@ function update(dt) {
     if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .04) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
-  if (R.booms && R.booms.length) { for (const b of R.booms) { areaDmg(b.x, b.y, SET_BOOM.r, SET_BOOM.dmg * DM()); R.fx.push({ k: 'ring', x: b.x, y: b.y, r: SET_BOOM.r, t: .3, max: .3, col: '#ff9a2a' }); burst(b.x, b.y, '#ff9a2a', 12); } R.booms = []; }
+  if (R.booms && R.booms.length) { for (const b of R.booms) { inSrc('Conjunto: Detonação', () => areaDmg(b.x, b.y, SET_BOOM.r, SET_BOOM.dmg * DM())); R.fx.push({ k: 'ring', x: b.x, y: b.y, r: SET_BOOM.r, t: .3, max: .3, col: '#ff9a2a' }); burst(b.x, b.y, '#ff9a2a', 12); } R.booms = []; }
   if (R.raid && R.phase === 'hunt' && !dead) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
     if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < RAID_MINI.burst + 2 * R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
@@ -356,8 +367,8 @@ function update(dt) {
   const b = R.boss;
   if (b) {
     b.hit -= dt; b.slow -= dt; b.ob -= dt;
-    if (b.burn > 0) { b.burn -= dt; b.bt -= dt; if (b.bt <= 0) { b.bt = .5; dmgE(b, .3, 0, 0, true); } }
-    if (b.psn > 0) { b.psn -= dt; b.pt = (b.pt || 0) - dt; if (b.pt <= 0) { b.pt = .5; dmgE(b, b.pd || .3, 0, 0, true); } }
+    if (b.burn > 0) { b.burn -= dt; b.bt -= dt; if (b.bt <= 0) { b.bt = .5; inSrc('Queimadura', () => dmgE(b, .3, 0, 0, true)); } }
+    if (b.psn > 0) { b.psn -= dt; b.pt = (b.pt || 0) - dt; if (b.pt <= 0) { b.pt = .5; inSrc('Veneno', () => dmgE(b, b.pd || .3, 0, 0, true)); } }
     const sl = b.slow > 0 ? .6 : 1, rage = b.mini || b.hp < b.max * (R.raid ? .65 : .5);
     b.x += b.kx * dt; b.y += b.ky * dt; b.kx *= .9; b.ky *= .9;
     const dx = p.x - b.x, dy = p.y - b.y, d = Math.hypot(dx, dy) || 1;
@@ -379,14 +390,14 @@ function update(dt) {
     t.t -= dt; if (t.from === 'p' && t.burn && t.t > 0) { const f = t.t / t.max; spark(t.x - 80 * f, t.y - 420 * f, Math.random() < .5 ? '#ffb040' : '#fff0a0', 2, 30, .4, 4, 0); } if (t.t > 0) continue;
     R.fx.push({ k: 'ring', x: t.x, y: t.y, r: t.r, t: .3, max: .3, col: t.col }); burst(t.x, t.y, t.col, 12);
     if (t.from === 'p' && t.burn) { R.zones.push({ x: t.x, y: t.y, r: t.r * .85, t: 2.6 }); spark(t.x, t.y, '#ffa030', 40, 260, .8, 4, 120); spark(t.x, t.y, '#ffe9a0', 20, 160, .5, 3, 0); spark(t.x, t.y, '#555', 12, 70, 1.2, 6, -40); R.shake = 13; } R.shake = Math.max(R.shake, 7); SFX.boom();
-    if (t.from === 'p') areaDmg(t.x, t.y, t.r, t.dmg, { kb: 250, burn: t.burn });
+    if (t.from === 'p') inSrc('Habilidade: ' + (R.skName || '?'), () => areaDmg(t.x, t.y, t.r, t.dmg, { kb: 250, burn: t.burn }));
     else { if (Math.hypot(p.x - t.x, p.y - t.y) < t.r + 10) hurt(t.dmg); if (t.ring && R.boss) ringShots({ x: t.x, y: t.y, col: R.boss.col }, 8); }
   }
   R.tels = R.tels.filter(t => t.t > 0);
   // armadilhas
   for (const tr of R.traps) {
     tr.t -= dt;
-    if (targets().some(e => Math.hypot(e.x - tr.x, e.y - tr.y) < tr.r + e.r)) { areaDmg(tr.x, tr.y, 95, tr.dmg, { stun: 1.2, slow: 3, kb: 200 }); R.fx.push({ k: 'ring', x: tr.x, y: tr.y, r: 95, t: .3, max: .3, col: '#c8f' }); SFX.boom(); tr.t = 0; }
+    if (targets().some(e => Math.hypot(e.x - tr.x, e.y - tr.y) < tr.r + e.r)) { inSrc('Habilidade: ' + (R.skName || 'armadilha'), () => areaDmg(tr.x, tr.y, 95, tr.dmg, { stun: 1.2, slow: 3, kb: 200 })); R.fx.push({ k: 'ring', x: tr.x, y: tr.y, r: 95, t: .3, max: .3, col: '#c8f' }); SFX.boom(); tr.t = 0; }
   }
   R.traps = R.traps.filter(t => t.t > 0);
   for (const z of R.zones) {
@@ -413,15 +424,15 @@ function update(dt) {
       for (const e of targets()) {
         if (q.life <= 0) break;
         if (q.hit.has(e) || Math.hypot(e.x - q.x, e.y - q.y) > e.r + q.r) continue;
-        q.hit.add(e); dmgE(e, q.dmg, q.a, 120);
-        if (q.burn) e.burn = 3; if (q.kind === 'ice') e.slow = Math.max(e.slow, q.slow || 2); if (q.leech && q.kind !== 'blood') heal(q.leech); if (q.lsf) heal(Math.min(R.p.max * .012, q.dmg * 10 * q.lsf));
+        q.hit.add(e); inSrc(q.src || 'Outros', () => dmgE(e, q.dmg, q.a, 120));
+        if (q.burn) e.burn = 3; if (q.kind === 'ice') e.slow = Math.max(e.slow, q.slow || 2); if (q.leech && q.kind !== 'blood') heal(q.leech, 'Roubo de vida (arma)'); if (q.lsf) lsHeal(Math.min(R.p.max * .005, q.dmg * 10 * q.lsf), 'Roubo de vida (arma)');
         if (q.kind === 'poison') { e.psn = 4; e.pd = Math.max(e.pd || 0, q.dmg * .45); }   // veneno: dano ao longo do tempo (renova, nao acumula)
-        if (q.kind === 'blood') heal(Math.min(R.p.max * .012, q.dmg * 10 * q.leech));   // rouba vida em cada acerto
+        if (q.kind === 'blood') lsHeal(Math.min(R.p.max * .005, q.dmg * 10 * q.leech), 'Roubo de vida (arma)');   // rouba vida em cada acerto
         if (q.kind === 'ice') { spark(e.x, e.y, '#d8ffff', 14, 220, .55, 3, 220); spark(e.x, e.y, '#6ad0ff', 8, 120, .5, 4, 0); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: 34, t: .3, max: .3, col: '#8cf' }); }
         else if (q.kind === 'poison') { spark(e.x, e.y, '#e8ffb0', 10, 160, .45, 3, 0); spark(e.x, e.y, '#7acb1f', 8, 100, .5, 4, -40); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: 28, t: .3, max: .3, col: '#9be32f' }); }
         else if (q.kind === 'blood') { spark(e.x, e.y, '#ff4a6a', 10, 90, .8, 4, -100); for (let i = 0; i < 4; i++) R.parts.push({ x: e.x, y: e.y, vx: (p.x - e.x) * 2.2 + (Math.random() - .5) * 60, vy: (p.y - e.y) * 2.2 + (Math.random() - .5) * 60, life: .45, color: '#ff4a6a', s: 3, g: 0 }); }
         if (q.kind === 'fire' || q.kind === 'boom' || q.kind === 'ball') {
-          for (const o of targets()) if (o !== e && Math.hypot(o.x - q.x, o.y - q.y) < q.aoe + o.r) { dmgE(o, q.dmg * .6, Math.atan2(o.y - q.y, o.x - q.x), 160); if (q.burn) o.burn = 3; }
+          for (const o of targets()) if (o !== e && Math.hypot(o.x - q.x, o.y - q.y) < q.aoe + o.r) { inSrc((q.src || 'Outros') + ' (explosão)', () => dmgE(o, q.dmg * .6, Math.atan2(o.y - q.y, o.x - q.x), 160)); if (q.burn) o.burn = 3; }
           R.fx.push({ k: 'ring', x: q.x, y: q.y, r: q.aoe, t: .25, max: .25, col: '#fa4' }); burst(q.x, q.y, '#fa4', 14); if (q.kind === 'fire') { spark(q.x, q.y, '#ffb040', 26, 230, .7, 4, 100); spark(q.x, q.y, '#ffe08a', 12, 140, .5, 3, 0); spark(q.x, q.y, '#555', 8, 60, 1, 5, -40); R.zones.push({ x: q.x, y: q.y, r: q.aoe * .9, t: 1.8 }); R.shake = Math.max(R.shake, 5); } if (q.kind === 'boom' || q.kind === 'ball') SFX.boom(); q.life = 0; break;
         }
         if (q.bounce > 0) { let nb = null, bd = 300; for (const o of targets()) { if (q.hit.has(o)) continue; const dd = Math.hypot(o.x - q.x, o.y - q.y); if (dd < bd) { bd = dd; nb = o; } } if (nb) { q.bounce--; const sp = Math.hypot(q.vx, q.vy), a = Math.atan2(nb.y - q.y, nb.x - q.x); q.vx = Math.cos(a) * sp; q.vy = Math.sin(a) * sp; q.a = a; q.life = Math.max(q.life, .7); spark(q.x, q.y, '#ffe27a', 5, 120, .25, 2, 0); break; } }
@@ -440,7 +451,7 @@ function update(dt) {
   }
   R.coins = R.coins.filter(c => !c.got);
   for (const h of R.hearts) { h.t = (h.t || 0) + dt; if (h.life === undefined) h.life = 30 + Math.random() * 15; if (h.t > h.life) h.got = true; }
-  for (const h of R.hearts) if (!h.got && Math.hypot(p.x - h.x, p.y - h.y) < 20) { h.got = true; { const n = heartHeal(); heal(n); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); } }
+  for (const h of R.hearts) if (!h.got && Math.hypot(p.x - h.x, p.y - h.y) < 20) { h.got = true; { const n = heartHeal(); heal(n, 'Corações'); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); } }
   R.hearts = R.hearts.filter(h => !h.got);
 
   for (const q of R.parts) { q.vy += (q.g || 0) * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; } R.parts = R.parts.filter(q => q.life > 0);
