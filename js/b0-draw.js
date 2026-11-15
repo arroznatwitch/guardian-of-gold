@@ -225,7 +225,7 @@ function abilBox(x, y, key, name, cd, max, ready, col) {
   txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
 function drawDmgLog() {   // opcao "Logs de Dano": de onde vem o dano e a cura
-  const L = R.dl; if (!L) return; const x = W - 262, y0 = 50, t = Math.max(1, R.time || 1), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
+  const L = R.dl; if (!L) return; const x = 14, y0 = 62, t = Math.max(1, R.time || 1), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
   const rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
   const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length) * 14 + (h.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
   const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), f = v => fmt(v * 10);   // o jogo mostra o dano x10
@@ -273,6 +273,29 @@ function drawCheckpoint() {
   btn(x + 30, y + 226, 190, 44, 'Sair e guardar tudo', () => { endMission(true, 'cash'); }, { size: lang === 'en' ? 14 : 16, col: '#2f7a4a', hot: '#3fa061' });
   btn(x + 240, y + 226, 190, 44, 'Continuar', () => { R.phase = 'hunt'; state = 'play'; nextWave(); }, { size: 16, col: '#a06a20', hot: '#c98a30' });
 }
+/* ecra de resultados (fim de missao / raid / campanha) */
+function redoRaid() { if (R && R.raid) startMission(R.m, R.raid.d); }   // repete a mesma raid, na mesma dificuldade
+function drawResults(win) {
+  const col = win ? '#f0c060' : '#ee5555', X = 130, Y = 56, PW = 540, PH = 392, a = endLines(win), raid = !!R.raid, stones = (R.stoneGain || []).map((n, r) => [n, r]).filter(q => q[0]);
+  ctx.fillStyle = '#000d'; ctx.fillRect(-UIOX, 0, W, H);
+  bevel(X, Y, PW, PH, '#14142a', win ? '#a8821f' : '#8a3030', '#05050a'); ctx.fillStyle = win ? '#f0c06018' : '#ee555518'; ctx.fillRect(X + 6, Y + 6, PW - 12, 74);
+  txt(endTitle(win), UW / 2, Y + 58, 40, col, 'center', 'bold');
+  txt(a[0], UW / 2, Y + 100, 17, '#cdd6f4', 'center');
+  ctx.fillStyle = '#ffffff22'; ctx.fillRect(X + 24, Y + 112, PW - 48, 2);
+  const chips = [[T2('Ouro', 'Gold'), '¢' + gfmt(R.earned | 0), '#fd5'], ['XP', '+' + gfmt(R.xpGain | 0), '#7fe8ff'], [T2('Itens', 'Items'), String(R.lootN | 0), '#c9a0ff']]; if (R.wlootN) chips.push([T2('Cópias', 'Copies'), String(R.wlootN), '#ffd34a']);
+  const cw = 112, gp = 10, tw = chips.length * cw + (chips.length - 1) * gp; let cx = UW / 2 - tw / 2;
+  chips.forEach(c => { bevel(cx, Y + 126, cw, 58, '#0f0f1e', c[2], '#05050a'); txt(c[0], cx + cw / 2, Y + 146, 12, '#8890a8', 'center'); txt(c[1], cx + cw / 2, Y + 172, 22, c[2], 'center', 'bold'); cx += cw + gp; });
+  let y = Y + 214; const ln = (s, c) => { txt(s, UW / 2, y, 14, c, 'center'); y += 21; };
+  if (R.farm || !win || !raid) { const m = a[1]; if (m && !/^Ganhaste/.test(m)) ln(m, win ? '#cdd6f4' : '#f99'); }
+  { const B = gb(); if (B.gold || B.xp) ln(E2(`Guild bonus: +${Math.round(B.gold * 1000) / 10}% gold, +${Math.round(B.xp * 1000) / 10}% XP`, `Bónus da guilda: +${Math.round(B.gold * 1000) / 10}% ouro, +${Math.round(B.xp * 1000) / 10}% XP`), '#9ab'); }
+  if (R.petGain) ln(`${petDisplayName(save.pets.eq)}: +${R.petGain} XP` + (R.petUp ? T2(` · subiu para o nível ${petLv(save.pets.eq)}!`, ` · reached level ${petLv(save.pets.eq)}!`) : ''), '#9ab');
+  if (R.lvUp) ln(`★ ${T2('Subiste para o nível', 'Reached level')} ${R.lvUp}! (+${R.ptsGain} ${T2('pontos', 'points')})`, '#6f6');
+  if (R.gemGain) ln(`+${R.gemGain} ◆ ${T2('Diamantes', 'Diamonds')}`, '#7fe8ff');
+  if (stones.length) { const wd = stones.reduce((s, q) => s + 26 + txtW(q[0] + '×', 15, 'bold') + 14, 0) - 14; let sx = UW / 2 - wd / 2 - 40; txt(T2('Pedras:', 'Stones:'), sx + 30, y + 14, 13, '#9ab', 'right'); sx += 40; stones.forEach(q => { ctx.drawImage(STONE_SPR[q[1]], sx, y, 22, 22); const t = q[0] + '×'; txt(t, sx + 25, y + 16, 15, RAR[q[1]][1], 'left', 'bold'); sx += 26 + txtW(t, 15, 'bold') + 14; }); y += 28; }
+  const by = Y + PH - 62;
+  if (raid) { btn(X + 34, by, 230, 46, T2('Refazer Raid', 'Redo Raid'), redoRaid, { size: 18, col: '#a06a20', hot: '#c98a30' }); btn(X + PW - 264, by, 230, 46, T2('Acampamento', 'Camp'), goHub, { size: 18, col: '#2f7a4a' }); }
+  else btn(UW / 2 - 110, by, 220, 46, T2('Acampamento', 'Camp'), goHub, { size: 18, col: '#2f7a4a' });
+}
 function playOverlay() {
   if (state === 'cp') { drawCheckpoint(); return; }
   if (state === 'pause') {
@@ -282,12 +305,7 @@ function playOverlay() {
     if (R.farm) { btn(300, 323, 200, 44, 'Sair da campanha (só 30%)', () => { R.retire = true; endMission(true, 'quit'); }, { size: 15, col: '#8a3a2a', hot: '#b04a3a' }); txt('Sair a meio guarda só 30% do que ganhaste.', 400, 428, 11, '#f99', 'center'); }
     else btn(300, 323, 200, 44, 'Abandonar missão', () => goHub(), { size: 16, col: '#6a2a2a' });
     btn(300, 377, 200, 40, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 15, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
-  } else if (state === 'win') {
-    overlay(endTitle(true), '#f0c060', endLines(true));
-    btn(300, 366, 200, 46, 'Acampamento', goHub, { size: 18, col: '#2f7a4a' });
-  } else if (state === 'lose') {
-    overlay(endTitle(false), '#e55', endLines(false));
-    btn(300, 366, 200, 46, 'Acampamento', goHub, { size: 18, col: '#2f7a4a' });
-  }
+  } else if (state === 'win') drawResults(true);
+  else if (state === 'lose') drawResults(false);
 }
 
