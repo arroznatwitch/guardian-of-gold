@@ -505,6 +505,13 @@ begin
   if jsonb_typeof(nw->'pets'->'lv') = 'object' and exists (select 1 from jsonb_each(nw->'pets'->'lv') e where gog._nv(e.value) > 30) then return 'abs:pets'; end if;   -- os pets vao ate ao nivel 30
   lv1 := gog._n(nw, 'pl', 'lv'); g1 := gog._n(nw, 'gems');
   if gog._n(nw, 'chestDone') > lv1 + 1 then return 'chests'; end if;
+  -- atributos: os pontos distribuidos + por gastar nunca passam de 3 por nivel + os pontos comprados (max. 1200); valores absurdos = ban imediato
+  if (select coalesce(sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end), 0)
+        from jsonb_each_text(case when jsonb_typeof(nw->'attr') = 'object' then nw->'attr' else '{}'::jsonb end) e)
+     + coalesce(gog._n(nw, 'pts'), 0) > 3 * (coalesce(gog._n(nw, 'pl', 'lv'), 1) - 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 30
+     or coalesce(gog._n(nw, 'buyN'), 0) > 1200 then
+    return 'abs:attrs';
+  end if;
   -- conquistas: so as novas precisam de prova no proprio save
   if nw ? 'ach' and jsonb_typeof(nw->'ach') <> 'object' then return 'ach:format'; end if;
   for k, val in select e.key, e.value from jsonb_each(coalesce(nw->'ach', '{}'::jsonb)) e loop
