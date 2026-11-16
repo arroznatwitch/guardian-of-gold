@@ -5,7 +5,7 @@
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
   const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 0, rwv: 3, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '', lv: {}, xp: {}, names: {} }, bagSlots: 1, tut: { on: true, skip: false, done: {}, claim: {} },
-    pres: [0, 0, 0, 0, 0, 0], presW: [0, 0, 0, 0, 0, 0], farmN: [0, 0, 0, 0, 0, 0], ach: {}, codes: {}, title: '', buyN: 0, skRef: 1 };   // campos completos desde o inicio: um personagem recem-criado nao passa pelo normalize e o separador Campanha rebentava sem estes
+    pres: [0, 0, 0, 0, 0, 0], presW: [0, 0, 0, 0, 0, 0], farmN: [0, 0, 0, 0, 0, 0], ach: {}, codes: {}, title: '', buyN: 0, skRef: 1, pt: 0 };   // campos completos desde o inicio: um personagem recem-criado nao passa pelo normalize e o separador Campanha rebentava sem estes
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
@@ -27,6 +27,7 @@ function normalize(s) {
   s.lo = s.lo && typeof s.lo === 'object' ? s.lo : { cur: 0, own: [1, 0, 0], b: [null, null, null] };   // loadouts (a7-loadouts.js)
   s.ar = s.ar && typeof s.ar === 'object' ? s.ar : { n: 0, gold: 0 };   // Auto-Raid comprada (a8-shop.js)
   s.ep = Number.isFinite(+s.ep) ? Math.max(0, Math.floor(+s.ep)) : 0;   // epoca do save: se o servidor a mudar (reposicao pelo admin), o save local deixa de valer
+  s.pt = Number.isFinite(+s.pt) ? Math.max(0, +s.pt) : 0;   // tempo de jogo em segundos (b9-loop.js)
   s.wp = s.wp && typeof s.wp === 'object' ? s.wp : {};   // progresso por arma (abates, raids) para subir de estrela
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 0 : s.chestDone; if ((s.rwv | 0) < 3) { s.chestDone = 0; s.rwv = 3; }   // recompensas por nivel: reset unico, todos podem resgatar desde o nivel 1 s.wst = s.wst || {};
   s.tut = s.tut && typeof s.tut === 'object' ? s.tut : { on: (s.pl.lv | 0) <= 3 && !(s.stats && s.stats.kills > 20), skip: false, done: {}, claim: {} };   // tutorial (94-tutorial.js): saves antigos avancados nao o veem
