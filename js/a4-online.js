@@ -146,7 +146,7 @@ setInterval(autoSync, 30000);
 async function onlineSubmit() {
   if (!on.token || !save || subBusy) return; if (save.cheat && save.cheat.used) return;
   subBusy = true; const r = await rpc('gog_submit', { p_token: on.token, p: statPayload() }); subBusy = false;
-  if (r.error === 'auth') { dropSession(false); rkSay('auth'); } else if (r.ok) { rk.sentHash = JSON.stringify(statPayload()); rk.lastSub = Date.now(); rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
+  if (r.error === 'auth') { dropSession(false); rkSay('auth'); } else if (r.ok) { rk.sentHash = JSON.stringify(statPayload()); rk.lastSub = Date.now(); rk.at = {}; if (rk.msg === RK_MSG.implausible) rk.msg = '';   // limpa o aviso de recusa antigo if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
   return r;
 }
 // rk.at guarda a classificacao de cada categoria (rows, me, hora); limpar rk.at forca nova leitura
