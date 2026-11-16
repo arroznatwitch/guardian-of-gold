@@ -1,0 +1,4546 @@
+{
+ "classes": {
+  "knight": {
+   "name": "Cavaleiro",
+   "hp": 140,
+   "spd": 165,
+   "sp": "Escudo Férreo",
+   "desc": "Tanque corpo-a-corpo. Muita vida, golpes pesados e 15% menos dano recebido.",
+   "spDesc": "Ergue um escudo durante 10 segundos: recebes 60% menos dano. Recarrega a cada 22 segundos.",
+   "weapons": [
+    {
+     "id": "k_sword",
+     "n": "Espada de Ferro",
+     "price": 0,
+     "t": "melee",
+     "dmg": 1,
+     "cd": 0.35,
+     "range": 70,
+     "arc": 0.45,
+     "kb": 240,
+     "info": "Rápida e equilibrada.",
+     "sk": {
+      "n": "Investida",
+      "cd": 6,
+      "d": "Lança-te em frente ferindo tudo no caminho."
+     }
+    },
+    {
+     "id": "k_axe",
+     "n": "Espada Gigante",
+     "price": 600,
+     "t": "melee",
+     "dmg": 5,
+     "cd": 1.05,
+     "range": 90,
+     "arc": 0.8,
+     "kb": 440,
+     "info": "Enorme e muito lenta: dano altíssimo.",
+     "sk": {
+      "n": "Terremoto",
+      "cd": 8,
+      "d": "Abala o chão: dano em área e atordoa."
+     }
+    },
+    {
+     "id": "k_spear",
+     "n": "Lâmina Gémea",
+     "price": 2700,
+     "t": "melee",
+     "dmg": 3.2,
+     "cd": 0.5,
+     "range": 80,
+     "arc": 0.5,
+     "kb": 200,
+     "info": "Afiadíssima: dano alto e golpes certeiros.",
+     "sk": {
+      "n": "Onda de Corte",
+      "cd": 7,
+      "d": "Lança uma onda de choque que atravessa tudo."
+     }
+    },
+    {
+     "id": "k_hammer",
+     "n": "Espada Dourada",
+     "price": 10500,
+     "t": "melee",
+     "dmg": 1.7,
+     "cd": 0.2,
+     "range": 68,
+     "arc": 0.42,
+     "kb": 90,
+     "info": "Rapidíssima.",
+     "sk": {
+      "n": "Frenesim Dourado",
+      "cd": 12,
+      "d": "6s: cada abate acelera os teus ataques."
+     }
+    },
+    {
+     "id": "k_blade",
+     "n": "Espada Vampírica",
+     "price": 30000,
+     "t": "melee",
+     "dmg": 3.2,
+     "cd": 0.3,
+     "range": 78,
+     "arc": 0.5,
+     "kb": 160,
+     "lifesteal": 0.06,
+     "info": "Rouba vida em cada golpe.",
+     "sk": {
+      "n": "Onda Sanguínea",
+      "cd": 11,
+      "d": "Onda de choque que rouba vida."
+     }
+    }
+   ]
+  },
+  "archer": {
+   "name": "Arqueiro",
+   "hp": 95,
+   "spd": 195,
+   "sp": "Chuva de Flechas",
+   "desc": "Ataca de longe. Rápido mas frágil.",
+   "spDesc": "Dispara 14 flechas em todas as direções.",
+   "weapons": [
+    {
+     "id": "a_bow",
+     "n": "Arco Curto",
+     "price": 0,
+     "t": "arrow",
+     "dmg": 1,
+     "cd": 0.38,
+     "count": 1,
+     "spread": 0,
+     "spd": 560,
+     "pierce": 0,
+     "info": "Flecha rápida e certeira.",
+     "sk": {
+      "n": "Salva Rápida",
+      "cd": 6,
+      "d": "7 flechas em rápida sequência."
+     }
+    },
+    {
+     "id": "a_triple",
+     "n": "Arco Longo",
+     "price": 600,
+     "t": "arrow",
+     "dmg": 1.8,
+     "cd": 0.5,
+     "count": 1,
+     "spread": 0,
+     "spd": 800,
+     "life": 2.1,
+     "pierce": 1,
+     "info": "Alcança muito mais longe e dá mais dano.",
+     "sk": {
+      "n": "Tiro Certeiro",
+      "cd": 7,
+      "d": "Flecha gigante de longo alcance que atravessa tudo."
+     }
+    },
+    {
+     "id": "a_cross",
+     "n": "Besta",
+     "price": 2700,
+     "t": "arrow",
+     "dmg": 5.4,
+     "cd": 1.15,
+     "count": 1,
+     "spread": 0,
+     "spd": 820,
+     "pierce": 2,
+     "info": "Um pouco lenta, mas com bom dano.",
+     "sk": {
+      "n": "Rajada de Virotes",
+      "cd": 8,
+      "d": "Dispara uma chuva de virotes em leque."
+     }
+    },
+    {
+     "id": "a_fire",
+     "n": "Canhão de Mão",
+     "price": 10500,
+     "t": "arrow",
+     "dmg": 11,
+     "cd": 2.5,
+     "count": 1,
+     "spread": 0,
+     "spd": 520,
+     "pierce": 0,
+     "kind": "ball",
+     "aoe": 60,
+     "info": "Muito lento, mas com dano absurdo.",
+     "sk": {
+      "n": "Bomba Carregada",
+      "cd": 12,
+      "d": "Carrega o canhão e explode numa área enorme."
+     }
+    },
+    {
+     "id": "a_dark",
+     "n": "Besta de Repetição",
+     "price": 30000,
+     "t": "arrow",
+     "dmg": 0.95,
+     "cd": 0.22,
+     "count": 1,
+     "spread": 0.05,
+     "spd": 700,
+     "bounce": 2,
+     "pierce": 0,
+     "info": "Muito rápida, dano baixo. Flechas ricocheteiam.",
+     "sk": {
+      "n": "Rajada Ricochete",
+      "cd": 8,
+      "d": "Salva de virotes que ricocheteiam entre inimigos."
+     }
+    }
+   ]
+  },
+  "mage": {
+   "name": "Mago",
+   "hp": 80,
+   "spd": 175,
+   "sp": "Renovação Arcana",
+   "desc": "Magia à distância com efeitos especiais.",
+   "spDesc": "Recupera 10% da vida. Recarrega a cada 12 segundos.",
+   "weapons": [
+    {
+     "id": "m_fire",
+     "n": "Cajado de Fogo",
+     "price": 0,
+     "t": "bolt",
+     "kind": "fire",
+     "dmg": 1.75,
+     "cd": 0.6,
+     "spd": 380,
+     "aoe": 55,
+     "info": "Bola de fogo explosiva que deixa chamas no chão.",
+     "sk": {
+      "n": "Meteoro",
+      "cd": 8,
+      "d": "Chama um meteoro que incendeia o chão."
+     }
+    },
+    {
+     "id": "m_ice",
+     "n": "Cajado de Gelo",
+     "price": 600,
+     "t": "bolt",
+     "kind": "ice",
+     "dmg": 2.1,
+     "cd": 0.4,
+     "spd": 430,
+     "slow": 2,
+     "info": "Congela e deixa um rasto gelado.",
+     "sk": {
+      "n": "Prisão de Gelo",
+      "cd": 9,
+      "d": "Prende tudo em cristais de gelo."
+     }
+    },
+    {
+     "id": "m_bolt",
+     "n": "Cajado de Raios",
+     "price": 2700,
+     "t": "zap",
+     "dmg": 1.7,
+     "cd": 0.5,
+     "range": 300,
+     "chain": 3,
+     "info": "Raio com faíscas que salta entre inimigos.",
+     "sk": {
+      "n": "Tempestade",
+      "cd": 10,
+      "d": "7 raios caem sobre os inimigos."
+     }
+    },
+    {
+     "id": "m_arcane",
+     "n": "Cajado Venenoso",
+     "price": 10500,
+     "t": "bolt",
+     "kind": "poison",
+     "dmg": 3,
+     "cd": 0.4,
+     "spd": 360,
+     "info": "Dispara veneno que corrói os inimigos ao longo do tempo.",
+     "sk": {
+      "n": "Círculo Tóxico",
+      "cd": 12,
+      "d": "Círculo tóxico que fere quem se aproxima."
+     }
+    },
+    {
+     "id": "m_dark",
+     "n": "Cajado Vampírico",
+     "price": 30000,
+     "t": "bolt",
+     "kind": "blood",
+     "dmg": 3.6,
+     "cd": 0.45,
+     "spd": 400,
+     "pierce": 1,
+     "leech": 0.06,
+     "info": "Rouba vida enquanto dispara.",
+     "sk": {
+      "n": "Dreno de Vida",
+      "cd": 11,
+      "d": "Suga a vida dos inimigos próximos."
+     }
+    }
+   ]
+  }
+ },
+ "skins": {
+  "knight": [
+   0
+  ],
+  "archer": [
+   0
+  ],
+  "mage": [
+   0
+  ]
+ },
+ "missions": [
+  {
+   "name": "Floresta Sombria",
+   "desc": "Limpa a floresta e enfrenta o Ceifador.",
+   "kills": 10,
+   "boss": {
+    "name": "O Ceifador",
+    "hp": 50,
+    "pal": "reaper",
+    "r": 34,
+    "spd": 55,
+    "ring": 8,
+    "charge": 380,
+    "col": "#c6f",
+    "pattern": [
+     "ring",
+     "charge",
+     "spread"
+    ]
+   },
+   "semi": {
+    "name": "Lobo Alfa",
+    "pal": "alpha",
+    "r": 28,
+    "spd": 80,
+    "ring": 8,
+    "charge": 420,
+    "col": "#ccd",
+    "pattern": [
+     "charge",
+     "spread",
+     "ring"
+    ]
+   },
+   "reward": 60,
+   "theme": 0
+  },
+  {
+   "name": "Cavernas Douradas",
+   "desc": "Esqueletos e lobos guardam o Golem.",
+   "kills": 16,
+   "boss": {
+    "name": "Golem de Pedra",
+    "hp": 85,
+    "pal": "golem",
+    "r": 38,
+    "spd": 45,
+    "ring": 10,
+    "charge": 340,
+    "col": "#9ef",
+    "pattern": [
+     "slam",
+     "ring",
+     "charge",
+     "slam"
+    ]
+   },
+   "semi": {
+    "name": "Rainha Aranha",
+    "pal": "spiderq",
+    "r": 28,
+    "spd": 58,
+    "ring": 10,
+    "charge": 380,
+    "col": "#b4f",
+    "pattern": [
+     "spread",
+     "summon",
+     "ring"
+    ]
+   },
+   "reward": 120,
+   "theme": 1
+  },
+  {
+   "name": "Castelo Maldito",
+   "desc": "O covil do Dragão Rubro.",
+   "kills": 22,
+   "boss": {
+    "name": "Dragão Rubro",
+    "hp": 120,
+    "pal": "dragon",
+    "r": 40,
+    "spd": 65,
+    "ring": 12,
+    "charge": 460,
+    "col": "#f93",
+    "pattern": [
+     "cone",
+     "meteors",
+     "charge",
+     "cone"
+    ]
+   },
+   "semi": {
+    "name": "Cavaleiro Negro",
+    "pal": "bknight",
+    "r": 29,
+    "spd": 62,
+    "ring": 10,
+    "charge": 440,
+    "col": "#f55",
+    "pattern": [
+     "slam",
+     "charge",
+     "cone"
+    ]
+   },
+   "reward": 200,
+   "theme": 2
+  },
+  {
+   "name": "Pântano Tóxico",
+   "desc": "Fantasmas e lobos servem a Rainha.",
+   "kills": 24,
+   "boss": {
+    "name": "Rainha do Pântano",
+    "hp": 160,
+    "pal": "queen",
+    "r": 36,
+    "spd": 60,
+    "ring": 10,
+    "charge": 420,
+    "col": "#8f4",
+    "pattern": [
+     "spread",
+     "summon",
+     "spiral",
+     "charge"
+    ]
+   },
+   "semi": {
+    "name": "Sapo Colossal",
+    "pal": "toadk",
+    "r": 30,
+    "spd": 55,
+    "ring": 10,
+    "charge": 400,
+    "col": "#bf4",
+    "pattern": [
+     "slam",
+     "spread",
+     "charge"
+    ]
+   },
+   "reward": 260,
+   "theme": 3
+  },
+  {
+   "name": "Deserto Ardente",
+   "desc": "O Faraó desperta das areias.",
+   "kills": 26,
+   "boss": {
+    "name": "Faraó Eterno",
+    "hp": 200,
+    "pal": "pharaoh",
+    "r": 38,
+    "spd": 55,
+    "ring": 14,
+    "charge": 440,
+    "col": "#fd4",
+    "pattern": [
+     "meteors",
+     "spiral",
+     "slam",
+     "cone"
+    ]
+   },
+   "semi": {
+    "name": "Escorpião Rei",
+    "pal": "scorpk",
+    "r": 29,
+    "spd": 68,
+    "ring": 12,
+    "charge": 460,
+    "col": "#fb4",
+    "pattern": [
+     "charge",
+     "slam",
+     "cone"
+    ]
+   },
+   "reward": 340,
+   "theme": 4
+  },
+  {
+   "name": "Abismo Final",
+   "desc": "O Rei Demónio espera no fundo.",
+   "kills": 30,
+   "boss": {
+    "name": "Rei Demónio",
+    "hp": 250,
+    "pal": "demon",
+    "r": 42,
+    "spd": 70,
+    "ring": 16,
+    "charge": 500,
+    "col": "#f4f",
+    "pattern": [
+     "blink",
+     "spiral",
+     "meteors",
+     "charge",
+     "summon",
+     "slam"
+    ]
+   },
+   "semi": {
+    "name": "Arquidemónio",
+    "pal": "archd",
+    "r": 30,
+    "spd": 66,
+    "ring": 14,
+    "charge": 480,
+    "col": "#f4f",
+    "pattern": [
+     "blink",
+     "spiral",
+     "ring"
+    ]
+   },
+   "reward": 500,
+   "theme": 5
+  }
+ ],
+ "anvCh": [
+  100,
+  95,
+  90,
+  80,
+  70,
+  60,
+  50,
+  40,
+  30,
+  22,
+  15,
+  10,
+  8,
+  6,
+  5,
+  4,
+  3,
+  2.5,
+  2,
+  1.5
+ ],
+ "recBase": [
+  1,
+  15,
+  30,
+  45,
+  58,
+  70
+ ],
+ "mobs": {
+  "sq": {
+   "n": "Esquilo Raivoso",
+   "a": "fast"
+  },
+  "bee": {
+   "n": "Abelha Gigante",
+   "a": "fly"
+  },
+  "gob": {
+   "n": "Goblin Arqueiro",
+   "a": "shootA"
+  },
+  "boar": {
+   "n": "Javali",
+   "a": "charge"
+  },
+  "acorn": {
+   "n": "Bolota Explosiva",
+   "a": "boom"
+  },
+  "ent": {
+   "n": "Ent Jovem",
+   "a": "tank"
+  },
+  "cbat": {
+   "n": "Morcego de Cristal",
+   "a": "fly"
+  },
+  "spider": {
+   "n": "Aranha das Rochas",
+   "a": "fast"
+  },
+  "miner": {
+   "n": "Mineiro Esqueleto",
+   "a": "shootA"
+  },
+  "scarab": {
+   "n": "Escaravelho Dourado",
+   "a": "charge"
+  },
+  "rockb": {
+   "n": "Rocha Instável",
+   "a": "boom"
+  },
+  "troll": {
+   "n": "Troll das Cavernas",
+   "a": "tank"
+  },
+  "vamp": {
+   "n": "Morcego Vampiro",
+   "a": "fly"
+  },
+  "witch": {
+   "n": "Bruxa",
+   "a": "shootO"
+  },
+  "sknight": {
+   "n": "Cavaleiro Esqueleto",
+   "a": "chase"
+  },
+  "garg": {
+   "n": "Gárgula",
+   "a": "charge"
+  },
+  "pump": {
+   "n": "Abóbora Maldita",
+   "a": "boom"
+  },
+  "armor": {
+   "n": "Armadura Assombrada",
+   "a": "tank"
+  },
+  "toad": {
+   "n": "Sapo Venenoso",
+   "a": "chase"
+  },
+  "leech": {
+   "n": "Sanguessuga",
+   "a": "fast"
+  },
+  "wisp": {
+   "n": "Fogo-Fátuo",
+   "a": "shootO"
+  },
+  "croc": {
+   "n": "Crocodilo",
+   "a": "charge"
+  },
+  "zombie": {
+   "n": "Zombi do Lodo",
+   "a": "tank"
+  },
+  "spore": {
+   "n": "Cogumelo Tóxico",
+   "a": "boom"
+  },
+  "scorp": {
+   "n": "Escorpião",
+   "a": "charge"
+  },
+  "mummy": {
+   "n": "Múmia",
+   "a": "tank"
+  },
+  "snake": {
+   "n": "Serpente da Areia",
+   "a": "fast"
+  },
+  "vulture": {
+   "n": "Abutre",
+   "a": "fly"
+  },
+  "djinn": {
+   "n": "Mago do Deserto",
+   "a": "shootO"
+  },
+  "cactus": {
+   "n": "Cacto Explosivo",
+   "a": "boom"
+  },
+  "voidimp": {
+   "n": "Diabrete do Vazio",
+   "a": "fly"
+  },
+  "hellhound": {
+   "n": "Cão Infernal",
+   "a": "fast"
+  },
+  "eye": {
+   "n": "Olho do Abismo",
+   "a": "shootO"
+  },
+  "shgolem": {
+   "n": "Golem Sombrio",
+   "a": "tank"
+  },
+  "voidk": {
+   "n": "Cavaleiro do Vazio",
+   "a": "charge"
+  },
+  "crystal": {
+   "n": "Cristal Sombrio",
+   "a": "boom"
+  }
+ },
+ "mobsByMap": [
+  [
+   "sq",
+   "bee",
+   "gob",
+   "boar",
+   "acorn",
+   "ent"
+  ],
+  [
+   "cbat",
+   "spider",
+   "miner",
+   "scarab",
+   "rockb",
+   "troll"
+  ],
+  [
+   "vamp",
+   "witch",
+   "sknight",
+   "garg",
+   "pump",
+   "armor"
+  ],
+  [
+   "toad",
+   "leech",
+   "wisp",
+   "croc",
+   "zombie",
+   "spore"
+  ],
+  [
+   "scorp",
+   "mummy",
+   "snake",
+   "vulture",
+   "djinn",
+   "cactus"
+  ],
+  [
+   "voidimp",
+   "hellhound",
+   "eye",
+   "shgolem",
+   "voidk",
+   "crystal"
+  ]
+ ],
+ "ach": [
+  {
+   "id": "kills1000",
+   "cat": "combat",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Caçador I",
+    "Hunter I"
+   ],
+   "desc": [
+    "Mata 1.000 monstros",
+    "Kill 1.000 monsters"
+   ],
+   "title": ""
+  },
+  {
+   "id": "kills2500",
+   "cat": "combat",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Caçador II",
+    "Hunter II"
+   ],
+   "desc": [
+    "Mata 2.500 monstros",
+    "Kill 2.500 monsters"
+   ],
+   "title": ""
+  },
+  {
+   "id": "kills5000",
+   "cat": "combat",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Caçador III",
+    "Hunter III"
+   ],
+   "desc": [
+    "Mata 5.000 monstros",
+    "Kill 5.000 monsters"
+   ],
+   "title": ""
+  },
+  {
+   "id": "kills10000",
+   "cat": "combat",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Caçador IV",
+    "Hunter IV"
+   ],
+   "desc": [
+    "Mata 10.000 monstros",
+    "Kill 10.000 monsters"
+   ],
+   "title": "reaper"
+  },
+  {
+   "id": "kills25000",
+   "cat": "combat",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Caçador V",
+    "Hunter V"
+   ],
+   "desc": [
+    "Mata 25.000 monstros",
+    "Kill 25.000 monsters"
+   ],
+   "title": ""
+  },
+  {
+   "id": "kills50000",
+   "cat": "combat",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Caçador VI",
+    "Hunter VI"
+   ],
+   "desc": [
+    "Mata 50.000 monstros",
+    "Kill 50.000 monsters"
+   ],
+   "title": "slayer"
+  },
+  {
+   "id": "boss10",
+   "cat": "combat",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Matador de Bosses I",
+    "Boss Slayer I"
+   ],
+   "desc": [
+    "Derrota 10 bosses",
+    "Defeat 10 bosses"
+   ],
+   "title": ""
+  },
+  {
+   "id": "boss50",
+   "cat": "combat",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Matador de Bosses II",
+    "Boss Slayer II"
+   ],
+   "desc": [
+    "Derrota 50 bosses",
+    "Defeat 50 bosses"
+   ],
+   "title": ""
+  },
+  {
+   "id": "boss250",
+   "cat": "combat",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Matador de Bosses III",
+    "Boss Slayer III"
+   ],
+   "desc": [
+    "Derrota 250 bosses",
+    "Defeat 250 bosses"
+   ],
+   "title": ""
+  },
+  {
+   "id": "guard1",
+   "cat": "combat",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Guardião Quebrado",
+    "Guardian Broken"
+   ],
+   "desc": [
+    "Derrota o Guardião do Ouro",
+    "Defeat the Gold Guardian"
+   ],
+   "title": "treasure"
+  },
+  {
+   "id": "guard10",
+   "cat": "combat",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Pesadelo do Guardião",
+    "Guardian's Nightmare"
+   ],
+   "desc": [
+    "Derrota o Guardião do Ouro 10 vezes",
+    "Defeat the Gold Guardian 10 times"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend5000",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Cliente Frequente I",
+    "Big Spender I"
+   ],
+   "desc": [
+    "Gasta 5K de ouro",
+    "Spend 5K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend10000",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Cliente Frequente II",
+    "Big Spender II"
+   ],
+   "desc": [
+    "Gasta 10K de ouro",
+    "Spend 10K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend25000",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Cliente Frequente III",
+    "Big Spender III"
+   ],
+   "desc": [
+    "Gasta 25K de ouro",
+    "Spend 25K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend50000",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Cliente Frequente IV",
+    "Big Spender IV"
+   ],
+   "desc": [
+    "Gasta 50K de ouro",
+    "Spend 50K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend75000",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Cliente Frequente V",
+    "Big Spender V"
+   ],
+   "desc": [
+    "Gasta 75K de ouro",
+    "Spend 75K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend100000",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Cliente Frequente VI",
+    "Big Spender VI"
+   ],
+   "desc": [
+    "Gasta 100K de ouro",
+    "Spend 100K gold"
+   ],
+   "title": "tycoon"
+  },
+  {
+   "id": "spend250000",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Cliente Frequente VII",
+    "Big Spender VII"
+   ],
+   "desc": [
+    "Gasta 250K de ouro",
+    "Spend 250K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "spend500000",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Cliente Frequente VIII",
+    "Big Spender VIII"
+   ],
+   "desc": [
+    "Gasta 500K de ouro",
+    "Spend 500K gold"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv10",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Nível 10",
+    "Level 10"
+   ],
+   "desc": [
+    "Chega ao nível 10",
+    "Reach level 10"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv20",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Nível 20",
+    "Level 20"
+   ],
+   "desc": [
+    "Chega ao nível 20",
+    "Reach level 20"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv30",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Nível 30",
+    "Level 30"
+   ],
+   "desc": [
+    "Chega ao nível 30",
+    "Reach level 30"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv40",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Nível 40",
+    "Level 40"
+   ],
+   "desc": [
+    "Chega ao nível 40",
+    "Reach level 40"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv50",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Nível 50",
+    "Level 50"
+   ],
+   "desc": [
+    "Chega ao nível 50",
+    "Reach level 50"
+   ],
+   "title": "veteran"
+  },
+  {
+   "id": "lv60",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Nível 60",
+    "Level 60"
+   ],
+   "desc": [
+    "Chega ao nível 60",
+    "Reach level 60"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv70",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Nível 70",
+    "Level 70"
+   ],
+   "desc": [
+    "Chega ao nível 70",
+    "Reach level 70"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv80",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Nível 80",
+    "Level 80"
+   ],
+   "desc": [
+    "Chega ao nível 80",
+    "Reach level 80"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv90",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Nível 90",
+    "Level 90"
+   ],
+   "desc": [
+    "Chega ao nível 90",
+    "Reach level 90"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv100",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Nível 100",
+    "Level 100"
+   ],
+   "desc": [
+    "Chega ao nível 100",
+    "Reach level 100"
+   ],
+   "title": "legend"
+  },
+  {
+   "id": "lv110",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Nível 110",
+    "Level 110"
+   ],
+   "desc": [
+    "Chega ao nível 110",
+    "Reach level 110"
+   ],
+   "title": ""
+  },
+  {
+   "id": "lv120",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Nível 120",
+    "Level 120"
+   ],
+   "desc": [
+    "Chega ao nível 120",
+    "Reach level 120"
+   ],
+   "title": "immortal"
+  },
+  {
+   "id": "bag5",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Mochileiro",
+    "Backpacker"
+   ],
+   "desc": [
+    "Compra todos os espaços da mochila",
+    "Buy every backpack slot"
+   ],
+   "title": ""
+  },
+  {
+   "id": "farm5",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Fazendeiro 5",
+    "Farmer 5"
+   ],
+   "desc": [
+    "Conclui a Campanha de todos os mapas 5 vezes (onda 10)",
+    "Finish the Campaign of every map 5 times (wave 10)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "farm10",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Fazendeiro 10",
+    "Farmer 10"
+   ],
+   "desc": [
+    "Conclui a Campanha de todos os mapas 10 vezes (onda 10)",
+    "Finish the Campaign of every map 10 times (wave 10)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "farm15",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Fazendeiro 15",
+    "Farmer 15"
+   ],
+   "desc": [
+    "Conclui a Campanha de todos os mapas 15 vezes (onda 10)",
+    "Finish the Campaign of every map 15 times (wave 10)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "farm25",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Fazendeiro 25",
+    "Farmer 25"
+   ],
+   "desc": [
+    "Conclui a Campanha de todos os mapas 25 vezes (onda 10)",
+    "Finish the Campaign of every map 25 times (wave 10)"
+   ],
+   "title": "tireless"
+  },
+  {
+   "id": "wave0_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Floresta Sombria: onda 10",
+    "Floresta Sombria: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Floresta Sombria",
+    "Reach wave 10 in the Floresta Sombria Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave0_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Floresta Sombria: onda 20",
+    "Floresta Sombria: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Floresta Sombria",
+    "Reach wave 20 in the Floresta Sombria Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave0_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Floresta Sombria: onda 30",
+    "Floresta Sombria: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Floresta Sombria",
+    "Reach wave 30 in the Floresta Sombria Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave0_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Floresta Sombria: onda 40",
+    "Floresta Sombria: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Floresta Sombria",
+    "Reach wave 40 in the Floresta Sombria Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave0_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Floresta Sombria: onda 50",
+    "Floresta Sombria: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Floresta Sombria",
+    "Reach wave 50 in the Floresta Sombria Campaign"
+   ],
+   "title": "lord0"
+  },
+  {
+   "id": "wave1_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Cavernas Douradas: onda 10",
+    "Cavernas Douradas: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Cavernas Douradas",
+    "Reach wave 10 in the Cavernas Douradas Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave1_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Cavernas Douradas: onda 20",
+    "Cavernas Douradas: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Cavernas Douradas",
+    "Reach wave 20 in the Cavernas Douradas Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave1_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Cavernas Douradas: onda 30",
+    "Cavernas Douradas: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Cavernas Douradas",
+    "Reach wave 30 in the Cavernas Douradas Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave1_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Cavernas Douradas: onda 40",
+    "Cavernas Douradas: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Cavernas Douradas",
+    "Reach wave 40 in the Cavernas Douradas Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave1_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Cavernas Douradas: onda 50",
+    "Cavernas Douradas: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Cavernas Douradas",
+    "Reach wave 50 in the Cavernas Douradas Campaign"
+   ],
+   "title": "lord1"
+  },
+  {
+   "id": "wave2_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Castelo Maldito: onda 10",
+    "Castelo Maldito: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Castelo Maldito",
+    "Reach wave 10 in the Castelo Maldito Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave2_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Castelo Maldito: onda 20",
+    "Castelo Maldito: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Castelo Maldito",
+    "Reach wave 20 in the Castelo Maldito Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave2_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Castelo Maldito: onda 30",
+    "Castelo Maldito: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Castelo Maldito",
+    "Reach wave 30 in the Castelo Maldito Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave2_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Castelo Maldito: onda 40",
+    "Castelo Maldito: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Castelo Maldito",
+    "Reach wave 40 in the Castelo Maldito Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave2_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Castelo Maldito: onda 50",
+    "Castelo Maldito: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Castelo Maldito",
+    "Reach wave 50 in the Castelo Maldito Campaign"
+   ],
+   "title": "lord2"
+  },
+  {
+   "id": "wave3_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Pântano Tóxico: onda 10",
+    "Pântano Tóxico: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Pântano Tóxico",
+    "Reach wave 10 in the Pântano Tóxico Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave3_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Pântano Tóxico: onda 20",
+    "Pântano Tóxico: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Pântano Tóxico",
+    "Reach wave 20 in the Pântano Tóxico Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave3_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Pântano Tóxico: onda 30",
+    "Pântano Tóxico: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Pântano Tóxico",
+    "Reach wave 30 in the Pântano Tóxico Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave3_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Pântano Tóxico: onda 40",
+    "Pântano Tóxico: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Pântano Tóxico",
+    "Reach wave 40 in the Pântano Tóxico Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave3_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Pântano Tóxico: onda 50",
+    "Pântano Tóxico: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Pântano Tóxico",
+    "Reach wave 50 in the Pântano Tóxico Campaign"
+   ],
+   "title": "lord3"
+  },
+  {
+   "id": "wave4_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Deserto Ardente: onda 10",
+    "Deserto Ardente: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Deserto Ardente",
+    "Reach wave 10 in the Deserto Ardente Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave4_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Deserto Ardente: onda 20",
+    "Deserto Ardente: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Deserto Ardente",
+    "Reach wave 20 in the Deserto Ardente Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave4_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Deserto Ardente: onda 30",
+    "Deserto Ardente: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Deserto Ardente",
+    "Reach wave 30 in the Deserto Ardente Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave4_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Deserto Ardente: onda 40",
+    "Deserto Ardente: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Deserto Ardente",
+    "Reach wave 40 in the Deserto Ardente Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave4_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Deserto Ardente: onda 50",
+    "Deserto Ardente: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Deserto Ardente",
+    "Reach wave 50 in the Deserto Ardente Campaign"
+   ],
+   "title": "lord4"
+  },
+  {
+   "id": "wave5_10",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Abismo Final: onda 10",
+    "Abismo Final: wave 10"
+   ],
+   "desc": [
+    "Chega à onda 10 na Campanha de Abismo Final",
+    "Reach wave 10 in the Abismo Final Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave5_20",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Abismo Final: onda 20",
+    "Abismo Final: wave 20"
+   ],
+   "desc": [
+    "Chega à onda 20 na Campanha de Abismo Final",
+    "Reach wave 20 in the Abismo Final Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave5_30",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Abismo Final: onda 30",
+    "Abismo Final: wave 30"
+   ],
+   "desc": [
+    "Chega à onda 30 na Campanha de Abismo Final",
+    "Reach wave 30 in the Abismo Final Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave5_40",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Abismo Final: onda 40",
+    "Abismo Final: wave 40"
+   ],
+   "desc": [
+    "Chega à onda 40 na Campanha de Abismo Final",
+    "Reach wave 40 in the Abismo Final Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wave5_50",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Abismo Final: onda 50",
+    "Abismo Final: wave 50"
+   ],
+   "desc": [
+    "Chega à onda 50 na Campanha de Abismo Final",
+    "Reach wave 50 in the Abismo Final Campaign"
+   ],
+   "title": "lord5"
+  },
+  {
+   "id": "raid0",
+   "cat": "raid",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Raids Fácil",
+    "Easy Raids"
+   ],
+   "desc": [
+    "Conclui as 6 raids na dificuldade Fácil",
+    "Clear all 6 raids on Easy"
+   ],
+   "title": ""
+  },
+  {
+   "id": "raid1",
+   "cat": "raid",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Raids Normal",
+    "Normal Raids"
+   ],
+   "desc": [
+    "Conclui as 6 raids na dificuldade Normal",
+    "Clear all 6 raids on Normal"
+   ],
+   "title": ""
+  },
+  {
+   "id": "raid2",
+   "cat": "raid",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Raids Difícil",
+    "Hard Raids"
+   ],
+   "desc": [
+    "Conclui as 6 raids na dificuldade Difícil",
+    "Clear all 6 raids on Hard"
+   ],
+   "title": "hardcore"
+  },
+  {
+   "id": "raid3",
+   "cat": "raid",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Raids Pesadelo",
+    "Nightmare Raids"
+   ],
+   "desc": [
+    "Conclui as 6 raids na dificuldade Pesadelo",
+    "Clear all 6 raids on Nightmare"
+   ],
+   "title": "nightmare"
+  },
+  {
+   "id": "raid4",
+   "cat": "raid",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Raids Inferno",
+    "Inferno Raids"
+   ],
+   "desc": [
+    "Conclui as 6 raids na dificuldade Inferno",
+    "Clear all 6 raids on Inferno"
+   ],
+   "title": "inferno"
+  },
+  {
+   "id": "stars1",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Estrelas 1",
+    "Stars 1"
+   ],
+   "desc": [
+    "Junta 1 estrela de prestígio na Campanha",
+    "Collect 1 prestige star in the Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "stars3",
+   "cat": "farm",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Estrelas 3",
+    "Stars 3"
+   ],
+   "desc": [
+    "Junta 3 estrelas de prestígio na Campanha",
+    "Collect 3 prestige stars in the Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "stars6",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Estrelas 6",
+    "Stars 6"
+   ],
+   "desc": [
+    "Junta 6 estrelas de prestígio na Campanha",
+    "Collect 6 prestige stars in the Campaign"
+   ],
+   "title": "lodestar"
+  },
+  {
+   "id": "stars12",
+   "cat": "farm",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Estrelas 12",
+    "Stars 12"
+   ],
+   "desc": [
+    "Junta 12 estrelas de prestígio na Campanha",
+    "Collect 12 prestige stars in the Campaign"
+   ],
+   "title": ""
+  },
+  {
+   "id": "stars20",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Estrelas 20",
+    "Stars 20"
+   ],
+   "desc": [
+    "Junta 20 estrelas de prestígio na Campanha",
+    "Collect 20 prestige stars in the Campaign"
+   ],
+   "title": "astro"
+  },
+  {
+   "id": "stars30",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Estrelas 30",
+    "Stars 30"
+   ],
+   "desc": [
+    "Junta 30 estrelas de prestígio na Campanha",
+    "Collect 30 prestige stars in the Campaign"
+   ],
+   "title": "emperor"
+  },
+  {
+   "id": "presmax0",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Floresta Sombria",
+    "Max prestige: Floresta Sombria"
+   ],
+   "desc": [
+    "Leva Floresta Sombria ao prestígio 5 (nível 51)",
+    "Take Floresta Sombria to prestige 5 (level 51)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "presmax1",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Cavernas Douradas",
+    "Max prestige: Cavernas Douradas"
+   ],
+   "desc": [
+    "Leva Cavernas Douradas ao prestígio 5 (nível 65)",
+    "Take Cavernas Douradas to prestige 5 (level 65)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "presmax2",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Castelo Maldito",
+    "Max prestige: Castelo Maldito"
+   ],
+   "desc": [
+    "Leva Castelo Maldito ao prestígio 5 (nível 80)",
+    "Take Castelo Maldito to prestige 5 (level 80)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "presmax3",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Pântano Tóxico",
+    "Max prestige: Pântano Tóxico"
+   ],
+   "desc": [
+    "Leva Pântano Tóxico ao prestígio 5 (nível 95)",
+    "Take Pântano Tóxico to prestige 5 (level 95)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "presmax4",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Deserto Ardente",
+    "Max prestige: Deserto Ardente"
+   ],
+   "desc": [
+    "Leva Deserto Ardente ao prestígio 5 (nível 108)",
+    "Take Deserto Ardente to prestige 5 (level 108)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "presmax5",
+   "cat": "farm",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Prestígio máximo: Abismo Final",
+    "Max prestige: Abismo Final"
+   ],
+   "desc": [
+    "Leva Abismo Final ao prestígio 5 (nível 120)",
+    "Take Abismo Final to prestige 5 (level 120)"
+   ],
+   "title": "abyss5"
+  },
+  {
+   "id": "ench5",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Equipado a Sério",
+    "Properly Geared"
+   ],
+   "desc": [
+    "Tem as 4 peças de equipamento em +5",
+    "Have all 4 gear pieces at +5"
+   ],
+   "title": ""
+  },
+  {
+   "id": "ench10",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Setup Completo",
+    "Full Setup"
+   ],
+   "desc": [
+    "Tem as 4 peças de equipamento em +10 (máximo)",
+    "Have all 4 gear pieces at +10 (max)"
+   ],
+   "title": "enchanter"
+  },
+  {
+   "id": "wmax1",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Coleção MAX 1",
+    "MAX Collection 1"
+   ],
+   "desc": [
+    "Tem 1 arma no máximo (3 estrelas)",
+    "Own 1 weapon at max (3 stars)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wmax2",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Coleção MAX 2",
+    "MAX Collection 2"
+   ],
+   "desc": [
+    "Tem 2 armas no máximo (3 estrelas)",
+    "Own 2 weapons at max (3 stars)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wmax3",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Coleção MAX 3",
+    "MAX Collection 3"
+   ],
+   "desc": [
+    "Tem 3 armas no máximo (3 estrelas)",
+    "Own 3 weapons at max (3 stars)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wmax4",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Coleção MAX 4",
+    "MAX Collection 4"
+   ],
+   "desc": [
+    "Tem 4 armas no máximo (3 estrelas)",
+    "Own 4 weapons at max (3 stars)"
+   ],
+   "title": ""
+  },
+  {
+   "id": "wmax5",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Coleção MAX 5",
+    "MAX Collection 5"
+   ],
+   "desc": [
+    "Tem 5 armas no máximo (3 estrelas)",
+    "Own 5 weapons at max (3 stars)"
+   ],
+   "title": "armorer"
+  },
+  {
+   "id": "anv5",
+   "cat": "gear",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Ferreiro +5",
+    "Smith +5"
+   ],
+   "desc": [
+    "Leva uma arma a +5 na Bigorna",
+    "Take a weapon to +5 at the Anvil"
+   ],
+   "title": ""
+  },
+  {
+   "id": "anv10",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Ferreiro +10",
+    "Smith +10"
+   ],
+   "desc": [
+    "Leva uma arma a +10 na Bigorna",
+    "Take a weapon to +10 at the Anvil"
+   ],
+   "title": ""
+  },
+  {
+   "id": "anv15",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Ferreiro +15",
+    "Smith +15"
+   ],
+   "desc": [
+    "Leva uma arma a +15 na Bigorna",
+    "Take a weapon to +15 at the Anvil"
+   ],
+   "title": ""
+  },
+  {
+   "id": "anv20",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Ferreiro +20",
+    "Smith +20"
+   ],
+   "desc": [
+    "Leva uma arma a +20 na Bigorna",
+    "Take a weapon to +20 at the Anvil"
+   ],
+   "title": "smith"
+  },
+  {
+   "id": "rar3",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Brilho Dourado",
+    "Golden Glow"
+   ],
+   "desc": [
+    "Obtém um item Lendário",
+    "Get a Legendary item"
+   ],
+   "title": ""
+  },
+  {
+   "id": "rar4",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Sorte Absoluta",
+    "Absolute Luck"
+   ],
+   "desc": [
+    "Obtém um item Mítico",
+    "Get a Mythic item"
+   ],
+   "title": "lucky"
+  },
+  {
+   "id": "fuse1",
+   "cat": "gear",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Fundidor 1",
+    "Fuser 1"
+   ],
+   "desc": [
+    "Funde equipamento 1 vez",
+    "Fuse gear 1 time"
+   ],
+   "title": ""
+  },
+  {
+   "id": "fuse10",
+   "cat": "gear",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Fundidor 10",
+    "Fuser 10"
+   ],
+   "desc": [
+    "Funde equipamento 10 vezes",
+    "Fuse gear 10 times"
+   ],
+   "title": ""
+  },
+  {
+   "id": "fuse50",
+   "cat": "gear",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Fundidor 50",
+    "Fuser 50"
+   ],
+   "desc": [
+    "Funde equipamento 50 vezes",
+    "Fuse gear 50 times"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily1",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Dedicado I",
+    "Dedicated I"
+   ],
+   "desc": [
+    "Completa uma missão diária",
+    "Complete a daily mission"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily5",
+   "cat": "prog",
+   "tier": "f",
+   "gems": 25,
+   "name": [
+    "Dedicado II",
+    "Dedicated II"
+   ],
+   "desc": [
+    "Completa 5 missões diárias",
+    "Complete 5 daily missions"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily25",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Dedicado III",
+    "Dedicated III"
+   ],
+   "desc": [
+    "Completa 25 missões diárias",
+    "Complete 25 daily missions"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily50",
+   "cat": "prog",
+   "tier": "m",
+   "gems": 50,
+   "name": [
+    "Dedicado IV",
+    "Dedicated IV"
+   ],
+   "desc": [
+    "Completa 50 missões diárias",
+    "Complete 50 daily missions"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily100",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Dedicado V",
+    "Dedicated V"
+   ],
+   "desc": [
+    "Completa 100 missões diárias",
+    "Complete 100 daily missions"
+   ],
+   "title": ""
+  },
+  {
+   "id": "daily250",
+   "cat": "prog",
+   "tier": "d",
+   "gems": 75,
+   "name": [
+    "Dedicado VI",
+    "Dedicated VI"
+   ],
+   "desc": [
+    "Completa 250 missões diárias",
+    "Complete 250 daily missions"
+   ],
+   "title": ""
+  }
+ ],
+ "titles": {
+  "lodestar": [
+   "Estrela Guia",
+   "Guiding Star"
+  ],
+  "astro": [
+   "Astro da Campanha",
+   "Campaign Star"
+  ],
+  "emperor": [
+   "Imperador da Campanha",
+   "Campaign Emperor"
+  ],
+  "abyss5": [
+   "Lenda do Abismo",
+   "Abyss Legend"
+  ],
+  "reaper": [
+   "Ceifador de Almas",
+   "Soul Reaper"
+  ],
+  "slayer": [
+   "Aniquilador",
+   "Annihilator"
+  ],
+  "treasure": [
+   "Caçador de Tesouros",
+   "Treasure Hunter"
+  ],
+  "tycoon": [
+   "Magnata",
+   "Tycoon"
+  ],
+  "veteran": [
+   "Veterano",
+   "Veteran"
+  ],
+  "legend": [
+   "Lenda Viva",
+   "Living Legend"
+  ],
+  "immortal": [
+   "Imortal",
+   "Immortal"
+  ],
+  "tireless": [
+   "Incansável",
+   "Tireless"
+  ],
+  "lord0": [
+   "Senhor da Floresta",
+   "Lord of the Forest"
+  ],
+  "lord1": [
+   "Rei das Cavernas",
+   "King of the Caves"
+  ],
+  "lord2": [
+   "Conquistador do Castelo",
+   "Castle Conqueror"
+  ],
+  "lord3": [
+   "Mestre do Pântano",
+   "Swamp Master"
+  ],
+  "lord4": [
+   "Faraó das Areias",
+   "Pharaoh of the Sands"
+  ],
+  "lord5": [
+   "Dominador do Abismo",
+   "Abyss Dominator"
+  ],
+  "beta": [
+   "Beta Tester",
+   "Beta Tester"
+  ],
+  "hardcore": [
+   "Veterano das Raids",
+   "Raid Veteran"
+  ],
+  "nightmare": [
+   "Terror dos Pesadelos",
+   "Nightmare Terror"
+  ],
+  "inferno": [
+   "Campeão do Inferno",
+   "Inferno Champion"
+  ],
+  "enchanter": [
+   "Encantador",
+   "Enchanter"
+  ],
+  "armorer": [
+   "Mestre Armeiro",
+   "Master Armorer"
+  ],
+  "smith": [
+   "Ferreiro Lendário",
+   "Legendary Smith"
+  ],
+  "lucky": [
+   "O Sortudo",
+   "The Lucky One"
+  ]
+ },
+ "raid": [
+  {
+   "n": "Fácil",
+   "col": "#4cc46a",
+   "hp": 3.2,
+   "dmg": 0.5,
+   "gold": 1,
+   "spd": 1.05
+  },
+  {
+   "n": "Normal",
+   "col": "#4a9aff",
+   "hp": 14,
+   "dmg": 1.4,
+   "gold": 2,
+   "spd": 1.1
+  },
+  {
+   "n": "Difícil",
+   "col": "#ff9a2a",
+   "hp": 34,
+   "dmg": 2.4,
+   "gold": 4,
+   "spd": 1.15
+  },
+  {
+   "n": "Pesadelo",
+   "col": "#ff4a4a",
+   "hp": 65,
+   "dmg": 6.5,
+   "gold": 8,
+   "spd": 1.2
+  },
+  {
+   "n": "Inferno",
+   "col": "#c040ff",
+   "hp": 105,
+   "dmg": 6.6,
+   "gold": 15,
+   "spd": 1.25
+  }
+ ],
+ "rar": [
+  [
+   "Comum",
+   "#9aa4b8"
+  ],
+  [
+   "Raro",
+   "#5aa8ff"
+  ],
+  [
+   "Épico",
+   "#b06aff"
+  ],
+  [
+   "Lendário",
+   "#ff9a2a"
+  ],
+  [
+   "Mítico",
+   "#ff4a6a"
+  ]
+ ],
+ "items": {
+  "head": [
+   "Capacete de Couro",
+   "Elmo de Ferro",
+   "Elmo Rúnico",
+   "Coroa Ancestral",
+   "Coroa Divina"
+  ],
+  "chest": [
+   "Armadura de Couro",
+   "Peitoral de Aço",
+   "Armadura Rúnica",
+   "Armadura Ancestral",
+   "Armadura Divina"
+  ],
+  "boots": [
+   "Botas de Couro",
+   "Botas de Ferro",
+   "Botas Rúnicas",
+   "Botas Ancestrais",
+   "Botas Divinas"
+  ],
+  "amulet": [
+   "Amuleto de Bronze",
+   "Colar de Prata",
+   "Talismã Rúnico",
+   "Talismã Ancestral",
+   "Talismã Divino"
+  ],
+  "ring": [
+   "Anel de Prata",
+   "Anel de Ouro",
+   "Anel de Diamante",
+   "Anel Roxo"
+  ]
+ },
+ "aff": {
+  "hp": {
+   "n": "Vida",
+   "u": "",
+   "b": 12,
+   "p": 3
+  },
+  "dmg": {
+   "n": "Dano",
+   "u": "%",
+   "b": 2.5,
+   "p": 0.25
+  },
+  "spd": {
+   "n": "Velocidade",
+   "u": "%",
+   "b": 1.5,
+   "p": 0.12
+  },
+  "cdr": {
+   "n": "Vel. de ataque",
+   "u": "%",
+   "b": 1.5,
+   "p": 0.12
+  },
+  "crit": {
+   "n": "Crítico",
+   "u": "%",
+   "b": 1.5,
+   "p": 0.1
+  },
+  "ls": {
+   "n": "Roubo de vida",
+   "u": "%",
+   "b": 0.8,
+   "p": 0.05
+  },
+  "dr": {
+   "n": "Redução de dano",
+   "u": "%",
+   "b": 1,
+   "p": 0.08
+  },
+  "gf": {
+   "n": "Ouro extra",
+   "u": "%",
+   "b": 3,
+   "p": 0.3
+  },
+  "xpb": {
+   "n": "XP extra",
+   "u": "%",
+   "b": 3,
+   "p": 0.3
+  },
+  "burn": {
+   "n": "Chance de queimar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "slow": {
+   "n": "Chance de abrandar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  }
+ },
+ "attrs": [
+  [
+   "vit",
+   "Vitalidade",
+   "+7 vida"
+  ],
+  [
+   "str",
+   "Força",
+   "+1% dano"
+  ],
+  [
+   "agi",
+   "Agilidade",
+   "+0.6% velocidade"
+  ],
+  [
+   "per",
+   "Perícia",
+   "+0.6% vel. de ataque"
+  ]
+ ],
+ "enc": [
+  100,
+  90,
+  80,
+  70,
+  60,
+  50,
+  40,
+  30,
+  22,
+  15
+ ],
+ "spec": [
+  [
+   "burn",
+   "Ígneo"
+  ],
+  [
+   "slow",
+   "Gélido"
+  ],
+  [
+   "ls",
+   "Vampírico"
+  ],
+  [
+   "crit",
+   "Letal"
+  ],
+  [
+   "gf",
+   "Próspero"
+  ],
+  [
+   "xpb",
+   "Sábio"
+  ],
+  [
+   "dr",
+   "Protetor"
+  ],
+  [
+   "dmg",
+   "Poderoso"
+  ]
+ ],
+ "slots": {
+  "head": "Capacete",
+  "chest": "Armadura",
+  "boots": "Botas",
+  "amulet": "Amuleto",
+  "ring": "Anel"
+ },
+ "enemies": {
+  "slime": {
+   "spr": "slime",
+   "hp": 3,
+   "spd": 55,
+   "r": 12,
+   "dmg": 8,
+   "gold": 3,
+   "ai": "chase"
+  },
+  "bat": {
+   "spr": "bat",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "skel": {
+   "spr": "skel",
+   "hp": 4,
+   "spd": 55,
+   "r": 12,
+   "dmg": 8,
+   "gold": 6,
+   "ai": "shoot",
+   "shot": "earrow"
+  },
+  "brute": {
+   "spr": "brute",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "wolf": {
+   "spr": "wolf",
+   "hp": 3,
+   "spd": 150,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "ghost": {
+   "spr": "ghost",
+   "hp": 4,
+   "spd": 50,
+   "r": 11,
+   "dmg": 7,
+   "gold": 7,
+   "ai": "shoot",
+   "shot": "orb"
+  },
+  "imp": {
+   "spr": "imp",
+   "hp": 5,
+   "spd": 95,
+   "r": 11,
+   "dmg": 9,
+   "gold": 8,
+   "ai": "shoot",
+   "shot": "orb",
+   "col": "#ff6a2a",
+   "pspd": 280,
+   "rate": 1.4
+  },
+  "beetle": {
+   "spr": "beetle",
+   "hp": 9,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "shroom": {
+   "spr": "shroom",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "sq": {
+   "spr": "sq",
+   "hp": 2,
+   "spd": 120,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "bee": {
+   "spr": "bee",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "gob": {
+   "spr": "gob",
+   "hp": 4,
+   "spd": 55,
+   "r": 12,
+   "dmg": 8,
+   "gold": 6,
+   "ai": "shoot",
+   "shot": "earrow"
+  },
+  "boar": {
+   "spr": "boar",
+   "hp": 6,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "acorn": {
+   "spr": "acorn",
+   "hp": 5,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "ent": {
+   "spr": "ent",
+   "hp": 7,
+   "spd": 48,
+   "r": 18,
+   "dmg": 12,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "cbat": {
+   "spr": "cbat",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "spider": {
+   "spr": "spider",
+   "hp": 3,
+   "spd": 150,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "miner": {
+   "spr": "miner",
+   "hp": 4,
+   "spd": 55,
+   "r": 12,
+   "dmg": 8,
+   "gold": 6,
+   "ai": "shoot",
+   "shot": "earrow"
+  },
+  "scarab": {
+   "spr": "scarab",
+   "hp": 9,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "rockb": {
+   "spr": "rockb",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "troll": {
+   "spr": "troll",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "vamp": {
+   "spr": "vamp",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "witch": {
+   "spr": "witch",
+   "hp": 4,
+   "spd": 50,
+   "r": 11,
+   "dmg": 7,
+   "gold": 7,
+   "ai": "shoot",
+   "shot": "orb",
+   "col": "#9acd32"
+  },
+  "sknight": {
+   "spr": "sknight",
+   "hp": 5,
+   "spd": 55,
+   "r": 12,
+   "dmg": 11,
+   "gold": 4,
+   "ai": "chase"
+  },
+  "garg": {
+   "spr": "garg",
+   "hp": 8,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "pump": {
+   "spr": "pump",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "armor": {
+   "spr": "armor",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "toad": {
+   "spr": "toad",
+   "hp": 4,
+   "spd": 55,
+   "r": 12,
+   "dmg": 9,
+   "gold": 4,
+   "ai": "chase"
+  },
+  "leech": {
+   "spr": "leech",
+   "hp": 3,
+   "spd": 150,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "wisp": {
+   "spr": "wisp",
+   "hp": 4,
+   "spd": 50,
+   "r": 11,
+   "dmg": 7,
+   "gold": 7,
+   "ai": "shoot",
+   "shot": "orb",
+   "col": "#40e0b0"
+  },
+  "croc": {
+   "spr": "croc",
+   "hp": 9,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "zombie": {
+   "spr": "zombie",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "spore": {
+   "spr": "spore",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "scorp": {
+   "spr": "scorp",
+   "hp": 9,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "mummy": {
+   "spr": "mummy",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "snake": {
+   "spr": "snake",
+   "hp": 3,
+   "spd": 150,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "vulture": {
+   "spr": "vulture",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "djinn": {
+   "spr": "djinn",
+   "hp": 4,
+   "spd": 50,
+   "r": 11,
+   "dmg": 7,
+   "gold": 7,
+   "ai": "shoot",
+   "shot": "orb",
+   "col": "#ffd34a"
+  },
+  "cactus": {
+   "spr": "cactus",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  },
+  "voidimp": {
+   "spr": "voidimp",
+   "hp": 2,
+   "spd": 125,
+   "r": 10,
+   "dmg": 6,
+   "gold": 4,
+   "ai": "bat"
+  },
+  "hellhound": {
+   "spr": "hellhound",
+   "hp": 3,
+   "spd": 150,
+   "r": 11,
+   "dmg": 9,
+   "gold": 5,
+   "ai": "chase"
+  },
+  "eye": {
+   "spr": "eye",
+   "hp": 4,
+   "spd": 50,
+   "r": 11,
+   "dmg": 7,
+   "gold": 7,
+   "ai": "shoot",
+   "shot": "orb",
+   "col": "#ff40ff"
+  },
+  "shgolem": {
+   "spr": "shgolem",
+   "hp": 10,
+   "spd": 48,
+   "r": 18,
+   "dmg": 18,
+   "gold": 12,
+   "ai": "chase"
+  },
+  "voidk": {
+   "spr": "voidk",
+   "hp": 9,
+   "spd": 62,
+   "r": 14,
+   "dmg": 15,
+   "gold": 14,
+   "ai": "charge"
+  },
+  "crystal": {
+   "spr": "crystal",
+   "hp": 8,
+   "spd": 42,
+   "r": 12,
+   "dmg": 6,
+   "gold": 9,
+   "ai": "chase",
+   "boom": true
+  }
+ },
+ "maxlv": 120,
+ "req": [
+  {
+   "lv": 1
+  },
+  {
+   "lv": 6
+  },
+  {
+   "lv": 12,
+   "raid": 0,
+   "d": 0
+  },
+  {
+   "lv": 30,
+   "raid": 5,
+   "d": 0
+  },
+  {
+   "lv": 50,
+   "raid": 5,
+   "d": 1
+  }
+ ],
+ "rarW": [
+  [
+   69.62,
+   23.87,
+   5.97,
+   0.5,
+   0.04
+  ],
+  [
+   65.54,
+   25.84,
+   7.86,
+   0.69,
+   0.07
+  ],
+  [
+   61.9,
+   27.59,
+   9.55,
+   0.87,
+   0.09
+  ],
+  [
+   58.65,
+   29.16,
+   11.06,
+   1.02,
+   0.11
+  ],
+  [
+   55.72,
+   30.57,
+   12.42,
+   1.16,
+   0.13
+  ],
+  [
+   53.07,
+   31.84,
+   13.65,
+   1.29,
+   0.14
+  ]
+ ],
+ "gearStar": [
+  1,
+  1.1,
+  1.2,
+  1.35
+ ],
+ "starMult": [
+  1,
+  1.4,
+  1.9,
+  2.5
+ ],
+ "wstarReq": [
+  {
+   "stone": 0,
+   "n": 1,
+   "kills": 5000
+  },
+  {
+   "stone": 1,
+   "n": 2,
+   "raids": 20
+  },
+  {
+   "stone": 3,
+   "n": 1,
+   "nraids": 50
+  }
+ ],
+ "xp": [
+  [
+   10,
+   420
+  ],
+  [
+   20,
+   820
+  ],
+  [
+   30,
+   1220
+  ],
+  [
+   40,
+   1620
+  ],
+  [
+   50,
+   4782
+  ],
+  [
+   60,
+   13563
+  ],
+  [
+   70,
+   37415
+  ],
+  [
+   80,
+   63239
+  ],
+  [
+   90,
+   105237
+  ],
+  [
+   100,
+   172990
+  ],
+  [
+   110,
+   281547
+  ],
+  [
+   120,
+   454474
+  ]
+ ],
+ "rewards": [
+  {
+   "gold": 145,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 192,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 239,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 286,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 0,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 335,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 0,
+    "il": 5
+   },
+   "wpn": 0
+  },
+  {
+   "gold": 384,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 435,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 486,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 0,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 537,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 590,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 1,
+    "il": 10
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 643,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 698,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 0,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 753,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 808,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 865,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 0,
+    "il": 15
+   },
+   "wpn": 1
+  },
+  {
+   "gold": 922,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 0,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 981,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1040,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1099,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1160,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 0,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 2,
+    "il": 20
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 1221,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1284,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1347,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1410,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 0,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1475,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 1,
+    "il": 25
+   },
+   "wpn": 1
+  },
+  {
+   "gold": 1540,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1607,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1674,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 1,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1741,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1810,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 2,
+    "il": 30
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 1879,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 1950,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 1,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2021,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2092,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2165,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 1,
+    "il": 35
+   },
+   "wpn": 2
+  },
+  {
+   "gold": 2238,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 1,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2313,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2388,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2463,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2540,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 1,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 3,
+    "il": 40
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 2617,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2696,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2775,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2854,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 1,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 2935,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 2,
+    "il": 45
+   },
+   "wpn": 3
+  },
+  {
+   "gold": 3016,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3099,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3182,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 1,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3265,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3350,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 3,
+    "il": 50
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 3435,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3522,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 2,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3609,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3696,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3785,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 2,
+    "il": 55
+   },
+   "wpn": 3
+  },
+  {
+   "gold": 3874,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 2,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 3965,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4056,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4147,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4240,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 2,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 4,
+    "il": 60
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 4333,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4428,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4523,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4618,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 2,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4715,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 3,
+    "il": 65
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 4812,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 4911,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5010,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 2,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5109,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5210,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 4,
+    "il": 70
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 5311,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5414,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 2,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5517,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5620,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5725,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 3,
+    "il": 75
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 5830,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 3,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 5937,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6044,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6151,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6260,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 3,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 4,
+    "il": 80
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 6369,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6480,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6591,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6702,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 3,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 6815,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 4,
+    "il": 85
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 6928,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7043,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7158,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 3,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7273,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7390,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 4,
+    "il": 90
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 7507,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7626,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 3,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7745,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7864,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 7985,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 4,
+    "il": 95
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 8106,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 3,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8229,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8352,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8475,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8600,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 4,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 4,
+    "il": 100
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 8725,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8852,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 8979,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9106,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 4,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9235,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "head",
+    "r": 4,
+    "il": 105
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 9364,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9495,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9626,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 4,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9757,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 9890,
+   "pts": 4,
+   "gems": 15,
+   "stone": null,
+   "item": {
+    "slot": "chest",
+    "r": 4,
+    "il": 110
+   },
+   "wpn": -1
+  },
+  {
+   "gold": 10023,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10158,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 4,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10293,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10428,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10565,
+   "pts": 2,
+   "gems": 5,
+   "stone": null,
+   "item": {
+    "slot": "boots",
+    "r": 4,
+    "il": 115
+   },
+   "wpn": 4
+  },
+  {
+   "gold": 10702,
+   "pts": 1,
+   "gems": 0,
+   "stone": {
+    "r": 4,
+    "n": 1
+   },
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10841,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 10980,
+   "pts": 1,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 11119,
+   "pts": 0,
+   "gems": 0,
+   "stone": null,
+   "item": null,
+   "wpn": -1
+  },
+  {
+   "gold": 11260,
+   "pts": 4,
+   "gems": 15,
+   "stone": {
+    "r": 4,
+    "n": 2
+   },
+   "item": {
+    "slot": "amulet",
+    "r": 4,
+    "il": 120
+   },
+   "wpn": -1
+  }
+ ],
+ "starfx": {
+  "k_sword": [
+   "2 investidas",
+   "3 investidas",
+   "4 investidas"
+  ],
+  "k_axe": [
+   "2 ondas de choque",
+   "3 ondas de choque",
+   "4 ondas de choque"
+  ],
+  "k_spear": [
+   "onda maior",
+   "2 ondas",
+   "3 ondas"
+  ],
+  "k_hammer": [
+   "frenesim de 7s",
+   "frenesim de 8s",
+   "frenesim de 10s"
+  ],
+  "k_blade": [
+   "onda maior",
+   "2 ondas",
+   "3 ondas"
+  ],
+  "a_bow": [
+   "10 flechas",
+   "14 flechas",
+   "20 flechas"
+  ],
+  "a_triple": [
+   "tiro maior",
+   "tiro mais forte",
+   "tiro gigante"
+  ],
+  "a_cross": [
+   "12 virotes",
+   "15 virotes",
+   "21 virotes"
+  ],
+  "a_dark": [
+   "11 virotes",
+   "14 virotes, 5 ricochetes",
+   "18 virotes, 5 ricochetes"
+  ],
+  "a_fire": [
+   "explosão maior",
+   "explosão enorme",
+   "explosão colossal"
+  ],
+  "m_fire": [
+   "2 meteoros",
+   "3 meteoros",
+   "CHUVA DE METEOROS"
+  ],
+  "m_ice": [
+   "área maior",
+   "área e gelo maiores",
+   "nova gigante (5s de gelo)"
+  ],
+  "m_bolt": [
+   "10 raios",
+   "14 raios",
+   "20 raios"
+  ],
+  "m_arcane": [
+   "círculo de 7s",
+   "círculo de 8s",
+   "círculo enorme de 10s"
+  ],
+  "m_dark": [
+   "dreno de 6s",
+   "dreno de 7s",
+   "dreno de 8s e maior"
+  ]
+ },
+ "daily": [
+  {
+   "k": "kills",
+   "min": 0,
+   "pt": "Mata 250 monstros"
+  },
+  {
+   "k": "bosses",
+   "min": 0,
+   "pt": "Derrota 2 bosses"
+  },
+  {
+   "k": "raids",
+   "min": 10,
+   "pt": "Vence 2 raids"
+  },
+  {
+   "k": "waves",
+   "min": 0,
+   "pt": "Chega à onda 12 na Campanha"
+  },
+  {
+   "k": "gold",
+   "min": 0,
+   "pt": "Ganha ¢900 em missões"
+  },
+  {
+   "k": "skills",
+   "min": 0,
+   "pt": "Usa a habilidade (E) 30 vezes"
+  },
+  {
+   "k": "loot",
+   "min": 0,
+   "pt": "Apanha 5 itens"
+  }
+ ],
+ "events": [
+  {
+   "id": "statue",
+   "until": "2026-11-18",
+   "untilTxt": [
+    "18 de Nov",
+    "Nov 18"
+   ],
+   "tries": 2,
+   "secs": 30,
+   "goldPer": 0.030303030303030304,
+   "goldCap": 40000
+  }
+ ],
+ "ar": {
+  "cost": 1000,
+  "secs": 300,
+  "tmax": 400,
+  "k": 0.9
+ },
+ "build": 24
+}
