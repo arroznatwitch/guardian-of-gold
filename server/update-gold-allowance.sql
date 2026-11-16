@@ -18,6 +18,6 @@ begin
   end loop;
 end $$;
 
--- limpa as ocorrencias registadas e reativa contas banidas pelo anti-cheat (opcional)
+-- reativa as contas banidas pelo anti-cheat (so as que tem ocorrencias registadas) e limpa o registo
+update gog.players set active = true, inactive_at = null where coalesce(owner, id) in (select root from gog.violations);
 delete from gog.violations;
-update gog.players set active = true, inactive_at = null where not active and id in (select coalesce(owner, id) from gog.players);
