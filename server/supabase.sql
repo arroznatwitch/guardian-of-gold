@@ -524,8 +524,8 @@ begin
     if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + 10 + dt / 8 then return 'bosses'; end if;
     if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + 2 + dt / 60 then return 'guard'; end if;
     if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + 5 + dt / 20 then return 'fuses'; end if;
-    if gog._n(nw, 'gold') > gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) then return 'gold'; end if;
-    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) then return 'spent'; end if;
+    if gog._n(nw, 'gold') > gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) + greatest(0, gog._n(nw, 'ar', 'gold') - gog._n(o, 'ar', 'gold')) then return 'gold'; end if;
+    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) + greatest(0, gog._n(nw, 'ar', 'gold') - gog._n(o, 'ar', 'gold')) then return 'spent'; end if;
     s0 := 0; s1 := 0; r0 := 0; r1 := 0;
     for i in 0..5 loop
       if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + 6 + dt / 8 then return 'waves'; end if;

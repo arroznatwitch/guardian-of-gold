@@ -17,19 +17,19 @@ function drawHub() {
     ctx.drawImage(ICN.coin, x0, Math.round(34 - 22 * .34 - 9), 18, 18); txt(gs, x0 + 22, 34, 22, '#fd5', 'left', 'bold');
     ctx.drawImage(ICN.gem, x0, Math.round(58 - 18 * .34 - 9), 18, 18); txt(ms, x0 + 22, 58, 18, '#7fe8ff', 'left', 'bold'); }
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
-  const tabs = [['farm', 'Campanha'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['pets', 'Pets'], ['guild', 'Guilda'], ['events', 'Eventos'], ['rank', 'Ranking'], ['options', 'Opções']];
+  const tabs = [['farm', 'Campanha'], ['raids', 'Raids'], ['char', 'Personagem'], ['bag', 'Mochila'], ['ench', 'Encantar'], ['weapons', 'Armas'], ['fuse', 'Fusão'], ['anvil', 'Bigorna'], ['pets', 'Pets'], ['guild', 'Guilda'], ['events', 'Eventos'], ['shop', 'Shop'], ['rank', 'Ranking'], ['options', 'Opções']];
   tabs.forEach((t, i) => {
-    const by = 76 + i * 29;
-    if (t[0] === 'options') { btn(20, by, 150, 26, t[1], () => { rk.focus = ''; optBack = 'hub'; state = 'options'; }, { col: '#2a2a48', hot: '#d2a73a', size: 13 }); return; }
-    btn(20, by, 150, 26, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    const by = 74 + i * 27;
+    if (t[0] === 'options') { btn(20, by, 150, 24, t[1], () => { rk.focus = ''; optBack = 'hub'; state = 'options'; }, { col: '#2a2a48', hot: '#d2a73a', size: 13 }); return; }
+    btn(20, by, 150, 24, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); if (tab === 'anvil') anvSel = save.eq[save.cls]; if (tab === 'fuse') fuseSel = save.eq[save.cls]; }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
     if (!tabOpen(t[0])) drawIcon('lock', 36, by + 13, 1.3);
     if (t[0] === 'events' && (dailyReady() > 0 || isWeekend())) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
   });
   if (on.token && (rwAvail() > 0 || achReady() > 0)) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(14, 54, 14, 14); txt('!', 21, 65, 11, '#000', 'center', 'bold'); }   // aviso no retrato: ha baus por abrir no Perfil
-  btn(20, 450, 150, 30, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
+  btn(20, 458, 150, 28, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
-  if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, profile: hubProfile, rewards: () => { profileTabs(); hubRewards(); }, ach: () => { profileTabs(); hubAch(); }, pets: hubPets, guild: hubGuild, events: hubEvents, rank: hubRank })[tab]();
+  if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, char: hubChar, bag: hubBag, ench: hubEnchant, weapons: hubWeapons, fuse: hubFuse, anvil: hubAnvil, profile: hubProfile, rewards: () => { profileTabs(); hubRewards(); }, ach: () => { profileTabs(); hubAch(); }, pets: hubPets, guild: hubGuild, events: hubEvents, shop: hubShop, rank: hubRank })[tab]();
   drawTutHub();   // passos guiados e lista "Primeiros passos" (94-tutorial.js)
 }
 let presAsk = -1;

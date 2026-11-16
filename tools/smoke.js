@@ -5,7 +5,7 @@ const vm = require('vm'), { loadGame } = require('./sim/load-game.js');
 const ctx = loadGame();
 const code = `
 (function () {
-  const out = [], tabs = ['farm', 'raids', 'char', 'bag', 'ench', 'weapons', 'fuse', 'anvil', 'pets', 'guild', 'rank', 'profile', 'rewards', 'ach'];
+  const out = [], tabs = ['farm', 'raids', 'char', 'bag', 'ench', 'weapons', 'fuse', 'anvil', 'pets', 'guild', 'shop', 'rank', 'profile', 'rewards', 'ach'];
   on = { token: 'a'.repeat(64), nick: 'Teste', name: 'Teste', country: 'PT' };
   for (const cls of ['knight', 'archer', 'mage']) {
     createCharacterForTest(cls);

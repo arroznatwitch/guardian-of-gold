@@ -126,7 +126,7 @@ async function mkProof(nick, pass) {
   const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('gog1|' + nick.toLowerCase()), iterations: 210000 }, key, 256);
   return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
-function statsAdd(g) { const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; t.kills += R.kills | 0; t.gold += Math.max(0, g | 0); t.bosses += R.bossK | 0; onlineSubmit(); }
+function statsAdd(g) { if (autoSim) return; const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; t.kills += R.kills | 0; t.gold += Math.max(0, g | 0); t.bosses += R.bossK | 0; onlineSubmit(); }
 function statPayload() {
   const t = save.stats || { kills: 0, gold: 0, bosses: 0 }, f = save.farmBest || {}, o = { cls: save.cls, level: save.pl.lv, kills: Math.floor(t.kills), gold: Math.floor(t.gold), bosses: t.bosses | 0, raids: Object.values(save.raids || {}).reduce((a, v) => a + (v || []).reduce((x, y) => x + y, 0), 0) };
   for (let i = 0; i < 6; i++) o['w' + i] = f[i] | 0; o.build = buildPayload(); return o;
@@ -260,6 +260,7 @@ let cloud = cloudNew(), cf = null;
 function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
 function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 8000); }
 async function cloudFlush() {
+  if (autoSim) return false;
   clearTimeout(cloud.timer); cloud.timer = null;
   if (!cloud.dirty || cloud.busy || !on.token || !cloud.ready || !save) return !cloud.dirty;
   cloud.busy = true; cloud.dirty = false;
