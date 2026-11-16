@@ -477,6 +477,12 @@ begin
 end $$;
 
 -- devolve null se o save e plausivel, ou o motivo ('abs:...' = valor impossivel)
+-- ouro permitido por recompensas por nivel resgatadas entre dois saves (formula igual a levelReward() no jogo, com folga)
+create or replace function gog._rw_gold(o jsonb, nw jsonb) returns numeric
+language sql immutable set search_path = '' as $$
+  select coalesce(sum(100 + 45 * l + 0.4 * l * l), 0) * 1.2 from generate_series(coalesce(gog._n(o, 'chestDone'), 0)::int + 1, least(coalesce(gog._n(nw, 'chestDone'), 0), 200)::int) l
+$$;
+
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
 declare k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
@@ -511,8 +517,8 @@ begin
     if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + 10 + dt / 8 then return 'bosses'; end if;
     if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + 2 + dt / 60 then return 'guard'; end if;
     if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + 5 + dt / 20 then return 'fuses'; end if;
-    if gog._n(nw, 'gold') > gog._n(o, 'gold') + 80000 + dt * 2000 then return 'gold'; end if;
-    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + 80000 + dt * 2000 then return 'spent'; end if;
+    if gog._n(nw, 'gold') > gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) then return 'gold'; end if;
+    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) then return 'spent'; end if;
     s0 := 0; s1 := 0; r0 := 0; r1 := 0;
     for i in 0..5 loop
       if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + 6 + dt / 8 then return 'waves'; end if;
