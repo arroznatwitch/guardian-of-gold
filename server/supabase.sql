@@ -142,6 +142,67 @@ begin
   return pid;
 end $$;
 
+-- ------------------------------------------------------------ seguranca: limites de pedidos e ajudas (update-security)
+alter table gog.players add column if not exists fail_at timestamptz;   -- ultima tentativa de login falhada (o contador de falhas expira ao fim de 1 h)
+
+-- HMAC do IP do pedido (nunca o IP em claro); null se nao ha cabecalho
+create or replace function gog._ip() returns text
+language plpgsql security definer set search_path = '' as $$
+declare hdr json; ip text;
+begin
+  begin hdr := nullif(current_setting('request.headers', true), '')::json; exception when others then hdr := null; end;
+  ip := btrim(coalesce(nullif(hdr->>'cf-connecting-ip', ''), nullif(split_part(coalesce(hdr->>'x-forwarded-for', ''), ',', -1), ''), nullif(hdr->>'x-real-ip', ''), ''));
+  if ip = '' then return null; end if;
+  return encode(extensions.hmac(ip, (select v from gog.secrets where k = 'ip_salt'), 'sha256'), 'hex');
+end $$;
+
+-- limite de pedidos: true se ainda cabe (mx pedidos por secs segundos neste balde)
+create or replace function gog._rate(b text, mx int, secs int) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare cnt int;
+begin
+  insert into gog.throttle as t (bucket, n, since) values (b, 1, now())
+  on conflict (bucket) do update set
+    n = case when t.since < now() - make_interval(secs => secs) then 1 else t.n + 1 end,
+    since = case when t.since < now() - make_interval(secs => secs) then now() else t.since end
+  returning n into cnt;
+  if random() < 0.01 then delete from gog.throttle where since < now() - interval '1 day' and bucket <> 'register'; end if;
+  return cnt <= mx;
+end $$;
+
+-- soma todos os numeros de um json (objetos/listas ate 4 niveis)
+create or replace function gog._tot(j jsonb, d int default 0) returns numeric
+language plpgsql immutable set search_path = '' as $$
+declare r numeric := 0; e jsonb;
+begin
+  if d > 4 then return 0; end if;
+  if jsonb_typeof(j) = 'array' then
+    for e in select x from jsonb_array_elements(j) x loop r := r + gog._tot(e, d + 1); end loop;
+  elsif jsonb_typeof(j) = 'object' then
+    for e in select x.value from jsonb_each(j) x loop r := r + gog._tot(e, d + 1); end loop;
+  else r := gog._nv(j);
+  end if;
+  return r;
+end $$;
+
+-- ouro extra que o Auto-Raid pode explicar: so se o contador de usos subiu (cada uso custa 1000 diamantes, conferido em _check_save), no maximo 1 000 000 por uso
+create or replace function gog._ar_gold(o jsonb, nw jsonb) returns numeric
+language plpgsql immutable set search_path = '' as $$
+begin
+  return case when gog._n(nw, 'ar', 'n') > gog._n(o, 'ar', 'n')
+    then least(greatest(0, gog._n(nw, 'ar', 'gold') - gog._n(o, 'ar', 'gold')), 1000000 * least(5, gog._n(nw, 'ar', 'n') - gog._n(o, 'ar', 'n'))) else 0 end;
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['gog._ip()', 'gog._rate(text,int,int)', 'gog._tot(jsonb,int)', 'gog._ar_gold(jsonb,jsonb)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); end if;
+  end loop;
+end $$;
+
 -- ------------------------------------------------------------ API publica
 drop function if exists public.gog_register(text, text);
 create or replace function public.gog_register(p_nick text, p_proof text, p_gender text default 'm', p_country text default null) returns jsonb
@@ -182,11 +243,13 @@ end $$;
 
 create or replace function public.gog_login(p_nick text, p_proof text) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare v gog.players; a gog.players; ok boolean; wait int;
+declare v gog.players; a gog.players; ok boolean; wait int; iph text;
 begin
   if p_nick is null or p_nick !~ '^[A-Za-z0-9_]{3,16}$' or p_proof is null or p_proof !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('ok', false, 'error', 'bad_login');
   end if;
+  iph := gog._ip();   -- no maximo 20 tentativas por minuto por rede (cada uma custa um bcrypt)
+  if iph is not null and not gog._rate('login:' || iph, 20, 60) then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
   select * into v from gog.players where nick_key = lower(p_nick) for update;
   if not found then
     perform extensions.crypt(p_proof, extensions.gen_salt('bf', 12));   -- mesmo custo: nao revela se o nick existe
@@ -204,8 +267,9 @@ begin
     update gog.players set failed = 0, locked_until = null where id = a.id;
     return jsonb_build_object('ok', true, 'nick', v.nick, 'token', gog._new_session(v.id), 'gender', v.gender, 'country', v.country);
   end if;
+  if a.fail_at is null or a.fail_at < now() - interval '1 hour' then a.failed := 0; end if;   -- as falhas expiram: ninguem fica bloqueado para sempre por tentativas alheias
   wait := case when a.failed + 1 >= 5 then least(3600, 30 * (2 ^ least(a.failed + 1 - 5, 7))::int) else 0 end;
-  update gog.players set failed = a.failed + 1, locked_until = case when wait > 0 then now() + make_interval(secs => wait) end where id = a.id;
+  update gog.players set failed = a.failed + 1, fail_at = now(), locked_until = case when wait > 0 then now() + make_interval(secs => wait) end where id = a.id;
   return jsonb_build_object('ok', false, 'error', 'bad_login');
 end $$;
 
@@ -271,6 +335,7 @@ begin
   if n_cls is null or n_cls not in ('knight', 'archer', 'mage') or least(n_level, n_bosses, n_raids) < 0 or least(n_kills, n_gold) < 0 or least(n_w[1], n_w[2], n_w[3], n_w[4], n_w[5], n_w[6]) < 0 then
     return jsonb_build_object('ok', false, 'error', 'bad_data');
   end if;
+  if v.save is null then return jsonb_build_object('ok', false, 'error', 'no_save'); end if;   -- o ranking so aceita contas com save verificado no servidor
   first_time := v.submitted_at is null;
   if v.save is not null then   -- o ranking usa o save verificado no servidor, nunca o que o cliente diz (e pode descer, nao so subir)
     n_level := greatest(1, gog._n(v.save, 'pl', 'lv'))::int; n_kills := gog._n(v.save, 'stats', 'kills')::bigint; n_gold := gog._n(v.save, 'stats', 'gold')::bigint;
@@ -334,9 +399,12 @@ begin
 end $$;
 
 create or replace function public.gog_nick_free(p_nick text) returns jsonb
-language sql security definer set search_path = '' as $$
-  select jsonb_build_object('ok', true, 'free', not exists (select 1 from gog.players where nick_key = lower(p_nick)));
-$$;
+language plpgsql security definer set search_path = '' as $$
+declare iph text := gog._ip();
+begin
+  if iph is not null and not gog._rate('nick:' || iph, 30, 60) then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
+  return jsonb_build_object('ok', true, 'free', not exists (select 1 from gog.players where nick_key = lower(coalesce(p_nick, ''))));
+end $$;
 
 -- ------------------------------------------------------------ permissoes
 do $$
@@ -560,7 +628,7 @@ language sql immutable set search_path = '' as $$ select 8 * gog._rw_levels(o, n
 
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
-declare k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
+declare sl double precision := least(1, dt / 60); k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
 begin
   -- valores impossiveis (ban imediato)
   if gog._n(nw, 'gold') > 2147483647 or gog._n(nw, 'gems') > 60000 or gog._n(nw, 'pl', 'lv') > 400 or gog._n(nw, 'stats', 'kills') > 5000000
@@ -595,25 +663,29 @@ begin
   -- saltos impossiveis face ao save anterior (dt = segundos desde a gravacao anterior)
   if o is not null then
     lv0 := gog._n(o, 'pl', 'lv'); g0 := gog._n(o, 'gems');
-    if lv1 > lv0 + 8 + dt / 10 then return 'level'; end if;
-    if gog._n(nw, 'stats', 'kills') > gog._n(o, 'stats', 'kills') + 100 + dt * 12 then return 'kills'; end if;
-    if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + 10 + dt / 8 then return 'bosses'; end if;
-    if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + 2 + dt / 60 then return 'guard'; end if;
-    if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + 5 + dt / 20 then return 'fuses'; end if;
-    if gog._n(nw, 'gold') > gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) + greatest(0, gog._n(nw, 'ar', 'gold') - gog._n(o, 'ar', 'gold')) then return 'gold'; end if;
-    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + 160000 + dt * 2000 + gog._rw_gold(o, nw) + greatest(0, gog._n(nw, 'ar', 'gold') - gog._n(o, 'ar', 'gold')) then return 'spent'; end if;
+    if lv1 > lv0 + greatest(5, 8 * sl) + dt / 10 then return 'level'; end if;
+    if gog._n(nw, 'stats', 'kills') > gog._n(o, 'stats', 'kills') + greatest(100, 100 * sl) + dt * 12 then return 'kills'; end if;
+    if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + greatest(5, 10 * sl) + dt / 8 then return 'bosses'; end if;
+    if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + greatest(2, 2 * sl) + dt / 60 then return 'guard'; end if;
+    if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + greatest(5, 5 * sl) + dt / 20 then return 'fuses'; end if;
+    if gog._n(nw, 'gold') > gog._n(o, 'gold') + greatest(80000, 160000 * sl) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'gold'; end if;
+    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + greatest(80000, 160000 * sl) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'spent'; end if;
     s0 := 0; s1 := 0; r0 := 0; r1 := 0;
     for i in 0..5 loop
-      if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + 6 + dt / 8 then return 'waves'; end if;
+      if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + greatest(3, 6 * sl) + dt / 8 then return 'waves'; end if;
       s0 := s0 + gog._nv(gog._idx(o->'pres', i)); s1 := s1 + gog._nv(gog._idx(nw->'pres', i));
       for j in 0..4 loop
         r0 := r0 + gog._nv(gog._idx(gog._idx(o->'raids', i), j)); r1 := r1 + gog._nv(gog._idx(gog._idx(nw->'raids', i), j));
       end loop;
     end loop;
     if s1 > s0 + 1 + dt / 120 then return 'prestige'; end if;
-    if r1 > r0 + 3 + dt / 45 then return 'raids'; end if;
+    if r1 > r0 + greatest(2, 3 * sl) + dt / 45 then return 'raids'; end if;
+    -- crescimento de armas, pedras e copias (antes so se verificava o valor maximo de cada uma)
+    if gog._tot(nw->'wl') > gog._tot(o->'wl') + greatest(6, 12 * sl) + dt / 10 then return 'growth:wl'; end if;
+    if gog._tot(nw->'stones') > gog._tot(o->'stones') + greatest(60, 200 * sl) + dt / 2 then return 'growth:stones'; end if;
+    if gog._tot(nw->'wst') > gog._tot(o->'wst') + greatest(150, 200 * sl) + dt / 2 then return 'growth:copies'; end if;
     -- diamantes: so sobem por subir de nivel (a cada 10), baus, conquistas recebidas (max. 75 cada) e o codigo promocional
-    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + 10 + 80 + gog._rw_gems(o, nw);
+    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + greatest(40, 90 * sl) + gog._rw_gems(o, nw);
     -- reembolso unico das skins removidas: so conta o que o save anterior provava ter comprado (300, 600 e 900 diamantes)
     if nw ? 'skRef' and not (o ? 'skRef') then
       foreach c in array array['knight', 'archer', 'mage'] loop
@@ -623,6 +695,8 @@ begin
       end loop;
     end if;
     if g1 > g0 + allow + refund then return 'gems'; end if;
+    -- cada uso do Auto-Raid custa 1000 diamantes: o save tem de os mostrar gastos (senao o ouro do Auto-Raid nao conta)
+    if gog._n(nw, 'ar', 'n') > gog._n(o, 'ar', 'n') and g1 > g0 + allow + refund - 1000 * least(5, gog._n(nw, 'ar', 'n') - gog._n(o, 'ar', 'n')) then return 'ar'; end if;
   end if;
   return null;
 end $$;
@@ -691,7 +765,7 @@ begin
   if p_rev <> v.save_rev then
     return jsonb_build_object('ok', false, 'error', 'conflict', 'rev', v.save_rev, 'dev', v.save_dev);
   end if;
-  if v.save_at is not null and v.save_at > now() - interval '3 seconds' then
+  if v.save_at is not null and v.save_at > now() - interval '10 seconds' then
     return jsonb_build_object('ok', false, 'error', 'slow');
   end if;
   -- uma conta sem save so pode comecar com um personagem novo (nivel 1 ou 2, quase sem ouro): impede levar o progresso de outra conta
@@ -709,7 +783,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'wrong_class', 'cls', v.char_cls);
   end if;
   -- anti-batota: valores impossiveis, conquistas sem prova e titulos que nao ganhaste
-  reason := gog._check_save(v.save, p_save, least(greatest(extract(epoch from now() - coalesce(v.save_at, now() - interval '3 seconds')), 3), 7 * 86400), coalesce(v.owner, v.id));
+  reason := gog._check_save(v.save, p_save, least(greatest(extract(epoch from now() - coalesce(v.save_at, now() - interval '10 seconds')), 10), 7 * 86400), coalesce(v.owner, v.id));
   if reason is not null then
     banned := gog._violation(pid, reason, reason);
     return jsonb_build_object('ok', false, 'error', case when banned then 'banned' else 'cheat' end);

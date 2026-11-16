@@ -106,7 +106,7 @@ rk.country = guessCountry();
 const RK_MSG = {
   banned: 'A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.',
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
-  nick_taken: 'Esse nick já está em uso', class_taken: 'Já tens um personagem com esta classe', too_many: 'Já tens os 3 personagens', not_found: 'Personagem não encontrado', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos registos neste momento. Tenta daqui a uns minutos.',
+  nick_taken: 'Esse nick já está em uso', class_taken: 'Já tens um personagem com esta classe', too_many: 'Já tens os 3 personagens', not_found: 'Personagem não encontrado', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos pedidos neste momento. Tenta daqui a uns minutos.',
   network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
   implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
 };
@@ -258,7 +258,7 @@ const DEV_ID = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toSt
 const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false, uid: null, cls: null, taken: [] });
 let cloud = cloudNew(), cf = null;
 function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
-function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 8000); }
+function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 11000); }
 async function cloudFlush() {
   if (autoSim) return false;
   clearTimeout(cloud.timer); cloud.timer = null;
@@ -279,7 +279,7 @@ async function cloudFlush() {
     try { const raw = localStorage.getItem(SAVE_KEY); if (raw) localStorage.setItem('bladehunter_orphan', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
     save = null; cloud.dirty = false; cloud.timer = null; lsSync(true); if (state !== 'play') state = 'menu'; return false;
   }
-  cloud.err = r.error; cloud.timer = setTimeout(() => cloudFlush(), r.error === 'slow' ? 4000 : 15000); return false;
+  cloud.err = r.error; cloud.timer = setTimeout(() => cloudFlush(), r.error === 'slow' ? 5000 : 15000); return false;
 }
 async function cloudEpoch() {   // descarta o save local e carrega o da conta (nunca mais envia o local antigo)
   cloud.ready = false; cloud.dirty = false; clearTimeout(cloud.timer); cloud.timer = null;
