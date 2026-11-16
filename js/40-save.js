@@ -25,6 +25,7 @@ function normalize(s) {
   if (s.pl && s.pl.lv > MAXLV) { s.pl.lv = MAXLV; s.pl.xp = 0; } if (s.chestDone > s.pl.lv) s.chestDone = s.pl.lv;   // nivel maximo 120
   s.daily = s.daily && typeof s.daily === 'object' && Array.isArray(s.daily.m) ? s.daily : { d: '', m: [], n: 0, ev: { d: '', t: 0 }, best: 0 };   // missoes diarias e evento (a6-events.js)
   s.lo = s.lo && typeof s.lo === 'object' ? s.lo : { cur: 0, own: [1, 0, 0], b: [null, null, null] };   // loadouts (a7-loadouts.js)
+  s.ar = s.ar && typeof s.ar === 'object' ? s.ar : { n: 0, gold: 0 };   // Auto-Raid comprada (a8-shop.js)
   s.wp = s.wp && typeof s.wp === 'object' ? s.wp : {};   // progresso por arma (abates, raids) para subir de estrela
   s.gold = s.gold || 0; s.up = Object.assign({}, d.up, s.up); s.done = s.done || 0; s.wl = s.wl || {}; s.pity = s.pity || {}; s.cheat = s.cheat || {}; s.stats = s.stats || { kills: 0, gold: 0, bosses: 0 }; s.pl = s.pl || { lv: 1, xp: 0 }; s.raids = s.raids || {}; s.attr = s.attr || { vit: 0, str: 0, agi: 0, per: 0 }; s.bag = s.bag || []; s.gear = Object.assign({ head: null, chest: null, boots: null, amulet: null }, s.gear); s.farmBest = s.farmBest || {}; s.gems = s.gems === undefined ? Math.floor(s.pl.lv / 10) * 10 : s.gems; s.chestDone = s.chestDone === undefined ? 0 : s.chestDone; if ((s.rwv | 0) < 3) { s.chestDone = 0; s.rwv = 3; }   // recompensas por nivel: reset unico, todos podem resgatar desde o nivel 1 s.wst = s.wst || {};
   s.tut = s.tut && typeof s.tut === 'object' ? s.tut : { on: (s.pl.lv | 0) <= 3 && !(s.stats && s.stats.kills > 20), skip: false, done: {}, claim: {} };   // tutorial (94-tutorial.js): saves antigos avancados nao o veem
@@ -45,8 +46,9 @@ function normalize(s) {
 }
 let save = null;
 try { const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('bladehunter_v2'); if (raw) save = normalize(JSON.parse(raw)); } catch (e) { save = null; }
+let autoSim = false;   // a simular uma Auto-Raid (a8-shop.js): nada e guardado nem enviado
 let labOn = false, labGod = false;   // laboratorio de batalha (96-lab.js): enquanto ligado nada e gravado nem enviado
-function persist() { if (labOn) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} cloudMark(); }
+function persist() { if (labOn || autoSim) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} cloudMark(); }
 
 const DEF_BINDS = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', attack: 'Space', special: 'KeyQ', skill: 'KeyE', dash: 'ShiftLeft', auto: 'KeyT', speed: 'KeyG', pause: 'Escape' };
 const BIND_LABELS = [['up', 'Mover para cima'], ['down', 'Mover para baixo'], ['left', 'Mover para a esquerda'], ['right', 'Mover para a direita'],
