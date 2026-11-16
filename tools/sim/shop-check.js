@@ -16,12 +16,14 @@
     if (r.gold <= 0 || r.xp <= 0) o.push(c + ' simulacao sem recompensas');
     const n = arRuns(r); if (n < 1) o.push(c + ' sem corridas');
     shopSel = { i: 0, d: 0 }; shopSim = Object.assign(r, { key: arKey(), i: 0, d: 0 });
-    const g0 = save.gold, gm0 = save.gems, bag0 = save.bag.length, raids0 = JSON.stringify(save.raids), kills0 = save.stats.kills | 0, st0 = save.stones.slice();
+    save.bagSlots = 1; for (let k = 0; k < 29; k++) save.bag.push(genItem('head', 1, 5)); const g0 = save.gold, gm0 = save.gems, bag0 = save.bag.length, raids0 = JSON.stringify(save.raids), kills0 = save.stats.kills | 0, st0 = save.stones.slice();
     arBuy();
-    if (save.gems !== gm0 - AR.cost + (1 + 0) * n) o.push(c + ' diamantes: ' + gm0 + ' -> ' + save.gems + ' (esperado ' + (gm0 - AR.cost + n) + ')');
+    if (save.gems !== gm0 - AR.cost) o.push(c + ' diamantes: ' + gm0 + ' -> ' + save.gems + ' (esperado so o custo, sem diamantes de recompensa)');
     if (save.gold <= g0) o.push(c + ' sem ouro depois de comprar'); if (JSON.stringify(save.raids) !== raids0) o.push(c + ' as raids contaram para o ranking'); if ((save.stats.kills | 0) !== kills0) o.push(c + ' os abates contaram');
-    if (!shopLast || shopLast.n !== n) o.push(c + ' resumo da compra em falta'); if (save.ar.n !== 1 || save.ar.gold <= 0) o.push(c + ' contador de auto-raid');
-    if (save.stones.reduce((a, b) => a + b, 0) <= st0.reduce((a, b) => a + b, 0)) o.push(c + ' sem pedras');
+    if (!shopLast || shopLast.n !== n) o.push(c + ' resumo da compra em falta'); if (save.bag.length > bagMax()) o.push(c + ' mochila acima do limite'); if (shopLast && shopLast.items > 1 && shopLast.soldN < 1) o.push(c + ' com a mochila cheia devia vender o excedente'); if (save.ar.n !== 1 || save.ar.gold <= 0) o.push(c + ' contador de auto-raid');
+    if (save.stones.reduce((a, b) => a + b, 0) !== st0.reduce((a, b) => a + b, 0)) o.push(c + ' deu pedras (nao devia)');
+    if (shopLast.gold > Math.round(r.gold * n * AR.k) + 1 || shopLast.gold < Math.round(r.gold * n * AR.k) - 1) o.push(c + ' ouro sem o -10%: ' + shopLast.gold + ' vs ' + Math.round(r.gold * n * AR.k));
+    if (n * 1 !== Math.floor(300 / r.t)) o.push(c + ' corridas em 5 min: ' + n);
     // sem diamantes ou com a simulacao antiga nao compra
     save.gems = 10; shopSim = Object.assign({}, r, { key: arKey() }); const gb = save.gold; arBuy(); if (save.gold !== gb) o.push(c + ' comprou sem diamantes');
     save.gems = 5000; shopSim = Object.assign({}, r, { key: 'outro' }); arBuy(); if (save.gold !== gb) o.push(c + ' comprou com simulacao de outro personagem');
