@@ -477,11 +477,18 @@ begin
 end $$;
 
 -- devolve null se o save e plausivel, ou o motivo ('abs:...' = valor impossivel)
--- ouro permitido por recompensas por nivel resgatadas entre dois saves (formula igual a levelReward() no jogo, com folga)
+-- recompensas por nivel resgatadas entre dois saves: normalmente so os niveis novos (chestDone sobe), mas num reset das recompensas
+-- (rwv sobe) o jogador volta a resgatar desde o nivel 1, por isso conta-se desde o 1. Formulas = levelReward() no jogo, com folga.
+create or replace function gog._rw_levels(o jsonb, nw jsonb) returns int
+language sql immutable set search_path = '' as $$
+  select greatest(0, least(coalesce(gog._n(nw, 'chestDone'), 0), 200)::int - case when coalesce(gog._n(nw, 'rwv'), 0) > coalesce(gog._n(o, 'rwv'), 0) then 0 else coalesce(gog._n(o, 'chestDone'), 0)::int end)
+$$;
 create or replace function gog._rw_gold(o jsonb, nw jsonb) returns numeric
 language sql immutable set search_path = '' as $$
-  select coalesce(sum(100 + 45 * l + 0.4 * l * l), 0) * 1.2 from generate_series(coalesce(gog._n(o, 'chestDone'), 0)::int + 1, least(coalesce(gog._n(nw, 'chestDone'), 0), 200)::int) l
+  select coalesce(sum(100 + 45 * l + 0.4 * l * l), 0) * 1.2 from generate_series(least(coalesce(gog._n(nw, 'chestDone'), 0), 200)::int - gog._rw_levels(o, nw) + 1, least(coalesce(gog._n(nw, 'chestDone'), 0), 200)::int) l
 $$;
+create or replace function gog._rw_gems(o jsonb, nw jsonb) returns numeric
+language sql immutable set search_path = '' as $$ select 8 * gog._rw_levels(o, nw)::numeric $$;
 
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
@@ -530,7 +537,7 @@ begin
     if s1 > s0 + 1 + dt / 120 then return 'prestige'; end if;
     if r1 > r0 + 3 + dt / 45 then return 'raids'; end if;
     -- diamantes: so sobem por subir de nivel (a cada 10), baus, conquistas recebidas (max. 75 cada) e o codigo promocional
-    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + 10 + 80;
+    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + 10 + 80 + gog._rw_gems(o, nw);
     -- reembolso unico das skins removidas: so conta o que o save anterior provava ter comprado (300, 600 e 900 diamantes)
     if nw ? 'skRef' and not (o ? 'skRef') then
       foreach c in array array['knight', 'archer', 'mage'] loop
