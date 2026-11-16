@@ -10,10 +10,10 @@ const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 200], ['d', 300]];
 const bagMax = () => BAG_PAGE * ((save && save.bagSlots) || 1);
 const SLOT_LBL = { head: 'Capacete', chest: 'Armadura', boots: 'Botas', amulet: 'Amuleto', ring: 'Anel' };
 const ITEM_NAMES = {
-  head:   ['Capacete de Couro', 'Elmo de Ferro', 'Elmo de Ametista', 'Coroa Ancestral', 'Coroa Divina'],
-  chest:  ['Armadura de Couro', 'Armadura de Ferro', 'Armadura de Ametista', 'Armadura Ancestral', 'Armadura Divina'],
-  boots:  ['Botas de Couro', 'Botas de Ferro', 'Botas de Ametista', 'Botas Ancestrais', 'Botas Divinas'],
-  amulet: ['Amuleto de Bronze', 'Colar de Prata', 'Talismã de Ametista', 'Talismã Ancestral', 'Talismã Divino'],
+  head:   ['Capacete de Couro', 'Elmo de Ferro', 'Elmo de Ametista', 'Elmo Celeste', 'Elmo Demoníaco'],
+  chest:  ['Armadura de Couro', 'Armadura de Ferro', 'Armadura de Ametista', 'Armadura Celeste', 'Armadura Demoníaca'],
+  boots:  ['Botas de Couro', 'Botas de Ferro', 'Botas de Ametista', 'Botas Celestes', 'Botas Demoníacas'],
+  amulet: ['Amuleto de Bronze', 'Colar de Prata', 'Talismã de Ametista', 'Talismã Celeste', 'Talismã Demoníaco'],
   ring:   ['Anel de Prata', 'Anel de Ouro', 'Anel de Diamante', 'Anel Roxo'],   // Comum, Raro, Epico, Lendario (nao ha anel Mitico)
 };
 const SLOT_ROWS = {
@@ -51,6 +51,7 @@ const SLOT_SPR = {}; for (const sl of SLOTS) SLOT_SPR[sl] = RAR.map((r, i) => ma
 for (const sl of SLOTS) SLOT_SPR[sl][0] = C16[sl];   // os comuns usam a pixel art feita a mao (16x16)
 for (const sl of SLOTS) SLOT_SPR[sl][1] = IRON_SPR[sl];   // os raros (Ferro) tambem usam pixel art feita a mao (16x16)
 for (const sl of SLOTS) SLOT_SPR[sl][2] = AMETHYST_SPR[sl];   // os epicos (Ametista) tambem usam pixel art feita a mao (16x16)
+for (const sl of SLOTS) { SLOT_SPR[sl][3] = CELESTE_SPR[sl]; SLOT_SPR[sl][4] = DEMON_SPR[sl]; }   // lendarios (Celeste) e miticos (Demoniaco)
 
 // ----- Aneis: bonus de conjunto -----
 // 4 aros (Prata, Ouro, Diamante, Roxo = Comum, Raro, Epico, Lendario) x 4 gemas (a cor da gema e o stat que o anel melhora)
