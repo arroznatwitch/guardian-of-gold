@@ -39,7 +39,7 @@ function endMission(win, mode) {
   R.petGain = 0; R.petUp = 0; if (R.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { R.petGain = R.petXp; R.petUp = addPetXp(save.pets.eq, R.petXp); }
   R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
-  for (const id of R.wloot) { save.wst[id][0]++; const ci = CLASSES[save.cls].weapons.findIndex(w => w.id === id); if (ci >= 0) save.own[save.cls][ci] = 1; } R.wlootN = R.wloot.length;
+  for (const id of R.wloot) save.wst[id][0]++; R.wlootN = R.wloot.length;
   if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; }
     const rg = 1 + R.raid.d; save.gems += rg; R.gemGain = (R.gemGain | 0) + rg; }   // diamantes por raid ganha: 1 (Facil) ate 5 (Inferno)   // pedras de evolucao: a raridade segue a dificuldade
   R.lootN = R.loot.length; save.gold += g; R.earned = g; dailyAll(win, g, mode === 'cash' ? R.wave : R.wave - 1); statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();

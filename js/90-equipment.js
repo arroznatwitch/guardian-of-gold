@@ -144,7 +144,7 @@ function rollRarity(boost = 0, min = 0) {
 const runIL = () => (R.raid ? 6 + R.m * 6 + R.raid.d * 4 : (R.farm && R.rec ? R.rec : 1 + R.m * 6) + Math.floor((R.wave || 1) * .9)) + Math.floor((save.pl.lv || 1) * .5);
 const lootBoost = () => R.raid ? 2 + R.raid.d * 2 : Math.min(6, Math.floor((R.wave || 1) / 4));
 function giveWeaponCopy(x, y) {
-  const c = CLASSES[save.cls], ok = c.weapons.map((w, i) => i).filter(i => weaponReq(i).ok), i = ok[Math.floor(Math.random() * ok.length)], w = c.weapons[i];
+  const c = CLASSES[save.cls], ok = c.weapons.map((w, i) => i).filter(i => save.own[save.cls][i]), i = ok.length ? ok[Math.floor(Math.random() * ok.length)] : 0, w = c.weapons[i];   // so caem copias de armas que ja tens (a copia nao desbloqueia a arma)
   R.wloot.push(w.id); R.texts.push({ x, y: y - 28, s: 'Cópia: ' + w.n, t: 1.8, col: '#ffd34a', sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 24, t: .4, max: .4, col: '#ffd34a' }); SFX.heal();
 }
 // o drop depende do monstro: os fortes (bruto, escaravelho) largam mais vezes e itens melhores; os fracos (lodo, morcego) menos e piores
