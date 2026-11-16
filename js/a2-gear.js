@@ -477,7 +477,7 @@ const itemBand = it => Math.floor((Math.max(1, it.il) - 1) / 10), bandName = b =
 const fuseKeyOf = it => it.slot + '|' + it.r + '|' + gSt(it) + '|' + itemBand(it);
 const FUSE_IL_BONUS = 2, fuseNewIl = pick => Math.min(120, Math.round(pick.reduce((a, q) => a + q.il, 0) / Math.max(1, pick.length)) + FUSE_IL_BONUS);   // o nivel final e a media dos itens usados + 2 (alem da estrela)
 function gearGroups() {
-  const m = {}; save.bag.forEach(it => { if (it.slot === 'ring' || gSt(it) >= STAR_MAX || it.lk) return;   // o anel nao se funde
+  const m = {}; save.bag.forEach(it => { if (it.slot === 'ring' || gSt(it) >= STAR_MAX) return;   // o anel nao se funde (itens com cadeado tambem se fundem: tu escolhes quais)
     (m[fuseKeyOf(it)] = m[fuseKeyOf(it)] || []).push(it); });
   return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
 }
@@ -561,7 +561,7 @@ function hubFuse() {
       } else txt('Marca itens para ver o resultado.', rx + rw / 2, ry + 90, 12, '#667', 'center');
       const fee = fuseKeep ? gFuseFee(fuseKeep) : 0, ok = !lock && fusePick.length === FUSE_N && fuseKeep && save.gold >= fee;
       btn(197, cy0 + 106, 290, 34, fusePick.length === FUSE_N ? `Juntar ${FUSE_N} > 1 · ¢${gfmt(fee)}` : `Marca ${FUSE_N} itens`, () => fuseGear(fusePick, fuseKeep), { size: 14, off: !ok, col: '#2f7a4a', hot: '#3fa061' });
-      txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça.`, 342, 462, 10, '#9cf', 'center');
+      txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça. ${T2('Itens com cadeado também entram.', 'Locked items can be merged too.')}`, 342, 462, 10, '#9cf', 'center');
     }
   }
   for (const q of fz.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
