@@ -7,7 +7,7 @@ begin
   rule := $r$  -- atributos: os pontos distribuidos + por gastar nunca passam de 3 por nivel + os pontos comprados (max. 1200); valores absurdos = ban imediato
   if (select coalesce(sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end), 0)
         from jsonb_each_text(case when jsonb_typeof(nw->'attr') = 'object' then nw->'attr' else '{}'::jsonb end) e)
-     + coalesce(gog._n(nw, 'pts'), 0) > 3 * (coalesce(gog._n(nw, 'pl', 'lv'), 1) - 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 30
+     + coalesce(gog._n(nw, 'pts'), 0) > 4 * coalesce(gog._n(nw, 'pl', 'lv'), 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 40
      or coalesce(gog._n(nw, 'buyN'), 0) > 1200 then
     return 'abs:attrs';
   end if;

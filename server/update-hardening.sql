@@ -30,7 +30,7 @@ create or replace function gog._sane(s jsonb) returns text
 language plpgsql immutable set search_path = '' as $$
 declare b jsonb; it jsonb; lim numeric; tot numeric;
 begin
-  lim := 3 * (gog._n(s, 'pl', 'lv') - 1) + least(gog._n(s, 'buyN'), 1200) + 30;
+  lim := 4 * gog._n(s, 'pl', 'lv') + least(gog._n(s, 'buyN'), 1200) + 40;   -- 3 pontos por nivel + ate 1 por nivel das recompensas por nivel + os comprados
   if gog._n(s, 'pts') < 0 or gog._n(s, 'buyN') < 0 or gog._n(s, 'pts') > 100000 then return 'abs:neg'; end if;
   if jsonb_typeof(s->'lo'->'b') = 'array' then   -- builds guardadas (loadouts)
     for b in select x from jsonb_array_elements(s->'lo'->'b') x loop

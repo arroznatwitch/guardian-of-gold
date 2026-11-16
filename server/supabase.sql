@@ -296,7 +296,7 @@ begin
   end if;
   nb := gog._clean_build(p->'build');
   nb := gog._truth_build(nb, v.save);
-  if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 3 * (n_level - 1) + 1230 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico
+  if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 4 * n_level + 1240 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico
   if nb is not null then
     nb := nb - 'title';   -- o titulo mostrado vem do save verificado, nunca do pedido
     if v.save is not null and coalesce(v.save->>'title', '') <> '' and gog._title_ok(v.save, coalesce(v.owner, v.id), v.save->>'title') then nb := nb || jsonb_build_object('title', v.save->>'title'); end if;
@@ -510,7 +510,7 @@ create or replace function gog._sane(s jsonb) returns text
 language plpgsql immutable set search_path = '' as $$
 declare b jsonb; it jsonb; lim numeric; tot numeric;
 begin
-  lim := 3 * (gog._n(s, 'pl', 'lv') - 1) + least(gog._n(s, 'buyN'), 1200) + 30;
+  lim := 4 * gog._n(s, 'pl', 'lv') + least(gog._n(s, 'buyN'), 1200) + 40;   -- 3 pontos por nivel + ate 1 por nivel das recompensas por nivel + os comprados
   if gog._n(s, 'pts') < 0 or gog._n(s, 'buyN') < 0 or gog._n(s, 'pts') > 100000 then return 'abs:neg'; end if;
   if jsonb_typeof(s->'lo'->'b') = 'array' then   -- builds guardadas (loadouts)
     for b in select x from jsonb_array_elements(s->'lo'->'b') x loop
@@ -576,7 +576,7 @@ begin
   -- atributos: os pontos distribuidos + por gastar nunca passam de 3 por nivel + os pontos comprados (max. 1200); valores absurdos = ban imediato
   if (select coalesce(sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end), 0)
         from jsonb_each_text(case when jsonb_typeof(nw->'attr') = 'object' then nw->'attr' else '{}'::jsonb end) e)
-     + coalesce(gog._n(nw, 'pts'), 0) > 3 * (coalesce(gog._n(nw, 'pl', 'lv'), 1) - 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 30
+     + coalesce(gog._n(nw, 'pts'), 0) > 4 * coalesce(gog._n(nw, 'pl', 'lv'), 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 40
      or coalesce(gog._n(nw, 'buyN'), 0) > 1200 then
     return 'abs:attrs';
   end if;
