@@ -21,7 +21,7 @@ function hubChar() {
   slotBtn(237, 128, 'head', 'Capacete', save.gear.head, null, go('head'));
   slotBtn(237, 190, 'chest', 'Armadura', save.gear.chest, null, go('chest'));
   slotBtn(237, 252, 'boots', 'Botas', save.gear.boots, null, go('boots'));
-  slotBtn(437, 128, 'weapon', 'Arma', null, (x, y) => weaponIcon(w.id, x, y, 1.8), () => tab = 'weapons');
+  slotBtn(437, 128, 'weapon', 'Arma', null, (x, y) => weaponIcon(w.id, x, y, 1.8), () => { tab = 'bag'; bagFilter = 'weapons'; bagSel = -1; bagPage = 0; bagPick.clear(); });
   if (wlvl()) txt('+' + wlvl(), 460, 151, 11, '#fff', 'right', 'bold'); miniStars(wStar(w.id), 418, 109);
   slotBtn(437, 190, 'amulet', 'Amuleto', save.gear.amulet, null, go('amulet'));
   slotBtn(437, 252, 'ring', 'Anel', save.gear.ring, null, go('ring'));
@@ -70,10 +70,11 @@ function hubChar() {
   drawLoadouts();   // builds (a7-loadouts.js)
 }
 // ----- Mochila -----
-let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0;
+let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0, forgeSub = 'ench';
 function hubBag() {
-  [['all', 'Todos']].concat(EQ_SLOTS.map(sl => [sl, SLOT_LBL[sl]]), [['mat', 'Materiais']]).forEach(([k, l], i) => btn(197 + i * 43, 88, 41, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; bagPick.clear(); }, { size: 9, col: bagFilter === k ? '#a8821f' : (k === 'mat' ? '#3a2f5a' : '#2a2a48') }));
+  [['all', 'Todos']].concat(EQ_SLOTS.map(sl => [sl, SLOT_LBL[sl]]), [['mat', 'Materiais'], ['weapons', 'Armas']]).forEach(([k, l], i) => btn(197 + i * 43, 88, 41, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; bagPick.clear(); }, { size: 9, col: bagFilter === k ? '#a8821f' : (k === 'mat' || k === 'weapons' ? '#3a2f5a' : '#2a2a48') }));
   if (bagFilter === 'mat') { hubMaterials(); return; }
+  if (bagFilter === 'weapons') { hubWeapons(); return; }
   // mochilas: cinco separadores numerados; os bloqueados mostram um cadeado e o proximo mostra o preco
   const slots = save.bagSlots || 1; if (bagPage >= slots) bagPage = 0;
   txt('Mochila', 197, 132, 12, '#8a9ab8', 'left', 'bold');
@@ -133,7 +134,7 @@ function hubBag() {
   { const risky = it.r >= 3 || cmpItems(it, cur).verdict > 0 || it.ench >= 3 || (it.st || 0) > 0, armed = sellArm === it;
     btn(512, 412, 256, 28, it.lk ? 'Bloqueado (não se vende)' : armed ? 'Confirmar venda?' : `Vender ¢${sellValue(it)}`, () => { if (it.lk) { SFX.error(); return; } if (risky && !armed) { sellArm = it; SFX.click(); return; } sellArm = null; save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, off: !!it.lk, col: armed ? '#b03a2a' : '#a06a20', hot: armed ? '#d04a3a' : '#c98a30' });
     if (risky && !armed && !it.lk) txt(it.r >= 3 ? 'Item raro: pede confirmação' : 'Pode ser melhor que o equipado', 640, 476, 10, '#f99', 'center'); }
-  btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('ench')) { lockClick('ench'); return; } enchItem = it; tab = 'ench'; }, { size: 14, off: it.slot === 'ring', col: tabOpen('ench') ? '#5a3a7a' : '#26262f', hot: tabOpen('ench') ? '#7a55a0' : '#33333f' });   // o anel nao se encanta
+  btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('forge')) { lockClick('forge'); return; } enchItem = it; tab = 'forge'; forgeSub = 'ench'; }, { size: 14, off: it.slot === 'ring', col: tabOpen('forge') ? '#5a3a7a' : '#26262f', hot: tabOpen('forge') ? '#7a55a0' : '#33333f' });   // o anel nao se encanta
 }
 
 // materiais das raids: pedras de evolucao (nao se vendem)
@@ -357,7 +358,7 @@ function weaponReq(i) {
 function hubWeapons() {
   const c = CLASSES[save.cls];
   c.weapons.forEach((w, i) => {
-    const x = 195, y = 88 + i * 79, wd = 585, h = 72, own = save.own[save.cls][i], eq = save.eq[save.cls] === i, lv = save.wl[w.id] || 0;
+    const x = 195, y = 113 + i * 72, wd = 585, h = 72, own = save.own[save.cls][i], eq = save.eq[save.cls] === i, lv = save.wl[w.id] || 0;
     const [tn, tc] = TIERS[i], wc = WCOL[w.id], ac = auraCol(lv), rq = weaponReq(i), locked = !own && !rq.ok;
     if (locked) ui.push({ x, y, w: wd, h, fn: () => lockClick(w.id) });
     panel(x, y, wd, h, '#232342', own ? tc : shade(tc, -.6));
@@ -390,6 +391,15 @@ function hubWeapons() {
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');
   });
+}
+/* ----- Forja: junta Encantar, Bigorna e Fusão numa só aba; cada uma mantem o seu proprio nivel de bloqueio ----- */
+const FORGE_SUBS = [['ench', 'Encantar', hubEnchant], ['anvil', 'Bigorna', hubAnvil], ['fuse', 'Fusão', hubFuse]];
+function hubForge() {
+  FORGE_SUBS.forEach(([k, l], i) => { const x = 197 + i * 196, locked = !tabOpen(k);
+    btn(x, 88, 188, 20, l, () => { if (locked) { lockClick(k); return; } forgeSub = k; if (k === 'anvil') anvSel = save.eq[save.cls]; if (k === 'fuse') fuseSel = save.eq[save.cls]; }, { size: 12, col: forgeSub === k ? '#a8821f' : '#2a2a48' });
+    if (locked) drawIcon('lock', x + 8, 98, .8); });
+  const [, , fn] = FORGE_SUBS.find(([k]) => k === forgeSub) || FORGE_SUBS[0];
+  drawOffset(22, fn);
 }
 function drawAnvil(ax, ay, id, lv) {
   ctx.fillStyle = '#4a4f5c'; ctx.beginPath(); [[-80,-40],[70,-40],[115,-28],[70,-14],[36,-14],[30,20],[60,20],[60,42],[-60,42],[-60,20],[-30,20],[-36,-14],[-80,-14]].forEach((p, i) => i ? ctx.lineTo(ax + p[0], ay + p[1]) : ctx.moveTo(ax + p[0], ay + p[1])); ctx.fill();
@@ -432,9 +442,9 @@ function hubAnvil() {
   txt(`Falhas seguidas: ${pf}`, 600, 160, 13, pf ? '#ffd34a' : '#778', 'center');
   drawAnvil(615, 335, w.id, lv);
   txt('Histórico:', 470, 409, 12, '#aab');
-  anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 530 + i * 28, 392, 24, 24));   // icones 16x16 desenhados a mao, a 1.5x
-  if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 440, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 460, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
-  txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 478, 11, '#aab', 'center');
+  anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 530 + i * 28, 388, 24, 24));   // icones 16x16 desenhados a mao, a 1.5x
+  if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 434, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 453, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
+  txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 470, 11, '#aab', 'center');
 }
 function hammer(i) {
   const w = CLASSES[save.cls].weapons[i], lv = save.wl[w.id] || 0;
