@@ -271,6 +271,7 @@ async function cloudFlush() {
     if (r.dev === DEV_ID) { cloud.rev = r.rev; cloud.timer = setTimeout(() => cloudFlush(), 500); return false; }   // foi esta mesma janela (ex.: envio ao fechar)
     cloudConflict(); return false;
   }
+  if (r.error === 'epoch') { cloudEpoch(); return false; }   // o servidor repos o save desta conta: o local deixa de valer
   if (r.error === 'auth') { dropSession(false); return false; }
   if (r.error === 'banned') { cloud.dirty = false; cloud.timer = null; dropSession(false); rkSay('banned'); return false; }   // anti-batota: valores impossiveis ou 3 ocorrencias
   if (r.error === 'cheat') { cloud.err = 'cheat'; hubToast = { t: 6, s: 'O servidor recusou o save: valores suspeitos. Se jogaste normalmente, espera um pouco e tenta outra vez.', col: '#f88' }; cloud.timer = setTimeout(() => cloudFlush(), 60000); return false; }
@@ -279,6 +280,12 @@ async function cloudFlush() {
     save = null; cloud.dirty = false; cloud.timer = null; lsSync(true); if (state !== 'play') state = 'menu'; return false;
   }
   cloud.err = r.error; cloud.timer = setTimeout(() => cloudFlush(), r.error === 'slow' ? 4000 : 15000); return false;
+}
+async function cloudEpoch() {   // descarta o save local e carrega o da conta (nunca mais envia o local antigo)
+  cloud.ready = false; cloud.dirty = false; clearTimeout(cloud.timer); cloud.timer = null;
+  const r = await rpc('gog_save_get', { p_token: on.token });
+  if (r.ok && r.save) { cloud.rev = r.rev; let cl; try { cl = normalize(r.save); } catch (e) { cloud.ready = true; return; } cloudApply(cl, false); hubToast = { t: 5, s: 'O servidor repôs o save desta conta.', col: '#ffd34a' }; }
+  else cloud.ready = true;
 }
 function cloudApply(sv, upload) {
   save = sv; try { localStorage.setItem(OWNER_KEY, cloud.uid || on.nick); if (sv) localStorage.setItem(SAVE_KEY, JSON.stringify(sv)); } catch (e) {}
@@ -292,6 +299,7 @@ async function cloudConflict() {
   cloud.ready = false; const r = await rpc('gog_save_get', { p_token: on.token });
   if (!r.ok || !r.save) { cloud.ready = true; cloud.timer = setTimeout(() => cloudFlush(), 15000); return; }
   cloud.rev = r.rev; const cl = normalize(r.save), lo = save;
+  if (lo && (lo.ep | 0) !== (cl.ep | 0)) return cloudApply(cl, false);   // epoca diferente: o save local e antigo
   cf = { cloud: cl, local: lo, reason: 'dev', done: u => cloudApply(u ? lo : cl, u) }; state = 'conflict';
 }
 async function cloudStart() {
@@ -311,6 +319,7 @@ async function cloudStart() {
   const mine = !!local;
   if (r.save) {
     let cl; try { cl = normalize(r.save); } catch (e) { cloud.err = 'bad_data'; state = 'syncerr'; return; }
+    if (mine && (local.ep | 0) !== (cl.ep | 0)) return cloudApply(cl, false);   // o servidor repos o save: o local e descartado
     if (mine && uns && srev !== r.rev) { cf = { cloud: cl, local, reason: 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
     if (mine && uns) return cloudApply(local, true);
     return cloudApply(cl, false);

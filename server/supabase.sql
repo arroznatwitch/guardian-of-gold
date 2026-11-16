@@ -631,6 +631,7 @@ begin
   end if;
   if length(p_save::text) > 600000 then return jsonb_build_object('ok', false, 'error', 'too_big'); end if;
   select * into v from gog.players where id = pid for update;
+  if v.save is not null and gog._n(p_save, 'ep') <> gog._n(v.save, 'ep') then return jsonb_build_object('ok', false, 'error', 'epoch'); end if;   -- o admin repos este save: o save que o cliente tem (local) e antigo e nunca pode substituir o do servidor
   if p_rev <> v.save_rev then
     return jsonb_build_object('ok', false, 'error', 'conflict', 'rev', v.save_rev, 'dev', v.save_dev);
   end if;
