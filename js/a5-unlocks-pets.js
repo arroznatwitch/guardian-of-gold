@@ -1,7 +1,7 @@
 'use strict';
 /* ----- cadeados, desbloqueios e animacao ----- */
 let ua = null, lkShake = {}, hubToast = { t: 0, s: '', col: '#fff' }, charStrip = null;
-const TAB_LV = { raids: 10, ench: 15, anvil: 15, fuse: FUSE_LV, pets: 30 }, LOCK_TABS = Object.keys(TAB_LV);
+const TAB_LV = { raids: 10, forge: 15, fuse: FUSE_LV, pets: 30 }, LOCK_TABS = Object.keys(TAB_LV);
 const tabLv = t => TAB_LV[t] || 0;
 const tabOpen = t => !save || save.pl.lv >= tabLv(t);
 function lockClick(key) { lkShake[key] = .35; SFX.locked(); }
@@ -55,8 +55,7 @@ function drawUnlock() {
 }
 const TAB_INFO = {
   raids: ['Raids', 'Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.'],
-  anvil: ['Bigorna', 'Melhora as tuas armas até +20, com amuletos de sorte e pergaminhos de proteção.'],
-  ench: ['Encantar', 'Refina o equipamento até +10 e sorteia encantamentos especiais.'],
+  forge: ['Forja', 'Encanta e melhora o equipamento e as armas: refinar, encantar, martelar e fundir.'],
   fuse: ['Fusão', 'Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.'],
   pets: ['Pets', 'Companheiros que te seguem e te dão bónus enquanto estiverem perto.'],
 };
