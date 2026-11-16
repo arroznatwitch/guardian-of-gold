@@ -232,6 +232,22 @@ begin
 end $$;
 revoke all on function gog.set_active(text, boolean) from public;
 
+-- o perfil publico usa o save VERIFICADO no servidor (atributos e nivel da arma), nunca o que o cliente diz
+create or replace function gog._truth_build(nb jsonb, sv jsonb) returns jsonb
+language plpgsql immutable set search_path = '' as $$
+declare a jsonb; wid text;
+begin
+  if nb is null or sv is null then return nb; end if;
+  a := sv->'attr';
+  if jsonb_typeof(a) = 'object' then
+    nb := nb || jsonb_build_object('attr', jsonb_build_object('vit', least(greatest(gog._n(a, 'vit'), 0), 99999)::int, 'str', least(greatest(gog._n(a, 'str'), 0), 99999)::int,
+                                                              'agi', least(greatest(gog._n(a, 'agi'), 0), 99999)::int, 'per', least(greatest(gog._n(a, 'per'), 0), 99999)::int));
+  end if;
+  wid := nb->'weapon'->>'id';
+  if wid is not null and jsonb_typeof(sv->'wl') = 'object' then nb := jsonb_set(nb, '{weapon,lv}', to_jsonb(least(greatest(gog._n(sv->'wl', wid), 0), 20)::int)); end if;
+  return nb;
+end $$;
+
 create or replace function public.gog_submit(p_token text, p jsonb) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -256,6 +272,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'bad_data');
   end if;
   first_time := v.submitted_at is null;
+  if v.save is not null then n_level := least(n_level, greatest(1, gog._n(v.save, 'pl', 'lv'))::int); end if;   -- o nivel publico nunca passa do nivel do save verificado
   dt := least(greatest(extract(epoch from now() - coalesce(v.submitted_at, v.created_at)), 20), 7 * 86400);
   o_w := array[v.w0, v.w1, v.w2, v.w3, v.w4, v.w5];
   -- limites de plausibilidade (o 1.o envio usa tetos fixos, os seguintes dependem do tempo passado)
@@ -273,6 +290,7 @@ begin
     end loop;
   end if;
   nb := gog._clean_build(p->'build');
+  nb := gog._truth_build(nb, v.save);
   if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 3 * (n_level - 1) + 1230 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico
   if nb is not null then
     nb := nb - 'title';   -- o titulo mostrado vem do save verificado, nunca do pedido
