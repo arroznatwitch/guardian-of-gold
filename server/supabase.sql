@@ -264,12 +264,12 @@ begin
       return jsonb_build_object('ok', false, 'error', 'implausible');
     end if;
   else
-    if n_level > v.level + 5 + dt / 15 or n_kills > v.kills + 40 + dt * 8 or n_gold > v.gold + 20000 + dt * 500
-       or n_bosses > v.bosses + 5 + dt / 15 or n_raids > v.raids + 2 + dt / 60 then
+    if n_level > v.level + 10 + dt / 10 or n_kills > v.kills + 2000 + dt * 50 or n_gold > v.gold + 1000000 + dt * 5000
+       or n_bosses > v.bosses + 100 + dt / 3 or n_raids > v.raids + 20 + dt / 10 then
       return jsonb_build_object('ok', false, 'error', 'implausible');
     end if;
     for i in 1..6 loop
-      if n_w[i] > o_w[i] + 5 + dt / 8 then return jsonb_build_object('ok', false, 'error', 'implausible'); end if;
+      if n_w[i] > o_w[i] + 20 + dt / 2 then return jsonb_build_object('ok', false, 'error', 'implausible'); end if;
     end loop;
   end if;
   nb := gog._clean_build(p->'build');
