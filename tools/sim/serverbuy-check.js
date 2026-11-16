@@ -33,6 +33,18 @@
   const r = arSimulate(0, 0); shopSel = { i: 0, d: 0 }; shopSim = Object.assign(r, { key: arKey(), i: 0, d: 0 });
   if (r.win) { await arBuyUI(); if (save.gems !== 4000) o.push('auto-raid: diamantes ' + save.gems); if (!save.ar || save.ar.paid !== 3 || save.ar.n !== 1) o.push('auto-raid: ar ' + JSON.stringify(save.ar)); if (!calls.includes('gog_buy:ar')) o.push('auto-raid: nao chamou o servidor'); }
   else o.push('auto-raid: a simulacao nao ganhou');
+  // armas da loja
+  fresh(); save.cls = 'knight'; const wp = CLASSES.knight.weapons[1]; await buyWeapon(1, wp);
+  if (!save.own.knight[1] || save.gold !== 100000 - wp.price || save.eq.knight !== 1 || !calls.includes('gog_buy:wpn')) o.push('arma: ' + JSON.stringify(save.own.knight) + ' ouro ' + save.gold + ' ' + calls.join(','));
+  fresh(); save.cls = 'knight'; mode = 'funds'; await buyWeapon(1, wp); if (save.own.knight[1] || save.gold !== 100000) o.push('arma comprada apesar da recusa do servidor');
+  fresh(); save.cls = 'knight'; mode = 'missing'; await buyWeapon(1, wp); if (!save.own.knight[1]) o.push('arma: sem a funcao no servidor devia comprar localmente');
+  // pets
+  fresh(); ensurePets(); await buyPet('chicken', PETS.chicken.price);
+  if (!save.pets.own.chicken || save.gold !== 100000 - PETS.chicken.price || !calls.includes('gog_buy:pet')) o.push('pet: ' + JSON.stringify(save.pets.own) + ' ouro ' + save.gold);
+  fresh(); ensurePets(); mode = 'funds'; await buyPet('chicken', PETS.chicken.price); if (save.pets.own.chicken) o.push('pet comprado apesar da recusa do servidor');
+  fresh(); ensurePets(); save.pets.own.dog = 1; petRename = 'dog'; rk.pname = 'Rex'; await confirmPetRename();
+  if (save.pets.names.dog !== 'Rex' || save.gems !== 5000 - PET_RENAME || !calls.includes('gog_buy:petname')) o.push('nome do pet: ' + JSON.stringify(save.pets.names) + ' diamantes ' + save.gems);
+  fresh(); ensurePets(); save.pets.own.dog = 1; petRename = 'dog'; rk.pname = 'Rex'; mode = 'funds'; await confirmPetRename(); if (save.pets.names.dog === 'Rex') o.push('nome mudado apesar da recusa do servidor');
   // guilda
   fresh(); save.pl.lv = 45; save.gold = 20000; save.gems = 150; rk.gname = 'Teste'; rk.gtag = 'TST'; await createGuild();
   if (save.gold !== 5000 || save.gems !== 50) o.push('guilda: ouro ' + save.gold + ' diamantes ' + save.gems);

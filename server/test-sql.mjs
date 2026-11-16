@@ -472,12 +472,35 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Cheap Guild', 'CHP']); ok('guild: found creates the guild and charges the server save', r.ok && r.gold === 5000 && r.gems === 50 && r.rev > 0, r);
   g = await get(T2); ok('guild: server save lost 15 000 gold and 100 diamonds', g.save.gold === 5000 && g.save.gems === 50 && g.save.stats.spent === 15000, g.save);
   r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Other One', 'OTH']); g = await get(T2); ok('guild: a refused creation charges nothing', !r.ok && g.save.gold === 5000, r);
+  // armas, pets e bandeira
+  const T4 = await fresh('shop_four'); await setSave('shop_four', { gold: 100000, gems: 600, pl: { lv: 20, xp: 0 }, own: { knight: [1, 0, 0, 0, 0] }, wst: { k_axe: [0, 0, 0, 0] }, eq: { knight: 0 }, raids: [[0, 0, 0, 0, 0]] });
+  r = await q('select public.gog_buy($1,$2,1)', [T4, 'wpn']); ok('shop: weapon 1 costs 600 gold', r.ok && r.gold === 99400, r);
+  g = await get(T4); ok('shop: weapon owned, copy counted and equipped on the server', JSON.stringify(g.save.own.knight) === '[1,1,0,0,0]' && g.save.wst.k_axe[0] === 1 && g.save.eq.knight === 1 && g.save.stats.spent === 600, g.save);
+  r = await q('select public.gog_buy($1,$2,1)', [T4, 'wpn']); ok('shop: a weapon cannot be bought twice', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,2)', [T4, 'wpn']); ok('shop: weapon 2 needs the first raid cleared', r.error === 'req', r);
+  r = await q('select public.gog_buy($1,$2,3)', [T4, 'wpn']); ok('shop: weapon 3 needs level 30', r.error === 'req', r);
+  r = await q('select public.gog_buy($1,$2,9)', [T4, 'wpn']); ok('shop: bad weapon slot', r.error === 'bad_request', r);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'pet', 'chicken']); ok('shop: chicken costs 50 000 gold', r.ok && r.gold === 49400, r);
+  g = await get(T4); ok('shop: pet owned, level 1 and equipped', g.save.pets.own.chicken === 1 && g.save.pets.lv.chicken === 1 && g.save.pets.eq === 'chicken', g.save.pets);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'pet', 'bird']); ok('shop: bird needs more gold', r.error === 'funds', r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', 'Clucky Jr']); ok('shop: renaming a pet costs 50 diamonds', r.ok && r.gems === 550, r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', 'Clucky Jr']); ok('shop: same name is not charged again', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', '<b>x</b>']); ok('shop: unsafe pet names are refused', r.error === 'bad_request', r);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'petname', 'Rex']); ok('shop: cannot rename a pet you do not own', r.error === 'state', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'PT']); ok('profile: first flag is free', r.ok, r);
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'm', 'ES']); ok('profile: changing the flag costs 250 diamonds on the server', r.ok && r.gems === 300 && r.rev > 0, r);
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'f', 'ES']); g = await get(T4); ok('profile: same flag is free (gender only)', r.ok && g.save.gems === 300, r);
+  await setSave('shop_four', { gold: 0, gems: 100, pl: { lv: 20, xp: 0 } });
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'f', 'FR']); ok('profile: not enough diamonds to change the flag', r.error === 'funds', r);
   // impor: depois do enforce-server-shop.sql so o servidor mexe nas compras
   await db.exec('reset role'); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec('set role anon');
   r = await putFrom(T, s => { s.bagSlots = 5; return s; }); ok('enforce: a client-side bag purchase is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.ar.n = 5; return s; }); ok('enforce: ar.n above ar.paid is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.gold += 10; return s; }); ok('enforce: normal saves still pass', r.ok, r);
   r = await q('select public.gog_guild_create($1,$2,$3)', [T2, 'Free Guild', 'FRE']); ok('enforce: the old free guild creation is closed', r.error === 'outdated', r);
+  r = await putFrom(T4, s => { s.own = { knight: [1, 1, 1, 1, 1] }; return s; }); ok('enforce: client-side weapons are refused', r.error === 'outdated', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'DE']); ok('enforce: the old flag change is closed', r.error === 'outdated', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'ES']); ok('enforce: gender-only changes still work with the old function', r.ok, r);
   const T3 = await fresh('shop_three'); await setSave('shop_three', { gold: 20000, gems: 150, pl: { lv: 45, xp: 0 } });
   r = await q('select public.gog_guild_found($1,$2,$3)', [T3, 'Paid Guild', 'PAY']); ok('enforce: guild_found still works', r.ok && r.gold === 5000, r);
 }

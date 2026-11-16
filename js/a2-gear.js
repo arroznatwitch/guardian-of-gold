@@ -157,6 +157,12 @@ function hubMaterials() {
 let sellAsk = false, sellArm = null;
 function sellList(list) { list = list.filter(it => !it.lk); let g = 0; for (const it of list) { g += sellValue(it); if (enchItem === it) enchItem = null; bagPick.delete(it); } save.gold = Math.min(GOLD_MAX, save.gold + g); save.bag = save.bag.filter(it => !list.includes(it)); bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
 const sellTargets = () => (sellAsk === 'pick' ? save.bag.filter(it => bagPick.has(it)) : save.bag).filter(it => !it.lk);
+async function buyWeapon(i, w) {   // arma da loja: o servidor confere o preco e os requisitos
+  buyBusy = true; const sv = i > 0 ? await shopServer('wpn', i) : { fallback: true }; buyBusy = false;
+  if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
+  if (save.own[save.cls][i] || save.gold < w.price) return;
+  spendG(w.price); save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy();
+}
 async function buyBag(k) {   // compra de mochila: o servidor confere o preco e a ordem
   buyBusy = true; const sv = await shopServer('bag', k + 1); buyBusy = false;
   if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); bagBuy = 0; return; }
@@ -376,7 +382,7 @@ function hubWeapons() {
     txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * wlm(lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
     if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
-    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price) { spendG(w.price); save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy(); } else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
+    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price && !buyBusy) buyWeapon(i, w); else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');
   });
