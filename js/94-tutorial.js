@@ -18,7 +18,7 @@ const tutReadyN = () => TUT_TASKS.filter(t => t.ok() && !save.tut.claim[t.id]).l
 function tutClaim(t) {
   if (!t.ok() || save.tut.claim[t.id]) return;
   save.tut.claim[t.id] = 1; save.gold = Math.min(GOLD_MAX, save.gold + t.gold); SFX.coin(); persist();
-  if (TUT_TASKS.every(q => save.tut.claim[q.id])) { save.tut.on = false; tutOpen = false; hubToast = { t: 3.5, s: T2('Primeiros passos concluídos!', 'First steps complete!'), col: '#6f6' }; persist(); }
+  if (TUT_TASKS.every(q => save.tut.claim[q.id])) { ping('tutorial_done', true); save.tut.on = false; tutOpen = false; hubToast = { t: 3.5, s: T2('Primeiros passos concluídos!', 'First steps complete!'), col: '#6f6' }; persist(); }
 }
 
 // passo guiado atual do campo: { r: retangulo a destacar, bx, by: posicao da caixa, text }

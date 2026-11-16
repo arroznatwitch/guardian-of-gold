@@ -27,14 +27,14 @@ function frame(now) {
   if (['menu', 'class', 'keys', 'hub', 'options', 'login', 'sync', 'syncerr', 'conflict'].includes(state)) { ctx.save(); ctx.translate(UIOX, 0); ({ menu: () => { drawMenu(); menuAccount(); }, class: drawClass, keys: drawKeys, hub: () => { drawHub(); drawGuildProfile(); drawProfile(); drawFarmInfo(); drawPresAsk(); drawPetRename(); drawSellAsk(); drawBagBuy(); drawCharCreate(); drawUnlock(); }, options: drawOptions, login: drawLogin, sync: drawSync, syncerr: drawSync, conflict: drawConflict })[state](); drawCountryPicker(); ctx.restore(); }
   else drawPlayScreens();
   if (muted) txt('MUDO (M)', W - 10, H - 8, 12, '#888', 'right');
-    frameErr = 0;
+    frameErr = 0; if (!booted) { window.__booted = true; bootDone(); }
   } catch (e) {
     frameErr++; sfxQuiet = false; mdown = false; try { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; } catch (e2) {}
-    if (frameErr === 1) { try { console.error(e); } catch (e3) {} window.__lastErr = String(e && e.message || e); }
+    if (frameErr === 1) { try { console.error(e); } catch (e3) {} window.__lastErr = String(e && e.message || e); logErr(window.__lastErr); }
     if (frameErr >= 30) {   // continua a falhar: volta a um sitio seguro em vez de ficar preso
       frameErr = 0; farmInfo = -1; presAsk = -1; bagBuy = 0; cpick = null; chNew = null; try { rk.prof = null; } catch (e4) {}
       if (state === 'play' || state === 'cp' || state === 'win' || state === 'lose') state = save ? 'hub' : 'menu'; else if (state === 'hub') tab = 'farm';
-      hubToast = { t: 4, s: 'Erro recuperado: ' + (window.__lastErr || ''), col: '#f88' };
+      ping('error'); hubToast = { t: 6, s: 'Erro recuperado: ' + (window.__lastErr || '') + ' (Opções > Reportar problema)', col: '#f88' };
     }
   }
 }

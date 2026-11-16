@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Moderação · Guardians of Gold</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;background:#0b0b14;color:#cdd6f0;font:14px/1.5 system-ui,sans-serif}
+  header{display:flex;gap:12px;align-items:center;padding:10px 16px;background:#14142a;border-bottom:2px solid #a8821f;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;color:#f0c060;flex:1}
+  main{padding:14px 16px;max-width:1100px;margin:0 auto}
+  input,button,select{font:inherit;padding:6px 10px;background:#1a1a30;color:#fff;border:1px solid #3a3a5a;border-radius:3px}
+  button{cursor:pointer;background:#2f5a8a} button.g{background:#2f7a4a} button.r{background:#8a3a2a} button.n{background:#2a2a48}
+  button:disabled{opacity:.5;cursor:default}
+  .tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap} .tabs button.on{background:#a8821f}
+  table{border-collapse:collapse;width:100%;margin:6px 0 16px} th,td{border:1px solid #2a2a48;padding:5px 8px;text-align:left;vertical-align:top;font-size:13px} th{background:#14142a}
+  td.m{white-space:pre-wrap;word-break:break-word;max-width:520px} tr.done td{opacity:.5}
+  .box{background:#14142a;border:1px solid #2a2a48;padding:12px;margin:0 0 12px} .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+  .msg{color:#ffb060;min-height:20px} .ok{color:#6f6} .bad{color:#f88} .small{font-size:12px;color:#8890a8}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header><h1>Guardians of Gold · Moderação</h1><span id="who" class="small"></span><button id="out" class="n hidden">Sair</button></header>
+<main>
+<div id="login" class="box" style="max-width:380px">
+  <p>Entra com a tua conta de administrador (a conta tem de estar em <code>gog.admins</code>).</p>
+  <div class="row"><input id="nick" placeholder="Nick" autocomplete="username" maxlength="16"></div>
+  <div class="row"><input id="pass" type="password" placeholder="Palavra-passe" autocomplete="current-password"></div>
+  <div class="row"><button id="go" class="g">Entrar</button></div>
+  <div id="lmsg" class="msg"></div>
+</div>
+<div id="app" class="hidden">
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+  <div id="amsg" class="msg"></div>
+</div>
+</main>
+<script>
+'use strict';
+const URL_ = 'https://fnkjmykbjuxkagtjlyfn.supabase.co', KEY = 'sb_publishable_y_fMP0OBRbarUpDliORTdw_bfFYuwrx';   // chave publica (a mesma do jogo)
+const $ = id => document.getElementById(id);
+let token = '', data = null, tab = 'viol';
+const el = (tag, text, cls, attrs) => { const e = document.createElement(tag); if (text != null) e.textContent = String(text); if (cls) e.className = cls; if (attrs) Object.assign(e, attrs); return e; };
+const fmt = t => { try { return new Date(t).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { return String(t); } };
+async function rpc(fn, args) {
+  try { const r = await fetch(`${URL_}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args) }); const j = await r.json(); return j && 'ok' in j ? j : { ok: false, error: 'server' }; }
+  catch (e) { return { ok: false, error: 'network' }; }
+}
+async function proof(nick, pass) {   // igual ao jogo: PBKDF2-SHA256, 210 000 iteracoes, sal = nick
+  const enc = new TextEncoder(), key = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('gog1|' + nick.toLowerCase()), iterations: 210000 }, key, 256);
+  return Array.from(new Uint8Array(bits), b => b.toString(16).padStart(2, '0')).join('');
+}
+const say = (t, cls) => { const m = $('amsg'); m.textContent = t || ''; m.className = 'msg ' + (cls || ''); };
+
+$('go').onclick = async () => {
+  const nick = $('nick').value.trim(), pass = $('pass').value; if (!nick || !pass) return;
+  $('go').disabled = true; $('lmsg').textContent = 'A entrar...';
+  let r; try { r = await rpc('gog_login', { p_nick: nick, p_proof: await proof(nick, pass) }); } catch (e) { r = { ok: false }; }
+  $('pass').value = '';
+  if (!r.ok) { $('go').disabled = false; $('lmsg').textContent = r.error === 'locked' ? 'Conta bloqueada, espera ' + r.wait + ' s.' : 'Login falhou.'; return; }
+  token = r.token; const ov = await rpc('gog_admin_overview', { p_token: token });
+  if (!ov.ok) { await rpc('gog_logout', { p_token: token }); token = ''; $('go').disabled = false; $('lmsg').textContent = 'Esta conta não é administradora.'; return; }
+  data = ov; $('login').classList.add('hidden'); $('app').classList.remove('hidden'); $('out').classList.remove('hidden'); $('who').textContent = r.nick; render();
+};
+$('pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
+$('out').onclick = async () => { if (token) await rpc('gog_logout', { p_token: token }); location.reload(); };
+async function reload() { const ov = await rpc('gog_admin_overview', { p_token: token }); if (ov.ok) { data = ov; render(); } else say('Sessão expirada. Recarrega a página.', 'bad'); }
+
+function table(cols, rows, rowFn) {
+  const t = el('table'), h = el('tr'); cols.forEach(c => h.appendChild(el('th', c))); t.appendChild(h);
+  rows.forEach(r => { const tr = el('tr'); rowFn(r, tr); t.appendChild(tr); });
+  if (!rows.length) { const tr = el('tr'); const td = el('td', 'Sem registos.', 'small'); td.colSpan = cols.length; tr.appendChild(td); t.appendChild(tr); }
+  return t;
+}
+const cell = (tr, v, cls) => { const td = el('td', v, cls); tr.appendChild(td); return td; };
+async function act(label, fn, args, after) {
+  if (!confirm(label)) return; say('A executar...');
+  const r = await rpc(fn, Object.assign({ p_token: token }, args)); say(r.ok ? 'Feito.' : 'Falhou: ' + (r.error || 'erro'), r.ok ? 'ok' : 'bad'); if (r.ok) { await reload(); if (after) after(); }
+}
+function lookup(nick) {
+  rpc('gog_admin_player', { p_token: token, p_nick: nick }).then(p => {
+    const v = $('view'); const old = $('pinfo'); if (old) old.remove();
+    const box = el('div', null, 'box'); box.id = 'pinfo'; v.prepend(box);
+    if (!p.ok) { box.appendChild(el('div', p.error === 'not_found' ? 'Jogador não encontrado.' : 'Erro: ' + p.error, 'bad')); return; }
+    box.appendChild(el('h3', p.nick + (p.root !== p.nick ? ' (conta: ' + p.root + ')' : '') + (p.active ? '' : '  ·  DESATIVADA')));
+    box.appendChild(el('div', `Criado ${fmt(p.created)} · Nível ${p.level} · Ouro ${p.gold} · Diamantes ${p.gems} · Gasto ${p.spent} · Abates ${p.kills} · Último save ${p.save_at ? fmt(p.save_at) : '—'}`));
+    box.appendChild(el('div', 'Personagens: ' + p.characters.map(c => c.nick + (c.cls ? ' (' + c.cls + ')' : '') + (c.active ? '' : ' [off]')).join(', '), 'small'));
+    const row = el('div', null, 'row'); box.appendChild(row);
+    const b1 = el('button', p.active ? 'Desativar conta' : 'Reativar conta', p.active ? 'r' : 'g'); b1.onclick = () => act((p.active ? 'Desativar ' : 'Reativar ') + p.nick + '?', 'gog_admin_set_active', { p_nick: p.nick, p_active: !p.active }, () => lookup(p.nick)); row.appendChild(b1);
+    const b2 = el('button', 'Apagar progresso', 'r'); b2.onclick = () => act('Apagar o progresso de ' + p.nick + '? (a conta fica)', 'gog_admin_reset', { p_nick: p.nick }, () => lookup(p.nick)); row.appendChild(b2);
+    const b3 = el('button', 'Apagar conta (RGPD)', 'r'); b3.onclick = () => act('APAGAR DE VEZ a conta de ' + p.nick + ' e todos os personagens? Não dá para desfazer.', 'gog_admin_erase', { p_nick: p.nick }, () => { box.remove(); }); row.appendChild(b3);
+    box.appendChild(el('h4', 'Saves anteriores (repor)'));
+    box.appendChild(table(['Quando', 'Nível', 'Ouro', 'Diamantes', ''], p.history, (h, tr) => { cell(tr, fmt(h.at)); cell(tr, h.level); cell(tr, h.gold); cell(tr, h.gems); const td = cell(tr, ''); const b = el('button', 'Repor este', 'g'); b.onclick = () => act('Repor o save de ' + fmt(h.at) + ' (nível ' + h.level + ')?', 'gog_admin_restore', { p_nick: p.nick, p_hist: h.id }, () => lookup(p.nick)); td.appendChild(b); }));
+    box.appendChild(el('h4', 'Violações recentes'));
+    box.appendChild(table(['Quando', 'Tipo', 'Detalhe', 'Conta?'], p.violations, (x, tr) => { cell(tr, fmt(x.at)); cell(tr, x.kind); cell(tr, x.detail, 'm'); cell(tr, x.counted ? 'sim' : 'não'); }));
+  });
+}
+function render() {
+  const names = { viol: 'Violações', rep: 'Relatos (' + data.reports.filter(r => !r.handled).length + ')', ban: 'Desativadas', stats: 'Estatísticas', find: 'Procurar jogador' };
+  const tabs = $('tabs'); tabs.textContent = '';
+  Object.keys(names).forEach(k => { const b = el('button', names[k], k === tab ? 'on' : 'n'); b.onclick = () => { tab = k; say(''); render(); }; tabs.appendChild(b); });
+  const rf = el('button', 'Atualizar', 'g'); rf.onclick = reload; tabs.appendChild(rf);
+  const v = $('view'); v.textContent = '';
+  if (tab === 'viol') {
+    v.appendChild(el('p', `Jogadores (contas): ${data.players}. Últimas ${data.violations.length} violações. Clica num nick para abrir.`, 'small'));
+    v.appendChild(table(['Quando', 'Nick', 'Tipo', 'Detalhe', 'Conta?', 'Estado'], data.violations, (x, tr) => { cell(tr, fmt(x.at)); const td = cell(tr, ''); const a = el('button', x.nick, 'n'); a.onclick = () => { tab = 'find'; render(); $('q').value = x.nick; lookup(x.nick); }; td.appendChild(a); cell(tr, x.kind); cell(tr, x.detail, 'm'); cell(tr, x.counted ? 'sim' : 'não'); cell(tr, x.active ? 'ativa' : 'DESATIVADA', x.active ? '' : 'bad'); }));
+  } else if (tab === 'rep') {
+    v.appendChild(table(['Quando', 'Nick', 'Mensagem', 'Contexto', ''], data.reports, (x, tr) => {
+      if (x.handled) tr.className = 'done'; cell(tr, fmt(x.at)); cell(tr, x.nick || '—'); cell(tr, x.msg, 'm'); cell(tr, x.ctx ? JSON.stringify(x.ctx) : '—', 'm');
+      const td = cell(tr, ''); const b = el('button', x.handled ? 'Reabrir' : 'Resolvido', x.handled ? 'n' : 'g'); b.onclick = async () => { await rpc('gog_admin_report_done', { p_token: token, p_id: x.id, p_done: !x.handled }); reload(); }; td.appendChild(b);
+    }));
+  } else if (tab === 'ban') {
+    v.appendChild(table(['Nick', 'Desde', ''], data.banned, (x, tr) => { cell(tr, x.nick); cell(tr, x.at ? fmt(x.at) : '—'); const td = cell(tr, ''); const b = el('button', 'Ver', 'n'); b.onclick = () => { tab = 'find'; render(); $('q').value = x.nick; lookup(x.nick); }; td.appendChild(b); }));
+  } else if (tab === 'stats') {
+    const days = [...new Set(data.stats.map(s => s.day))].sort().reverse(), keys = [...new Set(data.stats.map(s => s.k.replace(/:[dm]$/, '')))];
+    v.appendChild(el('p', 'Contadores anónimos por dia (sem identificadores). d = computador, m = telemóvel. «open» = aberturas do jogo; a diferença entre «open» e «login/register» mostra quem desiste logo; «mission_*» mostra quem chega a jogar.', 'small'));
+    const t = el('table'), h = el('tr'); ['Dia'].concat(keys).forEach(c => h.appendChild(el('th', c))); t.appendChild(h);
+    days.forEach(d => { const tr = el('tr'); cell(tr, d); keys.forEach(k => { const f = x => (data.stats.find(s => s.day === d && s.k === k + ':' + x) || { n: 0 }).n; cell(tr, f('d') + ' / ' + f('m')); }); t.appendChild(tr); });
+    v.appendChild(t); v.appendChild(el('div', 'Formato: computador / telemóvel', 'small'));
+  } else {
+    const row = el('div', null, 'row'); const q = el('input'); q.id = 'q'; q.placeholder = 'Nick do jogador'; q.maxLength = 16; row.appendChild(q);
+    const b = el('button', 'Procurar', 'g'); b.onclick = () => { if (q.value.trim()) lookup(q.value.trim()); }; row.appendChild(b); v.appendChild(row);
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') b.click(); });
+  }
+}
+</script>
+</body>
+</html>

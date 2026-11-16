@@ -7,7 +7,7 @@ function mkDeco() {
   return d;
 }
 function startMission(i, rd, farm) {
-  const M = MISSIONS[i], s = stats();
+  ping('mission_start'); const M = MISSIONS[i], s = stats();
   R = { m: i, p: { x: W / 2, y: H / 2 + 90, hp: s.hp, max: s.hp, face: 0, cd: 0, sp: 0, sk: 0, spR: true, skR: true, dashT: 0, dashCd: 0, inv: 0, vx: 0, vy: 0, mv: 0, flip: false, rage: 0, shield: 0, lunge: null, aura: null, sw: 0, swd: 1 },
     dl: { dmg: {}, heal: {}, taken: {}, t0: 0 }, enemies: [], boss: null, projs: [], coins: [], hearts: [], parts: [], texts: [], fx: [], tels: [], traps: [], zones: [], sched: [],
     kills: 0, spawnT: 1, gold: 0, phase: 'hunt', shake: 0, toast: `${M.name}: elimina ${M.kills} monstros!`, toastT: 3.5, time: 0, deco: mkDeco(), endT: undefined, endWin: false };
@@ -22,7 +22,8 @@ function startMission(i, rd, farm) {
   state = 'play'; setMusic(R.raid ? 'raid' : 'm' + R.m); mdown = false;
 }
 function endMission(win, mode) {
-  if (labOn) { labExit(); return; }   // laboratorio: sair da arena, o save verdadeiro nao foi tocado
+  if (labOn) { labExit(); return; }
+  ping(win ? 'mission_win' : 'mission_lose');   // laboratorio: sair da arena, o save verdadeiro nao foi tocado
   R.exitMode = mode || ''; wpAdd(!!(win && R.raid));   // progresso da arma (abates e raids) para as estrelas
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda

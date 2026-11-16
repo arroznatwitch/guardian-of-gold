@@ -415,7 +415,7 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   T = await fresh('sec_fast'); r = await put(T, {}, 0); rev = r.rev;
   r = await put(T, { pl: { lv: 9, xp: 0 }, chestDone: 1 }, rev, 11); ok('security: +8 levels in 11 s is refused', r.error === 'cheat', r);
   r = await put(T, { pl: { lv: 2, xp: 0 }, chestDone: 1 }, rev, 11); ok('security: a normal level up in 11 s passes', r.ok, r); rev = r.rev;
-  r = await put(T, { pl: { lv: 2, xp: 0 }, gold: 150000 }, rev, 11); ok('security: +150 000 gold in 11 s is refused', r.error === 'cheat', r);
+  r = await put(T, { pl: { lv: 2, xp: 0 }, gold: 700000 }, rev, 11); ok('security: +700 000 gold in 11 s is refused', r.error === 'cheat', r);
   // intervalo minimo entre saves
   await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '5 seconds'"); await db.exec('set role anon');
   r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [T, SV({ pl: { lv: 2, xp: 0 } }), rev, 'd']); ok('security: saves closer than 10 s are slowed', r.error === 'slow', r);
@@ -444,10 +444,10 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
 // compras e guilda no servidor (gog_buy, gog_guild_found) e a regra que as impoe
 {
   const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
-  const age = async () => { await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '2 minutes'"); await db.exec('set role anon'); };
+  const age = async (secs = 120) => { await db.exec('reset role'); await db.exec(`update gog.players set save_at = now() - interval '${secs} seconds'`); await db.exec('set role anon'); };
   const setSave = async (nick, o) => { await db.exec('reset role'); await db.exec(`update gog.players set save = '${JSON.stringify(Object.assign({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0, stats: { kills: 0, gold: 0, bosses: 0, spent: 0 } }, o))}'::jsonb, save_at = now() - interval '2 minutes' where nick = '${nick}'`); await db.exec('set role anon'); };
   const get = async T => (await q('select public.gog_save_get($1)', [T]));
-  const putFrom = async (T, mut) => { const g = await get(T); await age(); const nw = mut(JSON.parse(JSON.stringify(g.save))); return q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [T, JSON.stringify(nw), g.rev, 'd']); };
+  const putFrom = async (T, mut, secs) => { const g = await get(T); await age(secs); const nw = mut(JSON.parse(JSON.stringify(g.save))); return q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [T, JSON.stringify(nw), g.rev, 'd']); };
   let T = await fresh('shop_one');
   r = await q('select public.gog_buy($1,$2,2)', [T, 'bag']); ok('shop: buying without a save is refused', r.error === 'no_save', r);
   await setSave('shop_one', { gold: 30000, gems: 5000 });
@@ -472,14 +472,100 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Cheap Guild', 'CHP']); ok('guild: found creates the guild and charges the server save', r.ok && r.gold === 5000 && r.gems === 50 && r.rev > 0, r);
   g = await get(T2); ok('guild: server save lost 15 000 gold and 100 diamonds', g.save.gold === 5000 && g.save.gems === 50 && g.save.stats.spent === 15000, g.save);
   r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Other One', 'OTH']); g = await get(T2); ok('guild: a refused creation charges nothing', !r.ok && g.save.gold === 5000, r);
+  // armas, pets e bandeira
+  const T4 = await fresh('shop_four'); await setSave('shop_four', { gold: 100000, gems: 600, pl: { lv: 20, xp: 0 }, own: { knight: [1, 0, 0, 0, 0] }, wst: { k_axe: [0, 0, 0, 0] }, eq: { knight: 0 }, raids: [[0, 0, 0, 0, 0]] });
+  r = await q('select public.gog_buy($1,$2,1)', [T4, 'wpn']); ok('shop: weapon 1 costs 600 gold', r.ok && r.gold === 99400, r);
+  g = await get(T4); ok('shop: weapon owned, copy counted and equipped on the server', JSON.stringify(g.save.own.knight) === '[1,1,0,0,0]' && g.save.wst.k_axe[0] === 1 && g.save.eq.knight === 1 && g.save.stats.spent === 600, g.save);
+  r = await q('select public.gog_buy($1,$2,1)', [T4, 'wpn']); ok('shop: a weapon cannot be bought twice', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,2)', [T4, 'wpn']); ok('shop: weapon 2 needs the first raid cleared', r.error === 'req', r);
+  r = await q('select public.gog_buy($1,$2,3)', [T4, 'wpn']); ok('shop: weapon 3 needs level 30', r.error === 'req', r);
+  r = await q('select public.gog_buy($1,$2,9)', [T4, 'wpn']); ok('shop: bad weapon slot', r.error === 'bad_request', r);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'pet', 'chicken']); ok('shop: chicken costs 50 000 gold', r.ok && r.gold === 49400, r);
+  g = await get(T4); ok('shop: pet owned, level 1 and equipped', g.save.pets.own.chicken === 1 && g.save.pets.lv.chicken === 1 && g.save.pets.eq === 'chicken', g.save.pets);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'pet', 'bird']); ok('shop: bird needs more gold', r.error === 'funds', r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', 'Clucky Jr']); ok('shop: renaming a pet costs 50 diamonds', r.ok && r.gems === 550, r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', 'Clucky Jr']); ok('shop: same name is not charged again', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,1,$3)', [T4, 'petname', '<b>x</b>']); ok('shop: unsafe pet names are refused', r.error === 'bad_request', r);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T4, 'petname', 'Rex']); ok('shop: cannot rename a pet you do not own', r.error === 'state', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'PT']); ok('profile: first flag is free', r.ok, r);
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'm', 'ES']); ok('profile: changing the flag costs 250 diamonds on the server', r.ok && r.gems === 300 && r.rev > 0, r);
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'f', 'ES']); g = await get(T4); ok('profile: same flag is free (gender only)', r.ok && g.save.gems === 300, r);
+  await setSave('shop_four', { gold: 0, gems: 100, pl: { lv: 20, xp: 0 } });
+  r = await q('select public.gog_profile_set($1,$2,$3)', [T4, 'f', 'FR']); ok('profile: not enough diamonds to change the flag', r.error === 'funds', r);
+  // credito de ouro, itens forjados e refinar no servidor
+  const T5 = await fresh('gold_cred'); await setSave('gold_cred', { gold: 0 });
+  let g5 = await get(T5); r = await putFrom(T5, s => { s.gold = 400000; return s; }, 15); ok('gold credit: a burst inside the credit passes', r.ok, r);
+  r = await putFrom(T5, s => { s.gold += 400000; return s; }, 15); ok('gold credit: the same burst again right away is refused', r.error === 'cheat', r);
+  g5 = await get(T5); ok('gold credit: the server stores the remaining credit (not the client)', g5.save.gcred < 500000 && g5.save.gcred >= 0, g5.save.gcred);
+  r = await putFrom(T5, s => { s.gcred = 500000; s.gold += 400000; return s; }, 15); ok('gold credit: the client cannot refill its own credit', r.error === 'cheat' || r.error === 'banned', r);
+  const GOODIT = { slot: 'head', r: 1, il: 10, ench: 0, rr: 0, main: { k: 'hp', v: 110 }, aff: [{ k: 'dmg', v: 5 }], spec: null };
+  const T6 = await fresh('item_one'); await setSave('item_one', { gold: 500000, pl: { lv: 40, xp: 0 }, bag: [GOODIT] });
+  r = await putFrom(T6, s => { s.bag.push({ slot: 'head', r: 1, il: 10, ench: 0, rr: 0, main: { k: 'hp', v: 1000000 }, aff: [], spec: null }); return s; }); ok('items: a new item with forged stats is refused', r.error === 'cheat' || r.error === 'banned', r);
+  const T7 = await fresh('item_two'); await setSave('item_two', { gold: 500000, pl: { lv: 40, xp: 0 }, bag: [GOODIT] });
+  r = await putFrom(T7, s => { s.bag.push({ slot: 'chest', r: 2, il: 20, ench: 0, rr: 0, main: { k: 'hp', v: 200 }, aff: [{ k: 'dr', v: 2 }, { k: 'hp', v: 30 }], spec: null }); return s; }); ok('items: a new item with normal stats passes', r.ok, r);
+  // refinar: o servidor sorteia e cobra
+  const T8 = await fresh('refine_one'); await setSave('refine_one', { gold: 1000000, pl: { lv: 40, xp: 0 }, bag: [GOODIT], gear: { head: { slot: 'head', r: 2, il: 30, ench: 0, rr: 0, main: { k: 'hp', v: 300 }, aff: [], spec: null } } });
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify({ slot: 'head', r: 1, il: 11, ench: 0, main: { k: 'hp', v: 1 }, aff: [] })]); ok('refine: an item the server does not have asks to sync', r.error === 'sync', r);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(GOODIT)]); const cost8 = Math.round(45 * (1 + 10 * .25) * (1 + 1 * .5) * 1 * (1 + 40 * .05));
+  ok('refine: level 0 always works and costs the formula price', r.ok && r.res === 'ok' && r.cost === cost8 && r.gold === 1000000 - cost8, [r, cost8]);
+  g5 = await get(T8); ok('refine: the item on the server is +1', g5.save.bag[0].ench === 1 && g5.save.stats.spent === cost8, g5.save.bag);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(g5.save.gear.head)]); ok('refine: equipped items work too', r.ok && r.res === 'ok', r);
+  let okN = 0, tot = 0, rr0; for (let i = 0; i < 40; i++) { await setSave('refine_one', { gold: 1000000, pl: { lv: 40, xp: 0 }, gear: { head: { slot: 'head', r: 2, il: 30, ench: 8, rr: 0, main: { k: 'hp', v: 300 }, aff: [], spec: null } } }); const gg = await get(T8); rr0 = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(gg.save.gear.head)]); tot++; if (rr0.res === 'ok') okN++; }
+  ok('refine: the +8 chance is about 22% (not always, not never)', okN > 0 && okN < 25, okN + '/' + tot);
+  await setSave('refine_one', { gold: 1000000, pl: { lv: 40, xp: 0 }, gear: { head: { slot: 'head', r: 2, il: 30, ench: 10, rr: 0, main: { k: 'hp', v: 300 }, aff: [], spec: null } } }); g5 = await get(T8);
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(g5.save.gear.head)]); ok('refine: the maximum level is refused', r.error === 'state', r);
+  await setSave('refine_one', { gold: 5, pl: { lv: 40, xp: 0 }, bag: [GOODIT] });
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(GOODIT)]); ok('refine: not enough gold', r.error === 'funds', r);
+  await setSave('refine_one', { gold: 100000, pl: { lv: 3, xp: 0 }, bag: [GOODIT] });
+  r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(GOODIT)]); ok('refine: needs player level 4 for the first refine', r.error === 'state', r);
   // impor: depois do enforce-server-shop.sql so o servidor mexe nas compras
   await db.exec('reset role'); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec('set role anon');
   r = await putFrom(T, s => { s.bagSlots = 5; return s; }); ok('enforce: a client-side bag purchase is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.ar.n = 5; return s; }); ok('enforce: ar.n above ar.paid is refused', r.error === 'outdated', r);
+  r = await putFrom(T7, s => { s.bag[0].ench = 5; return s; }); ok('enforce: raising an enchant level on the client is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.gold += 10; return s; }); ok('enforce: normal saves still pass', r.ok, r);
   r = await q('select public.gog_guild_create($1,$2,$3)', [T2, 'Free Guild', 'FRE']); ok('enforce: the old free guild creation is closed', r.error === 'outdated', r);
+  r = await putFrom(T4, s => { s.own = { knight: [1, 1, 1, 1, 1] }; return s; }); ok('enforce: client-side weapons are refused', r.error === 'outdated', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'DE']); ok('enforce: the old flag change is closed', r.error === 'outdated', r);
+  r = await q('select public.gog_set_profile($1,$2,$3)', [T4, 'm', 'ES']); ok('enforce: gender-only changes still work with the old function', r.ok, r);
   const T3 = await fresh('shop_three'); await setSave('shop_three', { gold: 20000, gems: 150, pl: { lv: 45, xp: 0 } });
   r = await q('select public.gog_guild_found($1,$2,$3)', [T3, 'Paid Guild', 'PAY']); ok('enforce: guild_found still works', r.ok && r.gold === 5000, r);
+}
+
+
+// lancamento: relatos, estatisticas anonimas e moderacao
+{
+  const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
+  const sq = async (sql, p) => (await q(sql, p));
+  let r2 = await sq('select public.gog_report($1,$2::jsonb)', ['O jogo bloqueou no hub', JSON.stringify({ build: 28, ua: 'x' })]); ok('report: an anonymous report is stored', r2.ok, r2);
+  r2 = await sq('select public.gog_report($1)', ['x']); ok('report: too short is refused', r2.error === 'bad_request', r2);
+  r2 = await sq('select public.gog_report($1)', ['y'.repeat(1001)]); ok('report: too long is refused', r2.error === 'bad_request', r2);
+  let busy2 = 0; for (let i = 0; i < 8; i++) { r2 = await sq('select public.gog_report($1)', ['mais um problema ' + i]); if (r2.error === 'busy') busy2++; } ok('report: limited per network', busy2 >= 3, busy2);
+  r2 = await sq('select public.gog_ping($1)', ['open:m']); ok('ping: a known event is counted', r2.ok, r2);
+  r2 = await sq('select public.gog_ping($1)', ['hack; drop table']); ok('ping: unknown events are refused', r2.error === 'bad_request', r2);
+  await db.exec('reset role'); const cnt = (await db.query("select n from gog.daily_stats where k = 'open:m'")).rows[0]; await db.exec('set role anon'); ok('ping: the counter is stored without any identifier', cnt && Number(cnt.n) === 1, cnt);
+  let denied2 = false; try { await db.query('select * from gog.reports'); } catch (e) { denied2 = true; } ok('report: anon cannot read the reports table', denied2);
+  const TA = await fresh('mod_admin'), TV = await fresh('mod_victim'), TN = await fresh('mod_normal'); void TV;
+  await db.exec('reset role'); await db.exec("insert into gog.admins (nick_key) values ('mod_admin') on conflict do nothing"); await db.exec('set role anon');
+  r2 = await sq('select public.gog_admin_overview($1)', [TN]); ok('admin: a normal player cannot open the panel', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_overview($1)', ['f'.repeat(64)]); ok('admin: a bad token cannot open the panel', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_overview($1)', [TA]); ok('admin: the overview works for an admin', r2.ok && Array.isArray(r2.violations) && Array.isArray(r2.reports) && r2.players >= 3, r2);
+  ok('admin: reports show up in the overview', r2.reports.length >= 4 && r2.reports[0].msg, r2.reports);
+  await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"knight","pl":{"lv":30},"gold":500,"gems":20,"stats":{"spent":10,"kills":99}}'::jsonb, save_rev = 1 where nick = 'mod_victim'`); await db.exec('set role anon');
+  await db.exec('reset role'); await db.exec(`insert into gog.save_history (player_id, save) select id, '{"cls":"knight","pl":{"lv":12},"gold":100,"gems":5}'::jsonb from gog.players where nick = 'mod_victim'`); await db.exec('set role anon');
+  let pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: player details show the save summary and history', pl.ok && pl.level === 30 && pl.gems === 20 && pl.history.length === 1 && pl.history[0].level === 12, pl);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,false)', [TA, 'mod_victim']); ok('admin: deactivating an account works', r2.ok, r2);
+  r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: a deactivated player cannot log in', r2.error === 'inactive', r2);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,true)', [TA, 'mod_victim']); r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: reactivating lets them back in', r2.ok, r2);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,false)', [TA, 'mod_admin']); ok('admin: an admin account cannot be deactivated from the panel', r2.error === 'admin', r2);
+  r2 = await sq('select public.gog_admin_restore($1,$2,$3)', [TA, 'mod_victim', pl.history[0].id]); pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: restoring a previous save', r2.ok && pl.level === 12, [r2, pl]);
+  await db.exec('reset role'); const ep = (await db.query("select save->>'ep' ep, save_rev from gog.players where nick = 'mod_victim'")).rows[0]; await db.exec('set role anon'); ok('admin: restoring raises the save epoch and the revision', ep.ep === '1' && ep.save_rev === 2, ep);
+  r2 = await sq('select public.gog_admin_reset($1,$2)', [TA, 'mod_victim']); pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: resetting clears the save', r2.ok && !pl.has_save, pl);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TN, 'mod_victim']); ok('admin: a normal player cannot erase accounts', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TA, 'mod_admin']); ok('admin: an admin account cannot be erased from the panel', r2.error === 'admin', r2);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TA, 'mod_victim']); ok('admin: erasing an account (RGPD)', r2.ok, r2);
+  r2 = await sq('select public.gog_nick_free($1)', ['mod_victim']); ok('admin: the erased nick is free again', r2.free === true, r2);
+  r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: the erased account cannot log in', r2.error === 'bad_login', r2);
 }
 
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');

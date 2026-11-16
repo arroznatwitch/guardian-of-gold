@@ -234,11 +234,20 @@ const petLines = (id, L) => {   // o que o pet faz a este nivel (ingles primeiro
   if (id === 'chicken') return [T2('Collects coins and hearts for you', 'Collects coins and hearts for you'), T2(`Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`, `Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`)];
   return [T2('Circles you and heals you below 50% health', 'Circles you and heals you below 50% health'), `${T2('Regen', 'Regen')} ${(S.regen * 100).toFixed(2)}% ${T2('max health per second', 'max health per second')}`];
 };
+async function buyPet(id, price) {   // comprar um pet: o servidor cobra o ouro
+  buyBusy = true; const sv = await shopServer('pet', 0, id); buyBusy = false;
+  if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
+  if (save.pets.own[id] || save.gold < price) return;
+  if (price) spendG(price); save.pets.own[id] = 1; save.pets.lv[id] = 1; save.pets.xp[id] = 0; if (!save.pets.eq) save.pets.eq = id; persist(); SFX.buy();
+}
 let petRename = '', petMsg = '';
-function confirmPetRename() {
+async function confirmPetRename() {
   ensurePets(); const id = petRename; if (!id) return; const name = (rk.pname || '').trim();
   if (!/^[A-Za-z0-9 _-]{1,12}$/.test(name)) { petMsg = T2('Use 1 to 12 letters, numbers, spaces, _ or -', 'Use 1 to 12 letters, numbers, spaces, _ or -'); SFX.error(); return; }
   if (name === ((save.pets.names && save.pets.names[id]) || '')) { petRename = ''; rk.focus = ''; return; }
+  if (save.gems < PET_RENAME) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
+  if (buyBusy) return; buyBusy = true; const sv = await shopServer('petname', ['dog', 'chicken', 'bird'].indexOf(id), name); buyBusy = false;
+  if (sv.ok === false) { petMsg = buyMsg(sv.error); SFX.error(); return; }
   if (save.gems < PET_RENAME) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
   save.gems -= PET_RENAME; save.pets.names[id] = name; petRename = ''; rk.focus = ''; hubToast = { t: 2.4, s: `${petSpecies(id)} → ${name}`, col: '#ffd34a' }; SFX.buy(); persist(); if (on.token) { rk.at = {}; onlineSubmit(); }
 }
@@ -268,7 +277,7 @@ function hubPets() {
     else txt(T2('Levels up to 30 while equipped', 'Levels up to 30 while equipped'), x + 126, y + 54, 12, '#778');
     petLines(id, L).forEach((ln, k) => txt(ln, x + 126, y + 78 + k * 18, 12, k ? '#6f6' : '#aab6d0', 'left', k ? 'bold' : 'normal'));
     const bx = x + w - 172;
-    if (!own) btn(bx, y + 14, 158, 36, price ? T2('Buy', 'Buy') : T2('Get (free)', 'Get (free)'), () => { if (price && !can) { SFX.error(); hubToast = { t: 2.4, s: T2('Not enough gold', 'Not enough gold'), col: '#f88' }; return; } if (price) spendG(price); save.pets.own[id] = 1; save.pets.lv[id] = 1; save.pets.xp[id] = 0; if (!save.pets.eq) save.pets.eq = id; persist(); SFX.buy(); }, { size: 15, col: !price || can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061' });
+    if (!own) btn(bx, y + 14, 158, 36, price ? T2('Buy', 'Buy') : T2('Get (free)', 'Get (free)'), () => { if (price && !can) { SFX.error(); hubToast = { t: 2.4, s: T2('Not enough gold', 'Not enough gold'), col: '#f88' }; return; } if (!buyBusy) buyPet(id, price); }, { size: 15, col: !price || can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061' });
     else { btn(bx, y + 14, 158, 36, eq ? T2('Equipped ✓', 'Equipped ✓') : T2('Equip', 'Equip'), () => { save.pets.eq = eq ? '' : id; persist(); SFX.click(); if (on.token) { rk.at = {}; } }, { size: 15, col: eq ? '#a06a20' : '#2f7a4a', hot: eq ? '#c98a30' : '#3fa061' });
       btn(bx, y + 58, 158, 28, `${T2('Rename', 'Rename')} · ◆${PET_RENAME}`, () => { petRename = id; petMsg = ''; rk.pname = (save.pets.names && save.pets.names[id]) || ''; rk.focus = 'pname'; }, { size: 12, col: '#3a5a7a', hot: '#4a7aa0' }); }
   });

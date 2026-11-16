@@ -48,9 +48,10 @@ let editProf = null;
 function openEditProfile() { if (!on.token) return; editProf = { gender: myG(), country: on.country || 'ZZ', busy: false, msg: '', col: '#f88' }; }
 async function saveEditProfile() {
   const e = editProf; if (!e || e.busy) return; const cost = flagCost(e); if (save.gems < cost) { e.msg = `Precisas de ${cost} diamantes para mudar de bandeira`; e.col = '#f88'; SFX.error(); return; }
-  e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab';
-  const r = await rpc('gog_set_profile', { p_token: on.token, p_gender: e.gender, p_country: e.country === 'ZZ' ? null : e.country }); e.busy = false;
-  if (r.ok) { on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
+  e.busy = true; e.msg = 'A guardar...'; e.col = '#9ab'; if (cost && cloud.ready) await cloudFlush();   // o servidor cobra a mudanca no save dele
+  const pa = { p_token: on.token, p_gender: e.gender, p_country: e.country === 'ZZ' ? null : e.country };
+  let r = await rpc('gog_profile_set', pa); if (!r.ok && r.error === 'server') r = await rpc('gog_set_profile', pa); e.busy = false;   // servidor sem a funcao nova: a antiga
+  if (r.ok) { if (r.rev != null) cloud.rev = r.rev; on.gender = r.gender; on.country = r.country; onSave(); if (cost) { save.gems -= cost; persist(); } SFX.buy(); editProf = null; rk.at = {}; if (cost === 0) hubToast = { t: 2.4, s: 'Perfil guardado', col: '#6f6' }; } else { e.msg = RK_MSG[r.error] || 'Erro, tenta outra vez'; e.col = '#f88'; }
 }
 function profileTabs() {
   const nChest = rwAvail();
@@ -151,16 +152,16 @@ async function onlineSubmit() {
 }
 // Compras no servidor (gog_buy): o servidor confere o preco e desconta no save dele; o jogo aplica o mesmo localmente. Sem ligacao/funcao: compra local como antes.
 let buyBusy = false;
-async function shopServer(what, n) {
+async function shopServer(what, n, str) {
   if (!(ONLINE_URL && on.token && cloud.ready) || labOn) return { fallback: true };
   await cloudFlush();   // o servidor confere o saldo no save guardado
-  const r = await rpc('gog_buy', { p_token: on.token, p_what: what, p_n: n | 0 });
+  const r = await rpc('gog_buy', { p_token: on.token, p_what: what, p_n: n | 0, p_s: str == null ? null : String(str) });
   if (r.ok) { cloud.rev = r.rev; return r; }
   if (r.error === 'server') return { fallback: true };   // a funcao ainda nao existe no servidor
   if (r.error === 'auth') dropSession(false);
   return r;
 }
-const buyMsg = e => ({ funds: 'O servidor ainda não vê saldo suficiente. Espera uns segundos e tenta outra vez.', state: 'Já tens isto.', network: 'Sem ligação ao servidor.', no_save: 'Joga um pouco antes de comprar.', busy: 'Muitos pedidos. Tenta daqui a pouco.' }[e] || 'Compra recusada pelo servidor.');
+const buyMsg = e => ({ sync: 'A sincronizar com o servidor. Tenta outra vez daqui a uns segundos.', req: 'Ainda não cumpres os requisitos.', bad_word: 'Esse nome não é permitido.', bad_request: 'Pedido inválido.', funds: 'O servidor ainda não vê saldo suficiente. Espera uns segundos e tenta outra vez.', state: 'Já tens isto.', network: 'Sem ligação ao servidor.', no_save: 'Joga um pouco antes de comprar.', busy: 'Muitos pedidos. Tenta daqui a pouco.' }[e] || 'Compra recusada pelo servidor.');
 // rk.at guarda a classificacao de cada categoria (rows, me, hora); limpar rk.at forca nova leitura
 let rkSeq = 0;
 async function rkLoad(force) {
@@ -179,7 +180,7 @@ async function rkAuth(register) {
   if (register && rk.pass.toLowerCase() === nick.toLowerCase()) return rkSay('same_pass');
   rk.busy = true; rkSay('working'); let proof;
   try { proof = await mkProof(nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
-  const r = await rpc(register ? 'gog_register' : 'gog_login', register ? { p_nick: nick, p_proof: proof, p_gender: rk.gender, p_country: rk.country === 'ZZ' ? null : rk.country } : { p_nick: nick, p_proof: proof }); rk.busy = false;
+  const r = await rpc(register ? 'gog_register' : 'gog_login', register ? { p_nick: nick, p_proof: proof, p_gender: rk.gender, p_country: rk.country === 'ZZ' ? null : rk.country } : { p_nick: nick, p_proof: proof }); rk.busy = false; if (r.ok) ping(register ? 'register' : 'login', true);
   if (r.ok) { on = { token: r.token, nick: r.nick, gender: r.gender === 'f' ? 'f' : 'm', country: r.country || null }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; cloudStart(); } else rkSay(r.error, r.wait);
 }
 async function rkLogout() {
