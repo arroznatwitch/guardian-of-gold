@@ -1,8 +1,8 @@
 -- COMPRAS NO SERVIDOR (parte 2, so DEPOIS de todos terem o jogo atualizado e de teres corrido update-server-shop.sql):
--- 1) gog_save_put recusa ('outdated') saves em que a mochila sobe, a 3.a build passa a comprada, ar.n passa de ar.paid, aparecem armas ou pets comprados: so gog_buy o pode fazer.
+-- 1) gog_save_put recusa ('outdated') saves em que a mochila sobe, a 3.a build passa a comprada, ar.n passa de ar.paid, aparecem armas ou pets comprados ou sobem os encantamentos: so gog_buy o pode fazer.
 -- 2) a criacao de guilda antiga (sem cobranca no servidor) deixa de funcionar: so gog_guild_found.
 do $$
-declare def text; a text := E'  if p_rev <> v.save_rev then'; chk text := E'  if v.save is not null and (gog._n(p_save, ''bagSlots'') > gog._n(v.save, ''bagSlots'') or gog._nv(gog._idx(p_save->''lo''->''own'', 2)) > gog._nv(gog._idx(v.save->''lo''->''own'', 2)) or gog._n(p_save, ''ar'', ''n'') > gog._n(p_save, ''ar'', ''paid'') or gog._tot(p_save->''own'') > gog._tot(v.save->''own'') or gog._tot(p_save->''pets''->''own'') > gog._tot(v.save->''pets''->''own'')) then return jsonb_build_object(''ok'', false, ''error'', ''outdated''); end if;   -- compras so pelo servidor (gog_buy)\n';
+declare def text; a text := E'  if p_rev <> v.save_rev then'; chk text := E'  if v.save is not null and (gog._n(p_save, ''bagSlots'') > gog._n(v.save, ''bagSlots'') or gog._nv(gog._idx(p_save->''lo''->''own'', 2)) > gog._nv(gog._idx(v.save->''lo''->''own'', 2)) or gog._n(p_save, ''ar'', ''n'') > gog._n(p_save, ''ar'', ''paid'') or gog._tot(p_save->''own'') > gog._tot(v.save->''own'') or gog._tot(p_save->''pets''->''own'') > gog._tot(v.save->''pets''->''own'') or gog._ench_sum(p_save) > gog._ench_sum(v.save)) then return jsonb_build_object(''ok'', false, ''error'', ''outdated''); end if;   -- compras so pelo servidor (gog_buy)\n';
 begin
   def := pg_get_functiondef('public.gog_save_put(text,jsonb,integer,text)'::regprocedure);
   if position('''bagSlots''' in def) = 0 and position(a in def) > 0 then execute replace(def, a, chk || a); end if;

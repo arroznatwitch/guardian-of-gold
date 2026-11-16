@@ -192,10 +192,14 @@ function drawSellAsk() {
   btn(x + 155, y + 112, 125, 38, 'Cancelar', () => { sellAsk = false; }, { size: 15, col: '#2a2a48' });
 }
 // ----- Encantamentos -----
-function doRefine() {
-  const it = enchItem; if (!it || enc.t > 0 || it.ench >= ENC_MAX) return; if (it.ench >= refCap()) { SFX.error(); return; } const c = refCost(it); if (save.gold < c) { SFX.error(); return; }
-  spendG(c); const ok = Math.random() * 100 < ENC_CH[it.ench], down = !ok && it.ench >= 6 && Math.random() < .3;
-  enc = { t: .9, res: { kind: 'ref', ok, down, it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
+async function doRefine() {
+  const it = enchItem; if (!it || enc.t > 0 || buyBusy || it.ench >= ENC_MAX) return; if (it.ench >= refCap()) { SFX.error(); return; } const c = refCost(it); if (save.gold < c) { SFX.error(); return; }
+  buyBusy = true; const sv = await shopServer('refine', 0, JSON.stringify(it)); buyBusy = false;   // o servidor cobra e sorteia o resultado
+  if (sv.ok === false) { hubToast = { t: 3, s: sv.error === 'sync' ? 'A sincronizar o item com o servidor. Tenta outra vez daqui a uns segundos.' : buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
+  let ok, down;
+  if (sv.ok) { spendG(sv.cost != null ? sv.cost : c); ok = sv.res === 'ok'; down = sv.res === 'down'; if (ok) it.ench++; else if (down) it.ench--; }   // o servidor ja guardou o resultado: aplica-se logo
+  else { spendG(c); ok = Math.random() * 100 < ENC_CH[it.ench]; down = !ok && it.ench >= 6 && Math.random() < .3; }
+  enc = { t: .9, res: { kind: 'ref', ok, down, it, done: !!sv.ok }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
 }
 // pedras de evolucao: cada pedra da raridade da peca sobe +2 niveis de item (ate 120) e os bonus crescem com ele
 const MAIN_BASE = { head: il => 30 + 8 * il, chest: il => 50 + 12 * il, boots: il => 3 + .25 * il, amulet: il => 3 + .35 * il };
@@ -236,8 +240,8 @@ function updateEnchant(dt) {
     if (enc.t <= 0) {
       enc.t = 0; const r = enc.res, it = r.it;
       if (r.kind === 'ref') {
-        if (r.ok) { it.ench++; enc.msg = `REFINADO +${it.ench}!`; enc.col = '#6f6'; SFX.buy(); }
-        else if (r.down) { it.ench--; enc.msg = `FALHOU! Desceu para +${it.ench}`; enc.col = '#f55'; SFX.error(); }
+        if (r.ok) { if (!r.done) it.ench++; enc.msg = `REFINADO +${it.ench}!`; enc.col = '#6f6'; SFX.buy(); }
+        else if (r.down) { if (!r.done) it.ench--; enc.msg = `FALHOU! Desceu para +${it.ench}`; enc.col = '#f55'; SFX.error(); }
         else { enc.msg = 'FALHOU...'; enc.col = '#f96'; SFX.error(); }
       } else { it.spec = rollSpec(it, it.spec ? it.spec.k : null); it.rr = (it.rr || 0) + 1; enc.msg = 'ENCANTADO!'; enc.col = '#d9a6ff'; SFX.special(); }
       enc.msgT = 2.5; for (let i = 0; i < 30; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 320, vy: -Math.random() * 260, l: .8, c: r.kind === 'spec' || r.ok ? '#fff' : '#f96' }); persist();

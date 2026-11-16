@@ -648,6 +648,7 @@ begin
      or coalesce(gog._n(nw, 'buyN'), 0) > 1200 then
     return 'abs:attrs';
   end if;
+  if o is not null and gog._items_new_bad(o, nw) then return 'items:stats'; end if;   -- itens novos com estatisticas impossiveis para o nivel e a raridade
   if gog._sane(nw) is not null then return gog._sane(nw); end if;   -- itens, niveis de arma, pedras, copias e builds guardadas
   -- conquistas: so as novas precisam de prova no proprio save
   if nw ? 'ach' and jsonb_typeof(nw->'ach') <> 'object' then return 'ach:format'; end if;
@@ -668,8 +669,8 @@ begin
     if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + greatest(5, 10 * sl) + dt / 8 then return 'bosses'; end if;
     if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + greatest(2, 2 * sl) + dt / 60 then return 'guard'; end if;
     if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + greatest(5, 5 * sl) + dt / 20 then return 'fuses'; end if;
-    if gog._n(nw, 'gold') > gog._n(o, 'gold') + greatest(80000, 160000 * sl) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'gold'; end if;
-    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + greatest(80000, 160000 * sl) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'spent'; end if;
+    if gog._n(nw, 'gold') > gog._n(o, 'gold') + gog._gcred(o, dt) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'gold'; end if;
+    if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + gog._gcred(o, dt) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'spent'; end if;
     s0 := 0; s1 := 0; r0 := 0; r1 := 0;
     for i in 0..5 loop
       if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + greatest(3, 6 * sl) + dt / 8 then return 'waves'; end if;
@@ -753,7 +754,7 @@ end $$;
 
 create or replace function public.gog_save_put(p_token text, p_save jsonb, p_rev int, p_dev text default null) returns jsonb
 language plpgsql security definer set search_path = '' as $$
-declare pid bigint; v gog.players; newrev int; c text; reason text; banned boolean; pts numeric;
+declare pid bigint; v gog.players; newrev int; c text; reason text; banned boolean; pts numeric; dtv double precision;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
@@ -784,11 +785,15 @@ begin
     return jsonb_build_object('ok', false, 'error', 'wrong_class', 'cls', v.char_cls);
   end if;
   -- anti-batota: valores impossiveis, conquistas sem prova e titulos que nao ganhaste
-  reason := gog._check_save(v.save, p_save, least(greatest(extract(epoch from now() - coalesce(v.save_at, now() - interval '10 seconds')), 10), 7 * 86400), coalesce(v.owner, v.id));
+  dtv := least(greatest(extract(epoch from now() - coalesce(v.save_at, now() - interval '10 seconds')), 10), 7 * 86400);
+  reason := gog._check_save(v.save, p_save, dtv, coalesce(v.owner, v.id));
   if reason is not null then
     banned := gog._violation(pid, reason, reason);
     return jsonb_build_object('ok', false, 'error', case when banned then 'banned' else 'cheat' end);
   end if;
+  if v.save is not null then   -- credito de ouro (o servidor escreve-o, o cliente nao o controla)
+    p_save := jsonb_set(p_save, '{gcred}', to_jsonb(greatest(0, gog._gcred(v.save, dtv) - greatest(0, gog._n(p_save, 'gold') - gog._n(v.save, 'gold') - gog._rw_gold(v.save, p_save) - gog._ar_gold(v.save, p_save) - dtv * 2000))));
+  else p_save := jsonb_set(p_save, '{gcred}', to_jsonb(500000)); end if;
   update gog.players set save = p_save, char_cls = coalesce(char_cls, c), save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
   if v.save is not null then   -- guilda: os mobs, bosses e raids novos (ja validados acima) dao pontos a guilda
     pts := greatest(0, gog._n(p_save, 'stats', 'kills') - gog._n(v.save, 'stats', 'kills')) + 10 * greatest(0, gog._n(p_save, 'stats', 'bosses') - gog._n(v.save, 'stats', 'bosses')) + 60 * greatest(0, gog._raids_total(p_save) - gog._raids_total(v.save));
@@ -1298,6 +1303,76 @@ begin
   if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
 end $$;
 
+-- ------------------------------------------------------------ seguranca 2: credito de ouro, itens novos, encantar
+-- credito de ouro: alem do ritmo normal (dt * 2000 por segundo) cada conta tem um credito ate 500 000 que regenera 500/s; gravar mais vezes ja nao multiplica a folga
+create or replace function gog._gcred(o jsonb, dt double precision) returns numeric
+language plpgsql immutable set search_path = '' as $$
+begin
+  if o ? 'gcred' then return least(500000, greatest(0, gog._n(o, 'gcred')) + dt * 500); end if;
+  return 500000;
+end $$;
+
+-- limites das estatisticas de um item (formulas do jogo sem os nerfs, com folga): so apanha valores forjados
+create or replace function gog._item_stat_bad(it jsonb) returns boolean
+language plpgsql immutable set search_path = '' as $$
+declare sl text := it->>'slot'; r numeric := gog._n(it, 'r'); il numeric := gog._n(it, 'il'); mb numeric; a jsonb; kk text; b numeric; p numeric; cap numeric;
+begin
+  if jsonb_typeof(it) <> 'object' then return false; end if;
+  if sl = 'ring' then return gog._n(it, 'main', 'v') > 17; end if;
+  mb := case sl when 'head' then (30 + 8 * il) * (1 + .24 * r) when 'chest' then (50 + 12 * il) * (1 + .24 * r) when 'boots' then (3 + .25 * il) * (1 + .2 * r) when 'amulet' then (3 + .35 * il) * (1 + .2 * r) end;
+  if mb is null then return true; end if;
+  if gog._n(it, 'main', 'v') > mb * 1.3 + 2 then return true; end if;
+  if jsonb_typeof(it->'aff') = 'array' then
+    if jsonb_array_length(it->'aff') > 4 then return true; end if;
+    for a in select x from jsonb_array_elements(it->'aff') x loop
+      kk := a->>'k'; b := null;
+      select s.b, s.p into b, p from (values ('hp', 12, 3), ('dmg', 2.5, .25), ('spd', 1.5, .12), ('cdr', 1.5, .12), ('crit', 1.5, .1), ('ls', .8, .05), ('dr', 1, .08), ('gf', 3, .3), ('xpb', 3, .3)) s(k, b, p) where s.k = kk;
+      if b is null then return true; end if;
+      if gog._n(a, 'v') > (b + p * il) * 1.25 * (1 + .1 * r) * 1.3 + 1 then return true; end if;
+    end loop;
+  end if;
+  if jsonb_typeof(it->'spec') = 'object' then
+    kk := it->'spec'->>'k';
+    cap := case when kk in ('burn', 'slow') then 35 when kk = 'xpb' then 20 when kk in ('ls', 'crit', 'gf', 'dr', 'dmg') then 45 end;
+    if cap is null or gog._n(it, 'spec', 'v') > cap + 0.5 then return true; end if;
+  end if;
+  return false;
+end $$;
+
+-- itens novos ou alterados (que o save anterior do servidor nao tinha tal e qual) com estatisticas impossiveis
+create or replace function gog._items_new_bad(o jsonb, nw jsonb) returns boolean
+language plpgsql immutable set search_path = '' as $$
+declare oi jsonb := '[]'::jsonb; it jsonb;
+begin
+  if jsonb_typeof(o->'bag') = 'array' then oi := o->'bag'; end if;
+  if jsonb_typeof(o->'gear') = 'object' then oi := oi || coalesce((select jsonb_agg(e.value) from jsonb_each(o->'gear') e), '[]'::jsonb); end if;
+  for it in select e.value from jsonb_each(case when jsonb_typeof(nw->'gear') = 'object' then nw->'gear' else '{}'::jsonb end) e
+            union all select x from jsonb_array_elements(case when jsonb_typeof(nw->'bag') = 'array' then nw->'bag' else '[]'::jsonb end) x loop
+    if jsonb_typeof(it) = 'object' and not (oi @> jsonb_build_array(it)) and gog._item_stat_bad(it) then return true; end if;
+  end loop;
+  return false;
+end $$;
+
+-- soma dos niveis de encantamento de todos os itens (equipados e na mochila)
+create or replace function gog._ench_sum(s jsonb) returns numeric
+language plpgsql immutable set search_path = '' as $$
+declare r numeric := 0; e jsonb;
+begin
+  if jsonb_typeof(s->'gear') = 'object' then for e in select x.value from jsonb_each(s->'gear') x loop if jsonb_typeof(e) = 'object' then r := r + greatest(0, gog._n(e, 'ench')); end if; end loop; end if;
+  if jsonb_typeof(s->'bag') = 'array' then for e in select x from jsonb_array_elements(s->'bag') x loop if jsonb_typeof(e) = 'object' then r := r + greatest(0, gog._n(e, 'ench')); end if; end loop; end if;
+  return r;
+end $$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['gog._gcred(jsonb,double precision)', 'gog._item_stat_bad(jsonb)', 'gog._items_new_bad(jsonb,jsonb)', 'gog._ench_sum(jsonb)'] loop
+    execute format('revoke all on function %s from public', f);
+    if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); end if;
+  end loop;
+end $$;
+
 -- ====================================================== compras no servidor (gog_buy) e guilda paga no servidor
 -- O servidor confere o preco e desconta ouro/diamantes no SEU save (nao confia no cliente). O jogo aplica o mesmo localmente e adota a revisao.
 create or replace function gog._obj(j jsonb) returns jsonb
@@ -1307,11 +1382,12 @@ create or replace function public.gog_buy(p_token text, p_what text, p_n int def
 language plpgsql security definer set search_path = '' as $$
 declare pid bigint; v gog.players; s jsonb; gold numeric; gems numeric; cg numeric := 0; cd numeric := 0; slots int; own jsonb; ar jsonb; newrev int;
   cls text; wid text; arr jsonb; pets jsonb; pk text; nm text; lvr int[] := array[1, 6, 12, 30, 50]; ok_req boolean;
+  it jsonb; it2 jsonb; sl text; bi int; ee numeric; lvl numeric; ok2 boolean; dn boolean; resn text; t text;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  if p_what is null or p_what not in ('bag', 'lo', 'ar', 'wpn', 'pet', 'petname') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
-  if not gog._rate('buy:' || pid, 30, 60) then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
+  if p_what is null or p_what not in ('bag', 'lo', 'ar', 'wpn', 'pet', 'petname', 'refine') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  if not gog._rate('buy:' || pid, 120, 60) then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
   select * into v from gog.players where id = pid for update;
   if v.save is null then return jsonb_build_object('ok', false, 'error', 'no_save'); end if;
   s := v.save; gold := gog._n(s, 'gold'); gems := gog._n(s, 'gems');
@@ -1354,6 +1430,24 @@ begin
     pets := pets || jsonb_build_object('own', gog._obj(pets->'own') || jsonb_build_object(pk, 1), 'lv', gog._obj(pets->'lv') || jsonb_build_object(pk, 1), 'xp', gog._obj(pets->'xp') || jsonb_build_object(pk, 0));
     if coalesce(pets->>'eq', '') = '' then pets := pets || jsonb_build_object('eq', pk); end if;
     s := jsonb_set(s, '{pets}', pets);
+  elsif p_what = 'refine' then   -- refinar um item (equipado ou na mochila): preco, hipotese de sucesso e sorteio no servidor
+    begin it := p_s::jsonb; exception when others then return jsonb_build_object('ok', false, 'error', 'bad_request'); end;
+    if jsonb_typeof(it) <> 'object' or (it->>'slot') not in ('head', 'chest', 'boots', 'amulet') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+    sl := null; bi := null;
+    foreach t in array array['head', 'chest', 'boots', 'amulet'] loop if s->'gear'->t = it then sl := t; exit; end if; end loop;
+    if sl is null and jsonb_typeof(s->'bag') = 'array' then
+      select (e.ord - 1)::int into bi from jsonb_array_elements(s->'bag') with ordinality as e(x, ord) where e.x = it order by e.ord limit 1;
+    end if;
+    if sl is null and bi is null then return jsonb_build_object('ok', false, 'error', 'sync'); end if;   -- o servidor ainda nao tem este item (grava e tenta outra vez)
+    ee := gog._n(it, 'ench'); lvl := gog._n(s, 'pl', 'lv');
+    if ee < 0 or ee >= 10 or ee >= floor(lvl / 4) then return jsonb_build_object('ok', false, 'error', 'state'); end if;
+    cg := round(45 * (1 + gog._n(it, 'il') * .25) * (1 + gog._n(it, 'r') * .5) * (ee + 1) * (1 + lvl * .05));
+    if gold < cg then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
+    ok2 := random() * 100 < (array[100, 90, 80, 70, 60, 50, 40, 30, 22, 15])[ee::int + 1];
+    dn := not ok2 and ee >= 6 and random() < .3;
+    resn := case when ok2 then 'ok' when dn then 'down' else 'fail' end;
+    it2 := jsonb_set(it, '{ench}', to_jsonb(ee + case when ok2 then 1 when dn then -1 else 0 end));
+    if sl is not null then s := jsonb_set(s, array['gear', sl], it2); else s := jsonb_set(s, array['bag', bi::text], it2); end if;
   else   -- petname: mudar o nome de um pet (50 diamantes); p_n = 0 cao, 1 galinha, 2 passaro
     if p_n is null or p_n < 0 or p_n > 2 then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
     pk := (array['dog', 'chicken', 'bird'])[p_n + 1]; nm := btrim(coalesce(p_s, ''));
@@ -1370,7 +1464,7 @@ begin
   s := jsonb_set(s, '{gems}', to_jsonb(gems - cd));
   if cg > 0 then s := jsonb_set(s, '{stats}', gog._obj(s->'stats') || jsonb_build_object('spent', gog._n(s, 'stats', 'spent') + cg)); end if;
   update gog.players set save = s, save_rev = save_rev + 1 where id = pid returning save_rev into newrev;   -- save_at nao muda: os limites de crescimento dependem dele
-  return jsonb_build_object('ok', true, 'rev', newrev, 'gold', gold - cg, 'gems', gems - cd, 'paid', gog._n(s, 'ar', 'paid'));
+  return jsonb_build_object('ok', true, 'rev', newrev, 'gold', gold - cg, 'gems', gems - cd, 'paid', gog._n(s, 'ar', 'paid'), 'cost', cg, 'res', resn);
 end $$;
 
 -- mudar o perfil: a bandeira so se muda por aqui (a 1.a e gratis; mudar custa 250 diamantes, cobrados no save do servidor)

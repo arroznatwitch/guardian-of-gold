@@ -1,10 +1,11 @@
 (async function () {
-  const o = []; on = { token: 'a'.repeat(64) }; let calls = [], mode = 'ok', rev = 10;
+  const o = []; on = { token: 'a'.repeat(64) }; let calls = [], mode = 'ok', rev = 10, refRes = 'ok';
   rpc = async (fn, args) => {
     calls.push(fn + ':' + (args.p_what || ''));
     if (fn === 'gog_buy') {
       if (mode === 'missing') return { ok: false, error: 'server' };
       if (mode === 'funds') return { ok: false, error: 'funds' };
+      if (args.p_what === 'refine') { rev++; return { ok: true, rev, cost: 123, res: refRes, gold: 0, gems: 0 }; }
       rev++; return { ok: true, rev, gold: 0, gems: 0, paid: (args.p_what === 'ar' ? 3 : 0) };
     }
     if (fn === 'gog_guild_found') { if (mode === 'missing') return { ok: false, error: 'server' }; rev++; return { ok: true, rev, guild: { name: 'X' } }; }
@@ -45,6 +46,14 @@
   fresh(); ensurePets(); save.pets.own.dog = 1; petRename = 'dog'; rk.pname = 'Rex'; await confirmPetRename();
   if (save.pets.names.dog !== 'Rex' || save.gems !== 5000 - PET_RENAME || !calls.includes('gog_buy:petname')) o.push('nome do pet: ' + JSON.stringify(save.pets.names) + ' diamantes ' + save.gems);
   fresh(); ensurePets(); save.pets.own.dog = 1; petRename = 'dog'; rk.pname = 'Rex'; mode = 'funds'; await confirmPetRename(); if (save.pets.names.dog === 'Rex') o.push('nome mudado apesar da recusa do servidor');
+  // refinar: o resultado vem do servidor
+  const mk = e => Object.assign(genItem('head', 2, 30), { ench: e });
+  fresh(); let it = mk(0); save.bag.push(it); enchItem = it; enc.t = 0; refRes = 'ok'; await doRefine();
+  if (it.ench !== 1 || save.gold !== 100000 - 123 || !enc.res || !enc.res.done || !calls.includes('gog_buy:refine')) o.push('refinar ok: ench ' + it.ench + ' ouro ' + save.gold);
+  fresh(); it = mk(7); save.bag.push(it); enchItem = it; enc.t = 0; refRes = 'down'; await doRefine(); if (it.ench !== 6) o.push('refinar down: ench ' + it.ench);
+  fresh(); it = mk(7); save.bag.push(it); enchItem = it; enc.t = 0; refRes = 'fail'; await doRefine(); if (it.ench !== 7 || save.gold !== 100000 - 123) o.push('refinar fail: ench ' + it.ench + ' ouro ' + save.gold);
+  fresh(); it = mk(0); save.bag.push(it); enchItem = it; enc.t = 0; mode = 'funds'; await doRefine(); if (it.ench !== 0 || save.gold !== 100000) o.push('refinar apesar da recusa do servidor');
+  fresh(); it = mk(0); save.bag.push(it); enchItem = it; enc.t = 0; mode = 'missing'; await doRefine(); if (save.gold >= 100000 || !enc.res || enc.res.done) o.push('refinar sem a funcao no servidor devia usar o sorteio local');
   // guilda
   fresh(); save.pl.lv = 45; save.gold = 20000; save.gems = 150; rk.gname = 'Teste'; rk.gtag = 'TST'; await createGuild();
   if (save.gold !== 5000 || save.gems !== 50) o.push('guilda: ouro ' + save.gold + ' diamantes ' + save.gems);

@@ -161,7 +161,7 @@ async function shopServer(what, n, str) {
   if (r.error === 'auth') dropSession(false);
   return r;
 }
-const buyMsg = e => ({ req: 'Ainda não cumpres os requisitos.', bad_word: 'Esse nome não é permitido.', bad_request: 'Pedido inválido.', funds: 'O servidor ainda não vê saldo suficiente. Espera uns segundos e tenta outra vez.', state: 'Já tens isto.', network: 'Sem ligação ao servidor.', no_save: 'Joga um pouco antes de comprar.', busy: 'Muitos pedidos. Tenta daqui a pouco.' }[e] || 'Compra recusada pelo servidor.');
+const buyMsg = e => ({ sync: 'A sincronizar com o servidor. Tenta outra vez daqui a uns segundos.', req: 'Ainda não cumpres os requisitos.', bad_word: 'Esse nome não é permitido.', bad_request: 'Pedido inválido.', funds: 'O servidor ainda não vê saldo suficiente. Espera uns segundos e tenta outra vez.', state: 'Já tens isto.', network: 'Sem ligação ao servidor.', no_save: 'Joga um pouco antes de comprar.', busy: 'Muitos pedidos. Tenta daqui a pouco.' }[e] || 'Compra recusada pelo servidor.');
 // rk.at guarda a classificacao de cada categoria (rows, me, hora); limpar rk.at forca nova leitura
 let rkSeq = 0;
 async function rkLoad(force) {
