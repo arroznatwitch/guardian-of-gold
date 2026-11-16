@@ -465,8 +465,8 @@ function fxBurst(msg, col) {
 }
 const wFuseFee = (id, t) => { const w = CLASSES[save.cls].weapons.find(q => q.id === id); return Math.round((200 + (w ? w.price : 0) * .08) * (1 + t) * lvMul() * 2.5); };   // cada fusao custa ouro: sobe com a estrela, o preco da arma e o nivel
 const gFuseFee = it => Math.round(150 * (1 + it.il * .12) * (1 + it.r) * (1 + gSt(it)) * lvMul() * 2.5);
-/* vender copias de arma: mantem sempre pelo menos 1 da arma (a que tens); preco = 20% do preco da copia */
-const copySell = i => Math.max(50, Math.round(copyPrice(i) * .2));
+/* vender copias de arma: mantem sempre pelo menos 1 da arma (a que tens); preco = 4% do preco da copia */
+const copySell = i => Math.max(10, Math.round(copyPrice(i) * .04));
 function sellCopies(id, i, t, n) {
   const a = save.wst[id]; if (!a || n < 1) return;
   const have = a[t] | 0, total = wTotal(id), k = Math.max(0, Math.min(n, have, total - 1)); if (k < 1) { SFX.error(); return; }
