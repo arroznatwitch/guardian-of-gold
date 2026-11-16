@@ -527,8 +527,10 @@ function fuseGear(pick, keep) {
 function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
 function hubFuse() {
   const lock = save.pl.lv < FUSE_LV;
-  [['w', 'Armas'], ['g', 'Equipamento']].forEach(([k, l], i) => btn(197 + i * 128, 88, 122, 24, l, () => fuseMode = k, { size: 13, col: fuseMode === k ? '#a8821f' : '#2a2a48' }));
-  if (lock) { drawIcon('lock', 520, 100, 1.6); txt(`Desbloqueia no Nível ${FUSE_LV} (nível atual: ${save.pl.lv})`, 780, 105, 13, '#f88', 'right', 'bold'); }
+  { const FM = [['w', 'Armas'], ['g', 'Equipamento']], fw = 76, gap = 4, x0 = 782 - FM.length * fw - (FM.length - 1) * gap;   // filtro discreto (nao e outra aba): menor, mais escuro e encostado a direita
+    FM.forEach(([k, l], i) => { let fs = 10; while (fs > 8 && txtW(l, fs, 'bold') > fw - 6) fs--;
+      btn(x0 + i * (fw + gap), 90, fw, 16, l, () => fuseMode = k, { size: fs, col: fuseMode === k ? '#3a5a7a' : '#1c1c2c', hot: '#4a7aa0' }); }); }
+  if (lock) { drawIcon('lock', 215, 100, 1.6); txt(`Desbloqueia no Nível ${FUSE_LV} (nível atual: ${save.pl.lv})`, 234, 105, 13, '#f88', 'left', 'bold'); }
   if (fuseMode === 'w') {
     const c = CLASSES[save.cls];
     c.weapons.forEach((w, i) => {
