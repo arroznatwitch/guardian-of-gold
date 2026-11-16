@@ -355,7 +355,7 @@ function update(dt) {
     if (d0.boom) { R.tels.push({ x: e.x, y: e.y, r: 56, t: .75, max: .75, dmg: 14, from: 'e', col: '#9acd32' }); burst(e.x, e.y, '#9acd32', 10); }
     R.coins.push({ x: e.x, y: e.y, v: Math.max(1, Math.round(d0.gold * (R.goldM || 1) * COIN_RATE * (R.farm ? FARM_RATE : 1) * (1 + R.G.gf / 100))) }); R.xp += (R.farm && R.rec ? 4 + (R.rec - 1) / 3 : 4 + 2 * R.m) * (R.farm ? FARM_RATE * xpK(save.pl.lv, R.rec) : 1); R.waveKills++;
     { const tr = mobTier(e.type); if (Math.random() < (.012 + .001 * (R.wave || 1) + (R.raid ? .012 : 0)) * (.5 + .5 * tr) * (1 + gb().drop)) giveLoot(e.x, e.y, 0, tr); }
-    if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .04) R.hearts.push({ x: e.x + 10, y: e.y });
+    if (Math.random() < .012 + (R.raid ? .02 : 0)) giveWeaponCopy(e.x, e.y); if (Math.random() < .02) R.hearts.push({ x: e.x + 10, y: e.y });
   }
   R.enemies = R.enemies.filter(e => e.hp > 0);
   if (R.booms && R.booms.length) { for (const b of R.booms) { inSrc('Conjunto: Detonação', () => areaDmg(b.x, b.y, SET_BOOM.r, SET_BOOM.dmg * DM())); R.fx.push({ k: 'ring', x: b.x, y: b.y, r: SET_BOOM.r, t: .3, max: .3, col: '#ff9a2a' }); burst(b.x, b.y, '#ff9a2a', 12); } R.booms = []; }
@@ -455,7 +455,8 @@ function update(dt) {
   }
   R.coins = R.coins.filter(c => !c.got);
   for (const h of R.hearts) { h.t = (h.t || 0) + dt; if (h.life === undefined) h.life = 30 + Math.random() * 15; if (h.t > h.life) h.got = true; }
-  for (const h of R.hearts) if (!h.got && Math.hypot(p.x - h.x, p.y - h.y) < 20) { h.got = true; { const n = heartHeal(); heal(n, 'Corações'); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); } }
+  for (const h of R.hearts) if (!h.got && p.hp < p.max && p.hp > 0) { const dh = Math.hypot(p.x - h.x, p.y - h.y) || 1; if (dh < 110) { const st = Math.min(dh, 420 * dt); h.x += (p.x - h.x) / dh * st; h.y += (p.y - h.y) / dh * st; } }   // os coracoes voam logo para ti (como as moedas), sem espera
+  for (const h of R.hearts) if (!h.got && p.hp < p.max && Math.hypot(p.x - h.x, p.y - h.y) < 24) { h.got = true; { const n = heartHeal(); heal(n, 'Corações'); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); } }
   R.hearts = R.hearts.filter(h => !h.got);
 
   for (const q of R.parts) { q.vy += (q.g || 0) * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; } R.parts = R.parts.filter(q => q.life > 0);
