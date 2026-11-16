@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacidade · Guardians of Gold</title>
+<meta name="robots" content="noindex">
+<style>
+  body{margin:0;background:#08080e;color:#cdd6f0;font:16px/1.6 system-ui,sans-serif}
+  main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+  h1{color:#f0c060;margin:.2em 0} h2{color:#ffd34a;margin:1.6em 0 .3em;font-size:1.15em}
+  a{color:#7fd0ff} table{border-collapse:collapse;width:100%;font-size:14px} td,th{border:1px solid #2a2a48;padding:6px 8px;text-align:left;vertical-align:top} th{background:#14142a}
+  .lang{float:right;font-size:14px} .note{background:#14142a;border-left:3px solid #a8821f;padding:8px 12px;margin:12px 0}
+</style>
+</head>
+<body>
+<main>
+<div class="lang"><a href="#pt">PT</a> · <a href="#en">EN</a> · <a href="index.html">← Jogo / Game</a></div>
+
+<section id="pt">
+<h1>Política de privacidade</h1>
+<p>Última atualização: novembro de 2026. Este documento explica, de forma simples, que dados o <b>Guardians of Gold</b> usa e porquê. O jogo é um projeto independente de <b>arroznatwitch</b> (responsável pelo tratamento).</p>
+
+<h2>1. O que fica no teu dispositivo (localStorage)</h2>
+<p>O jogo guarda no teu browser, através de <code>localStorage</code>, o teu progresso, as definições (idioma, volume, teclas, opções), a sessão de conta e o aviso que já viste. Não usamos cookies de rastreio nem publicidade. Podes apagar estes dados a qualquer momento nas definições do browser.</p>
+
+<h2>2. Se criares conta (online)</h2>
+<table>
+<tr><th>Dado</th><th>Para quê</th></tr>
+<tr><td>Nick</td><td>Identificar a conta e mostrar-te no ranking, nas guildas e nos perfis públicos.</td></tr>
+<tr><td>Palavra-passe</td><td>A palavra-passe <b>nunca sai do teu dispositivo</b>. Só é enviada uma prova criptográfica (PBKDF2) que o servidor volta a proteger com bcrypt. Não há recuperação de palavra-passe.</td></tr>
+<tr><td>Sexo do personagem e país (opcionais)</td><td>Aspeto do personagem e bandeira no perfil público.</td></tr>
+<tr><td>Save do jogo e estatísticas</td><td>Guardar o progresso na nuvem, ranking, guildas e deteção de batota.</td></tr>
+<tr><td>Identificador de sessão</td><td>Manter-te ligado (até 30 dias). É guardado no servidor apenas em forma de hash.</td></tr>
+<tr><td>Código derivado do IP (HMAC)</td><td>Limitar o número de contas por rede (anti-abuso). Não guardamos o IP em claro e o código não pode ser revertido sem uma chave secreta do servidor.</td></tr>
+<tr><td>Registos de anti-batota</td><td>Quando o servidor recusa um save suspeito, guardamos o tipo e o detalhe técnico da ocorrência.</td></tr>
+</table>
+<p>O nick, o nível, as estatísticas, o equipamento visível, o país e a guilda são <b>públicos</b> (ranking e perfis). Não uses o teu nome real nem dados pessoais no nick.</p>
+
+<h2>3. Estatísticas anónimas</h2>
+<p>O jogo envia contadores por dia (por exemplo «abriu o jogo», «começou uma missão», «em telemóvel/computador»). <b>Não há identificadores, cookies nem IP associados</b>, e não conseguimos saber quem foi. Se o teu browser tiver «Do Not Track» ativo, o jogo não envia estes contadores.</p>
+
+<h2>4. Relatos de problemas</h2>
+<p>Se carregares em «Reportar problema», o texto que escreveres é enviado. Só vão a informação técnica (versão, browser, últimos erros) e o teu nick se marcares essas caixas. Nada é enviado sem carregares em Enviar.</p>
+
+<h2>5. Serviços de terceiros</h2>
+<ul>
+<li><b>GitHub Pages</b> aloja o jogo (o GitHub vê o teu IP ao servir as páginas).</li>
+<li><b>Supabase</b> aloja a base de dados e a API da conta online.</li>
+<li><b>Google Fonts</b> fornece o tipo de letra do jogo (a Google vê o teu IP ao pedir a fonte).</li>
+</ul>
+
+<h2>6. Quanto tempo guardamos</h2>
+<p>Os dados da conta ficam enquanto a conta existir. Os registos de anti-batota ficam enquanto a conta existir. Os relatos de problemas e os contadores diários são apagados ou anonimizados quando já não forem úteis.</p>
+
+<h2>7. Os teus direitos</h2>
+<p>Podes pedir <b>acesso, correção ou eliminação</b> dos teus dados (RGPD), ou opor-te ao tratamento. Para eliminar a conta e todos os personagens, escreve-nos pelo <a href="https://github.com/arroznatwitch/guardian-of-gold/issues">GitHub (issues)</a> indicando o teu nick (não incluas a palavra-passe), ou usa «Reportar problema» no jogo com a caixa do nick marcada. Podes também apresentar queixa à CNPD (<a href="https://www.cnpd.pt">cnpd.pt</a>).</p>
+
+<h2>8. Crianças</h2>
+<p>O jogo não se destina a menores de 13 anos. Se tens menos de 13 anos, pede autorização a um responsável antes de criar conta.</p>
+
+<div class="note">Este documento descreve o funcionamento atual do jogo e pode mudar com novas versões; a data no topo indica a última atualização.</div>
+</section>
+
+<hr style="border-color:#2a2a48;margin:40px 0">
+
+<section id="en">
+<h1>Privacy policy</h1>
+<p>Last updated: November 2026. This explains in plain language what data <b>Guardians of Gold</b> uses and why. The game is an independent project by <b>arroznatwitch</b> (data controller).</p>
+<h2>1. On your device (localStorage)</h2>
+<p>Your browser's <code>localStorage</code> holds your progress, settings (language, volume, keys, options), your account session and the notice you already saw. We do not use tracking cookies or advertising. You can clear this data in your browser settings at any time.</p>
+<h2>2. If you create an account (online)</h2>
+<table>
+<tr><th>Data</th><th>Purpose</th></tr>
+<tr><td>Nickname</td><td>Identify the account and show you in rankings, guilds and public profiles.</td></tr>
+<tr><td>Password</td><td>The password <b>never leaves your device</b>. Only a cryptographic proof (PBKDF2) is sent, which the server protects again with bcrypt. There is no password recovery.</td></tr>
+<tr><td>Character sex and country (optional)</td><td>Character look and flag on the public profile.</td></tr>
+<tr><td>Game save and statistics</td><td>Cloud progress, rankings, guilds and cheat detection.</td></tr>
+<tr><td>Session identifier</td><td>Keep you signed in (up to 30 days). Stored on the server only as a hash.</td></tr>
+<tr><td>IP-derived code (HMAC)</td><td>Limit accounts per network (anti-abuse). We do not store the IP in clear and the code cannot be reversed without a server secret key.</td></tr>
+<tr><td>Anti-cheat logs</td><td>When the server rejects a suspicious save we store the type and technical detail of the event.</td></tr>
+</table>
+<p>Nickname, level, statistics, visible equipment, country and guild are <b>public</b> (rankings and profiles). Do not use your real name or personal data as a nickname.</p>
+<h2>3. Anonymous statistics</h2>
+<p>The game sends per-day counters (e.g. "opened the game", "started a mission", "phone/desktop"). <b>No identifiers, cookies or IP are attached</b>, so we cannot tell who it was. If your browser has "Do Not Track" enabled, the game does not send these counters.</p>
+<h2>4. Problem reports</h2>
+<p>If you press "Report a problem", the text you write is sent. Technical info (version, browser, last errors) and your nickname are only included if you tick those boxes. Nothing is sent until you press Send.</p>
+<h2>5. Third parties</h2>
+<ul><li><b>GitHub Pages</b> hosts the game (GitHub sees your IP when serving pages).</li><li><b>Supabase</b> hosts the database and the online account API.</li><li><b>Google Fonts</b> provides the game's typeface (Google sees your IP when fetching the font).</li></ul>
+<h2>6. Retention</h2>
+<p>Account data is kept while the account exists. Anti-cheat logs are kept while the account exists. Problem reports and daily counters are deleted or anonymised when no longer useful.</p>
+<h2>7. Your rights</h2>
+<p>You may request <b>access, correction or deletion</b> of your data (GDPR) or object to processing. To delete your account and all characters, contact us through <a href="https://github.com/arroznatwitch/guardian-of-gold/issues">GitHub (issues)</a> with your nickname (never your password), or use "Report a problem" in the game with the nickname box ticked. You can also complain to your data protection authority (in Portugal: <a href="https://www.cnpd.pt">CNPD</a>).</p>
+<h2>8. Children</h2>
+<p>The game is not intended for children under 13. If you are under 13, ask a parent or guardian before creating an account.</p>
+</section>
+</main>
+</body>
+</html>

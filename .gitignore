@@ -1,0 +1,4 @@
+# ficheiros de trabalho locais (arte, scripts, copias antigas): nao vao para o repositorio
+_arquivo/
+.claude/
+node_modules/

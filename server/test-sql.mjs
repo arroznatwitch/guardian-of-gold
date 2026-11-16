@@ -532,4 +532,40 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   r = await q('select public.gog_guild_found($1,$2,$3)', [T3, 'Paid Guild', 'PAY']); ok('enforce: guild_found still works', r.ok && r.gold === 5000, r);
 }
 
+
+// lancamento: relatos, estatisticas anonimas e moderacao
+{
+  const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
+  const sq = async (sql, p) => (await q(sql, p));
+  let r2 = await sq('select public.gog_report($1,$2::jsonb)', ['O jogo bloqueou no hub', JSON.stringify({ build: 28, ua: 'x' })]); ok('report: an anonymous report is stored', r2.ok, r2);
+  r2 = await sq('select public.gog_report($1)', ['x']); ok('report: too short is refused', r2.error === 'bad_request', r2);
+  r2 = await sq('select public.gog_report($1)', ['y'.repeat(1001)]); ok('report: too long is refused', r2.error === 'bad_request', r2);
+  let busy2 = 0; for (let i = 0; i < 8; i++) { r2 = await sq('select public.gog_report($1)', ['mais um problema ' + i]); if (r2.error === 'busy') busy2++; } ok('report: limited per network', busy2 >= 3, busy2);
+  r2 = await sq('select public.gog_ping($1)', ['open:m']); ok('ping: a known event is counted', r2.ok, r2);
+  r2 = await sq('select public.gog_ping($1)', ['hack; drop table']); ok('ping: unknown events are refused', r2.error === 'bad_request', r2);
+  await db.exec('reset role'); const cnt = (await db.query("select n from gog.daily_stats where k = 'open:m'")).rows[0]; await db.exec('set role anon'); ok('ping: the counter is stored without any identifier', cnt && Number(cnt.n) === 1, cnt);
+  let denied2 = false; try { await db.query('select * from gog.reports'); } catch (e) { denied2 = true; } ok('report: anon cannot read the reports table', denied2);
+  const TA = await fresh('mod_admin'), TV = await fresh('mod_victim'), TN = await fresh('mod_normal'); void TV;
+  await db.exec('reset role'); await db.exec("insert into gog.admins (nick_key) values ('mod_admin') on conflict do nothing"); await db.exec('set role anon');
+  r2 = await sq('select public.gog_admin_overview($1)', [TN]); ok('admin: a normal player cannot open the panel', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_overview($1)', ['f'.repeat(64)]); ok('admin: a bad token cannot open the panel', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_overview($1)', [TA]); ok('admin: the overview works for an admin', r2.ok && Array.isArray(r2.violations) && Array.isArray(r2.reports) && r2.players >= 3, r2);
+  ok('admin: reports show up in the overview', r2.reports.length >= 4 && r2.reports[0].msg, r2.reports);
+  await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"knight","pl":{"lv":30},"gold":500,"gems":20,"stats":{"spent":10,"kills":99}}'::jsonb, save_rev = 1 where nick = 'mod_victim'`); await db.exec('set role anon');
+  await db.exec('reset role'); await db.exec(`insert into gog.save_history (player_id, save) select id, '{"cls":"knight","pl":{"lv":12},"gold":100,"gems":5}'::jsonb from gog.players where nick = 'mod_victim'`); await db.exec('set role anon');
+  let pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: player details show the save summary and history', pl.ok && pl.level === 30 && pl.gems === 20 && pl.history.length === 1 && pl.history[0].level === 12, pl);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,false)', [TA, 'mod_victim']); ok('admin: deactivating an account works', r2.ok, r2);
+  r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: a deactivated player cannot log in', r2.error === 'inactive', r2);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,true)', [TA, 'mod_victim']); r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: reactivating lets them back in', r2.ok, r2);
+  r2 = await sq('select public.gog_admin_set_active($1,$2,false)', [TA, 'mod_admin']); ok('admin: an admin account cannot be deactivated from the panel', r2.error === 'admin', r2);
+  r2 = await sq('select public.gog_admin_restore($1,$2,$3)', [TA, 'mod_victim', pl.history[0].id]); pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: restoring a previous save', r2.ok && pl.level === 12, [r2, pl]);
+  await db.exec('reset role'); const ep = (await db.query("select save->>'ep' ep, save_rev from gog.players where nick = 'mod_victim'")).rows[0]; await db.exec('set role anon'); ok('admin: restoring raises the save epoch and the revision', ep.ep === '1' && ep.save_rev === 2, ep);
+  r2 = await sq('select public.gog_admin_reset($1,$2)', [TA, 'mod_victim']); pl = await sq('select public.gog_admin_player($1,$2)', [TA, 'mod_victim']); ok('admin: resetting clears the save', r2.ok && !pl.has_save, pl);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TN, 'mod_victim']); ok('admin: a normal player cannot erase accounts', !r2.ok, r2);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TA, 'mod_admin']); ok('admin: an admin account cannot be erased from the panel', r2.error === 'admin', r2);
+  r2 = await sq('select public.gog_admin_erase($1,$2)', [TA, 'mod_victim']); ok('admin: erasing an account (RGPD)', r2.ok, r2);
+  r2 = await sq('select public.gog_nick_free($1)', ['mod_victim']); ok('admin: the erased nick is free again', r2.free === true, r2);
+  r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: the erased account cannot log in', r2.error === 'bad_login', r2);
+}
+
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');

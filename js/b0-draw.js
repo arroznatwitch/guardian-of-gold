@@ -261,7 +261,7 @@ function overlay(title, col, lines) {
   lines.forEach((l, i) => txt(l, UW / 2, 240 + i * 28, 20, '#fff', 'center'));
 }
 function drawPlayScreens() {
-  drawWorld(); drawHUD(); ctx.save(); ctx.translate(UIOX, 0); playOverlay(); ctx.restore(); drawCine();
+  drawWorld(); drawHUD(); ctx.save(); ctx.translate(UIOX, 0); playOverlay(); ctx.restore(); drawCine(); drawTouch();
 }
 function drawCheckpoint() {
   const gt = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = Math.round(R.xp * (1 + (R.G ? R.G.xpb : 0) / 100));

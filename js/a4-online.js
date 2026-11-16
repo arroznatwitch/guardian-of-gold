@@ -180,7 +180,7 @@ async function rkAuth(register) {
   if (register && rk.pass.toLowerCase() === nick.toLowerCase()) return rkSay('same_pass');
   rk.busy = true; rkSay('working'); let proof;
   try { proof = await mkProof(nick, rk.pass); } catch (e) { rk.busy = false; return rkSay('nocrypto'); }
-  const r = await rpc(register ? 'gog_register' : 'gog_login', register ? { p_nick: nick, p_proof: proof, p_gender: rk.gender, p_country: rk.country === 'ZZ' ? null : rk.country } : { p_nick: nick, p_proof: proof }); rk.busy = false;
+  const r = await rpc(register ? 'gog_register' : 'gog_login', register ? { p_nick: nick, p_proof: proof, p_gender: rk.gender, p_country: rk.country === 'ZZ' ? null : rk.country } : { p_nick: nick, p_proof: proof }); rk.busy = false; if (r.ok) ping(register ? 'register' : 'login', true);
   if (r.ok) { on = { token: r.token, nick: r.nick, gender: r.gender === 'f' ? 'f' : 'm', country: r.country || null }; onSave(); rk.pass = rk.pass2 = ''; rk.focus = ''; rkSay('welcome'); rk.at = {}; cloudStart(); } else rkSay(r.error, r.wait);
 }
 async function rkLogout() {
