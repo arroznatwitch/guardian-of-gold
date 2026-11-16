@@ -142,7 +142,7 @@ function levelReward(L) {
 }
 let chestAnim = 0, lastRw = null, rwPage = -1;   // chestAnim: so para o ciclo principal nao falhar
 const RW_PER = 6, rwAvail = () => Math.max(0, Math.min(MAXLV, save.pl.lv) - save.chestDone);
-const rwWeaponIdx = tier => { const c = CLASSES[save.cls]; for (let i = Math.min(tier, c.weapons.length - 1); i >= 0; i--) if (weaponReq(i).ok) return i; return 0; };
+const rwWeaponIdx = tier => { const c = CLASSES[save.cls]; for (let i = Math.min(tier, c.weapons.length - 1); i >= 0; i--) if (save.own[save.cls][i]) return i; return 0; };   // so copias de armas que ja tens
 function claimRewards(upTo) {   // resgata, por ordem, os premios ate ao nivel pedido (cada nivel so se resgata uma vez)
   const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, stones: [0, 0, 0, 0, 0], n: 0, sold: 0, from: save.chestDone + 1, to: save.chestDone };
   while (save.chestDone < Math.min(MAXLV, save.pl.lv) && save.chestDone < upTo) {
@@ -150,7 +150,7 @@ function claimRewards(upTo) {   // resgata, por ordem, os premios ate ao nivel p
     rw.gold += d.gold; rw.pts += d.pts; rw.gems += d.gems;
     if (d.stone) { save.stones[d.stone.r] = (save.stones[d.stone.r] | 0) + d.stone.n; rw.stones[d.stone.r] += d.stone.n; }
     if (d.item) { const it = genItem(d.item.slot, d.item.r, d.item.il); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
-    if (d.wpn >= 0) { const wi = rwWeaponIdx(d.wpn), id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; save.own[save.cls][wi] = 1; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
+    if (d.wpn >= 0) { const wi = rwWeaponIdx(d.wpn), id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
     rw.n++;
   }
   if (!rw.n) return;

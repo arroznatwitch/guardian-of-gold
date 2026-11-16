@@ -465,6 +465,14 @@ function fxBurst(msg, col) {
 }
 const wFuseFee = (id, t) => { const w = CLASSES[save.cls].weapons.find(q => q.id === id); return Math.round((200 + (w ? w.price : 0) * .08) * (1 + t) * lvMul() * 2.5); };   // cada fusao custa ouro: sobe com a estrela, o preco da arma e o nivel
 const gFuseFee = it => Math.round(150 * (1 + it.il * .12) * (1 + it.r) * (1 + gSt(it)) * lvMul() * 2.5);
+/* vender copias de arma: mantem sempre pelo menos 1 da arma (a que tens); preco = 20% do preco da copia */
+const copySell = i => Math.max(50, Math.round(copyPrice(i) * .2));
+function sellCopies(id, i, t, n) {
+  const a = save.wst[id]; if (!a || n < 1) return;
+  const have = a[t] | 0, total = wTotal(id), k = Math.max(0, Math.min(n, have, total - 1)); if (k < 1) { SFX.error(); return; }
+  a[t] -= k; save.gold = Math.min(GOLD_MAX, save.gold + k * copySell(i) * (1 + t)); SFX.coin(); persist();
+  hubToast = { t: 2.2, s: T2(`${k} cópia(s) vendida(s): +¢${gfmt(k * copySell(i) * (1 + t))}`, `${k} copy(ies) sold: +¢${gfmt(k * copySell(i) * (1 + t))}`), col: '#fd5' };
+}
 function doFuse(id, t, all) {
   if (save.pl.lv < FUSE_LV) { SFX.error(); return; }
   const a = save.wst[id]; let n = 0;
@@ -520,7 +528,8 @@ function hubFuse() {
     txt(`Cópias de ${w.n}: ${wTotal(w.id)}`, 212, 458, 14, '#fff');
     { const un = wUnlocked(w.id); if (un < STAR_MAX) { const rq2 = wReq(w.id, un); txt(`Missão para desbloquear ${un + 1}★ (uma vez por arma):`, 470, 404, 12, '#f0c060', 'left', 'bold'); rq2.lines.forEach((l, i) => txt((l.ok ? '✔ ' : '✘ ') + l.t, 470, 421 + i * 17, 12, l.ok ? '#6f6' : '#f88')); btn(470, 421 + rq2.lines.length * 17 + 2, 160, 22, `Desbloquear ${un + 1}★`, () => { if (wUnlock(w.id)) { SFX.special(); persist(); fxBurst(`${un + 1}★ DESBLOQUEADA!`, '#ffd34a'); } else SFX.error(); }, { size: 12, off: lock || !rq2.ok, col: '#a06a20', hot: '#c98a30' }); } else txt('Todas as estrelas desbloqueadas', 470, 421, 12, '#6f6', 'left', 'bold'); }
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
-    if (!rq.ok) txt(rq.text, 665, 418, 12, '#f88', 'center');
+    { const t0 = a.findIndex(q => q > 0), tt = t0 < 0 ? 0 : t0, sv = copySell(fuseSel) * (1 + tt), kk = Math.max(0, Math.min(a[tt] | 0, wTotal(w.id) - 1)); txt(`${T2('Vender cópias', 'Sell copies')} (${tt ? tt + '★' : 'Base'}): ¢${gfmt(sv)} ${T2('cada', 'each')}`, 665, 408, 11, '#9ab', 'center'); btn(560, 414, 64, 24, `${T2('Vender', 'Sell')} 1`, () => sellCopies(w.id, fuseSel, tt, 1), { size: 11, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); btn(630, 414, 64, 24, `${T2('Vender', 'Sell')} 5`, () => sellCopies(w.id, fuseSel, tt, 5), { size: 11, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); btn(700, 414, 70, 24, `${T2('Todas', 'All')} (${kk})`, () => sellCopies(w.id, fuseSel, tt, 999), { size: 11, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); }
+    if (!rq.ok) txt(rq.text, 665, 450, 12, '#f88', 'center');
   } else {
     const gs = gearGroups(), key = g => fuseKeyOf(g[0]);
     if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 250, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 272, 13, '#667', 'center'); }
