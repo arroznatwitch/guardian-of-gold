@@ -440,4 +440,46 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   ok('security: failure counter restarts after an hour', fc === 1, fc);
 }
 
+
+// compras e guilda no servidor (gog_buy, gog_guild_found) e a regra que as impoe
+{
+  const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
+  const age = async () => { await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '2 minutes'"); await db.exec('set role anon'); };
+  const setSave = async (nick, o) => { await db.exec('reset role'); await db.exec(`update gog.players set save = '${JSON.stringify(Object.assign({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0, stats: { kills: 0, gold: 0, bosses: 0, spent: 0 } }, o))}'::jsonb, save_at = now() - interval '2 minutes' where nick = '${nick}'`); await db.exec('set role anon'); };
+  const get = async T => (await q('select public.gog_save_get($1)', [T]));
+  const putFrom = async (T, mut) => { const g = await get(T); await age(); const nw = mut(JSON.parse(JSON.stringify(g.save))); return q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [T, JSON.stringify(nw), g.rev, 'd']); };
+  let T = await fresh('shop_one');
+  r = await q('select public.gog_buy($1,$2,2)', [T, 'bag']); ok('shop: buying without a save is refused', r.error === 'no_save', r);
+  await setSave('shop_one', { gold: 30000, gems: 5000 });
+  r = await q('select public.gog_buy($1,$2,0)', [T, 'sword']); ok('shop: unknown item is refused', r.error === 'bad_request', r);
+  r = await q('select public.gog_buy($1,$2,3)', [T, 'bag']); ok('shop: bag slots must be bought in order', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,2)', [T, 'bag']); ok('shop: bag 2 costs 10 000 gold', r.ok && r.gold === 20000 && r.gems === 5000, r);
+  let g = await get(T); ok('shop: the server save has the slot and the spent gold', g.save.bagSlots === 2 && g.save.gold === 20000 && g.save.stats.spent === 10000 && g.rev === r.rev, g.save);
+  r = await q('select public.gog_buy($1,$2,3)', [T, 'bag']); ok('shop: not enough gold is refused', r.error === 'funds', r);
+  await setSave('shop_one', { gold: 100000, gems: 5000, bagSlots: 2 });
+  r = await q('select public.gog_buy($1,$2,3)', [T, 'bag']); ok('shop: bag 3 costs 25 000 gold', r.ok && r.gold === 75000, r);
+  r = await q('select public.gog_buy($1,$2,4)', [T, 'bag']); ok('shop: bag 4 costs 200 diamonds', r.ok && r.gems === 4800, r);
+  r = await q('select public.gog_buy($1,$2,0)', [T, 'lo']); ok('shop: 3rd build costs 200 diamonds', r.ok && r.gems === 4600, r);
+  g = await get(T); ok('shop: build 3 is owned on the server', JSON.stringify(g.save.lo.own) === '[1,0,1]', g.save.lo);
+  r = await q('select public.gog_buy($1,$2,0)', [T, 'lo']); ok('shop: the 3rd build cannot be bought twice', r.error === 'state', r);
+  r = await q('select public.gog_buy($1,$2,0)', [T, 'ar']); ok('shop: auto-raid costs 1000 diamonds and counts as paid', r.ok && r.gems === 3600 && r.paid === 1, r);
+  // o save do jogo gasta o uso pago sem voltar a descer os diamantes; nao pode inventar usos pagos
+  r = await putFrom(T, s => { s.ar.n = 1; s.ar.gold = 500000; s.gold += 500000; return s; }); ok('shop: a paid auto-raid use is accepted without a second diamond drop', r.ok, r);
+  r = await putFrom(T, s => { s.ar.n = 2; s.ar.gold = 1000000; s.gold += 500000; return s; }); ok('shop: an unpaid auto-raid use is refused', r.error === 'cheat', r);
+  r = await putFrom(T, s => { s.ar.paid = 9; s.ar.n = 2; s.ar.gold = 1000000; s.gold += 500000; return s; }); ok('shop: the client cannot raise ar.paid', r.error === 'cheat' || r.error === 'banned', r);
+  // guilda paga no servidor
+  const T2 = await fresh('shop_two'); await setSave('shop_two', { gold: 20000, gems: 150, pl: { lv: 45, xp: 0 } });
+  r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Cheap Guild', 'CHP']); ok('guild: found creates the guild and charges the server save', r.ok && r.gold === 5000 && r.gems === 50 && r.rev > 0, r);
+  g = await get(T2); ok('guild: server save lost 15 000 gold and 100 diamonds', g.save.gold === 5000 && g.save.gems === 50 && g.save.stats.spent === 15000, g.save);
+  r = await q('select public.gog_guild_found($1,$2,$3)', [T2, 'Other One', 'OTH']); g = await get(T2); ok('guild: a refused creation charges nothing', !r.ok && g.save.gold === 5000, r);
+  // impor: depois do enforce-server-shop.sql so o servidor mexe nas compras
+  await db.exec('reset role'); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec('set role anon');
+  r = await putFrom(T, s => { s.bagSlots = 5; return s; }); ok('enforce: a client-side bag purchase is refused', r.error === 'outdated', r);
+  r = await putFrom(T, s => { s.ar.n = 5; return s; }); ok('enforce: ar.n above ar.paid is refused', r.error === 'outdated', r);
+  r = await putFrom(T, s => { s.gold += 10; return s; }); ok('enforce: normal saves still pass', r.ok, r);
+  r = await q('select public.gog_guild_create($1,$2,$3)', [T2, 'Free Guild', 'FRE']); ok('enforce: the old free guild creation is closed', r.error === 'outdated', r);
+  const T3 = await fresh('shop_three'); await setSave('shop_three', { gold: 20000, gems: 150, pl: { lv: 45, xp: 0 } });
+  r = await q('select public.gog_guild_found($1,$2,$3)', [T3, 'Paid Guild', 'PAY']); ok('enforce: guild_found still works', r.ok && r.gold === 5000, r);
+}
+
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');

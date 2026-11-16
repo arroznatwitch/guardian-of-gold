@@ -55,7 +55,14 @@ function arPlan(o, n) {   // o que a compra dava (-10%); sem diamantes nem pedra
   const k = AR.k, items = Math.floor(o.loot.length * n * k), free = Math.max(0, bagMax() - save.bag.length);
   return { items, free, overflow: Math.max(0, items - free), gold: Math.round(o.gold * n * k), xp: Math.round(o.xp * n * k), copies: Math.floor(o.wloot.length * n * k) };
 }
-function arBuy() {
+async function arBuyUI() {   // o servidor cobra os 1000 diamantes e regista a compra (ar.paid); depois aplica-se o resultado
+  const o = shopSim, n = arRuns(o); if (buyBusy || !o || !o.win || o.key !== arKey() || n < 1 || save.gems < AR.cost) { SFX.error(); return; }
+  buyBusy = true; const sv = await shopServer('ar', 0); buyBusy = false;
+  if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
+  if (shopSim !== o) { SFX.error(); return; }
+  arBuy(sv.ok ? sv.paid : null);
+}
+function arBuy(paid) {
   const o = shopSim, n = arRuns(o); if (!o || !o.win || o.key !== arKey() || n < 1 || save.gems < AR.cost) { SFX.error(); return; }
   const P = arPlan(o, n); save.gems -= AR.cost;
   const lv0 = save.pl.lv, res = { n, t: o.t, gold: P.gold, xp: P.xp, items: 0, sold: 0, soldN: 0, copies: 0, lvUp: 0 };
@@ -63,7 +70,7 @@ function arBuy() {
   for (let c = 0; c < P.copies; c++) { const id = o.wloot[c % o.wloot.length]; if (save.wst[id]) { save.wst[id][0]++; res.copies++; } }   // copias de arma (-10%)
   save.gold = Math.min(GOLD_MAX, save.gold + res.gold + res.sold); addXP(res.xp); res.lvUp = save.pl.lv - lv0;
   if (o.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { try { addPetXp(save.pets.eq, Math.round(o.petXp * n * AR.k)); } catch (e) { } }
-  const a = save.ar = save.ar && typeof save.ar === 'object' ? save.ar : { n: 0, gold: 0 }; a.n = (a.n | 0) + 1; a.gold = (a.gold | 0) + res.gold + res.sold;   // o servidor usa isto para permitir o ouro
+  const a = save.ar = save.ar && typeof save.ar === 'object' ? save.ar : { n: 0, gold: 0 }; a.n = (a.n | 0) + 1; a.gold = (a.gold | 0) + res.gold + res.sold; if (paid != null) a.paid = paid;   // o servidor usa isto para permitir o ouro
   shopLast = res; shopSim = null; SFX.buy(); SFX.special(); persist();
 }
 
@@ -81,7 +88,7 @@ function hubShop() {
   sel(T2('Dificuldade', 'Difficulty'), Y + 150, RAID_D[shopSel.d].n, RAID_D[shopSel.d].col, () => { shopSel.d = (shopSel.d + RAID_D.length - 1) % RAID_D.length; shopSim = null; }, () => { shopSel.d = (shopSel.d + 1) % RAID_D.length; shopSim = null; });
   if (!open) txt(T2('Ainda não concluíste esta raid.', 'You have not cleared this raid yet.'), X + 16, Y + 196, 12, '#f88', 'left', 'bold');
   btn(X + 16, Y + 186, 150, 32, shopBusy ? T2('A simular...', 'Simulating...') : T2('Simular (grátis)', 'Simulate (free)'), arRun, { size: 14, off: shopBusy || !open, col: '#2a5a7a', hot: '#3a7aa0' });
-  btn(X + WD - 216, Y + 186, 200, 32, `${T2('Comprar', 'Buy')} · ${gfmt(AR.cost)} ◆`, arBuy, { size: 14, off: !ok || n < 1 || save.gems < AR.cost, col: '#2f7a4a', hot: '#3fa061' });
+  btn(X + WD - 216, Y + 186, 200, 32, `${T2('Comprar', 'Buy')} · ${gfmt(AR.cost)} ◆`, arBuyUI, { size: 14, off: !ok || n < 1 || save.gems < AR.cost, col: '#2f7a4a', hot: '#3fa061' });
   // resultado da simulacao
   const rx = X + 350;
   if (shopBusy) txt(T2('A simular a raid...', 'Simulating the raid...'), rx, Y + 140, 13, '#ffd34a', 'left', 'bold');

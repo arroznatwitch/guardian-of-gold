@@ -25,13 +25,18 @@ function loBuy(i) {
   const l = loState(); if (l.own[i] || i !== 2 || save.gems < LO_COST) return false;
   save.gems -= LO_COST; l.own[i] = 1; return loSwitch(i);
 }
+async function loBuyUI() {   // compra da 3.a build: o servidor desconta e regista
+  if (buyBusy) return false; buyBusy = true; const sv = await shopServer('lo', 2); buyBusy = false;
+  if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; return false; }
+  return loBuy(2);
+}
 let loAsk = false;
 function drawLoadouts() {   // seletor de builds no painel direito do ecra Personagem (ao lado do XP)
   const l = loState();
   if (loAsk) {
     ctx.fillStyle = '#000c'; ctx.fillRect(195, 88, 590, 390); ui.push({ x: 195, y: 88, w: 590, h: 390, fn() {} }); bevel(300, 190, 380, 130, '#14142a', '#a8821f', '#05050a');
     txt(T2('Desbloquear a Build 3?', 'Unlock Build 3?'), 490, 222, 18, '#ffd34a', 'center', 'bold'); txt(T2(`Custa ${LO_COST} diamantes (tens ${save.gems}).`, `Costs ${LO_COST} diamonds (you have ${save.gems}).`), 490, 248, 13, save.gems >= LO_COST ? '#cdd6f4' : '#f88', 'center');
-    btn(320, 268, 160, 34, T2(`Comprar · ${LO_COST} ◆`, `Buy · ${LO_COST} ◆`), () => { if (loBuy(2)) { SFX.buy(); hubToast = { t: 2.5, s: T2('Build 3 desbloqueada!', 'Build 3 unlocked!'), col: '#ffd34a' }; } else SFX.error(); loAsk = false; }, { off: save.gems < LO_COST, size: 14, col: '#2f7a4a', hot: '#3fa061' });
+    btn(320, 268, 160, 34, T2(`Comprar · ${LO_COST} ◆`, `Buy · ${LO_COST} ◆`), async () => { loAsk = false; if (await loBuyUI()) { SFX.buy(); hubToast = { t: 2.5, s: T2('Build 3 desbloqueada!', 'Build 3 unlocked!'), col: '#ffd34a' }; } else SFX.error(); }, { off: save.gems < LO_COST, size: 14, col: '#2f7a4a', hot: '#3fa061' });
     btn(500, 268, 160, 34, T2('Cancelar', 'Cancel'), () => { loAsk = false; }, { size: 14 });
     return;
   }

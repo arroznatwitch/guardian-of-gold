@@ -66,8 +66,9 @@ async function createGuild() {
   if (gld.busy) return; const nm = (rk.gname || '').trim(), tg = (rk.gtag || '').trim();
   if (save.pl.lv < GUILD.minLv || save.gold < GUILD.gold || save.gems < GUILD.gems) { gld.col = '#f88'; gld.msg = E2('You do not meet the requirements yet.', 'Ainda não cumpres os requisitos.'); SFX.error(); return; }
   gld.busy = true; gld.col = '#9ab'; gld.msg = E2('Checking...', 'A verificar...'); await cloudFlush();   // o servidor confere o ouro e os diamantes no save guardado
-  const r = await rpc('gog_guild_create', { p_token: on.token, p_name: nm, p_tag: tg }); gld.busy = false;
-  if (r.ok) { spendG(GUILD.gold); save.gems -= GUILD.gems; persist(); gld.info = r.guild; gld.at = Date.now(); rk.gname = rk.gtag = ''; rk.focus = ''; gld.col = '#6f6'; gld.msg = ''; hubToast = { t: 3, s: E2('Guild created!', 'Guilda criada!'), col: '#ffd34a' }; SFX.unlock(); }
+  let r = await rpc('gog_guild_found', { p_token: on.token, p_name: nm, p_tag: tg });   // cria e cobra no servidor
+  if (!r.ok && r.error === 'server') r = await rpc('gog_guild_create', { p_token: on.token, p_name: nm, p_tag: tg }); gld.busy = false;   // servidor sem a funcao nova
+  if (r.ok) { if (r.rev != null) cloud.rev = r.rev; spendG(GUILD.gold); save.gems -= GUILD.gems; persist(); gld.info = r.guild; gld.at = Date.now(); rk.gname = rk.gtag = ''; rk.focus = ''; gld.col = '#6f6'; gld.msg = ''; hubToast = { t: 3, s: E2('Guild created!', 'Guilda criada!'), col: '#ffd34a' }; SFX.unlock(); }
   else { gld.col = '#f88'; gld.msg = gmsg(r.error); SFX.error(); }
 }
 function drawGCust(I, x0) {
