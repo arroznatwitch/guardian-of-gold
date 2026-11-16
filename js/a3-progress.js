@@ -143,7 +143,7 @@ function levelReward(L) {
 let chestAnim = 0, lastRw = null, rwPage = -1;   // chestAnim: so para o ciclo principal nao falhar
 const RW_PER = 6, rwAvail = () => Math.max(0, Math.min(MAXLV, save.pl.lv) - save.chestDone);
 const rwWeaponIdx = tier => { const c = CLASSES[save.cls]; for (let i = Math.min(tier, c.weapons.length - 1); i >= 0; i--) if (save.own[save.cls][i]) return i; return 0; };   // so copias de armas que ja tens
-function claimRewards(upTo) {   // resgata, por ordem, os premios ate ao nivel pedido (cada nivel so se resgata uma vez)
+function claimRewardsLocal(upTo) {   // resgata, por ordem, os premios ate ao nivel pedido (cada nivel so se resgata uma vez)
   const rw = { gold: 0, pts: 0, gems: 0, items: [], wpn: {}, stones: [0, 0, 0, 0, 0], n: 0, sold: 0, from: save.chestDone + 1, to: save.chestDone };
   while (save.chestDone < Math.min(MAXLV, save.pl.lv) && save.chestDone < upTo) {
     const L = ++save.chestDone, d = levelReward(L); rw.to = L;
@@ -155,6 +155,34 @@ function claimRewards(upTo) {   // resgata, por ordem, os premios ate ao nivel p
   }
   if (!rw.n) return;
   save.gold = Math.min(GOLD_MAX, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; SFX.buy(); persist();
+}
+/* resgate no SERVIDOR: o servidor calcula ouro, diamantes, pontos e pedras (gog_claim_rewards) e o jogo aplica a diferenca.
+   Se o servidor ainda nao tem a funcao (transicao), usa o resgate local de antes. */
+let rwBusy = false;
+function claimRewards(upTo) {
+  if (rwBusy) return;
+  if (!(ONLINE_URL && on && on.token && typeof cloud === 'object' && cloud.ready)) return claimRewardsLocal(upTo);
+  claimRewardsServer(upTo);
+}
+async function claimRewardsServer(upTo) {
+  rwBusy = true;
+  try {
+    if (cloud.dirty) await cloudFlush();   // o servidor tem de conhecer o teu nivel atual
+    const r = await rpc('gog_claim_rewards', { p_token: on.token, p_up_to: Math.min(MAXLV, save.pl.lv, upTo) });
+    if (r.ok) applyServerClaim(r);
+    else if (r.error === 'server') claimRewardsLocal(upTo);   // funcao ainda nao instalada no servidor
+    else if (r.error === 'auth') dropSession(false);
+    else hubToast = { t: 3, s: T2('Não foi possível resgatar agora. Tenta outra vez.', 'Could not claim right now. Try again.'), col: '#f88' };
+  } finally { rwBusy = false; }
+}
+function applyServerClaim(r) {
+  if (!(r.n > 0)) { hubToast = { t: 3, s: T2('Nada para resgatar (o servidor ainda não tem o teu nível: tenta daqui a pouco).', 'Nothing to claim (the server does not have your level yet: try again shortly).'), col: '#fd5' }; return; }
+  const rw = { gold: r.gold | 0, pts: r.pts | 0, gems: r.gems | 0, items: [], wpn: {}, stones: [0, 0, 0, 0, 0], n: r.n | 0, sold: 0, from: r.from | 0, to: r.chestDone | 0 };
+  save.chestDone = r.chestDone | 0; cloud.rev = r.rev;
+  (r.stones || []).forEach((n, k) => { n = n | 0; if (n > 0 && k < 5) { save.stones[k] = (save.stones[k] | 0) + n; rw.stones[k] += n; } });
+  for (const d of (r.items || [])) { const it = genItem(d.slot, d.r | 0, d.il | 0); if (addBag(it)) rw.items.push(it); else rw.sold += sellValue(it); }
+  for (const d of (r.wpn || [])) { const wi = rwWeaponIdx(d.tier | 0), id = CLASSES[save.cls].weapons[wi].id; save.wst[id][0]++; rw.wpn[id] = (rw.wpn[id] || 0) + 1; }
+  save.gold = Math.min(GOLD_MAX, save.gold + rw.gold + rw.sold); save.pts += rw.pts; save.gems += rw.gems; lastRw = rw; SFX.buy(); persist(); cloudFlush();
 }
 // linhas do premio de um nivel (texto curto, para a lista)
 function rewardLines(d) {
@@ -179,7 +207,7 @@ function hubRewards() {
     rewardLines(d).forEach(t => { if (t.ico) { ctx.drawImage(t.ico, x, y + 14, 16, 16); x += 18; } txt(t.txt, x, y + 26, 10, t.col, 'left', 'bold'); x += txtW(t.txt, 10, 'bold') + 12; });
     ctx.globalAlpha = 1;
     if (done) txt('✔ ' + T2('Recebido', 'Claimed'), X + WD - 14, y + 26, 12, '#7a7', 'right', 'bold');
-    else btn(X + WD - 104, y + 6, 94, 30, can ? T2('Resgatar', 'Claim') : T2('Bloqueado', 'Locked'), () => claimRewards(Lv), { off: !can, size: 13, col: '#a06a20', hot: '#c98a30' });
+    else btn(X + WD - 104, y + 6, 94, 30, can ? T2('Resgatar', 'Claim') : T2('Bloqueado', 'Locked'), () => claimRewards(Lv), { off: !can || rwBusy, size: 13, col: '#a06a20', hot: '#c98a30' });
   }
   btn(X, 430, 50, 28, '<', () => { rwPage = Math.max(0, rwPage - 1); }, { off: rwPage === 0, size: 14 });
   btn(X + WD - 50, 430, 50, 28, '>', () => { rwPage++; }, { off: p0 + RW_PER > MAXLV, size: 14 });
