@@ -31,10 +31,13 @@ let denied = false; try { await db.query('select * from gog.players'); } catch (
 denied = false; try { await db.query('select * from gog.sessions'); } catch (e) { denied = true; } ok('anon cannot read sessions', denied);
 denied = false; try { await db.query("select gog._auth('x')"); } catch (e) { denied = true; } ok('anon cannot call internal fn', denied);
 const S = (o) => JSON.stringify({ cls: 'mage', level: 20, kills: 900, gold: 120000, bosses: 4, raids: 1, w0: 12, w1: 3, w2: 0, w3: 0, w4: 0, w5: 0, ...o });
+r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 300, gold: 900000000000 })]); ok('submit without a verified save is refused (no forged ranking)', r.error === 'no_save', r);
+await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"mage","pl":{"lv":26},"stats":{"kills":1500,"gold":120000,"bosses":4},"farmBest":[15,3,0,0,0,0]}'::jsonb where nick_key = 'rui_99'`); await db.exec('set role anon');
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({})]); ok('submit first', r.ok, r);
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 21 })]); ok('submit too fast', r.error === 'slow', r);
 await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
-r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 400 })]); ok('implausible level jump', r.error === 'implausible', r);
+r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 400 })]); ok('forged level is ignored: the verified save wins', r.ok, r);
+await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 26, kills: 1500, w0: 15 })]); ok('submit plausible', r.ok, r);
 await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 10, kills: 10, gold: 1, w0: 1 })]); ok('lower values accepted but never decrease', r.ok, r);
@@ -81,9 +84,10 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   const BUILD = { skin: 2, title: 'inferno', weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
     gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, junk: 'x'.repeat(50) };
   const SB = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: BUILD });
+  await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"mage","pl":{"lv":10},"stats":{"kills":100,"gold":500,"bosses":1},"farmBest":[4,0,0,0,0,0]}'::jsonb where nick = 'builder'`); await db.exec('set role anon');
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, SB]); ok('submit with build', r.ok, r);
   r = await q('select public.gog_profile($1)', ['BUILDER']); const bd = r.build;
-  ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && bd.attr.str === 99999 && !('evil' in bd.attr) && !('junk' in bd), r);
+  ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && !bd.attr && !('junk' in bd), r);
   ok('gear slots whitelisted and clamped', Object.keys(bd.gear).sort().join() === 'chest,head' && bd.gear.chest.r === 4 && bd.gear.chest.e === 0 && bd.gear.head.sp === 'Ígneoscript', bd);
   r = await q('select public.gog_board($1,5,null)', ['level']); const row = r.rows.find(x => x.nick === 'builder'); ok('board rows carry class, level and skin', row && row.cls === 'mage' && row.lv === 10 && row.skin === 2, r);
   ok('a forged title in the build is dropped', !('title' in bd) && !row.title, row);
@@ -248,7 +252,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await strike(); ok('anticheat: 3rd strike bans the account', r.error === 'banned', r);
   r = await q('select public.gog_login($1,$2)', ['ac_three', B]); ok('anticheat: a banned account cannot log in', r.error === 'inactive', r);
   const TK4 = await fresh('ac_four'); r = await put(TK4, {}, 0); rev = r.rev;
-  r = await put(TK4, { gold: 99999999 }, rev); ok('anticheat: impossible values ban immediately', r.error === 'banned', r);
+  r = await put(TK4, { gold: 3000000000 }, rev); ok('anticheat: impossible values ban immediately', r.error === 'banned', r);
   r = await q('select public.gog_save_get($1)', [TK4]); ok('anticheat: the banned session is dead', !r.ok, r);
   // recuperar de um falso positivo: o administrador reativa
   await db.exec('reset role'); await db.exec("select gog.set_active('ac_four', true)"); await db.exec('set role anon');
@@ -278,6 +282,7 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon');
   r = await q('select public.gog_register($1,$2)', ['pet_one', B]); const TP = r.token;
   const SBP = pet => JSON.stringify({ cls: 'mage', level: 3, kills: 10, gold: 5, bosses: 0, raids: 0, w0: 1, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: { skin: 0, pet } });
+  await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"mage","pl":{"lv":3},"stats":{"kills":10,"gold":5,"bosses":0},"farmBest":[1,0,0,0,0,0]}'::jsonb where nick = 'pet_one'`); await db.exec('set role anon');
   r = await q('select public.gog_submit($1,$2::jsonb)', [TP, SBP({ id: 'chicken', lv: 12, name: '<b>Clucky</b> The Great One!' })]); ok('submit with a pet', r.ok, r);
   r = await q('select public.gog_profile($1)', ['pet_one']); const pt = r.build && r.build.pet;
   ok('pet is whitelisted, level clamped and the name is sanitised', pt && pt.id === 'chicken' && pt.lv === 12 && /^[A-Za-z0-9 _-]{0,12}$/.test(pt.name) && pt.name.length <= 12 && !pt.name.includes('<'), pt);
@@ -390,4 +395,49 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
 // throttle
 await db.exec('reset role'); await db.exec("update gog.throttle set n = 30, since = now()"); await db.exec('set role anon');
 r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global register throttle', r.error === 'busy', r);
+
+// seguranca (auditoria): limites de pedidos, Auto-Raid, folgas por tempo, crescimento de armas/pedras
+{
+  const fresh = async nick => { await db.exec('reset role'); await db.exec('update gog.throttle set n = 0'); await db.exec('set role anon'); const rr = await q('select public.gog_register($1,$2)', [nick, B]); return rr.token; };
+  const age = async (s = 120) => { await db.exec('reset role'); await db.exec(`update gog.players set save_at = now() - interval '${s} seconds'`); await db.exec('set role anon'); };
+  const SV = o => JSON.stringify(Object.assign({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0, chestDone: 1, stats: { kills: 0, gold: 0, bosses: 0, spent: 0 }, ach: {}, title: '' }, o));
+  const put = async (tk, o, rev, s) => { await age(s); return q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [tk, SV(o), rev, 'd']); };
+  const setSave = async (nick, o) => { await db.exec('reset role'); await db.exec(`update gog.players set save = '${SV(o)}'::jsonb, save_at = now() - interval '2 minutes' where nick = '${nick}'`); await db.exec('set role anon'); };
+  // Auto-Raid: o campo ar.gold ja nao abre o limite de ouro
+  let T = await fresh('sec_ar'); r = await put(T, {}, 0); let rev = r.rev;
+  r = await put(T, { gold: 2000000000, ar: { n: 0, gold: 2000000000 } }, rev); ok('security: ar.gold alone does not allow gold', r.error === 'cheat', r);
+  r = await put(T, { gold: 2000000000, ar: { n: 1, gold: 2000000000 } }, rev); ok('security: ar.gold is capped per use (1 000 000)', r.error === 'cheat', r);
+  await setSave('sec_ar', { gems: 5000, gold: 100 });
+  r = await q('select public.gog_save_get($1)', [T]); rev = r.rev;
+  r = await put(T, { gems: 5000, gold: 500100, ar: { n: 1, gold: 500000 } }, rev); ok('security: auto-raid gold without the 1000 diamonds spent is refused', r.error === 'cheat', r);
+  r = await put(T, { gems: 4000, gold: 500100, ar: { n: 1, gold: 500000 } }, rev); ok('security: auto-raid gold with the diamonds spent passes', r.ok, r);
+  // gravar muito depressa nao multiplica as folgas: com 10 s so uma fracao
+  T = await fresh('sec_fast'); r = await put(T, {}, 0); rev = r.rev;
+  r = await put(T, { pl: { lv: 9, xp: 0 }, chestDone: 1 }, rev, 11); ok('security: +8 levels in 11 s is refused', r.error === 'cheat', r);
+  r = await put(T, { pl: { lv: 2, xp: 0 }, chestDone: 1 }, rev, 11); ok('security: a normal level up in 11 s passes', r.ok, r); rev = r.rev;
+  r = await put(T, { pl: { lv: 2, xp: 0 }, gold: 150000 }, rev, 11); ok('security: +150 000 gold in 11 s is refused', r.error === 'cheat', r);
+  // intervalo minimo entre saves
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '5 seconds'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [T, SV({ pl: { lv: 2, xp: 0 } }), rev, 'd']); ok('security: saves closer than 10 s are slowed', r.error === 'slow', r);
+  // armas, pedras e copias nao crescem de repente
+  T = await fresh('sec_grow'); r = await put(T, {}, 0); rev = r.rev;
+  r = await put(T, { wl: { k_sword: 25, k_axe: 25, k_spear: 25, k_hammer: 25 } }, rev); ok('security: weapon levels cannot jump', r.error === 'cheat', r);
+  r = await put(T, { stones: [9999, 9999, 9999, 9999, 9999] }, rev); ok('security: stones cannot jump', r.error === 'cheat', r);
+  r = await put(T, { wst: { k_sword: [999, 999, 999, 999] } }, rev); ok('security: weapon copies cannot jump', r.error === 'cheat', r);
+  r = await put(T, { wl: { k_sword: 3 }, stones: [4, 1, 0, 0, 0] }, rev); ok('security: normal weapon and stone progress passes', r.ok, r);
+  // login: limite por rede e as falhas expiram
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec(`select set_config('request.headers', '{"x-forwarded-for":"9.9.9.9"}', false)`); await db.exec('set role anon');
+  let busy = 0; for (let i = 0; i < 25; i++) { r = await q('select public.gog_login($1,$2)', ['nobody_x', B]); if (r.error === 'busy') busy++; }
+  ok('security: login attempts are limited per network', busy >= 4 && busy <= 6, busy);
+  busy = 0; for (let i = 0; i < 35; i++) { r = await q('select public.gog_nick_free($1)', ['someone']); if (r.error === 'busy') busy++; }
+  ok('security: nick lookups are limited per network', busy >= 4 && busy <= 6, busy);
+  await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec(`select set_config('request.headers', '', false)`); await db.exec('set role anon');
+  const TL = await fresh('sec_lock'); void TL;
+  for (let i = 0; i < 6; i++) await q('select public.gog_login($1,$2)', ['sec_lock', A]);
+  await db.exec('reset role'); await db.exec("update gog.players set locked_until = null, fail_at = now() - interval '2 hours' where nick = 'sec_lock'"); await db.exec('set role anon');
+  r = await q('select public.gog_login($1,$2)', ['sec_lock', A]); ok('security: old failures do not keep the account locked', r.error === 'bad_login', r);
+  await db.exec('reset role'); const fc = (await db.query("select failed from gog.players where nick = 'sec_lock'")).rows[0].failed; await db.exec('set role anon');
+  ok('security: failure counter restarts after an hour', fc === 1, fc);
+}
+
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');
