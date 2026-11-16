@@ -10,10 +10,10 @@ const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 200], ['d', 300]];
 const bagMax = () => BAG_PAGE * ((save && save.bagSlots) || 1);
 const SLOT_LBL = { head: 'Capacete', chest: 'Armadura', boots: 'Botas', amulet: 'Amuleto', ring: 'Anel' };
 const ITEM_NAMES = {
-  head:   ['Capacete de Couro', 'Elmo de Ferro', 'Elmo Rúnico', 'Coroa Ancestral', 'Coroa Divina'],
-  chest:  ['Armadura de Couro', 'Armadura de Ferro', 'Armadura Rúnica', 'Armadura Ancestral', 'Armadura Divina'],
-  boots:  ['Botas de Couro', 'Botas de Ferro', 'Botas Rúnicas', 'Botas Ancestrais', 'Botas Divinas'],
-  amulet: ['Amuleto de Bronze', 'Colar de Prata', 'Talismã Rúnico', 'Talismã Ancestral', 'Talismã Divino'],
+  head:   ['Capacete de Couro', 'Elmo de Ferro', 'Elmo de Ametista', 'Coroa Ancestral', 'Coroa Divina'],
+  chest:  ['Armadura de Couro', 'Armadura de Ferro', 'Armadura de Ametista', 'Armadura Ancestral', 'Armadura Divina'],
+  boots:  ['Botas de Couro', 'Botas de Ferro', 'Botas de Ametista', 'Botas Ancestrais', 'Botas Divinas'],
+  amulet: ['Amuleto de Bronze', 'Colar de Prata', 'Talismã de Ametista', 'Talismã Ancestral', 'Talismã Divino'],
   ring:   ['Anel de Prata', 'Anel de Ouro', 'Anel de Diamante', 'Anel Roxo'],   // Comum, Raro, Epico, Lendario (nao ha anel Mitico)
 };
 const SLOT_ROWS = {
@@ -50,6 +50,7 @@ const EGEM = ['#ffffff', '#bfe6ff', '#ffd34a', '#ff4a4a', '#7fffd4'];
 const SLOT_SPR = {}; for (const sl of SLOTS) SLOT_SPR[sl] = RAR.map((r, i) => makeSprite(SLOT_ROWS[sl][i], { m: r[1], d: shade(r[1], -.55), h: '#ffffff', g: '#f5c542', e: EGEM[i], w: shade(r[1], .55) }, 1, false));
 for (const sl of SLOTS) SLOT_SPR[sl][0] = C16[sl];   // os comuns usam a pixel art feita a mao (16x16)
 for (const sl of SLOTS) SLOT_SPR[sl][1] = IRON_SPR[sl];   // os raros (Ferro) tambem usam pixel art feita a mao (16x16)
+for (const sl of SLOTS) SLOT_SPR[sl][2] = AMETHYST_SPR[sl];   // os epicos (Ametista) tambem usam pixel art feita a mao (16x16)
 
 // ----- Aneis: bonus de conjunto -----
 // 4 aros (Prata, Ouro, Diamante, Roxo = Comum, Raro, Epico, Lendario) x 4 gemas (a cor da gema e o stat que o anel melhora)
