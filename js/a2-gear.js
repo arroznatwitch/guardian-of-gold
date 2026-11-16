@@ -72,9 +72,9 @@ function hubChar() {
 // ----- Mochila -----
 let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0, forgeSub = 'ench';
 function hubBag() {
-  { const BAGF = [['all', 'Todos']].concat(EQ_SLOTS.map(sl => [sl, SLOT_LBL[sl]]), [['mat', 'Materiais'], ['weapons', 'Armas']]), bw = (500 - 197) / BAGF.length - 2;
-    BAGF.forEach(([k, l], i) => { let fs = 9; while (fs > 7 && txtW(l, fs, 'bold') > bw - 2) fs--;
-      btn(197 + i * (bw + 2), 88, bw, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; bagPick.clear(); }, { size: fs, col: bagFilter === k ? '#a8821f' : (k === 'mat' || k === 'weapons' ? '#3a2f5a' : '#2a2a48') }); }); }
+  { const BAGF = [['all', 'Todos']].concat(EQ_SLOTS.map(sl => [sl, SLOT_LBL[sl]]), [['mat', 'Materiais'], ['weapons', 'Armas']]), gap = 5, bw = (492 - 197 - gap * (BAGF.length - 1)) / BAGF.length;
+    BAGF.forEach(([k, l], i) => { let fs = 9; while (fs > 7 && txtW(l, fs, 'bold') > bw - 4) fs--;
+      btn(197 + i * (bw + gap), 88, bw, 24, l, () => { bagFilter = k; bagSel = -1; bagPage = 0; bagPick.clear(); }, { size: fs, col: bagFilter === k ? '#a8821f' : (k === 'mat' || k === 'weapons' ? '#3a2f5a' : '#2a2a48') }); }); }
   if (bagFilter === 'mat') { hubMaterials(); return; }
   if (bagFilter === 'weapons') { hubWeapons(); return; }
   // mochilas: cinco separadores numerados; os bloqueados mostram um cadeado e o proximo mostra o preco
