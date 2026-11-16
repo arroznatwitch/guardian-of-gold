@@ -52,6 +52,8 @@ function hubChar() {
   const pn = on && on.nick ? on.nick : c.name;
   txt(pn, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(pn, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
   bar(504, 122, 267, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 504, 148, 11, '#8ab', 'left');
+  { const ps = Math.floor(+save.pt || 0), h = Math.floor(ps / 3600), m = Math.floor(ps / 60) % 60, v = h ? `${h}h ${m}m` : `${m}m ${ps % 60}s`, end = 504 + txtW(pn, 20, 'bold') + 10 + txtW(`Nv ${L}`, 16, 'bold') + 8, full = T2('Tempo de jogo: ', 'Play time: ') + v;
+    const s2 = 771 - txtW(full, 11) >= end ? full : 771 - txtW('⏱ ' + v, 11) >= end ? '⏱ ' + v : ''; if (s2) txt(s2, 771, 112, 11, '#8ab', 'right'); }   // tempo de jogo deste personagem; com nicks compridos so mostra o valor (ou nada, se nao couber)
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
