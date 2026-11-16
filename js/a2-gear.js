@@ -157,6 +157,12 @@ function hubMaterials() {
 let sellAsk = false, sellArm = null;
 function sellList(list) { list = list.filter(it => !it.lk); let g = 0; for (const it of list) { g += sellValue(it); if (enchItem === it) enchItem = null; bagPick.delete(it); } save.gold = Math.min(GOLD_MAX, save.gold + g); save.bag = save.bag.filter(it => !list.includes(it)); bagSel = -1; sellAsk = false; persist(); SFX.coin(); }
 const sellTargets = () => (sellAsk === 'pick' ? save.bag.filter(it => bagPick.has(it)) : save.bag).filter(it => !it.lk);
+async function buyBag(k) {   // compra de mochila: o servidor confere o preco e a ordem
+  buyBusy = true; const sv = await shopServer('bag', k + 1); buyBusy = false;
+  if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); bagBuy = 0; return; }
+  const c = BAG_COST[k]; if (k < (save.bagSlots || 1)) { bagBuy = 0; return; }
+  if (c[0] === 'd') save.gems -= c[1]; else spendG(c[1]); save.bagSlots = k + 1; bagPage = k; bagBuy = 0; persist(); SFX.buy();
+}
 function drawBagBuy() {
   if (state !== 'hub' || tab !== 'bag' || !bagBuy) return; const k = bagBuy - 1, c = BAG_COST[k], gem = c[0] === 'd', can = gem ? save.gems >= c[1] : save.gold >= c[1];
   if (k < (save.bagSlots || 1)) { bagBuy = 0; return; }
@@ -164,7 +170,7 @@ function drawBagBuy() {
   const x = 250, y = 170, w = 300, h = 160; panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
   txt(`Desbloquear a Mochila ${k + 1}?`, x + w / 2, y + 34, 18, '#ffd34a', 'center', 'bold'); txt('+30 lugares para itens', x + w / 2, y + 58, 13, '#aab', 'center');
   txt((gem ? '◆' : '¢') + gfmt(c[1]), x + w / 2, y + 90, 24, gem ? '#7fe8ff' : '#fd5', 'center', 'bold');
-  btn(x + 20, y + 106, 125, 38, 'Comprar', () => { if (!can) { SFX.error(); return; } if (gem) save.gems -= c[1]; else spendG(c[1]); save.bagSlots = k + 1; bagPage = k; bagBuy = 0; persist(); SFX.buy(); }, { size: 15, col: can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061', off: !can });
+  btn(x + 20, y + 106, 125, 38, 'Comprar', () => { if (!can || buyBusy) { SFX.error(); return; } buyBag(k); }, { size: 15, col: can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061', off: !can });
   btn(x + 155, y + 106, 125, 38, 'Cancelar', () => { bagBuy = 0; }, { size: 15, col: '#2a2a48' });
 }
 function drawSellAsk() {

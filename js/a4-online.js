@@ -149,6 +149,18 @@ async function onlineSubmit() {
   if (r.error === 'auth') { dropSession(false); rkSay('auth'); } else if (r.ok) { rk.sentHash = JSON.stringify(statPayload()); rk.lastSub = Date.now(); rk.at = {}; if (tab === 'rank') rkLoad(true); } else if (r.error === 'implausible') rkSay('implausible');
   return r;
 }
+// Compras no servidor (gog_buy): o servidor confere o preco e desconta no save dele; o jogo aplica o mesmo localmente. Sem ligacao/funcao: compra local como antes.
+let buyBusy = false;
+async function shopServer(what, n) {
+  if (!(ONLINE_URL && on.token && cloud.ready) || labOn) return { fallback: true };
+  await cloudFlush();   // o servidor confere o saldo no save guardado
+  const r = await rpc('gog_buy', { p_token: on.token, p_what: what, p_n: n | 0 });
+  if (r.ok) { cloud.rev = r.rev; return r; }
+  if (r.error === 'server') return { fallback: true };   // a funcao ainda nao existe no servidor
+  if (r.error === 'auth') dropSession(false);
+  return r;
+}
+const buyMsg = e => ({ funds: 'O servidor ainda não vê saldo suficiente. Espera uns segundos e tenta outra vez.', state: 'Já tens isto.', network: 'Sem ligação ao servidor.', no_save: 'Joga um pouco antes de comprar.', busy: 'Muitos pedidos. Tenta daqui a pouco.' }[e] || 'Compra recusada pelo servidor.');
 // rk.at guarda a classificacao de cada categoria (rows, me, hora); limpar rk.at forca nova leitura
 let rkSeq = 0;
 async function rkLoad(force) {
