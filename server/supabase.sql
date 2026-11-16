@@ -272,6 +272,11 @@ begin
     return jsonb_build_object('ok', false, 'error', 'bad_data');
   end if;
   first_time := v.submitted_at is null;
+  if v.save is not null then   -- o ranking usa o save verificado no servidor, nunca o que o cliente diz (e pode descer, nao so subir)
+    n_level := greatest(1, gog._n(v.save, 'pl', 'lv'))::int; n_kills := gog._n(v.save, 'stats', 'kills')::bigint; n_gold := gog._n(v.save, 'stats', 'gold')::bigint;
+    n_bosses := gog._n(v.save, 'stats', 'bosses')::int; n_raids := gog._raids_total(v.save)::int;
+    n_w := array[gog._nv(gog._idx(v.save->'farmBest', 0))::int, gog._nv(gog._idx(v.save->'farmBest', 1))::int, gog._nv(gog._idx(v.save->'farmBest', 2))::int, gog._nv(gog._idx(v.save->'farmBest', 3))::int, gog._nv(gog._idx(v.save->'farmBest', 4))::int, gog._nv(gog._idx(v.save->'farmBest', 5))::int];
+  end if;
   if v.save is not null then n_level := least(n_level, greatest(1, gog._n(v.save, 'pl', 'lv'))::int); end if;   -- o nivel publico nunca passa do nivel do save verificado
   dt := least(greatest(extract(epoch from now() - coalesce(v.submitted_at, v.created_at)), 20), 7 * 86400);
   o_w := array[v.w0, v.w1, v.w2, v.w3, v.w4, v.w5];
@@ -297,9 +302,9 @@ begin
     if v.save is not null and coalesce(v.save->>'title', '') <> '' and gog._title_ok(v.save, coalesce(v.owner, v.id), v.save->>'title') then nb := nb || jsonb_build_object('title', v.save->>'title'); end if;
   end if;
   update gog.players set
-    cls = n_cls, build = coalesce(nb, build), level = greatest(level, n_level), kills = greatest(kills, n_kills), gold = greatest(gold, n_gold),
-    bosses = greatest(bosses, n_bosses), raids = greatest(raids, n_raids),
-    w0 = greatest(w0, n_w[1]), w1 = greatest(w1, n_w[2]), w2 = greatest(w2, n_w[3]), w3 = greatest(w3, n_w[4]), w4 = greatest(w4, n_w[5]), w5 = greatest(w5, n_w[6]),
+    cls = n_cls, build = coalesce(nb, build), level = n_level, kills = n_kills, gold = n_gold,
+    bosses = n_bosses, raids = n_raids,
+    w0 = n_w[1], w1 = n_w[2], w2 = n_w[3], w3 = n_w[4], w4 = n_w[5], w5 = n_w[6],
     submitted_at = now(), updated_at = now()
   where id = pid;
   return jsonb_build_object('ok', true);
