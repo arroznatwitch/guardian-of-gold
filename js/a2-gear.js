@@ -479,9 +479,9 @@ const FUSE_IL_BONUS = 2, fuseNewIl = pick => Math.min(120, Math.round(pick.reduc
 function gearGroups() {
   const m = {}; save.bag.forEach(it => { if (it.slot === 'ring' || gSt(it) >= STAR_MAX) return;   // o anel nao se funde (itens com cadeado tambem se fundem: tu escolhes quais)
     (m[fuseKeyOf(it)] = m[fuseKeyOf(it)] || []).push(it); });
-  return Object.values(m).filter(g => g.length >= 2).sort((p, q) => q.length - p.length || q[0].r - p[0].r);
+  return Object.values(m).filter(g => g.length >= 2).sort((p, q) => (q.length >= FUSE_N) - (p.length >= FUSE_N) || gSt(q[0]) - gSt(p[0]) || q[0].r - p[0].r || q.length - p.length);   // primeiro os que ja se podem juntar, depois mais estrelas
 }
-let fuseGrp = null, fusePick = null, fuseKeep = null;
+let fuseGrp = null, fusePick = null, fuseKeep = null, fuseGPage = 0, fuseSeen = null;
 function fuseGear(pick, keep) {
   if (save.pl.lv < FUSE_LV || !pick || pick.length < FUSE_N || !keep || !pick.includes(keep)) { SFX.error(); return; }
   const gone = pick.filter(it => it !== keep), fee = gFuseFee(keep); if (save.gold < fee) { SFX.error(); return; } spendG(fee); statUp('fuses');
@@ -530,13 +530,14 @@ function hubFuse() {
       if (!fusePick || fusePick.some(it => !save.bag.includes(it))) { fusePick = items.slice(0, FUSE_N); fuseKeep = fusePick[0] || null; }
       if (!fusePick.includes(fuseKeep)) fuseKeep = fusePick[0] || null;
       txt('1. Escolhe o grupo (mesma peça, raridade, estrelas e faixa de nível)   2. Marca 5 itens   3. Clica num marcado para o manter', 487, 134, 10, '#aab', 'center');
-      gs.slice(0, 5).forEach((g, i) => {
+      const GP = 5, pages = Math.max(1, Math.ceil(gs.length / GP)); fuseGPage = Math.max(0, Math.min(pages - 1, fuseGPage)); const gi0 = gs.findIndex(g => key(g) === fuseGrp); if (fuseSeen !== fuseGrp && gi0 >= 0) { fuseGPage = Math.floor(gi0 / GP); fuseSeen = fuseGrp; }
+      gs.slice(fuseGPage * GP, fuseGPage * GP + GP).forEach((g, i) => {
         const y = 142 + i * 28, it = g[0], st = gSt(it), nm = ITEM_NAMES[it.slot][it.r], sel = key(g) === fuseGrp;
         btn(197, y, 585, 26, '', () => { fuseGrp = key(g); fusePick = null; }, { col: sel ? '#2c2410' : '#12121f', hot: '#2a2a48' }); ctx.fillStyle = RAR[it.r][1]; ctx.fillRect(197, y, 3, 26);
         itemIcon(it, 222, y + 13, 1.8); txt(nm, 246, y + 18, 13, RAR[it.r][1], 'left', 'bold'); for (let q = 0; q < st; q++) drawIcon('star', 246 + txtW(nm, 13, 'bold') + 12 + q * 10, y + 13, 1.1); txt('Nv ' + bandName(itemBand(it)), 520, y + 18, 12, '#9cf', 'left', 'bold');
         txt(`${Math.min(g.length, 99)} ${lang === 'en' ? 'items' : 'itens'}`, 640, y + 18, 13, g.length >= FUSE_N ? '#6f6' : '#fff', 'right', 'bold'); txt(g.length >= FUSE_N ? (lang === 'en' ? 'ready to merge' : 'pode juntar') : (lang === 'en' ? 'missing ' : 'faltam ') + (FUSE_N - g.length), 770, y + 18, 11, g.length >= FUSE_N ? '#6f6' : '#a88', 'right');
       });
-      const cy0 = 142 + Math.min(gs.length, 5) * 28 + 20; if (gs.length > 5) txt(`+${gs.length - 5} ${lang === 'en' ? 'groups' : 'grupos'}`, 487, cy0 - 12, 11, '#889', 'center');
+      const vis = Math.min(GP, gs.length - fuseGPage * GP), cy0 = 142 + vis * 28 + 20; if (pages > 1) { const py = 142 + vis * 28 + 2; btn(430, py, 24, 14, '<', () => { fuseGPage = Math.max(0, fuseGPage - 1); }, { size: 10, off: fuseGPage === 0 }); txt(`${fuseGPage + 1}/${pages} · ${gs.length} ${lang === 'en' ? 'groups' : 'grupos'}`, 487, py + 11, 10, '#889', 'center'); btn(520, py, 24, 14, '>', () => { fuseGPage = Math.min(pages - 1, fuseGPage + 1); }, { size: 10, off: fuseGPage >= pages - 1 }); }
       // candidatos (marca os que queres usar; o com estrela e o que fica)
       txt('Itens do grupo', 197, cy0, 13, '#f0c060', 'left', 'bold'); txt(`${fusePick.length}/${FUSE_N} ${lang === 'en' ? 'marked' : 'marcados'}`, 487, cy0, 12, fusePick.length === FUSE_N ? '#6f6' : '#fd5', 'right', 'bold');
       items.forEach((it, i) => {
