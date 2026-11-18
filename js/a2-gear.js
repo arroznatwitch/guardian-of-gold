@@ -118,7 +118,6 @@ function hubBag() {
   { const nk = slots < 5 ? BAG_COST[slots] : null; if (nk) { const gem = nk[0] === 'd', can = gem ? save.gems >= nk[1] : save.gold >= nk[1]; txt('Próxima: ' + (gem ? '◆' : '¢') + gfmt(nk[1]), 430, 132, 11, can ? (gem ? '#7fe8ff' : '#fd5') : '#a88', 'left', 'bold'); } }
   txt(`${save.bag.length}/${bagMax()}`, 495, 417, 13, save.bag.length >= bagMax() ? '#f66' : '#aab', 'right', 'bold');
   const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter);
-  if (list.length && bagPage * BAG_PAGE >= list.length) bagPage = Math.min(slots - 1, Math.floor((list.length - 1) / BAG_PAGE));   // com filtro, nao mostra uma pagina vazia quando ha itens
   const pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);
   for (let n = 0; n < BAG_PAGE; n++) {
     const x = 197 + (n % 6) * 50, y = 146 + Math.floor(n / 6) * 45, o = pageList[n], picked = o && bagPick.has(o.it);
