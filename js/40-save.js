@@ -80,7 +80,10 @@ const wlvl = () => save.wl[curW().id] || 0;
 const STAR_MAX = 3, STAR_MULT = [1, 1.4, 1.9, 2.5], GEAR_STAR = [1, 1.1, 1.2, 1.35], ENC_K = .06, GEAR_F = { hp: .75, dmg: .85, xpb: .5, ls: .35 }, MYTH_F = .85, FUSE_LV = 20, FUSE_N = 5;   // 0..3 estrelas (3 = MAX)
 const wStar = id => { const a = save && save.wst && save.wst[id]; if (!a) return 0; for (let i = STAR_MAX; i >= 0; i--) if (a[i] > 0) return i; return 0; };
 /* ---- subir de estrela: alem das 5 copias e do ouro, cada estrela pede uma pedra de evolucao e um objetivo com ESTA arma ---- */
-const WSTAR_REQ = [{ stone: 0, n: 1, kills: 5000 }, { stone: 1, n: 2, raids: 20 }, { stone: 3, n: 1, nraids: 50 }];   // para ir de t para t+1: pedra Comum + 5000 abates / 2 pedras Raras + 20 raids / 1 pedra Lendaria + 50 raids Normal ou acima
+const WSTAR_REQ = [{ stone: 0, n: 1, kills: 1 }, { stone: 1, n: 2, raids: 20 }, { stone: 3, n: 1, nraids: 50 }];   // para ir de t para t+1 (kills: 1 = usa starKills): pedra Comum + 1000 a 5000 abates conforme a raridade da arma / 2 pedras Raras + 20 raids / 1 pedra Lendaria + 50 raids Normal ou acima
+// abates para a 1.a estrela: 1000 na arma Comum, +1000 por raridade, 5000 na Mitica
+const wTierOf = id => { for (const c in CLASSES) { const i = CLASSES[c].weapons.findIndex(w => w.id === id); if (i >= 0) return i; } return 0; };
+const starKills = id => 1000 * (1 + Math.min(4, wTierOf(id)));
 const wProg = id => { save.wp = save.wp || {}; return save.wp[id] = save.wp[id] || { k: 0, r: 0, n: 0, u: 0 }; };
 /* cada estrela e uma missao que se faz UMA vez por arma: depois de desbloqueada, podes juntar copias para essa estrela as vezes que quiseres. Quem ja tem a estrela tem-na desbloqueada */
 const wUnlocked = id => Math.max(wProg(id).u | 0, wStar(id));
@@ -96,7 +99,7 @@ function wUnlock(id) {   // cumpre a missao da proxima estrela: gasta a(s) pedra
 function wReq(id, t) {   // estado dos requisitos para a estrela t+1
   const q = WSTAR_REQ[t]; if (!q) return { ok: false, lines: [] }; const p = wProg(id), have = save.stones[q.stone] | 0, lines = [];
   lines.push({ ok: have >= q.n, t: `${q.n}× ${['Pedra Comum', 'Pedra Rara', 'Pedra Épica', 'Pedra Lendária', 'Pedra Mítica'][q.stone]} (${have})` });
-  if (q.kills) lines.push({ ok: p.k >= q.kills, t: `${Math.min(p.k, q.kills)}/${q.kills} abates com esta arma` });
+  if (q.kills) { const K = starKills(id); lines.push({ ok: p.k >= K, t: `${Math.min(p.k, K)}/${K} abates com esta arma` }); }
   if (q.raids) lines.push({ ok: p.r >= q.raids, t: `${Math.min(p.r, q.raids)}/${q.raids} raids (depois de ter ${t}★)` });
   if (q.nraids) lines.push({ ok: p.n >= q.nraids, t: `${Math.min(p.n, q.nraids)}/${q.nraids} raids Normal+ (depois de ter ${t}★)` });
   return { ok: lines.every(l => l.ok), lines, q };
