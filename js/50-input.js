@@ -5,7 +5,8 @@
 const keys = {}; let mouse = { x: W / 2, y: H / 2 }, mdown = false;
 let state = 'menu', tab = 'farm', ui = [], R = null, T = 0, capture = null, keysBack = 'menu', optBack = 'menu', menuConfirm = false, anvSel = 0;
 const DASH_CD = 6;   // espera da esquiva (Shift), em segundos
-const BASE_SPD = 1.12;   // o jogo normal corre um pouco mais depressa
+const BASE_SPD = 1.2;   // o jogo normal (x1) corre um pouco mais depressa (era 1.12)
+const X2_STEP = .8;    // no x2 cada um dos 2 passos vale 0.8: fica 1.6x o normal (2x era rapido demais)
 let gameSpeed = 1; try { gameSpeed = localStorage.getItem('bladehunter_speed') === '2' ? 2 : 1; } catch (e) {}
 function toggleSpeed() { gameSpeed = gameSpeed === 1 ? 2 : 1; try { localStorage.setItem('bladehunter_speed', String(gameSpeed)); } catch (e) {} SFX.click(); }
 let autoAtk = false; try { autoAtk = localStorage.getItem('bladehunter_auto') === '1'; } catch (e) {}
