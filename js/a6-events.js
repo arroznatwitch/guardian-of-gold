@@ -2,11 +2,25 @@
 /* ----- Eventos, missoes diarias e fim de semana x2 ----- */
 const pad2 = n => String(n).padStart(2, '0');
 const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
-const isWeekend = () => { const d = new Date().getDay(); return d === 0 || d === 6; };   // sabado e domingo: XP e ouro x2
+/* calendario semanal (dia pela hora de Portugal, igual para todos e para o servidor):
+   quarta = Estatua Dourada, quinta = sorte de drops x2, sexta = -20% em todas as compras, sabado e domingo = XP e ouro x2 */
+const LX_FMT = (() => { try { return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Lisbon', weekday: 'short' }); } catch (e) { return null; } })();
+let lxCache = { t: 0, d: 0 };
+const evDay = () => { const now = Date.now(); if (now - lxCache.t > 1000) { let d = new Date().getDay(); if (LX_FMT) { const i = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(LX_FMT.format(new Date(now))); if (i >= 0) d = i; } lxCache = { t: now, d }; } return lxCache.d; };   // 0 = domingo ... 6 = sabado
+const isWeekend = () => { const d = evDay(); return d === 0 || d === 6; };   // sabado e domingo: XP e ouro x2
+const isLuckDay = () => evDay() === 4;   // quinta: sorte de drops x2 (raridades melhores com o dobro da hipotese)
+const isSaleDay = () => evDay() === 5;   // sexta: -20% em todas as compras
+const LUCK_X = 2, SALE_K = .8;
+const disc = n => isSaleDay() ? Math.round(n * SALE_K) : n;   // preco com o desconto de sexta (o servidor faz a mesma conta)
 const WEEKEND_X = 2;
-/* eventos temporarios (ate ao fim do dia indicado) */
-const EVENTS = [{ id: 'statue', until: '2026-11-18', untilTxt: ['18 de Nov', 'Nov 18'], tries: 2, secs: 30, goldPer: 1 / 33, goldCap: 40000 }];   // estatua dourada: 30 s para dar o maximo de dano
-const eventOn = ev => todayKey() <= ev.until;
+/* eventos semanais: a Estatua Dourada abre todas as quartas */
+const EVENTS = [{ id: 'statue', day: 3, tries: 2, secs: 30, goldPer: 1 / 33, goldCap: 40000 }];   // estatua dourada: 30 s para dar o maximo de dano
+const eventOn = ev => evDay() === ev.day;
+const WEEK = [   // [dia, PT, EN, cor] pela ordem segunda..domingo
+  [1, ['—', '—'], '#556'], [2, ['—', '—'], '#556'], [3, ['Estátua Dourada', 'Golden Statue'], '#f5c542'], [4, ['Drops x2', 'Drops x2'], '#c9a0ff'],
+  [5, ['Compras -20%', 'Shop -20%'], '#6f6'], [6, ['XP e Ouro x2', 'XP & Gold x2'], '#ffd34a'], [0, ['XP e Ouro x2', 'XP & Gold x2'], '#ffd34a']];
+const DAY_N = [['Dom', 'Sun'], ['Seg', 'Mon'], ['Ter', 'Tue'], ['Qua', 'Wed'], ['Qui', 'Thu'], ['Sex', 'Fri'], ['Sáb', 'Sat']];
+const evBonusToday = () => isWeekend() || isLuckDay() || isSaleDay() || EVENTS.some(eventOn);
 
 /* ---- missoes diarias: 3 por dia, sempre as mesmas para o mesmo dia ---- */
 const DAILY_POOL = [
@@ -34,7 +48,7 @@ function dailyAdd(kind, v) {   // chamado no fim das missoes
   for (const m of d.m) if (m.k === kind) m.p = Math.min(m.n, kind === 'waves' ? Math.max(m.p, v) : m.p + v);
 }
 function dailyAll(win, g, doneWave) {   // fim de missao: soma o progresso das missoes diarias
-  dailyAdd('kills', R.kills | 0); dailyAdd('bosses', R.bossK | 0); if (win && R.raid) dailyAdd('raids', 1); if (R.farm) dailyAdd('waves', doneWave | 0); dailyAdd('gold', g | 0); dailyAdd('skills', R.skillN | 0); dailyAdd('loot', R.lootN | 0);
+  dailyAdd('kills', R.kills | 0); dailyAdd('bosses', R.bossK | 0); if (win && R.raid) dailyAdd('raids', 1); if (R.farm && !R.tower) dailyAdd('waves', doneWave | 0); dailyAdd('gold', g | 0); dailyAdd('skills', R.skillN | 0); dailyAdd('loot', R.lootN | 0);
 }
 const dailyDef = m => DAILY_POOL.find(p => p.k === m.k);
 const dailyReady = () => { if (!save || !save.pl) return 0; const d = dailyEnsure(); return d.m.filter(m => m.p >= m.n && !m.c).length; };
@@ -73,9 +87,13 @@ function endEvent() {
 
 /* ---- ecra: separador Eventos ---- */
 function hubEvents() {
-  const d = dailyEnsure(), X = 197, WD = 583, wk = isWeekend();
-  bevel(X, 98, WD, 40, wk ? '#3a2a08' : '#12121f', wk ? '#ffd34a' : '#3a3a5a', '#05050a');
-  txt(wk ? T2('FIM DE SEMANA: XP e Ouro x2 ativo!', 'WEEKEND: XP and Gold x2 active!') : T2('Sábados e Domingos: XP e Ouro x2', 'Saturdays and Sundays: XP and Gold x2'), X + WD / 2, 124, 16, wk ? '#ffd34a' : '#9ab', 'center', 'bold');
+  const d = dailyEnsure(), X = 197, WD = 583, today = evDay(), cw = (WD - 6 * 4) / 7;
+  WEEK.forEach(([dw, nm, col], i) => {   // calendario da semana: hoje fica destacado
+    const x = X + i * (cw + 4), on = dw === today, has = nm[0] !== '—';
+    bevel(x, 92, cw, 46, on ? (has ? '#3a2a08' : '#22223a') : '#12121f', on ? '#ffd34a' : '#2a2a3a', '#05050a');
+    txt(DAY_N[dw][lang === 'en' ? 1 : 0] + (on ? ' · ' + T2('Hoje', 'Today') : ''), x + cw / 2, 108, 11, on ? '#ffd34a' : '#8890a8', 'center', 'bold');
+    let fs = 11; const s2 = nm[lang === 'en' ? 1 : 0]; while (fs > 8 && txtW(s2, fs, 'bold') > cw - 6) fs--; txt(s2, x + cw / 2, 128, fs, has ? (on ? col : col + 'aa') : '#445', 'center', 'bold');
+  });
   txt(T2('Missões diárias', 'Daily missions'), X + 4, 162, 16, '#f0c060', 'left', 'bold'); txt(`${T2('Completas', 'Completed')}: ${d.n | 0}`, X + WD - 4, 162, 12, '#9ab', 'right');
   d.m.forEach((m, i) => {
     const def = dailyDef(m), y = 170 + i * 50, done = m.p >= m.n, got = !!m.c;
@@ -86,7 +104,7 @@ function hubEvents() {
     if (got) txt('✔ ' + T2('Recebido', 'Claimed'), X + WD - 14, y + 27, 12, '#7a7', 'right', 'bold');
     else btn(X + WD - 104, y + 7, 94, 30, T2('Resgatar', 'Claim'), () => dailyClaim(i), { off: !done, size: 13, col: '#a06a20', hot: '#c98a30' });
   });
-  txt(T2('Faz as 3 para um bónus extra (+5 ◆).', 'Do all 3 for an extra bonus (+5 ◆).'), X + 4, 330, 11, '#889');
+  txt(T2('Faz as 3 para um bónus extra (+5 ◆).', 'Do all 3 for an extra bonus (+5 ◆).'), X + 4, 330, 11, '#889'); txt(T2('Dias pela hora de Portugal', 'Days follow Portugal time'), X + WD - 4, 330, 10, '#667', 'right');
   txt(T2('Evento', 'Event'), X + 4, 352, 16, '#f0c060', 'left', 'bold');
   EVENTS.forEach((ev, i) => {
     const on = eventOn(ev), left = eventTriesLeft(ev), y = 360 + i * 108;
@@ -94,8 +112,8 @@ function hubEvents() {
     drawSprBig('gguard', X + 52, y + 51, .6);
     txt(T2('Estátua Dourada', 'Golden Statue'), X + 108, y + 26, 18, '#ffd34a', 'left', 'bold');
     txt(T2('Uma estátua do Guardião Dourado, parada. 30 segundos para dar o máximo de dano!', 'A motionless Golden Guardian statue. 30 seconds to deal as much damage as you can!'), X + 108, y + 46, 11, '#cdd6f4');
-    txt(`${T2('Termina a', 'Ends on')} ${ev.untilTxt[lang === 'en' ? 1 : 0]} · ${T2('Tentativas hoje', 'Tries today')}: ${left}/${ev.tries}` + ((d.best | 0) ? ` · ${T2('Melhor', 'Best')}: ${gfmt(d.best)}` : ''), X + 108, y + 66, 12, on ? '#9fe' : '#f88', 'left', 'bold');
+    txt(`${on ? T2('Hoje', 'Today') : T2('Todas as quartas', 'Every Wednesday')} · ${T2('Tentativas hoje', 'Tries today')}: ${on ? left : ev.tries}/${ev.tries}` + ((d.best | 0) ? ` · ${T2('Melhor', 'Best')}: ${gfmt(d.best)}` : ''), X + 108, y + 66, 12, on ? '#9fe' : '#f88', 'left', 'bold');
     txt(T2('Ouro = dano / 33 (máx. ¢40K) · x2 ao fim de semana', 'Gold = damage / 33 (max ¢40K) · x2 on weekends'), X + 108, y + 84, 11, '#889');
-    btn(X + WD - 124, y + 30, 112, 40, on ? T2('Jogar', 'Play') : T2('Terminou', 'Ended'), () => startEvent(ev), { off: !on || !left, size: 17, col: '#2f7a4a', hot: '#3fa061' });
+    btn(X + WD - 124, y + 30, 112, 40, on ? T2('Jogar', 'Play') : T2('Quarta', 'Wednesday'), () => startEvent(ev), { off: !on || !left, size: 17, col: '#2f7a4a', hot: '#3fa061' });
   });
 }

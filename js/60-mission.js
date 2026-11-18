@@ -28,7 +28,8 @@ function endMission(win, mode) {
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
   if (isWeekend() && !labOn) { g *= WEEKEND_X; xp *= WEEKEND_X; R.boosted = true; }   // sabados e domingos: XP e ouro x2
-  if (R.farm) {
+  if (R.tower) { towerEnd(win); if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }   // Torre: morrer fecha-a ate amanha e guarda metade das moedas e do XP apanhados (as recompensas dos andares feitos ja estao pagas)
+  else if (R.farm) {
     if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
     save.presW = save.presW || [0, 0, 0, 0, 0, 0]; const doneW = mode === 'cash' ? R.wave : R.wave - 1; if (doneW > (save.presW[R.m] | 0)) save.presW[R.m] = doneW;   // melhor onda CONCLUIDA neste prestigio (morrer ou sair a meio da onda 30 nao conta)
     if (R.wave >= 10) { save.farmN = save.farmN || [0, 0, 0, 0, 0, 0]; save.farmN[R.m] = (save.farmN[R.m] | 0) + 1; }   // Farm concluida (chegou a onda 10)
@@ -38,12 +39,13 @@ function endMission(win, mode) {
   else if (win) { g += Math.round(M.reward * R.goldM * 2.5); const a = save.raids[R.m] = save.raids[R.m] || [0, 0, 0, 0, 0]; a[R.raid.d]++; xp += Math.round((60 + 30 * R.m + 25 * R.raid.d) * (1 + raidRec(R.m, R.raid.d) / 10)); }
   else { g = Math.floor(g / 2); xp = Math.floor(xp / 2); }
   R.petGain = 0; R.petUp = 0; if (R.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { R.petGain = R.petXp; R.petUp = addPetXp(save.pets.eq, R.petXp); }
-  R.xpGain = Math.round(xp); const lv0 = save.pl.lv, pts0 = save.pts, gem0 = save.gems; addXP(R.xpGain); R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
+  R.xpGain = Math.round(xp); const TWR = R.tower, lv0 = TWR ? TWR.lv0 : save.pl.lv, pts0 = TWR ? TWR.pts0 : save.pts, gem0 = TWR ? TWR.gem0 : save.gems; addXP(R.xpGain); if (TWR) R.xpGain += TWR.xp; R.lvUp = save.pl.lv > lv0 ? save.pl.lv : 0; R.ptsGain = save.pts - pts0; R.gemGain = save.gems - gem0;
   for (const it of R.loot) if (!addBag(it)) g += sellValue(it);
   for (const id of R.wloot) save.wst[id][0]++; R.wlootN = R.wloot.length;
   if (R.raid && win) { R.stoneGain = [0, 0, 0, 0, 0]; const n = 2 + Math.floor(R.m / 2); for (let i = 0; i < n; i++) { const r = Math.min(4, R.raid.d + (Math.random() < .45 ? 1 : 0)); save.stones[r]++; R.stoneGain[r]++; }
     const rg = 1 + R.raid.d; save.gems += rg; R.gemGain = (R.gemGain | 0) + rg; }   // diamantes por raid ganha: 1 (Facil) ate 5 (Inferno)   // pedras de evolucao: a raridade segue a dificuldade
-  R.lootN = R.loot.length; save.gold += g; R.earned = g; dailyAll(win, g, mode === 'cash' ? R.wave : R.wave - 1); statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
+  if (TWR) R.stoneGain = TWR.st.some(Boolean) ? TWR.st.slice() : null;
+  R.lootN = R.loot.length; save.gold += g; R.earned = g + (TWR ? TWR.g : 0); dailyAll(win, g, mode === 'cash' ? R.wave : R.wave - 1); statsAdd(g); persist(); cloudFlush(); state = win ? 'win' : 'lose'; setMusic('calm'); win ? SFX.win() : SFX.lose();
 }
 const GLOW = { fire: '#ff7a1a', ice: '#6ad0ff', arcane: '#b06aff', dark: '#c030ff', bigbolt: '#9cf', boom: '#ff7a1a' };
 const GLOWW = { m_fire: '#ff7a1a', m_ice: '#6ad0ff', m_bolt: '#ffe14a', m_arcane: '#9be32f', m_dark: '#ff4a6a' };
@@ -364,7 +366,8 @@ function update(dt) {
     const per = Math.ceil(R.need / 4), w = Math.min(4, Math.floor(R.kills / per) + 1);
     if (w > R.wave) { R.wave = w; R.toast = `ONDA ${w}/4!`; R.toastT = 2.5; R.shake = 8; SFX.boss(); for (let i = 0; i < RAID_MINI.burst + 2 * R.raid.d; i++) spawnEdge(M.types[Math.floor(Math.random() * M.types.length)]); }
   }
-  if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (isHorde(R.wave)) { giveLoot(R.p.x, R.p.y - 24, 1); R.toast = 'HORDA DERROTADA!'; R.toastT = 2.2; } if (R.wave % 10 === 0) spawnBoss(); else if (R.wave % 5 === 0) spawnBoss(true); else nextWave(); } }
+  if (R.tower) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (towerBoss(save.tw.f)) spawnBoss(); else towerClear(); } }
+  else if (R.farm) { if (R.phase === 'hunt' && R.waveKills >= R.need && !dead) { if (isHorde(R.wave)) { giveLoot(R.p.x, R.p.y - 24, 1); R.toast = 'HORDA DERROTADA!'; R.toastT = 2.2; } if (R.wave % 10 === 0) spawnBoss(); else if (R.wave % 5 === 0) spawnBoss(true); else nextWave(); } }
   else if (R.phase === 'hunt' && R.kills >= R.need && !dead) spawnBoss();
 
   // boss

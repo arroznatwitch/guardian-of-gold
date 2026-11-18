@@ -1,7 +1,7 @@
 'use strict';
 /* ----- cadeados, desbloqueios e animacao ----- */
 let ua = null, lkShake = {}, hubToast = { t: 0, s: '', col: '#fff' }, charStrip = null;
-const TAB_LV = { raids: 10, forge: 15, fuse: FUSE_LV, pets: 30 }, LOCK_TABS = Object.keys(TAB_LV);
+const TAB_LV = { raids: 10, forge: 15, fuse: FUSE_LV, pets: 30, tower: 50 }, LOCK_TABS = Object.keys(TAB_LV);
 const tabLv = t => TAB_LV[t] || 0;
 const tabOpen = t => !save || save.pl.lv >= tabLv(t);
 function lockClick(key) { lkShake[key] = .35; SFX.locked(); }
@@ -57,6 +57,7 @@ const TAB_INFO = {
   raids: ['Raids', 'Combates contra bosses muito difíceis, com muito ouro e itens raros garantidos.'],
   forge: ['Forja', 'Encanta e melhora o equipamento e as armas: refinar, encantar, martelar e fundir.'],
   fuse: ['Fusão', 'Junta 5 armas ou peças iguais para ganhares estrelas, mais poder e habilidades melhoradas.'],
+  tower: ['Torre', 'Sobe andares cada vez mais difíceis, uma vez por dia. Ouro, XP, diamantes e pedras a cada andar.'],
   pets: ['Pets', 'Companheiros que te seguem e te dão bónus enquanto estiverem perto.'],
 };
 function wrapC(str, cx, y, maxW, lh, size, col) {
@@ -244,11 +245,11 @@ async function confirmPetRename() {
   ensurePets(); const id = petRename; if (!id) return; const name = (rk.pname || '').trim();
   if (!/^[A-Za-z0-9 _-]{1,12}$/.test(name)) { petMsg = T2('Use 1 to 12 letters, numbers, spaces, _ or -', 'Use 1 to 12 letters, numbers, spaces, _ or -'); SFX.error(); return; }
   if (name === ((save.pets.names && save.pets.names[id]) || '')) { petRename = ''; rk.focus = ''; return; }
-  if (save.gems < PET_RENAME) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
+  if (save.gems < disc(PET_RENAME)) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
   if (buyBusy) return; buyBusy = true; const sv = await shopServer('petname', ['dog', 'chicken', 'bird'].indexOf(id), name); buyBusy = false;
   if (sv.ok === false) { petMsg = buyMsg(sv.error); SFX.error(); return; }
-  if (save.gems < PET_RENAME) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
-  save.gems -= PET_RENAME; save.pets.names[id] = name; petRename = ''; rk.focus = ''; hubToast = { t: 2.4, s: `${petSpecies(id)} → ${name}`, col: '#ffd34a' }; SFX.buy(); persist(); if (on.token) { rk.at = {}; onlineSubmit(); }
+  if (save.gems < disc(PET_RENAME)) { petMsg = T2('Not enough diamonds', 'Not enough diamonds'); SFX.error(); return; }
+  save.gems -= disc(PET_RENAME); save.pets.names[id] = name; petRename = ''; rk.focus = ''; hubToast = { t: 2.4, s: `${petSpecies(id)} → ${name}`, col: '#ffd34a' }; SFX.buy(); persist(); if (on.token) { rk.at = {}; onlineSubmit(); }
 }
 function drawPetRename() {
   if (state !== 'hub' || tab !== 'pets' || !petRename) return;
@@ -256,16 +257,16 @@ function drawPetRename() {
   ctx.fillStyle = '#000c'; ctx.fillRect(-UIOX, 0, W, H); ui.push({ x: -UIOX, y: 0, w: W, h: H, fn: () => { petRename = ''; rk.focus = ''; } });
   panel(x, y, w, h, '#16162a', '#a8821f'); ui.push({ x, y, w, h, fn: () => {} });
   txt(T2('Rename pet', 'Rename pet'), x + w / 2, y + 32, 18, '#ffd34a', 'center', 'bold');
-  txt(`${petSpecies(id)} · ${T2('each change costs', 'each change costs')} ◆${PET_RENAME}`, x + w / 2, y + 54, 12, '#7fe8ff', 'center');
+  txt(`${petSpecies(id)} · ${T2('each change costs', 'each change costs')} ◆${disc(PET_RENAME)}`, x + w / 2, y + 54, 12, '#7fe8ff', 'center');
   rkField(x + 20, y + 84, w - 40, T2('Name (1-12 characters)', 'Name (1-12 characters)'), 'pname', false);
   if (petMsg) txt(petMsg, x + w / 2, y + 134, 11, '#f88', 'center');
-  btn(x + 20, y + 152, 140, 38, T2('Confirm', 'Confirm'), confirmPetRename, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: save.gems < PET_RENAME });
+  btn(x + 20, y + 152, 140, 38, T2('Confirm', 'Confirm'), confirmPetRename, { size: 14, col: '#2f7a4a', hot: '#3fa061', off: save.gems < disc(PET_RENAME) });
   btn(x + w - 160, y + 152, 140, 38, T2('Cancel', 'Cancel'), () => { petRename = ''; rk.focus = ''; }, { size: 14, col: '#2a2a48' });
 }
 function hubPets() {
   ensurePets(); const ids = ['dog', 'chicken', 'bird'];
   ids.forEach((id, i) => {
-    const x = 197, y = 94 + i * 128, w = 585, h = 120, own = !!save.pets.own[id], eq = save.pets.eq === id, L = own ? petLv(id) : 1, price = PETS[id].price, can = save.gold >= price;
+    const x = 197, y = 94 + i * 128, w = 585, h = 120, own = !!save.pets.own[id], eq = save.pets.eq === id, L = own ? petLv(id) : 1, price = disc(PETS[id].price), can = save.gold >= price;
     panel(x, y, w, h, '#16162a', eq ? '#a8821f' : '#3a3a5a');
     ctx.fillStyle = '#0e0e1a'; ctx.fillRect(x + 10, y + 10, 100, 100);
     { const im = petImg(id, T), k = id === 'dog' ? 5.5 : id === 'chicken' ? 6 : 7; if (!own) ctx.globalAlpha = .55; ctx.drawImage(im, Math.round(x + 60 - im.width * k / 2), Math.round(y + 60 - im.height * k / 2 + Math.sin(T * 3 + i) * 2), im.width * k, im.height * k); ctx.globalAlpha = 1; }
@@ -278,7 +279,7 @@ function hubPets() {
     const bx = x + w - 172;
     if (!own) btn(bx, y + 14, 158, 36, price ? T2('Buy', 'Buy') : T2('Get (free)', 'Get (free)'), () => { if (price && !can) { SFX.error(); hubToast = { t: 2.4, s: T2('Not enough gold', 'Not enough gold'), col: '#f88' }; return; } if (!buyBusy) buyPet(id, price); }, { size: 15, col: !price || can ? '#2f7a4a' : '#4a3a3a', hot: '#3fa061' });
     else { btn(bx, y + 14, 158, 36, eq ? T2('Equipped ✓', 'Equipped ✓') : T2('Equip', 'Equip'), () => { save.pets.eq = eq ? '' : id; persist(); SFX.click(); if (on.token) { rk.at = {}; } }, { size: 15, col: eq ? '#a06a20' : '#2f7a4a', hot: eq ? '#c98a30' : '#3fa061' });
-      btn(bx, y + 58, 158, 28, `${T2('Rename', 'Rename')} · ◆${PET_RENAME}`, () => { petRename = id; petMsg = ''; rk.pname = (save.pets.names && save.pets.names[id]) || ''; rk.focus = 'pname'; }, { size: 12, col: '#3a5a7a', hot: '#4a7aa0' }); }
+      btn(bx, y + 58, 158, 28, `${T2('Rename', 'Rename')} · ◆${disc(PET_RENAME)}`, () => { petRename = id; petMsg = ''; rk.pname = (save.pets.names && save.pets.names[id]) || ''; rk.focus = 'pname'; }, { size: 12, col: '#3a5a7a', hot: '#4a7aa0' }); }
   });
 }
 

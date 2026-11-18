@@ -1442,7 +1442,6 @@ begin
     ee := gog._n(it, 'ench'); lvl := gog._n(s, 'pl', 'lv');
     if ee < 0 or ee >= 10 or ee >= floor(lvl / 4) then return jsonb_build_object('ok', false, 'error', 'state'); end if;
     cg := round(45 * (1 + gog._n(it, 'il') * .25) * (1 + gog._n(it, 'r') * .5) * (ee + 1) * (1 + lvl * .05));
-    if gold < cg then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
     ok2 := random() * 100 < (array[100, 90, 80, 70, 60, 50, 40, 30, 22, 15])[ee::int + 1];
     dn := not ok2 and ee >= 6 and random() < .3;
     resn := case when ok2 then 'ok' when dn then 'down' else 'fail' end;
@@ -1459,6 +1458,7 @@ begin
     pets := pets || jsonb_build_object('names', gog._obj(pets->'names') || jsonb_build_object(pk, nm));
     s := jsonb_set(s, '{pets}', pets);
   end if;
+  if extract(isodow from now() at time zone 'Europe/Lisbon') = 5 then cg := round(cg * .8); cd := round(cd * .8); end if;   -- sexta: -20%
   if gold < cg or gems < cd then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
   s := jsonb_set(s, '{gold}', to_jsonb(gold - cg));
   s := jsonb_set(s, '{gems}', to_jsonb(gems - cd));

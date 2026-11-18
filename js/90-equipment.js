@@ -6,7 +6,8 @@ const RAR = [['Comum', '#9aa4b8'], ['Raro', '#5aa8ff'], ['Épico', '#b06aff'], [
 const SLOTS = ['head', 'chest', 'boots', 'amulet'], BAG_PAGE = 30;
 const EQ_SLOTS = SLOTS.concat('ring');   // slots de equipamento: 4 pecas de armadura + o anel (o anel nao tem refino, encantamento nem fusao)
 // 5 mochilas de 30 lugares: a 1.a e gratis, as outras compram-se por ordem (ouro ou diamantes)
-const BAG_COST = [null, ['g', 10000], ['g', 25000], ['d', 200], ['d', 300]];
+const BAG_COST0 = [null, ['g', 10000], ['g', 25000], ['d', 200], ['d', 300]];
+const BAG_COST = new Proxy(BAG_COST0, { get: (a, k) => { const c = a[k]; return Array.isArray(c) ? [c[0], disc(c[1])] : c; } });   // precos com o desconto de sexta
 const bagMax = () => BAG_PAGE * ((save && save.bagSlots) || 1);
 const SLOT_LBL = { head: 'Capacete', chest: 'Armadura', boots: 'Botas', amulet: 'Amuleto', ring: 'Anel' };
 const ITEM_NAMES = {
@@ -77,7 +78,7 @@ const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico']
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
 const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Agilidade', '+0.6% velocidade'], ['per', 'Perícia', '+0.6% vel. de ataque']];
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
-const refCost = it => Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1) * lvMul());
+const refCost = it => disc(Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1) * lvMul()));
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15) * lvMul());
 const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
@@ -140,8 +141,8 @@ function gearStats() {
 }
 // pesos de raridade (Comum..Mitico): Lendario ronda 1% e Mitico 0,1% mesmo no melhor caso
 const rarityWeights = b => [70, 24 + b * 1.8, 6 + b * 1.2, .5 + b * .12, .04 + b * .015];
-function rollRarity(boost = 0, min = 0) {
-  const w = rarityWeights(boost); let x = Math.random() * w.reduce((a, b) => a + b), r = 0;
+function rollRarity(boost = 0, min = 0, luck = 1) {
+  const w = rarityWeights(boost).map((v, i) => i ? v * luck : v); let x = Math.random() * w.reduce((a, b) => a + b), r = 0;   // luck: quinta-feira multiplica as hipoteses das raridades acima de Comum
   for (; r < 4; r++) { if (x < w[r]) break; x -= w[r]; } return Math.max(min, r);
 }
 const runIL = () => (R.raid ? 6 + R.m * 6 + R.raid.d * 4 : (R.farm && R.rec ? R.rec : 1 + R.m * 6) + Math.floor((R.wave || 1) * .9)) + Math.floor((save.pl.lv || 1) * .5);
@@ -153,7 +154,7 @@ function giveWeaponCopy(x, y) {
 // o drop depende do monstro: os fortes (bruto, escaravelho) largam mais vezes e itens melhores; os fracos (lodo, morcego) menos e piores
 const mobTier = type => (EN[type] ? EN[type].gold : 8) / 8;   // 0,4 (lodo) ... 1,75 (escaravelho)
 function giveLoot(x, y, minR = 0, tier = 1) {
-  const it = genLoot(rollRarity(Math.max(0, lootBoost() + (tier - 1) * 2), minR), Math.max(1, Math.min(120, runIL() + Math.round((tier - 1) * 8)))); R.loot.push(it);
+  const it = genLoot(rollRarity(Math.max(0, lootBoost() + (tier - 1) * 2), minR, isLuckDay() && !labOn ? LUCK_X : 1), Math.max(1, Math.min(120, runIL() + Math.round((tier - 1) * 8)))); R.loot.push(it);
   R.texts.push({ x, y: y - 14, s: itemName(it), t: 1.8, col: RAR[it.r][1], sz: 14 }); R.fx.push({ k: 'ring', x, y, r: 28, t: .4, max: .4, col: RAR[it.r][1] }); SFX.heal();
 }
 function bossDown(b) {
@@ -166,11 +167,12 @@ function bossDown(b) {
   const n = R.raid ? 2 + R.raid.d : 1, minR = R.raid ? Math.min(2, 1 + (R.raid.d >= 2 ? 1 : 0)) : 1;   // o boss garante no minimo Raro (Epico nas raids dificeis); Lendario e Mitico so por sorte
   for (let i = 0; i < n; i++) giveLoot(b.x + (i - (n - 1) / 2) * 30, b.y, minR);
   for (let i = 0; i < (R.raid ? 1 + Math.floor(R.raid.d / 2) : 1); i++) giveWeaponCopy(b.x + 22 * i, b.y + 22);
+  if (R.tower) { if (save.tw.f % 10 === 0) giveLoot(b.x, b.y + 30, 2); towerClear(); return; }   // Torre: a cada 10 andares um item Epico (Ametista) ou melhor garantido
   if (R.farm) { if (R.wave % 10 === 0) { R.phase = 'cp'; R.cpWave = R.wave; state = 'cp'; SFX.win(); } else { R.phase = 'hunt'; nextWave(); } } else { R.endT = 1.4; R.endWin = true; }   // a cada 10 ondas (depois do boss) podes sair e guardar tudo
 }
 const isHorde = w => w > 0 && w % 10 === 0;   // a cada 10 ondas do Farm vem uma horda
 function applyWave() {
-  const w = R.wave, h = isHorde(w); R.need = Math.round(Math.min(50, 6 + 1.6 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
+  const w = R.wave, h = isHorde(w) && !R.tower; R.need = Math.round(Math.min(50, 6 + 1.6 * w) * (h ? 1.5 : 1)); R.waveKills = 0;
   R.hpM = 1 + TUNE.wHP * (w - 1) + TUNE.wHP2 * (w - 1) * (w - 1); R.dmgM = 1 + TUNE.wDM * (w - 1); R.goldM = (1 + .12 * (w - 1)) * (h ? 1.5 : 1); R.spdM = Math.min(1.4, 1 + .01 * (w - 1));
   R.kdm = 1; if (R.farm && R.rec) { const fk = farmK(R.rec); R.hpM *= fk.hp; R.dmgM *= fk.dm; R.kdm = fk.dm; R.goldM *= 1 + .02 * (R.rec - 1); }   // mapas e prestigios mais altos: monstros mais fortes e mais ouro
   R.bossM = R.hpM * .9; R.bossDM = (1 + .05 * (w - 1) + .08 * R.m) * R.kdm;   // os ataques do boss do Farm tambem crescem com a onda e a zona
@@ -213,9 +215,10 @@ function nextWave() {
   if (isHorde(R.wave)) { R.toastT = 3.2; R.shake = 14; SFX.boss(); hordeBurst(); }
   if (R.farm && guardHere(R.wave)) spawnGuardian();
 }
-function endTitle(win) { return R.eventRes ? T2('EVENTO CONCLUÍDO!', 'EVENT COMPLETE!') : R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DA CAMPANHA' : 'CAMPANHA GUARDADA') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
+function endTitle(win) { return R.eventRes ? T2('EVENTO CONCLUÍDO!', 'EVENT COMPLETE!') : R.tower ? (win ? (R.tower.out ? T2('SEM ANDARES', 'OUT OF FLOORS') : T2('SAÍSTE DA TORRE', 'LEFT THE TOWER')) : T2('DERROTADO NA TORRE', 'DEFEATED IN THE TOWER')) : R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DA CAMPANHA' : 'CAMPANHA GUARDADA') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
   if (R.eventRes) return [T2('Estátua Dourada: tempo esgotado!', 'Golden Statue: time is up!'), ''];
+  if (R.tower) { const n = R.tower.n; return [T2(`Andares concluídos: ${n} (próximo: ${save.tw.f})`, `Floors cleared: ${n} (next: ${save.tw.f})`), win ? (R.tower.out ? T2(`Ganhas +${TW.per} andares por hora. Volta mais tarde!`, `You earn +${TW.per} floors per hour. Come back later!`) : T2('O teu progresso fica guardado: continua quando quiseres hoje.', 'Your progress is saved: continue any time today.')) : T2('Morreste: a Torre fecha até amanhã e volta ao andar 1.', 'You died: the Tower closes until tomorrow and resets to floor 1.')]; }
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : `Morreste: ficaste com 40% do XP e 10% do ouro (¢${R.earned}) · itens perdidos`) : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
