@@ -31,7 +31,7 @@ async function loBuyUI() {   // compra da 3.a build: o servidor desconta e regis
   return loBuy(2);
 }
 let loAsk = false;
-function drawLoadouts() {   // seletor de builds no topo do painel esquerdo do ecra Personagem (entre o capacete e a arma)
+function drawLoadouts() {   // seletor de builds: fila centrada por baixo da barra de XP (painel direito do ecra Personagem)
   const l = loState();
   if (loAsk) {
     ctx.fillStyle = '#000c'; ctx.fillRect(195, 88, 590, 390); ui.push({ x: 195, y: 88, w: 590, h: 390, fn() {} }); bevel(300, 190, 380, 130, '#14142a', '#a8821f', '#05050a');
@@ -41,12 +41,12 @@ function drawLoadouts() {   // seletor de builds no topo do painel esquerdo do e
     return;
   }
   for (let i = 0; i < LO_N; i++) {
-    const x = 270 + i * 46, act = l.cur === i, own = !!l.own[i];
-    btn(x, 94, 44, 22, !own && i === 2 ? '' : `Build ${i + 1}`, () => {
+    const bw = (267 - 8) / 3, x = 504 + i * (bw + 4), act = l.cur === i, own = !!l.own[i];
+    btn(x, 136, bw, 19, !own && i === 2 ? '' : `Build ${i + 1}`, () => {
       if (act) return;
       if (!own && i === 2) { loAsk = true; SFX.click(); return; }
       if (loSwitch(i)) { SFX.buy(); hubToast = { t: 2, s: T2(`Build ${i + 1} ativa`, `Build ${i + 1} active`), col: '#9fe' }; }
-    }, { size: 10, col: act ? '#a8821f' : own || i === 1 ? '#2a2a48' : '#26262f', hot: '#d2a73a' });
-    if (!own && i === 2) { drawIcon('lock', x + 9, 105, .8); txt(`${disc(LO_COST0)}◆`, x + 29, 109, 8, '#7fe8ff', 'center', 'bold'); }
+    }, { size: 12, col: act ? '#a8821f' : own || i === 1 ? '#2a2a48' : '#26262f', hot: '#d2a73a' });
+    if (!own && i === 2) { drawIcon('lock', x + bw / 2 - 22, 145, .9); txt(`${disc(LO_COST0)} ◆`, x + bw / 2 + 8, 150, 11, '#7fe8ff', 'center', 'bold'); }
   }
 }

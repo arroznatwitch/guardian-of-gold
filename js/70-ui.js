@@ -36,7 +36,7 @@ Object.assign(EN_DICT, {"Vender tudo?": "Sell everything?", "Vender tudo": "Sell
 Object.assign(EN_DICT, {"Equipado (não se vende)": "Equipped (not sold)"});
 Object.assign(EN_DICT, {"Conclui a raid anterior nesta dificuldade": "Clear the previous raid on this difficulty"});
 Object.assign(EN_DICT, {"Já existem 20 contas criadas a partir desta rede": "There are already 20 accounts created from this network", "Confirmar venda?": "Confirm sale?", "Item raro: pede confirmação": "Rare item: asks to confirm", "Pode ser melhor que o equipado": "May be better than equipped", "parecem melhores que o equipado": "look better than equipped", "● melhor  ● pior  ● igual (vs equipado)": "● better  ● worse  ● same (vs equipped)", "efetivo": "effective"});
-Object.assign(EN_DICT, {"Pedras de evolução:": "Evolution stones:", "Evoluir Nv": "Upgrade Lv", "Nível de item máximo": "Max item level", "Pedra": "Stone", "EVOLUÍDO! Nível": "UPGRADED! Level", "Diamantes insuficientes": "Not enough diamonds", "Refinar: +6% a todos os atributos por nível.": "Refine: +6% to all stats per level.", "Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.": "Enchant: rolls a special effect (costs gold and diamonds). Raid stones raise the item level.", "MÁX": "MAX"});
+Object.assign(EN_DICT, {"Pedras de evolução:": "Evolution stones:", "Materiais": "Materials", "Evoluir Nv": "Upgrade Lv", "Nível de item máximo": "Max item level", "Pedra": "Stone", "EVOLUÍDO! Nível": "UPGRADED! Level", "Diamantes insuficientes": "Not enough diamonds", "Refinar: +6% a todos os atributos por nível.": "Refine: +6% to all stats per level.", "Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.": "Enchant: rolls a special effect (costs gold and diamonds). Raid stones raise the item level.", "MÁX": "MAX"});
 Object.assign(EN_DICT, {"Evoluir exige Nv": "Upgrade needs Lv", "Requer nível": "Requires level", "A Bigorna só melhora a arma até ao nível do jogador ÷ 3. Sobe de nível para continuar.": "The Anvil only upgrades a weapon up to player level ÷ 3. Level up to continue."});
 Object.assign(EN_DICT, {"Reforjar": "Reforge", "REFORJADO!": "REFORGED!", "Para desativar ou recuperar a conta fala com o administrador.": "To deactivate or recover your account, contact the administrator.", "Esta conta está desativada. Fala com o administrador.": "This account is deactivated. Contact the administrator."});
 Object.assign(EN_DICT, {"Cão": "Dog", "GRÁTIS": "FREE", "Um companheiro leal que corre ao teu lado. Não causa dano, mas dá-te energia enquanto estiver perto de ti.": "A loyal companion that runs by your side. It deals no damage but gives you energy while it is near you.", "velocidade de movimento": "movement speed", "velocidade de ataque": "attack speed", "Se te afastares depressa (esquiva), o bónus pára até ele te alcançar.": "If you move away fast (dash), the bonus stops until it catches up.", "Obter (grátis)": "Get (free)", "Equipado ✓": "Equipped ✓", "Mais companheiros em breve": "More companions soon", "Companheiros que te seguem e te dão bónus enquanto estiverem perto.": "Companions that follow you and give you bonuses while they are near."});
@@ -69,7 +69,8 @@ const LCACHE = {}; let LCN = 0;
 function L(s) {
   if (lang !== 'en') return s;
   let r = LCACHE[s]; if (r !== undefined) return r; r = s;
-  for (const k of EN_KEYS) if (r.includes(k)) r = r.split(k).join(EN_DICT[k]);
+  for (let i = 0; i < EN_KEYS.length; i++) { const k = EN_KEYS[i]; if (r.includes(k)) r = r.split(k).join('\u0001' + i + '\u0002'); }   // marca primeiro: o texto ja traduzido nao volta a ser traduzido ("Nickname" nao vira "Nicknamename")
+  if (r !== s) r = r.replace(/\u0001(\d+)\u0002/g, (m, i) => EN_DICT[EN_KEYS[+i]]);
   if (++LCN > 5000) { for (const k in LCACHE) delete LCACHE[k]; LCN = 0; }
   return LCACHE[s] = r;
 }
@@ -144,7 +145,7 @@ function bar(x, y, w, h, v, col, back = '#000a') {
 function wrap(s, x, y, maxW, lh, size, col) {
   s = L(s); ctx.font = `${Math.round(size * FS)}px ${FONT}`; const words = s.split(' '); let line = '';
   for (const w of words) { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { txtR(line, x, y, size, col); y += lh; line = w; } else line = t; }
-  txtR(line, x, y, size, col);
+  txtR(line, x, y, size, col); return y;   // devolve o y da ultima linha
 }
 const embers = Array.from({ length: 45 }, () => ({ x: Math.random() * W, y: Math.random() * H, s: 1 + Math.random() * 2.5, v: 10 + Math.random() * 30 }));
 function menuBg() {
