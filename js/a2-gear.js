@@ -72,13 +72,13 @@ function hubChar() {
     ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', pc(g.dr, 1), '#6a9aff']]],
     ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Crítico', pc(g.crit, 1), '#ff7ae0'], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%', '#ffe24a']]],
     ['Agilidade', [['Velocidade', Math.round(s.spd), '#6adfff']]],
-    ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(g.xpb, 0) + ' · ' + pc(g.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (w.sk.cd - skCd(w)).toFixed(2) + 's', '#7cf']]]];
+    ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(g.xpb, 0) + ' · ' + pc(g.gf, 0), '#ffd34a', 1], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (w.sk.cd - skCd(w)).toFixed(2) + 's', '#7cf']]]];
   let sgHov = -1;
   SG.forEach(([nm, rows], i) => {
     const y = 368 + i * 22, hov = mouse.x - UIOX >= 498 && mouse.x - UIOX <= 778 && mouse.y >= y && mouse.y < y + 20; if (hov) sgHov = i;
     ctx.fillStyle = hov ? '#26264a' : '#1c1c34'; ctx.fillRect(498, y, 280, 20); ctx.fillStyle = rows[0][2]; ctx.fillRect(498, y, 3, 20);
     txt(nm, 507, y + 15, 13, '#fff', 'left', 'bold');
-    let x = 771; for (let k = rows.length - 1; k >= 0; k--) { const v = String(rows[k][1]), w = txtW(v, 11, 'bold'); if (x - w < 590) { txt('…', x, y + 15, 11, '#778', 'right', 'bold'); break; } txt(v, x, y + 15, 11, rows[k][2], 'right', 'bold'); x -= w + 8; }
+    let x = 771; const x0 = 507 + txtW(nm, 13, 'bold') + 12; for (let k = rows.length - 1; k >= 0; k--) { if (rows[k][3]) continue; const v = String(rows[k][1]), w = txtW(v, 11, 'bold'); if (x - w < x0) { txt('…', x, y + 15, 11, '#778', 'right', 'bold'); break; } txt(v, x, y + 15, 11, rows[k][2], 'right', 'bold'); x -= w + 8; }
     ui.push({ x: 498, y, w: 280, h: 20, fn: () => {} });   // no telemovel um toque fixa o rato aqui e abre o detalhe
   });
   drawLoadouts();   // builds (a7-loadouts.js)
