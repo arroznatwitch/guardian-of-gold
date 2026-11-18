@@ -29,7 +29,7 @@ function hubChar() {
   // informacao do slot
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && EQ_SLOTS.includes(hv) ? save.gear[hv] : null;
-  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
+  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n} (${T2('recarga', 'cooldown')} ${+skCd(w).toFixed(2)}s): ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap(T2('Com capacete, armadura e botas equipados, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 'With a helmet, armour and boots equipped, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring level.'), 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
   else { drawSetInfo(208, 304); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 354 + i * 18, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
@@ -55,11 +55,12 @@ function hubChar() {
   { const ps = Math.floor(+save.pt || 0), h = Math.floor(ps / 3600), m = Math.floor(ps / 60) % 60, v = h ? `${h}h ${m}m` : `${m}m ${ps % 60}s`, end = 504 + txtW(pn, 20, 'bold') + 10 + txtW(`Nv ${L}`, 16, 'bold') + 8, full = T2('Tempo de jogo: ', 'Play time: ') + v;
     const s2 = 771 - txtW(full, 11) >= end ? full : 771 - txtW('⏱ ' + v, 11) >= end ? '⏱ ' + v : ''; if (s2) txt(s2, 771, 112, 11, '#8ab', 'right'); }   // tempo de jogo deste personagem; com nicks compridos so mostra o valor (ou nada, se nao couber)
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
-  ATTRS.forEach(([key, nm, hint], i) => {
+  ATTRS.forEach(([key, nm, hint0], i) => { let hint = hint0;
     const y = 176 + i * 34;
+    if (key === 'agi') hint = a.agi % 2 === 0 ? T2('Próximo: +0.6% vel. de ataque (alterna)', 'Next: +0.6% attack speed (alternates)') : T2('Próximo: +0.6% velocidade (alterna)', 'Next: +0.6% speed (alternates)');   // a Destreza alterna entre os dois
     txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
     const capped = false;   // a Pericia nunca bloqueia: com a vel. de ataque no maximo (+70%) os pontos continuam a baixar a recarga da habilidade
-    if (key === 'per' && stats().cdm <= .3001) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
+    if (key === 'agi' && stats().cdm <= .3001) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
@@ -70,8 +71,8 @@ function hubChar() {
   const s = stats(), pc = (v, d) => v.toFixed(d) + '%';   // as cores de cada estatistica mantem-se
   const SG = [
     ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', pc(g.dr, 1), '#6a9aff']]],
-    ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Crítico', pc(g.crit, 1), '#ff7ae0'], ['Vel. de ataque', s.cdm <= .3001 ? '+70% MÁX' : '+' + Math.round((1 - s.cdm) * 100) + '%', s.cdm <= .3001 ? '#6f6' : '#ffe24a']]],
-    ['Agilidade', [['Velocidade', Math.round(s.spd), '#6adfff']]],
+    ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Chance de crítico', pc(Math.min(75, g.crit), 1), '#ff7ae0'], ['Dano crítico', 'x' + CRIT_X.toFixed(2), '#ff7ae0']]],
+    ['Destreza', [['Vel. de ataque', s.cdm <= .3001 ? '+70% MÁX' : '+' + Math.round((1 - s.cdm) * 100) + '%', s.cdm <= .3001 ? '#6f6' : '#ffe24a'], ['Velocidade', Math.round(s.spd), '#6adfff']]],
     ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(g.xpb, 0) + ' · ' + pc(g.gf, 0), '#ffd34a', 1], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (w.sk.cd - skCd(w)).toFixed(2) + 's', '#7cf']]]];
   let sgHov = -1;
   SG.forEach(([nm, rows], i) => {
@@ -428,7 +429,7 @@ function hubWeapons() {
     const sst = wStar(w.id); if (own && sst) { if (sst >= STAR_MAX) { drawIcon('star', x + wd - 226, y + 17, 1.6); txt('MAX', x + wd - 214, y + 22, 13, '#ffd34a', 'left', 'bold'); } else for (let q = 0; q < sst; q++) drawIcon('star', x + wd - 228 + q * 12, y + 17, 1.4); }
     txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * wlm(lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
-    if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
+    if (!locked) txt(`[E] ${w.sk.n} (${+skCd(w).toFixed(2)}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
     if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${disc(w.price)}` : 'Bloqueada', () => { if (rq.ok && save.gold >= disc(w.price) && !buyBusy) buyWeapon(i, w); else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');

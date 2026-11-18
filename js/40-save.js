@@ -64,9 +64,9 @@ function keyName(c) {
 }
 const attrEff = n => n;   // sem travao por nivel: cada ponto vale sempre por inteiro (cada um distribui como quiser)
 const stats = () => {
-  const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, ga = 1 + gb().attr, a = { vit: attrEff(save.attr.vit) * ga, str: attrEff(save.attr.str) * ga, agi: attrEff(save.attr.agi) * ga, per: attrEff(save.attr.per) * ga };
+  const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, ga = 1 + gb().attr, a = { vit: attrEff(save.attr.vit) * ga, str: attrEff(save.attr.str) * ga, agiS: attrEff(Math.floor((save.attr.agi | 0) / 2)) * ga, agiA: attrEff(Math.ceil((save.attr.agi | 0) / 2)) * ga };   // Destreza alterna: 1.º ponto vel. de ataque, 2.º velocidade, ...
   const sb = setBonus(), bm = k => (sb && sb.on && sb.k === k ? 1 + sb.p : 1) * (1 + setPct(k));   // bonus do anel (so com o conjunto completo) e dos conjuntos de armadura (92-sets.js)
-  return { hp: Math.round((c.hp + a.vit * 7 + 4 * (L - 1) + g.hp) * bm('hp')), spd: c.spd * (1 + (a.agi * .6 + g.spd) / 100) * bm('spd'), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .01) * (1 + g.dmg / 100) * bm('dmg'), cdm: Math.max(.3, (1 - a.per * .006 - g.cdr / 100) / bm('cdr')) };   // cada ponto vale metade do que valia
+  return { hp: Math.round((c.hp + a.vit * 7 + 4 * (L - 1) + g.hp) * bm('hp')), spd: c.spd * (1 + (a.agiS * .6 + g.spd) / 100) * bm('spd'), dm: (1 + TUNE.lvDmg * (L - 1) + a.str * .01) * (1 + g.dmg / 100) * bm('dmg'), cdm: Math.max(.3, (1 - a.agiA * .006 - g.cdr / 100) / bm('cdr')) };   // cada ponto vale metade do que valia
 };
 const curW = () => CLASSES[save.cls].weapons[save.eq[save.cls]];
 const wlvl = () => save.wl[curW().id] || 0;
