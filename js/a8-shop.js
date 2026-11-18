@@ -46,9 +46,11 @@ function arSimulate(i, d) {
   return out;
 }
 const arRuns = o => o && o.win ? Math.floor(AR.secs / o.t) : 0;
+let shopSimAt = 0; const AR_SIM_CD = 30000;   // Simular tem 30 s de espera: os valores mudam a cada simulacao e nao se pode repetir ate sair bem
+const arSimLeft = () => Math.max(0, Math.ceil((shopSimAt + AR_SIM_CD - Date.now()) / 1000));
 function arRun() {
-  if (shopBusy || !arOpen(shopSel.i, shopSel.d)) { SFX.error(); return; }
-  shopBusy = true; shopSim = null; const key = arKey(), i = shopSel.i, d = shopSel.d;
+  if (shopBusy || !arOpen(shopSel.i, shopSel.d) || arSimLeft() > 0) { SFX.error(); return; }
+  shopSimAt = Date.now(); shopBusy = true; shopSim = null; const key = arKey(), i = shopSel.i, d = shopSel.d;
   setTimeout(() => { const o = arSimulate(i, d); o.key = key; o.i = i; o.d = d; shopSim = o; shopBusy = false; }, 40);
 }
 function arPlan(o, n) {   // o que a compra dava (-10%); sem diamantes nem pedras
@@ -87,22 +89,22 @@ function hubShop() {
   sel(T2('Raid', 'Raid'), Y + 120, MISSIONS[shopSel.i].name, '#fff', () => { shopSel.i = (shopSel.i + MISSIONS.length - 1) % MISSIONS.length; shopSim = null; }, () => { shopSel.i = (shopSel.i + 1) % MISSIONS.length; shopSim = null; });
   sel(T2('Dificuldade', 'Difficulty'), Y + 150, RAID_D[shopSel.d].n, RAID_D[shopSel.d].col, () => { shopSel.d = (shopSel.d + RAID_D.length - 1) % RAID_D.length; shopSim = null; }, () => { shopSel.d = (shopSel.d + 1) % RAID_D.length; shopSim = null; });
   if (!open) txt(T2('Ainda não concluíste esta raid.', 'You have not cleared this raid yet.'), X + 16, Y + 196, 12, '#f88', 'left', 'bold');
-  btn(X + 16, Y + 186, 150, 32, shopBusy ? T2('A simular...', 'Simulating...') : T2('Simular (grátis)', 'Simulate (free)'), arRun, { size: 14, off: shopBusy || !open, col: '#2a5a7a', hot: '#3a7aa0' });
+  btn(X + 16, Y + 186, 150, 32, shopBusy ? T2('A simular...', 'Simulating...') : arSimLeft() ? T2(`Simular (${arSimLeft()}s)`, `Simulate (${arSimLeft()}s)`) : T2('Simular (grátis)', 'Simulate (free)'), arRun, { size: 14, off: shopBusy || !open || arSimLeft() > 0, col: '#2a5a7a', hot: '#3a7aa0' });
   btn(X + WD - 216, Y + 186, 200, 32, `${T2('Comprar', 'Buy')} · ${gfmt(disc(AR.cost))} ◆`, arBuyUI, { size: 14, off: !ok || n < 1 || save.gems < disc(AR.cost), col: '#2f7a4a', hot: '#3fa061' });
   // resultado da simulacao
   const rx = X + 350;
   if (shopBusy) txt(T2('A simular a raid...', 'Simulating the raid...'), rx, Y + 140, 13, '#ffd34a', 'left', 'bold');
   else if (o && o.error) txt('Erro: ' + o.error, rx, Y + 140, 12, '#f88');
-  else if (o && !o.win) { txt(o.timeout ? T2('O teu personagem não consegue acabar esta raid sozinho (demora demasiado).', 'Your character cannot finish this raid on its own (it takes too long).') : T2('O teu personagem perdeu a raid simulada. Escolhe uma mais fácil.', 'Your character lost the simulated raid. Pick an easier one.'), rx, Y + 140, 12, '#f88', 'left', 'bold'); }
+  else if (o && !o.win) { wrap(o.timeout ? T2('O teu personagem não consegue acabar esta raid sozinho (demora demasiado).', 'Your character cannot finish this raid on its own (it takes too long).') : T2('O teu personagem perdeu a raid simulada. Escolhe uma mais fácil.', 'Your character lost the simulated raid. Pick an easier one.'), rx, Y + 134, WD - 350 - 16, 14, 12, '#f88'); }
   else if (o && o.key !== arKey()) txt(T2('O personagem mudou: simula outra vez.', 'Your character changed: simulate again.'), rx, Y + 140, 12, '#f88');
   else if (ok) {
     const P = arPlan(o, n);
-    txt(`${o.t}s/raid → ${n} raids`, rx, Y + 134, 13, '#6f6', 'left', 'bold');
-    txt(`¢${gfmt(P.gold)} · ${gfmt(P.xp)} XP`, rx, Y + 152, 12, '#fd5');
-    txt(`~${P.items} ${T2('itens', 'items')}${P.copies ? ` · ${P.copies} ${T2('cópias', 'copies')}` : ''}`, rx, Y + 168, 12, '#c9a0ff');
-    if (P.overflow > 0) txt(T2(`Mochila: ${P.free} livres · ~${P.overflow} serão vendidos`, `Backpack: ${P.free} free · ~${P.overflow} will be sold`), rx, Y + 182, 10, '#ffb060', 'left', 'bold');
+    txt(`${o.t}s/raid → ${n} raids`, rx, Y + 133, 12, '#6f6', 'left', 'bold');
+    txt(`¢${gfmt(P.gold)} · ${gfmt(P.xp)} XP`, rx, Y + 148, 11, '#fd5');
+    txt(`~${P.items} ${T2('itens', 'items')}${P.copies ? ` · ${P.copies} ${T2('cópias', 'copies')}` : ''}`, rx, Y + 162, 11, '#c9a0ff');
+    if (P.overflow > 0) txt(T2(`Mochila: ${P.free} livres · ~${P.overflow} serão vendidos`, `Backpack: ${P.free} free · ~${P.overflow} will be sold`), rx, Y + 176, 9, '#ffb060', 'left', 'bold');
     if (save.gems < disc(AR.cost)) txt(T2('Diamantes insuficientes.', 'Not enough diamonds.'), X + WD - 216, Y + 226, 11, '#f88');
-  } else txt(T2('Carrega em Simular para veres quanto rende.', 'Press Simulate to see what you would get.'), rx, Y + 140, 12, '#778');
+  } else wrap(T2('Carrega em Simular para veres quanto rende.', 'Press Simulate to see what you would get.'), rx, Y + 134, WD - 350 - 16, 14, 12, '#778');
   shopTowerCard(X, 366, WD);   // andares da Torre (a9-tower.js)
   // ultima compra
   txt(T2('Última compra', 'Last purchase'), X, 440, 14, '#f0c060', 'left', 'bold');

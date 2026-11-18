@@ -123,9 +123,9 @@ function hubAch() {
     if (st === 1) btn(x + w - 100, y + 9, 92, 32, T2('Receber', 'Claim'), () => achClaim(a), { size: 13, col: '#2f7a4a', hot: '#3fa061' });
     else if (st === 2) txt('✓', x + w - 54, y + 33, 22, '#6f6', 'center', 'bold');
   });
-  btn(197, 452, 60, 24, '<', () => { achPage = Math.max(0, achPage - 1); }, { size: 14, off: achPage === 0 });
+  btn(412, 452, 40, 24, '<', () => { achPage = Math.max(0, achPage - 1); }, { size: 14, off: achPage === 0 });   // paginas juntas: < 1 / 21 >
   txt(`${achPage + 1} / ${pages}`, 487, 470, 13, '#9ab', 'center', 'bold');
-  btn(720, 452, 60, 24, '>', () => { achPage = Math.min(pages - 1, achPage + 1); }, { size: 14, off: achPage >= pages - 1 });
+  btn(522, 452, 40, 24, '>', () => { achPage = Math.min(pages - 1, achPage + 1); }, { size: 14, off: achPage >= pages - 1 });
 }
 
 /* ----- Recompensas: premios FIXOS por nivel (sem baus, sem sorte; ao estilo de um passe de batalha) ----- */
@@ -209,8 +209,9 @@ function hubRewards() {
     if (done) txt('✔ ' + T2('Recebido', 'Claimed'), X + WD - 14, y + 24, 12, '#7a7', 'right', 'bold');
     else btn(X + WD - 104, y + 3, 94, 31, can ? T2('Resgatar', 'Claim') : T2('Bloqueado', 'Locked'), () => claimRewards(Lv), { off: !can || rwBusy, size: 13, col: '#a06a20', hot: '#c98a30' });
   }
-  btn(X, 428, 50, 28, '<', () => { rwPage = Math.max(0, rwPage - 1); }, { off: rwPage === 0, size: 14 });
-  btn(X + WD - 50, 428, 50, 28, '>', () => { rwPage++; }, { off: p0 + RW_PER > MAXLV, size: 14 });
-  btn(X + WD / 2 - 90, 428, 180, 28, T2('Resgatar tudo', 'Claim all'), () => { claimRewards(1e9); rwPage = Math.floor(save.chestDone / RW_PER); }, { off: !avail, size: 13, col: '#2f7a4a', hot: '#3fa061' });
+  btn(X, 428, 44, 28, '<', () => { rwPage = Math.max(0, rwPage - 1); }, { off: rwPage === 0, size: 14 });   // paginas juntas a esquerda, Resgatar tudo a direita
+  txt(`${rwPage + 1} / ${Math.ceil(MAXLV / RW_PER)}`, X + 82, 447, 13, '#9ab', 'center', 'bold');
+  btn(X + 120, 428, 44, 28, '>', () => { rwPage++; }, { off: p0 + RW_PER > MAXLV, size: 14 });
+  btn(X + WD - 180, 428, 180, 28, T2('Resgatar tudo', 'Claim all'), () => { claimRewards(1e9); rwPage = Math.floor(save.chestDone / RW_PER); }, { off: !avail, size: 13, col: '#2f7a4a', hot: '#3fa061' });
   if (lastRw) { const r = lastRw, p = [`${r.from === r.to ? T2('Nível', 'Level') + ' ' + r.to : T2('Níveis', 'Levels') + ' ' + r.from + '-' + r.to}:`, '¢' + gfmt(r.gold)]; if (r.pts) p.push(`+${r.pts} pts`); if (r.gems) p.push('◆' + r.gems); r.stones.forEach((n, q) => { if (n) p.push(`${n}× ${L(RAR[q][0])}`); }); const nw = Object.values(r.wpn).reduce((a, b) => a + b, 0); if (nw) p.push(`${nw} ${T2('cópia(s)', 'copy(ies)')}`); if (r.items.length) p.push(`${r.items.length} ${lang === 'en' ? 'item(s)' : 'item(ns)'}`); txt(T2('Último resgate', 'Last claim') + ' · ' + p.join('  '), 488, 474, 11, '#9ab', 'center'); }
 }
