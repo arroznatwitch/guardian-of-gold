@@ -72,7 +72,7 @@ function drawTabLock(t) {
   const n = wrapC(ds, cx, 286, 400, 17, 14, '#b8c4e0'), y0 = 286 + n * 17 + 12;
   txt(`Desbloqueia no Nível ${lv}`, cx, y0 + 12, 22, '#ffd34a', 'center', 'bold');
   bar(cx - 160, y0 + 28, 320, 12, Math.min(1, (cur - 1) / Math.max(1, lv - 1)), '#a8821f'); txt(`Nv ${cur}`, cx - 160, y0 + 56, 12, '#9ab', 'left', 'bold'); txt(`Nv ${lv}`, cx + 160, y0 + 56, 12, '#ffd34a', 'right', 'bold');
-  txt(`${left === 1 ? 'Falta' : 'Faltam'} ${left} ${left === 1 ? 'nível' : 'níveis'} para desbloquear`, cx, y0 + 82, 16, '#f88', 'center', 'bold');
+  txt(T2(`${left === 1 ? 'Falta' : 'Faltam'} ${left} ${left === 1 ? 'nível' : 'níveis'} para desbloquear`, `${left} more ${left === 1 ? 'level' : 'levels'} to unlock`), cx, y0 + 82, 16, '#f88', 'center', 'bold');
   txt(`Próximo nível: ${save.pl.xp}/${need} XP`, cx, y0 + 102, 12, '#9ab', 'center');
   txt('Joga na Campanha para ganhar XP e subir de nível.', cx, y0 + 120, 12, '#778', 'center');
   ui.push({ x: 197, y: 90, w: 585, h: 385, fn: () => lockClick(t) });
