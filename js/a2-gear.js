@@ -209,6 +209,10 @@ async function buyWeapon(i, w) {   // arma da loja: o servidor confere o preco e
 }
 async function buyBag(k) {   // compra de mochila: o servidor confere o preco e a ordem
   buyBusy = true; const sv = await shopServer('bag', k + 1); buyBusy = false;
+  if (sv.ok === false && sv.error === 'state' && on.token) {   // o servidor ja tem mais mochilas (ex.: codigo "backpack"): vai busca-las
+    const g = await rpc('gog_save_get', { p_token: on.token }), n = g && g.ok && g.save ? Math.min(5, g.save.bagSlots | 0) : 0;
+    if (n > (save.bagSlots | 0)) { save.bagSlots = n; if (g.rev) cloud.rev = g.rev; bagBuy = 0; persist(); hubToast = { t: 3, s: T2('Mochilas desbloqueadas!', 'Backpacks unlocked!'), col: '#6f6' }; SFX.buy(); return; }
+  }
   if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); bagBuy = 0; return; }
   const c = BAG_COST[k]; if (k < (save.bagSlots || 1)) { bagBuy = 0; return; }
   if (c[0] === 'd') save.gems -= c[1]; else spendG(c[1]); save.bagSlots = k + 1; bagPage = k; bagBuy = 0; persist(); SFX.buy();
