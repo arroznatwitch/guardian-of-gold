@@ -102,12 +102,12 @@ const ON_STORE = 'gog-online-v1';
 let on = { token: null, nick: null, gender: 'm', country: null };
 try { const o = JSON.parse(localStorage.getItem(ON_STORE) || 'null'); if (o && /^[0-9a-f]{64}$/.test(o.token) && /^[A-Za-z0-9_]{3,16}$/.test(o.nick)) on = { token: o.token, nick: o.nick, gender: o.gender === 'f' ? 'f' : 'm', country: /^[A-Z]{2}$/.test(o.country || '') ? o.country : null }; } catch (e) {}
 const onSave = () => { try { if (on.token) localStorage.setItem(ON_STORE, JSON.stringify(on)); else localStorage.removeItem(ON_STORE); } catch (e) {} };
-let rk = { gmotto: '', gb: null, gp: null, gname: '', gtag: '', pname: '', code: '', cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
+let rk = { gmotto: '', gb: null, gp: null, gname: '', gtag: '', pname: '', code: '', cnick: '', gender: 'm', country: 'ZZ', mode: 'login', nick: '', pass: '', pass2: '', focus: '', stat: 'level', pg: 0, rows: [], me: null, busy: false, msg: '', col: '#f88', at: {}, loading: false };
 rk.country = guessCountry();
 const RK_MSG = {
   banned: 'A tua conta foi desativada por valores suspeitos no save. Fala com o administrador.',
   bad_nick: 'Nick inválido: 3 a 16 letras, números ou _', short_pass: 'A palavra-passe precisa de 8 a 64 caracteres', mismatch: 'As palavras-passe não coincidem', same_pass: 'A palavra-passe não pode ser igual ao nick',
-  nick_taken: 'Esse nick já está em uso', class_taken: 'Já tens um personagem com esta classe', too_many: 'Já tens os 3 personagens', not_found: 'Personagem não encontrado', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 5 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos pedidos neste momento. Tenta daqui a uns minutos.',
+  nick_taken: 'Esse nick já está em uso', class_taken: 'Já tens um personagem com esta classe', too_many: 'Já tens os 3 personagens', not_found: 'Personagem não encontrado', inactive: 'Esta conta está desativada. Fala com o administrador.', ip_limit: 'Já existem 20 contas criadas a partir desta rede', bad_login: 'Nick ou palavra-passe incorretos', locked: 'Conta bloqueada por tentativas falhadas. Tenta daqui a', busy: 'Muitos pedidos neste momento. Tenta daqui a uns minutos.',
   network: 'Sem ligação ao servidor', off: 'O ranking online ainda não está ligado a um servidor.', nocrypto: 'O teu browser não permite criptografia aqui (usa https).', server: 'Erro do servidor, tenta mais tarde',
   implausible: 'Progresso recusado pelo servidor (valores inesperados)', auth: 'Sessão expirada. Entra outra vez.', bad_request: 'Pedido inválido', bad_data: 'Dados inválidos', working: 'A ligar...', welcome: 'Sessão iniciada!', sent: 'Progresso enviado!', deleted: 'Conta apagada.', cheat: 'Este save não pode entrar no ranking.'
 };
@@ -168,7 +168,7 @@ async function rkLoad(force) {
   const st = rk.stat; if (!ONLINE_URL) return; if (st === 'guilds') return gbLoad(force);
   const c = rk.at[st]; rk.rows = c ? c.rows : []; rk.me = c ? c.me : null;                  // mostra logo o que ja temos desta categoria
   if (!force && c && Date.now() - c.t < 15000) return;
-  const my = ++rkSeq; rk.loading = true; const r = await rpc('gog_board', { p_stat: st, p_limit: 14, p_token: on.token }); if (my === rkSeq) rk.loading = false;
+  const my = ++rkSeq; rk.loading = true; const r = await rpc('gog_board', { p_stat: st, p_limit: RK_N * RK_PAGES, p_token: on.token }); if (my === rkSeq) rk.loading = false;
   if (r.ok) { rk.at[st] = { rows: r.rows || [], me: r.me || null, t: Date.now() }; if (st === rk.stat) { rk.rows = rk.at[st].rows; rk.me = rk.at[st].me; } } else if (st === rk.stat) rkSay(r.error);
 }
 async function rkAuth(register) {
@@ -206,6 +206,7 @@ function rkField(x, y, w, label, key, mask) {
   const v = mask ? '•'.repeat(rk[key].length) : rk[key];
   txt(v + (foc && Math.floor(T * 2) % 2 ? '_' : ''), x + 8, y + 20, 15, '#fff', 'left', 'bold');
 }
+const RK_N = 15, RK_PAGES = 4, RK_DY = 17.4;   // 15 por pagina, 4 paginas (o servidor da no maximo 50)
 const RK_STATS = () => [['level', 'Nível'], ['kills', 'Mobs'], ['gold', 'Ouro'], ['bosses', 'Bosses'], ['raids', 'Raids'], ['guilds', E2('Guilds', 'Guildas')]].concat(MISSIONS.map((m, i) => ['wave' + i, 'Mapa ' + (i + 1)]));
 function hubRank() {
   const cheat = save.cheat && save.cheat.used, conf = !!ONLINE_URL;
@@ -229,7 +230,7 @@ function hubRank() {
   }
   // classificacao
   panel(430, 90, 352, 386, '#16162a');
-  const st = RK_STATS(); st.forEach(([k, n], i) => btn(i < 6 ? 438 + i * 56 : 438 + (i - 6) * 56, i < 6 ? 98 : 124, 52, 22, n, () => { rk.stat = k; rkLoad(false); }, { size: 11, col: rk.stat === k ? '#a8821f' : '#2a2a48' }));
+  const st = RK_STATS(); st.forEach(([k, n], i) => btn(i < 6 ? 438 + i * 56 : 438 + (i - 6) * 56, i < 6 ? 98 : 124, 52, 22, n, () => { rk.stat = k; rk.pg = 0; rkLoad(false); }, { size: 11, col: rk.stat === k ? '#a8821f' : '#2a2a48' }));
   const idx = st.findIndex(q => q[0] === rk.stat), title = idx < 5 ? ['Maior nível', 'Mais mobs mortos', 'Mais ouro ganho', 'Mais bosses derrotados', 'Mais raids vencidas'][idx] : idx === 5 ? E2('Top guilds', 'Melhores guildas') : 'Recorde de waves: ' + MISSIONS[idx - 6].name;
   txt(title, 606, 170, 15, '#f0c060', 'center', 'bold');
   btn(740, 150, 34, 20, '↻', () => rkLoad(true), { size: 13, col: '#2a2a48', off: !conf });
@@ -249,11 +250,12 @@ function hubRank() {
     return;
   }
   if (!rk.rows.length) txt(rk.loading ? 'A carregar...' : 'Ainda sem resultados.', 606, 280, 14, '#778', 'center');
-  rk.rows.forEach((r, i) => {
-    const y = 186 + i * 20.5, mine = on.nick && r.nick.toLowerCase() === on.nick.toLowerCase(), col = i === 0 ? '#ffd34a' : i === 1 ? '#d8e0f0' : i === 2 ? '#e0a060' : '#fff';
-    if (mine) { ctx.fillStyle = '#10263e'; ctx.fillRect(438, y - 13, 336, 19); ctx.fillStyle = '#4aa8ff'; ctx.fillRect(438, y - 13, 3, 19); }   // a tua linha fica a azul, para nao se confundir com o 1.º lugar
-    const hov = mouse.x - UIOX >= 438 && mouse.x - UIOX <= 774 && mouse.y >= y - 13 && mouse.y <= y + 6; if (hov && !mine) { ctx.fillStyle = '#ffffff12'; ctx.fillRect(438, y - 13, 336, 19); }
-    ui.push({ x: 438, y: y - 13, w: 336, h: 19, fn: () => openProfile(r.nick) });
+  const pages = Math.max(1, Math.ceil(rk.rows.length / RK_N)); rk.pg = Math.min(rk.pg | 0, pages - 1);
+  rk.rows.slice(rk.pg * RK_N, rk.pg * RK_N + RK_N).forEach((r, j) => {
+    const i = rk.pg * RK_N + j, y = 186 + j * RK_DY, mine = on.nick && r.nick.toLowerCase() === on.nick.toLowerCase(), col = i === 0 ? '#ffd34a' : i === 1 ? '#d8e0f0' : i === 2 ? '#e0a060' : '#fff';
+    if (mine) { ctx.fillStyle = '#10263e'; ctx.fillRect(438, y - 12, 336, 17); ctx.fillStyle = '#4aa8ff'; ctx.fillRect(438, y - 12, 3, 17); }   // a tua linha fica a azul, para nao se confundir com o 1.º lugar
+    const hov = mouse.x - UIOX >= 438 && mouse.x - UIOX <= 774 && mouse.y >= y - 12 && mouse.y < y + 5; if (hov && !mine) { ctx.fillStyle = '#ffffff12'; ctx.fillRect(438, y - 12, 336, 17); }
+    ui.push({ x: 438, y: y - 12, w: 336, h: 17, fn: () => openProfile(r.nick) });
     if (SPR[r.cls + '0']) drawSprBig(hk(r.cls, r.skin, r.gender), 482, y - 4, .5);
     txt('#' + r.rank, 446, y, 13, col, 'left', 'bold'); txt(r.nick, 502, y, 14, mine ? '#6cc4ff' : col, 'left', 'bold'); let fx = 502 + txtW(r.nick, 14, 'bold') + 8;
     if (r.gtag) { const tgt = '[' + r.gtag + ']'; txt(tgt, fx, y, 10, gcol(r.gcol)); fx += txtW(tgt, 10) + 6; }
@@ -261,8 +263,13 @@ function hubRank() {
     { const tt = r.title && TITLES[r.title] ? '« ' + titleName(r.title) + ' »' : '', room = 768 - txtW(gfmt(r.value), 14, 'bold') - 8 - fx; if (tt && txtW(tt, 10, 'bold') <= room) drawTitle(tt, fx, y, 10, r.title); else if (rk.stat !== 'level' && txtW('Nv ' + r.lv, 11) <= room) txt('Nv ' + r.lv, fx, y, 11, '#8a9ab8'); }
     txt(gfmt(r.value), 768, y, 14, '#fff', 'right', 'bold');
   });
-  if (rk.rows.length) txt('Clica num jogador para ver o perfil', 606, 452, 11, '#778', 'center');
-  if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 606, 468, 14, '#7fe8a0', 'center', 'bold');
+  if (rk.rows.length) {   // paginas: ◀ 1/4 ▶ ; o hint fica por cima
+    txt('Clica num jogador para ver o perfil', 606, 445, 10, '#778', 'center');
+    btn(438, 450, 40, 22, '◀', () => { rk.pg--; }, { size: 13, col: '#2a2a48', off: rk.pg <= 0 });
+    btn(734, 450, 40, 22, '▶', () => { rk.pg++; }, { size: 13, col: '#2a2a48', off: rk.pg >= pages - 1 });
+    txt(`${rk.pg + 1}/${pages}`, 500, 466, 12, '#9ab', 'center', 'bold');
+  }
+  if (rk.me) txt(`Tu: #${rk.me.rank} · ${gfmt(rk.me.value)}`, 616, 467, 14, '#7fe8a0', 'center', 'bold');
 }
 
 /* ----- Save na nuvem: com o servidor configurado o login e obrigatorio e o save vive na conta ----- */

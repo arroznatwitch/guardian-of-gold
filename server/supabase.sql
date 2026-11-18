@@ -216,12 +216,12 @@ begin
   if lower(p_nick) in ('admin', 'administrator', 'moderator', 'mod', 'system', 'support', 'staff', 'null', 'undefined', 'guardiansofgold') then
     return jsonb_build_object('ok', false, 'error', 'nick_taken');
   end if;
-  -- no maximo 5 contas por rede (IP): usa o cabecalho do Cloudflare/Supabase, so guarda um HMAC
+  -- no maximo 20 contas por rede (IP): usa o cabecalho do Cloudflare/Supabase, so guarda um HMAC
   begin hdr := nullif(current_setting('request.headers', true), '')::json; exception when others then hdr := null; end;
   ip := btrim(coalesce(nullif(hdr->>'cf-connecting-ip', ''), nullif(split_part(coalesce(hdr->>'x-forwarded-for', ''), ',', -1), ''), nullif(hdr->>'x-real-ip', ''), ''));
   if ip <> '' then
     iph := encode(extensions.hmac(ip, (select v from gog.secrets where k = 'ip_salt'), 'sha256'), 'hex');
-    if (select count(*) from gog.players where reg_ip = iph) >= 5 then return jsonb_build_object('ok', false, 'error', 'ip_limit'); end if;
+    if (select count(*) from gog.players where reg_ip = iph) >= 20 then return jsonb_build_object('ok', false, 'error', 'ip_limit'); end if;
   end if;
   -- limite global de registos: 30 por 10 minutos (trava criacao em massa)
   insert into gog.throttle as t (bucket, n, since) values ('register', 1, now())
