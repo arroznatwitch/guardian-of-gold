@@ -70,14 +70,15 @@ function setComplete() { const g = save && save.gear; return !!(g && g.head && g
 function setBonus() { const g = save && save.gear; if (!g || !g.ring) return null; return { ring: g.ring, k: g.ring.main.k, p: g.ring.main.v / 100, on: setComplete() }; }
 const AFF = {
   hp: { n: 'Vida', u: '', b: 12, p: 3 }, dmg: { n: 'Dano', u: '%', b: 2.5, p: .25 }, spd: { n: 'Velocidade', u: '%', b: 1.5, p: .12 }, cdr: { n: 'Vel. de ataque', u: '%', b: 1.5, p: .12 },
-  crit: { n: 'Crítico', u: '%', b: 1.5, p: .1 }, ls: { n: 'Roubo de vida', u: '%', b: .8, p: .05 }, dr: { n: 'Redução de dano', u: '%', b: 1, p: .08 },
+  crit: { n: 'Chance de crítico', u: '%', b: 1.5, p: .1 }, ls: { n: 'Roubo de vida', u: '%', b: .8, p: .05 }, dr: { n: 'Redução de dano', u: '%', b: 1, p: .08 },
   gf: { n: 'Ouro extra', u: '%', b: 3, p: .3 }, xpb: { n: 'XP extra', u: '%', b: 3, p: .3 }, burn: { n: 'Chance de queimar', u: '%', b: 6, p: .5 }, slow: { n: 'Chance de gelo', u: '%', b: 6, p: .5 },
   poi: { n: 'Chance de envenenar', u: '%', b: 6, p: .5 }, elec: { n: 'Chance de eletrocutar', u: '%', b: 6, p: .5 },   // efeitos especiais novos (so no Encantar especial)
 };
 const AFF_POOL = ['hp', 'dmg', 'spd', 'cdr', 'crit', 'ls', 'dr', 'gf', 'xpb'];
 const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso'], ['poi', 'Venenoso'], ['elec', 'Elétrico']];
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
-const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Agilidade', '+0.6% velocidade'], ['per', 'Perícia', '+0.6% vel. de ataque · -0.02s recarga']];
+const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Destreza', '+0.6% vel. de ataque / velocidade'], ['per', 'Perícia', '-0.02s recarga']];
+const CRIT_X = 1.75;   // dano critico: multiplicador do golpe
 const SK_CD_PT = .02, SK_CD_MIN = .5;   // cada ponto de Pericia tira 0,02 s a recarga da habilidade (E), sem limite (so nunca desce de 0,5 s)
 const skCd = w => Math.max(SK_CD_MIN, w.sk.cd - SK_CD_PT * ((save && save.attr && save.attr.per) | 0));
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
