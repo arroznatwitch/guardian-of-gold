@@ -114,8 +114,9 @@ function hubGuild() {
   panel(x0, 94, 583, 62, '#16162a'); drawGEmb(I.emblem, x0 + 14, 113, 3, gc);   // emblema 24x24 centrado na vertical do painel
   txt(`[${I.tag}] ${I.name}`, x0 + 54, 119, 22, gc, 'left', 'bold');
   if (I.motto) txt(I.motto, x0 + 54 + txtW(`[${I.tag}] ${I.name}`, 22, 'bold') + 12, 118, 11, '#9ab');
-  txt(E2(`Level ${I.level} / ${GUILD.maxLv}`, `Nível ${I.level} / ${GUILD.maxLv}`), x0 + 54, 142, 12, '#9cf', 'left', 'bold'); bar(x0 + 142, 134, 110, 9, I.level >= GUILD.maxLv ? 1 : I.xp / I.need, '#a8821f'); txt(I.level >= GUILD.maxLv ? 'MAX' : `${gfmt(I.xp)} / ${gfmt(I.need)}`, x0 + 260, 142, 11, '#9ab');
-  if (lead) btn(x0 + 329, 110, 100, 30, gld.cust ? E2('Upgrades', 'Melhorias') : E2('Customize', 'Personalizar'), () => { gld.cust = !gld.cust; rk.focus = ''; if (gld.cust) { gld.dc = I.color | 0; gld.de = I.emblem | 0; rk.gmotto = I.motto || ''; gld.msg = ''; } }, { size: 12, col: gld.cust ? '#a8821f' : '#2a3a5a' });
+  txt(E2(`Level ${I.level} / ${GUILD.maxLv}`, `Nível ${I.level} / ${GUILD.maxLv}`), x0 + 54, 140, 12, '#9cf', 'left', 'bold'); bar(x0 + 142, 131, 110, 9, I.level >= GUILD.maxLv ? 1 : I.xp / I.need, '#a8821f'); txt(I.level >= GUILD.maxLv ? 'MAX' : `${gfmt(I.xp)} / ${gfmt(I.need)} ${E2('pts', 'pts')}`, x0 + 258, 140, 10, '#cdd6f0', 'left', 'bold');
+  txt(E2('Members earn points: 1 per mob · 10 per boss · 60 per raid', 'Os membros ganham pontos: 1 por mob · 10 por boss · 60 por raid'), x0 + 54, 153, 9, '#8a9ab8');   // de onde vem o XP da guilda
+  if (lead) btn(x0 + 345, 110, 88, 30, gld.cust ? E2('Upgrades', 'Melhorias') : E2('Customize', 'Personalizar'), () => { gld.cust = !gld.cust; rk.focus = ''; if (gld.cust) { gld.dc = I.color | 0; gld.de = I.emblem | 0; rk.gmotto = I.motto || ''; gld.msg = ''; } }, { size: 12, col: gld.cust ? '#a8821f' : '#2a3a5a' });
   btn(x0 + 583 - 144, 110, 130, 30, gld.ask === 'leave' ? E2('Confirm leave?', 'Confirmar saída?') : E2('Leave guild', 'Sair da guilda'), () => { if (gld.ask === 'leave') guildCall('gog_guild_leave', {}, ''); else gld.ask = 'leave'; }, { size: 12, col: gld.ask === 'leave' ? '#a03a3a' : '#3a2a3a', off: gld.busy });
   // melhorias
   if (lead && gld.cust) drawGCust(I, x0); else {
@@ -141,7 +142,7 @@ function hubGuild() {
   if (!lead) txt(E2('Click a member to see their profile', 'Clica num membro para ver o perfil'), 642, 466, 9, '#667', 'center');
   if (lead) txt(E2('★ make leader · ✕ remove (click twice)', '★ passar a liderança · ✕ expulsar (clica duas vezes)'), 642, 466, 9, '#667', 'center');
   if (gld.msg) txt(gld.msg, x0 + 150, 472, 11, gld.col, 'center');
-  else txt(E2('Guild points: 1 per kill, 10 per boss, 60 per raid clear.', 'Pontos de guilda: 1 por mob, 10 por boss, 60 por raid.'), x0 + 150, 472, 10, '#667', 'center');
+  else txt(E2('Each guild level gives 1 upgrade point.', 'Cada nível da guilda dá 1 ponto de melhoria.'), x0 + 150, 472, 9, '#778', 'center');
 }
 function hubRaids() {
   const d = RAID_D[raidD];

@@ -242,7 +242,7 @@ function endLines(win) {
 function miniStars(n, x, y) { for (let q = 0; q < n; q++) drawIcon('star', x + q * 8, y, .9); }
 function slotIcon(slot, r, cx, cy, k) { if (slot === 'ring') { ringIcon(r, 2, cx, cy, k); return; } const im = SLOT_SPR[slot][r]; if (im.width === 16) k = Math.max(1, Math.round(k * .7));   // 16x16: escala inteira
   ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
-function itemCard(it, x, y, w = 230) {
+function itemCard(it, x, y, w = 230, compact = false) {   // compact: stats em 2 colunas (ecra Personagem, para nao ficar por baixo da tira da mochila)
   const col = RAR[it.r][1], m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], nm = L(itemName(it)), avail = w - 52; let sz = 15, lines = [nm];
   if (txtW(nm, sz, 'bold') > avail) {
     sz = 13;
@@ -257,7 +257,16 @@ function itemCard(it, x, y, w = 230) {
     wrap(T2('Só fica ativo com capacete, armadura e botas equipados (qualquer raridade).', 'Only active with a helmet, armour and boots equipped (any rarity).'), x, yy, w - 8, 13, 11, '#9ab'); yy += 30;
     const ok = setComplete(); txt(ok ? 'Conjunto completo' : 'Conjunto incompleto', x, yy, 13, ok ? '#6f6' : '#f88', 'left', 'bold'); return yy + 16;
   }
-  let yy = y + 58 + ex; txt(statLine(it.main.k, ev(it.main.k, it.main.v, m)), x, yy, 14, '#fff', 'left', 'bold'); yy += 18;
+  let yy = y + 58 + ex;
+  if (compact) {
+    const L2 = [[statLine(it.main.k, ev(it.main.k, it.main.v, m)), '#fff', 'bold']].concat(it.aff.map(a => [statLine(a.k, ev(a.k, a.v, m)), '#7cf', 'normal']));
+    L2.forEach(([t, c, b], i) => txt(t, x + (i % 2) * (w / 2), yy - 4 + Math.floor(i / 2) * 15, 12, c, 'left', b)); yy += Math.ceil(L2.length / 2) * 15;
+    if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy - 4, 12, '#ffd34a'); yy += 15; }
+    const ex2 = [it.ench ? `Refinado +${it.ench}` : '', it.st ? `Fusão ${'★'.repeat(it.st)} (×${GEAR_STAR[it.st].toFixed(2)})` : ''].filter(Boolean).join(' · ');
+    if (ex2) { txt(ex2, x, yy - 4, 11, '#9fe'); yy += 14; }
+    return yy;
+  }
+  txt(statLine(it.main.k, ev(it.main.k, it.main.v, m)), x, yy, 14, '#fff', 'left', 'bold'); yy += 18;
   for (const a of it.aff) { txt(statLine(a.k, ev(a.k, a.v, m)), x, yy, 13, '#7cf'); yy += 16; }
   if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy, 13, '#ffd34a'); yy += 16; }
   if (it.ench) { txt(`Refinado +${it.ench}`, x, yy, 12, '#9fe'); yy += 15; }

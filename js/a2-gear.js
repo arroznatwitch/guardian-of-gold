@@ -26,11 +26,11 @@ function hubChar() {
   if (wlvl()) txt('+' + wlvl(), 460, 151, 11, '#fff', 'right', 'bold'); miniStars(wStar(w.id), 418, 109);
   slotBtn(437, 190, 'amulet', 'Amuleto', save.gear.amulet, null, go('amulet'));
   slotBtn(437, 252, 'ring', 'Anel', save.gear.ring, null, go('ring'));
-  { const sb = setBonus(); if (sb) { const c2 = sb.on ? '#6f6' : '#778'; txt(`Conjunto +${sb.ring.main.v}%`, 437, 290, 10, c2, 'center', 'bold'); txt(AFF[sb.k].n, 437, 301, 10, c2, 'center'); } }
+  { const sb = setBonus(); if (sb) { const c2 = sb.on ? '#6f6' : '#778'; txt(`Conjunto +${sb.ring.main.v}%`, 437, 289, 9, c2, 'center', 'bold'); } }
   // informacao do slot
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && EQ_SLOTS.includes(hv) ? save.gear[hv] : null;
-  if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n} (${T2('recarga', 'cooldown')} ${+skCd(w).toFixed(2)}s): ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
+  if (itH) itemCard(itH, 208, 292, 268, true); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n} (${T2('recarga', 'cooldown')} ${+skCd(w).toFixed(2)}s): ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap(T2('Com capacete, armadura e botas equipados, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 'With a helmet, armour and boots equipped, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring level.'), 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
   else { drawSetInfo(208, 304); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 354 + i * 18, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
@@ -39,13 +39,13 @@ function hubChar() {
   if (hv && EQ_SLOTS.includes(hv)) charStrip = hv; else if (!inLeft || hv === 'weapon') charStrip = null;   // a arma mostra a sua descricao: a tira da mochila nao pode ficar por cima
   if (charStrip) {
     const cur = save.gear[charStrip], cand = save.bag.map((it, i) => ({ it, i })).filter(o => o.it.slot === charStrip).slice(0, 7);
-    txt(`Mochila · ${SLOT_LBL[charStrip]}`, 208, 428, 12, '#9ab', 'left', 'bold');
+    txt(`Mochila · ${SLOT_LBL[charStrip]}`, 208, 433, 11, '#9ab', 'left', 'bold');
     if (!cand.length) txt('Nenhum item para este slot', 208, 455, 12, '#667');
     cand.forEach((o, k) => {
       const x = 208 + k * 38, cm = cmpItems(o.it, cur), col = cm.verdict > 0 ? '#6f6' : cm.verdict < 0 ? '#f66' : '#fd5';
-      btn(x, 436, 34, 34, '', () => equipFromBag(o.i), { col: '#10101c', hot: '#1c1c34' }); itemIcon(o.it, x + 17, 453, 1.9); arrowTri(x + 27, 443, cm.verdict >= 0, col);
+      btn(x, 440, 34, 34, '', () => equipFromBag(o.i), { col: '#10101c', hot: '#1c1c34' }); itemIcon(o.it, x + 17, 457, 1.9); arrowTri(x + 27, 447, cm.verdict >= 0, col);
     });
-    if (cand.length) txt('Shift+clique: melhor', 478, 428, 10, '#778', 'right');
+    if (cand.length) txt('Shift+clique: melhor', 472, 433, 10, '#778', 'right');
   }
   if (hubToast.t > 0) { ctx.globalAlpha = Math.min(1, hubToast.t); txt(hubToast.s, 337, 424, 13, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1; }
   // painel direito
@@ -58,7 +58,7 @@ function hubChar() {
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint0], i) => { let hint = hint0;
     const y = 176 + i * 34;
-    if (key === 'agi') hint = a.agi % 2 === 0 ? T2('Próximo: +0.6% vel. de ataque (alterna)', 'Next: +0.6% attack speed (alternates)') : T2('Próximo: +0.6% velocidade (alterna)', 'Next: +0.6% speed (alternates)');   // a Destreza alterna entre os dois
+    if (key === 'agi') hint = a.agi % 2 === 0 ? T2('Próximo: +0.6% vel. ataque', 'Next: +0.6% atk speed') : T2('Próximo: +0.6% velocidade', 'Next: +0.6% speed');   // curto: nao passa por cima do numero   // a Destreza alterna entre os dois
     txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
     const capped = false;   // a Pericia nunca bloqueia: com a vel. de ataque no maximo (+70%) os pontos continuam a baixar a recarga da habilidade
     if (key === 'agi' && stats().cdm <= .3001) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
@@ -166,17 +166,17 @@ function hubBag() {
     return;
   }
   if (!it) { txt('Seleciona um item', 640, 260, 15, '#667', 'center'); wrap(T2('Arrasta um item para o slot equipado em baixo para o equipar. Clica num item equipado para o desequipar.', 'Drag an item onto the equipped slot below to equip it. Click an equipped item to unequip it.'), 524, 288, 232, 14, 11, '#778'); return; }
-  const yy = itemCard(it, 512, 98, 232), cur = save.gear[it.slot];
-  { const lx = 744, ly = 98; btn(lx, ly, 26, 24, '', () => { it.lk = it.lk ? 0 : 1; if (it.lk) bagPick.delete(it); sellArm = null; persist(); SFX.click(); }, { col: it.lk ? '#a8821f' : '#2a2a48', hot: '#c9a030' }); ctx.fillStyle = it.lk ? '#fff' : '#9aa'; ctx.fillRect(lx + 8, ly + 11, 10, 8); ctx.fillRect(lx + 10, ly + 6, 2, 6); ctx.fillRect(lx + 14, ly + 6, 2, 6); ctx.fillRect(lx + 10, ly + 5, 6, 2); if (it.lk) { ctx.fillStyle = '#a8821f'; ctx.fillRect(lx + 12, ly + 13, 2, 4); } }
+  const yy = itemCard(it, 512, 98, 256), cur = save.gear[it.slot];
+  { const lx = 742, ly = 380; btn(lx, ly, 26, 28, '', () => { it.lk = it.lk ? 0 : 1; if (it.lk) bagPick.delete(it); sellArm = null; persist(); SFX.click(); }, { col: it.lk ? '#a8821f' : '#2a2a48', hot: '#c9a030' }); ctx.fillStyle = it.lk ? '#fff' : '#9aa'; ctx.fillRect(lx + 8, ly + 11, 10, 8); ctx.fillRect(lx + 10, ly + 6, 2, 6); ctx.fillRect(lx + 14, ly + 6, 2, 6); ctx.fillRect(lx + 10, ly + 5, 6, 2); if (it.lk) { ctx.fillStyle = '#a8821f'; ctx.fillRect(lx + 12, ly + 13, 2, 4); } }
   txt(cur ? `Equipado: ${itemName(cur)}` : 'Equipado: —', 512, yy + 12, 12, cur ? RAR[cur.r][1] : '#667');
   { const cm = cmpItems(it, cur), vy = yy + 34, vt = cm.verdict > 0 ? [cur ? 'MELHOR' : 'Slot vazio', '#6f6'] : cm.verdict < 0 ? ['PIOR', '#f66'] : ['SIMILAR', '#fd5'];
     txt(vt[0], 512, vy, 15, vt[1], 'left', 'bold'); if (cur) arrowTri(512 + txtW(vt[0], 15, 'bold') + 12, vy - 5, cm.verdict >= 0, vt[1]);
     const room = Math.max(0, Math.min(5, Math.floor((374 - (vy + 14)) / 14)));
     cm.rows.slice(0, room).forEach((r, i) => txt(`${r.d > 0 ? '+' : ''}${ev(r.k, r.d, 1)}${AFF[r.k].u} ${AFF[r.k].n}`, 512, vy + 15 + i * 14, 12, r.d > 0 ? '#6f6' : '#f77')); }
-  btn(512, 380, 256, 28, canWear(it) ? 'Equipar' : `Requer Nv ${itemReq(it)}`, () => { if (!canWear(it)) { SFX.error(); return; } const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, off: !canWear(it), col: '#2f7a4a', hot: '#3fa061' });
+  btn(512, 380, 226, 28, canWear(it) ? 'Equipar' : `Requer Nv ${itemReq(it)}`, () => { if (!canWear(it)) { SFX.error(); return; } const i = bagSel, old = save.gear[it.slot]; save.gear[it.slot] = it; if (old) save.bag[i] = old; else save.bag.splice(i, 1); bagSel = old ? i : -1; persist(); SFX.buy(); }, { size: 14, off: !canWear(it), col: '#2f7a4a', hot: '#3fa061' });
   { const risky = it.r >= 3 || cmpItems(it, cur).verdict > 0 || it.ench >= 3 || (it.st || 0) > 0, armed = sellArm === it;
     btn(512, 412, 256, 28, it.lk ? 'Bloqueado (não se vende)' : armed ? 'Confirmar venda?' : `Vender ¢${sellValue(it)}`, () => { if (it.lk) { SFX.error(); return; } if (risky && !armed) { sellArm = it; SFX.click(); return; } sellArm = null; save.gold += sellValue(it); save.bag.splice(bagSel, 1); if (enchItem === it) enchItem = null; bagSel = -1; persist(); SFX.coin(); }, { size: 14, off: !!it.lk, col: armed ? '#b03a2a' : '#a06a20', hot: armed ? '#d04a3a' : '#c98a30' });
-    if (risky && !armed && !it.lk) txt(it.r >= 3 ? 'Item raro: pede confirmação' : 'Pode ser melhor que o equipado', 640, 476, 10, '#f99', 'center'); }
+    if (risky && !armed && !it.lk) txt(it.r >= 3 ? 'Item raro: pede confirmação' : 'Pode ser melhor que o equipado', 640, 373, 10, '#f99', 'center'); }
   btn(512, 444, 256, 28, 'Encantar', () => { if (!tabOpen('forge')) { lockClick('forge'); return; } enchItem = it; tab = 'forge'; forgeSub = 'ench'; }, { size: 14, off: it.slot === 'ring', col: tabOpen('forge') ? '#5a3a7a' : '#26262f', hot: tabOpen('forge') ? '#7a55a0' : '#33333f' });   // o anel nao se encanta
 }
 
@@ -314,21 +314,21 @@ function hubEnchant() {
   itemIcon(it, sx, sy + Math.sin(T * 2) * 2, 6.4);
   for (const q of enc.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;
   if (enc.msgT > 0) { ctx.globalAlpha = Math.min(1, enc.msgT); txt(enc.msg, sx, 328, 22, enc.col, 'center', 'bold'); ctx.globalAlpha = 1; }
-  wrap('Refinar: +6% a todos os atributos por nível.', 205, 360, 225, 16, 12, '#9ab'); wrap('Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.', 205, 392, 225, 15, 12, '#9ab');
+  wrap('Refinar: +6% a todos os atributos por nível.', 205, 360, 225, 16, 12, '#9ab'); wrap('Encantar: sorteia um efeito especial (custa ouro e diamantes). Pedras de raid evoluem o nível do item.', 205, 384, 225, 15, 12, '#9ab'); wrap(T2('Reforjar: volta a sortear os atributos azuis do item.', 'Reforge: re-rolls the blue stats of the item.'), 205, 438, 225, 15, 12, '#c9a07a');
   const max = it.ench >= ENC_MAX, rc = refCost(it), sc = specCost(it), ch = max ? 0 : ENC_CH[it.ench];
   if (max) txt('Nível máximo!', 600, 360, 16, '#ffd34a', 'center', 'bold');
-  else { txt(`Chance: ${ch}%`, 444, 351, 14, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold'); bar(444, 357, 328, 8, ch / 100, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'); }
+  else { txt(`Chance: ${ch}%`, 444, 345, 14, ch >= 70 ? '#6f6' : ch >= 40 ? '#fd5' : '#f66', 'left', 'bold'); bar(444, 350, 328, 7, ch / 100, ch >= 70 ? '#4c4' : ch >= 40 ? '#ca3' : '#c44'); }
   const rlock = !max && it.ench >= refCap();
-  btn(432, 392, 165, 56, '', doRefine, { off: max || rlock || enc.t > 0 || save.gold < rc, col: '#a06a20', hot: '#c98a30' });
-  txt(max ? 'Nível máximo!' : `Refinar +${it.ench} > +${it.ench + 1}`, 514, 414, 14, '#fff', 'center', 'bold'); if (!max) { if (rlock) txt(`Requer Nv ${4 * (it.ench + 1)}`, 514, 435, 13, '#f88', 'center', 'bold'); else txt(`¢${rc}`, 514, 435, 14, '#fd5', 'center', 'bold'); }
+  btn(432, 376, 165, 50, '', doRefine, { off: max || rlock || enc.t > 0 || save.gold < rc, col: '#a06a20', hot: '#c98a30' });
+  txt(max ? 'Nível máximo!' : `Refinar +${it.ench} > +${it.ench + 1}`, 514, 396, 14, '#fff', 'center', 'bold'); if (!max) { if (rlock) txt(`Requer Nv ${4 * (it.ench + 1)}`, 514, 416, 13, '#f88', 'center', 'bold'); else txt(`¢${rc}`, 514, 416, 14, '#fd5', 'center', 'bold'); }
   const sg = specGems(it);
-  btn(607, 392, 165, 56, '', doSpec, { off: enc.t > 0 || save.gold < sc || save.gems < sg, col: '#5a3a7a', hot: '#7a55a0' });
-  txt('Encantar especial', 689, 414, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 435, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 435, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
+  btn(607, 376, 165, 50, '', doSpec, { off: enc.t > 0 || save.gold < sc || save.gems < sg, col: '#5a3a7a', hot: '#7a55a0' });
+  txt('Encantar especial', 689, 396, 14, '#fff', 'center', 'bold'); txt(`¢${sc}`, 658, 416, 13, '#fd5', 'center', 'bold'); txt(`◆${sg}`, 725, 416, 13, save.gems >= sg ? '#7fe8ff' : '#f88', 'center', 'bold');
   { const have = save.stones[it.r], capIl = it.il >= 120, needLv = Math.ceil((it.il + 2) / 2), lvLock = !capIl && needLv > save.pl.lv;
-    btn(432, 452, 200, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir ${it.il}>${Math.min(120, it.il + 2)} · Pedra (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 12, col: '#2a5a7a', hot: '#3a7aa0' });
-    if (!capIl && !lvLock) { ctx.globalAlpha = have ? 1 : .4; ctx.drawImage(STONE_SPR[it.r], 436, 454, 20, 20); ctx.globalAlpha = 1; }
-    const rfc = reforgeCost(it); btn(638, 452, 134, 24, `Reforjar ¢${gfmt(rfc)}`, () => reforgeItem(it), { off: enc.t > 0 || !it.aff.length || save.gold < rfc, size: 12, col: '#7a4a2a', hot: '#a0643a' }); }
-  if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 383, 13, '#f88', 'center', 'bold'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 383, 13, '#f88', 'center', 'bold');
+    btn(432, 432, 200, 24, capIl ? 'Nível de item máximo' : lvLock ? `Evoluir exige Nv ${needLv}` : `Evoluir ${it.il}>${Math.min(120, it.il + 2)} · Pedra (${have})`, () => evolveItem(it), { off: enc.t > 0 || capIl || lvLock || !have, size: 12, col: '#2a5a7a', hot: '#3a7aa0' });
+    if (!capIl && !lvLock) { ctx.globalAlpha = have ? 1 : .4; ctx.drawImage(STONE_SPR[it.r], 436, 434, 20, 20); ctx.globalAlpha = 1; }
+    const rfc = reforgeCost(it); btn(638, 432, 134, 24, `Reforjar ¢${gfmt(rfc)}`, () => reforgeItem(it), { off: enc.t > 0 || !it.aff.length || save.gold < rfc, size: 12, col: '#7a4a2a', hot: '#a0643a' }); }
+  if (save.gold < Math.min(max ? 1e9 : rc, sc)) txt('Ouro insuficiente', 600, 371, 11, '#f88', 'center', 'bold'); else if (save.gems < sg) txt('Diamantes insuficientes', 689, 371, 11, '#f88', 'center', 'bold');
 }
 
 const fr = v => v - Math.floor(v), rn = k => fr(Math.sin(k * 127.1 + 311.7) * 43758.5453);
