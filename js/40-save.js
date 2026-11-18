@@ -5,12 +5,19 @@
 const SAVE_KEY = 'bladehunter_v3', KEYS_KEY = 'bladehunter_keys';
 function newSave(cls) {
   const s = { cls, gold: 0, up: { hp: 0, dmg: 0, spd: 0, cd: 0 }, done: 0, own: {}, eq: {}, wl: {}, sk: {}, skE: {}, pity: {}, cheat: {}, stats: { kills: 0, gold: 0, bosses: 0 }, pl: { lv: 1, xp: 0 }, raids: {}, attr: { vit: 0, str: 0, agi: 0, per: 0 }, pts: 0, bag: [], gear: { head: null, chest: null, boots: null, amulet: null }, farmBest: {}, gems: 0, wst: {}, chestDone: 0, rwv: 3, stones: [0, 0, 0, 0, 0], pets: { own: {}, eq: '', lv: {}, xp: {}, names: {} }, bagSlots: 1, tut: { on: true, skip: false, done: {}, claim: {} },
-    pres: [0, 0, 0, 0, 0, 0], presW: [0, 0, 0, 0, 0, 0], farmN: [0, 0, 0, 0, 0, 0], ach: {}, codes: {}, title: '', buyN: 0, skRef: 1, pt: 0 };   // campos completos desde o inicio: um personagem recem-criado nao passa pelo normalize e o separador Campanha rebentava sem estes
+    pres: [0, 0, 0, 0, 0, 0], presW: [0, 0, 0, 0, 0, 0], farmN: [0, 0, 0, 0, 0, 0], ach: {}, codes: {}, title: '', buyN: 0, skRef: 1, dexRf: 1, pt: 0 };   // campos completos desde o inicio: um personagem recem-criado nao passa pelo normalize e o separador Campanha rebentava sem estes
   for (const c in CLASSES) { CLASSES[c].weapons.forEach((w, i) => s.wst[w.id] = [i === 0 ? 1 : 0, 0, 0, 0, 0, 0, 0]); s.own[c] = [1, 0, 0, 0, 0]; s.eq[c] = 0; s.sk[c] = SKINS[c].map((_, k) => k === 0 ? 1 : 0); s.skE[c] = 0; }
   return s;
 }
 // reembolso (uma vez) das skins compradas antes de serem removidas: 1.ª extra = 5000 de ouro; as restantes 300/600/900 diamantes
 const SK_GEMS = { knight: [0, 0, 300, 600, 900], archer: [0, 0, 300, 600], mage: [0, 0, 300, 600] };
+// Respec gratis (uma vez) quando a Agilidade passou a Destreza e a vel. de ataque saiu da Pericia: todos os pontos voltam a estar por gastar, tambem nas builds guardadas
+function respecDex(s) {
+  if (s.dexRf) return; const A = s.attr || {}, n = ['vit', 'str', 'agi', 'per'].reduce((t, k) => t + Math.max(0, A[k] | 0), 0);
+  s.attr = { vit: 0, str: 0, agi: 0, per: 0 }; s.pts = Math.max(0, s.pts | 0) + n;
+  if (s.lo && Array.isArray(s.lo.b)) s.lo.b.forEach(b => { if (b && b.attr) b.attr = { str: 0, vit: 0, per: 0, agi: 0 }; });
+  s.dexRf = 1; if (n) window.__dexRf = n;
+}
 function refundSkins(s) {
   if (s.skRef) return; let g = 0, d = 0;
   for (const c in SK_GEMS) { const a = (s.sk && s.sk[c]) || []; SK_GEMS[c].forEach((cost, i) => { if (i > 0 && a[i] === 1) { if (i === 1) g += 5000; else d += cost; } }); }
@@ -43,7 +50,7 @@ function normalize(s) {
     const old = s.wst[w.id] || []; s.wst[w.id] = [0, 0, 0, 0, 0, 0, 0].map((_, k) => k < 3 ? (old[k] || 0) : k === 3 ? (old[3] || 0) + (old[4] || 0) + (old[5] || 0) + (old[6] || 0) : 0);
     if (!s.wst[w.id].some(x => x)) s.wst[w.id][0] = (s.own[c] && s.own[c][i]) ? 1 : 0;
   });
-  refundSkins(s);
+  refundSkins(s); respecDex(s);
   return s;
 }
 let save = null;
