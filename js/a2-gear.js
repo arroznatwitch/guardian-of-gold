@@ -47,7 +47,6 @@ function hubChar() {
     });
     if (cand.length) txt('Shift+clique: melhor', 472, 433, 10, '#778', 'right');
   }
-  if (hubToast.t > 0) { ctx.globalAlpha = Math.min(1, hubToast.t); txt(hubToast.s, 337, 424, 13, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1; }
   // painel direito
   panel(490, 88, 295, 390, '#16162a', '#3a3a5a');
   const pn = on && on.nick ? on.nick : c.name;
@@ -491,7 +490,7 @@ function hubAnvil() {
   txt('Histórico:', 470, 409, 12, '#aab');
   anvHist.slice(-7).forEach((h, i) => ctx.drawImage(ICN[h.ok ? 'check' : h.down ? 'cross_down' : 'cross'], 530 + i * 28, 388, 24, 24));   // icones 16x16 desenhados a mao, a 1.5x
   if (anv.msgT > 0) { ctx.globalAlpha = Math.min(1, anv.msgT); txt(anv.msg, 615, 434, 24, anv.col, 'center', 'bold'); if (anv.msg2) txt(anv.msg2, 615, 453, 14, '#ffd34a', 'center', 'bold'); ctx.globalAlpha = 1; }
-  txt('Marcos: +5 brilho · +10 faíscas · +12 aura lendária · +16 aura mítica', 615, 470, 11, '#aab', 'center');
+  txt(T2('Marcos: +5 brilho · +10 faíscas', 'Milestones: +5 glow · +10 sparks'), 600, 180, 11, '#aab', 'center'); txt(T2('+12 aura lendária · +16 aura mítica', '+12 legendary aura · +16 mythic aura'), 600, 194, 11, '#aab', 'center');   // dentro do painel, por baixo das falhas
 }
 function hammer(i) {
   const w = CLASSES[save.cls].weapons[i], lv = save.wl[w.id] || 0;
@@ -572,29 +571,29 @@ function fuseGear(pick, keep) {
 function updateFuse(dt) { for (const q of fz.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 300 * dt; q.l -= dt; } fz.sparks = fz.sparks.filter(q => q.l > 0); if (fz.msgT > 0) fz.msgT -= dt; if (fz.t > 0) fz.t -= dt; }
 function hubFuse() {
   const lock = save.pl.lv < FUSE_LV;
-  { const FM = [['w', 'Armas'], ['g', 'Equipamento']], fw = 76, gap = 4, x0 = 782 - FM.length * fw - (FM.length - 1) * gap;   // filtro discreto (nao e outra aba): menor, mais escuro e encostado a direita
-    FM.forEach(([k, l], i) => { let fs = 10; while (fs > 8 && txtW(l, fs, 'bold') > fw - 6) fs--;
-      btn(x0 + i * (fw + gap), 90, fw, 16, l, () => fuseMode = k, { size: fs, col: fuseMode === k ? '#3a5a7a' : '#1c1c2c', hot: '#4a7aa0' }); }); }
+  { const FM = [['w', 'Armas'], ['g', 'Equipamento']], gap = 8, fw = (580 - gap) / 2;   // escolha Armas / Equipamento: duas metades a toda a largura, alinhadas com o resto
+    FM.forEach(([k, l], i) => btn(197 + i * (fw + gap), 90, fw, 17, l, () => fuseMode = k, { size: 11, col: fuseMode === k ? '#3a5a7a' : '#1c1c2c', hot: '#4a7aa0' })); }
   if (lock) { drawIcon('lock', 215, 100, 1.6); txt(`Desbloqueia no Nível ${FUSE_LV} (nível atual: ${save.pl.lv})`, 234, 105, 13, '#f88', 'left', 'bold'); }
   if (fuseMode === 'w') {
     const c = CLASSES[save.cls];
     c.weapons.forEach((w, i) => {
       const x = 197 + i * 117, tot = wTotal(w.id), st = wStar(w.id);
-      btn(x, 116, 110, 40, '', () => { if (!save.own[save.cls][i] && !weaponReq(i).ok) lockClick(w.id); else fuseSel = i; }, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
-      if (!save.own[save.cls][i] && !weaponReq(i).ok) drawIcon('lock', x + 55, 136, 1.8); else { weaponIcon(w.id, x + 28, 136, 1.6); txt(tot ? 'x' + tot : '—', x + 54, 142, 15, tot ? '#fff' : '#667', 'left', 'bold'); }
-      if (st) drawIcon('star', x + 98, 126, 1.3);
+      btn(x, 114, 110, 34, '', () => { if (!save.own[save.cls][i] && !weaponReq(i).ok) lockClick(w.id); else fuseSel = i; }, { col: fuseSel === i ? '#a8821f' : '#2a2a48' });
+      if (!save.own[save.cls][i] && !weaponReq(i).ok) drawIcon('lock', x + 55, 130, 1.8); else { weaponIcon(w.id, x + 28, 130, 1.6); txt(tot ? 'x' + tot : '—', x + 54, 136, 15, tot ? '#fff' : '#667', 'left', 'bold'); }
+      if (st) drawIcon('star', x + 98, 121, 1.3);
     });
     const w = c.weapons[fuseSel], a = save.wst[w.id], st = wStar(w.id), rq = weaponReq(fuseSel), cp = copyPrice(fuseSel);
     for (let t = 0; t <= STAR_MAX; t++) {
-      const x = 197 + t * 148, y = 164, cur = st === t && wTotal(w.id) > 0;
-      bevel(x, y, 140, 86, cur ? '#2c2410' : '#12121f', cur ? '#ffd34a' : '#33334a', '#05050a');
+      const x = 197 + t * 148, y = 154, cur = st === t && wTotal(w.id) > 0;
+      bevel(x, y, 140, 78, cur ? '#2c2410' : '#12121f', cur ? '#ffd34a' : '#33334a', '#05050a');
       if (t === 0) txt('Base', x + 70, y + 16, 13, '#889', 'center'); else starIcons(t, x + (t === STAR_MAX ? 52 : 70), y + 11, 1.2);
       if (t === STAR_MAX) txt('MAX', x + 108, y + 16, 12, '#ffd34a', 'center', 'bold');
-      ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 46, 1.9, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
-      txt('x' + a[t], x + 70, y + 80, 16, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
-      if (t < STAR_MAX) btn(x, y + 90, 140, 22, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || t + 1 > wUnlocked(w.id) || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t), col: '#2f7a4a', hot: '#3fa061' });
+      ctx.globalAlpha = a[t] > 0 ? 1 : .3; STAR_OV = t; weaponIcon(w.id, x + 70, y + 43, 1.8, -.785); STAR_OV = -1; ctx.globalAlpha = 1;
+      txt('x' + a[t], x + 70, y + 72, 15, a[t] > 0 ? '#fff' : '#556', 'center', 'bold');
+      if (t < STAR_MAX) btn(x, y + 82, 140, 20, `${FUSE_N} > 1 · ¢${gfmt(wFuseFee(w.id, t))}`, () => doFuse(w.id, t, false), { size: 12, off: lock || t + 1 > wUnlocked(w.id) || a[t] < FUSE_N || save.gold < wFuseFee(w.id, t), col: '#2f7a4a', hot: '#3fa061' });
     }
-    panel(197, 284, 585, 192, '#16162a');
+    drawOffset(-24, () => {   // painel de detalhes 24px acima: cabe todo dentro do painel da Forja
+    panel(197, 284, 585, 196, '#16162a');
     txt(st ? `Estrela atual: ${st}★` + (st >= STAR_MAX ? ' (MAX)' : '') : 'Estrela atual: nenhuma', 212, 310, 17, '#f0c060', 'left', 'bold');
     txt(`Dano ×${STAR_MULT[st].toFixed(2)} · Vel. de ataque +${st * 3}%`, 212, 332, 14, '#9cf');
     if (st < STAR_MAX) txt(`Próximo (${st + 1}★): Dano ×${STAR_MULT[st + 1].toFixed(2)} · Vel. de ataque +${(st + 1) * 3}%`, 212, 352, 14, '#6f6');
@@ -605,6 +604,7 @@ function hubFuse() {
     btn(560, 360, 210, 34, 'Juntar tudo', () => doFuse(w.id, 0, true), { size: 15, off: lock, col: '#2f7a4a', hot: '#3fa061' });
     { const t0 = a.findIndex(q => q > 0), tt = t0 < 0 ? 0 : t0, sv = copySell(fuseSel) * (1 + tt), kk = Math.max(0, Math.min(a[tt] | 0, wTotal(w.id) - 1)); txt(`${T2('Vender cópias', 'Sell copies')} (${tt ? tt + '★' : 'Base'}): ¢${gfmt(sv)} ${T2('cada', 'each')}`, 665, 406, 10, '#9ab', 'center'); btn(560, 410, 64, 18, `${T2('Vender', 'Sell')} 1`, () => sellCopies(w.id, fuseSel, tt, 1), { size: 10, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); btn(630, 410, 64, 18, `${T2('Vender', 'Sell')} 5`, () => sellCopies(w.id, fuseSel, tt, 5), { size: 10, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); btn(700, 410, 70, 18, `${T2('Todas', 'All')} (${kk})`, () => sellCopies(w.id, fuseSel, tt, 999), { size: 10, off: kk < 1, col: '#7a4a2a', hot: '#a0643a' }); }
     if (!rq.ok) txt(rq.text, 665, 450, 12, '#f88', 'center');
+    });
   } else {
     const gs = gearGroups(), key = g => fuseKeyOf(g[0]);
     if (!gs.length) { txt('Ainda não tens itens repetidos na Mochila.', 487, 250, 15, '#778', 'center'); txt('Os itens equipados não contam.', 487, 272, 13, '#667', 'center'); }
@@ -645,8 +645,8 @@ function hubFuse() {
         txt(`Os outros ${Math.max(0, fusePick.length - 1)} itens desaparecem.`, rx + 14, ry + 150, 10, '#f99');
       } else txt('Marca itens para ver o resultado.', rx + rw / 2, ry + 90, 12, '#667', 'center');
       const fee = fuseKeep ? gFuseFee(fuseKeep) : 0, ok = !lock && fusePick.length === FUSE_N && fuseKeep && save.gold >= fee;
-      btn(197, cy0 + 106, 290, 34, fusePick.length === FUSE_N ? `Juntar ${FUSE_N} > 1 · ¢${gfmt(fee)}` : `Marca ${FUSE_N} itens`, () => fuseGear(fusePick, fuseKeep), { size: 14, off: !ok, col: '#2f7a4a', hot: '#3fa061' });
-      txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça. ${T2('Itens com cadeado também entram.', 'Locked items can be merged too.')}`, 342, 462, 10, '#9cf', 'center');
+      btn(197, cy0 + 106, 290, 34, fusePick.length === FUSE_N ? `${T2('Juntar', 'Merge')} ${FUSE_N} > 1 · ¢${gfmt(fee)}` : T2(`Marca ${FUSE_N} itens`, `Mark ${FUSE_N} items`), () => fuseGear(fusePick, fuseKeep), { size: 14, off: !ok, col: '#2f7a4a', hot: '#3fa061' });
+      txt(`Estrelas dão ×${GEAR_STAR[1].toFixed(2)} / ×${GEAR_STAR[2].toFixed(2)} / ×${GEAR_STAR[3].toFixed(2)} aos bónus da peça. ${T2('Itens com cadeado também entram.', 'Locked items can be merged too.')}`, 487, 456, 10, '#9cf', 'center');   // centrado no painel (antes saia para a esquerda)
     }
   }
   for (const q of fz.sparks) { ctx.globalAlpha = Math.max(0, q.l * 2); ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, 3, 3); } ctx.globalAlpha = 1;

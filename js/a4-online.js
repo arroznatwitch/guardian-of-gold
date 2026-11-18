@@ -320,7 +320,7 @@ async function cloudConflict() {
   if (!r.ok || !r.save) { cloud.ready = true; cloud.timer = setTimeout(() => cloudFlush(), 15000); return; }
   cloud.rev = r.rev; const cl = normalize(r.save), lo = save;
   if (lo && (lo.ep | 0) !== (cl.ep | 0)) return cloudApply(cl, false);   // epoca diferente: o save local e antigo
-  cf = { cloud: cl, local: lo, reason: 'dev', done: u => cloudApply(u ? lo : cl, u) }; state = 'conflict';
+  return cloudApply(cl, false);   // o save da conta (servidor) ganha sempre: nunca se pergunta
 }
 async function cloudStart() {
   state = 'sync'; cloud.ready = false; cloud.err = '';
@@ -341,7 +341,7 @@ async function cloudStart() {
     let cl; try { cl = normalize(r.save); } catch (e) { cloud.err = 'bad_data'; state = 'syncerr'; return; }
     if (mine) local.bagSlots = Math.max(local.bagSlots | 0, cl.bagSlots | 0);   // mochilas desbloqueadas no servidor (codigo promocional) nunca se perdem
     if (mine && (local.ep | 0) !== (cl.ep | 0)) return cloudApply(cl, false);   // o servidor repos o save: o local e descartado
-    if (mine && uns && srev !== r.rev) { cf = { cloud: cl, local, reason: 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
+    if (mine && uns && srev !== r.rev) return cloudApply(cl, false);   // a conta mudou noutro sitio: fica o save do servidor (sem perguntar)
     if (mine && uns) return cloudApply(local, true);
     return cloudApply(cl, false);
   }

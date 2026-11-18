@@ -12,12 +12,14 @@ function drawHub() {
   txt(pn, 94, 30, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 94 + txtW(pn, 20, 'bold') + 12, 29, 15, '#6cf', 'left', 'bold'); if (on.token) drawFlag(on.country || 'ZZ', 94 + txtW(pn, 20, 'bold') + 12 + txtW(`Nv ${L}`, 15, 'bold') + 10, 17, 20, 13); if (gld.info) txt('[' + gld.info.tag + ']', 94 + txtW(pn, 20, 'bold') + 12 + txtW(`Nv ${L}`, 15, 'bold') + 38, 29, 12, '#8ab', 'left', 'bold');
   if (save.title && TITLES[save.title]) drawTitle('« ' + titleName(save.title) + ' »', 94 + txtW(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 11) + 14, 61, 11, save.title);
   bar(94, 38, 170, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 94, 61, 11, '#8ab');
-  txt('ACAMPAMENTO', UW / 2, 46, 26, '#f0c060', 'center', 'bold');
   { const gs = gfmt(save.gold), ms = String(save.gems), x0 = 770 - 22 - Math.max(txtW(gs, 22), txtW(ms, 18));   // moeda e diamante na mesma coluna, centrados na altura dos numeros
     ctx.drawImage(ICN.coin, x0, Math.round(34 - 22 * .34 - 9), 18, 18); txt(gs, x0 + 22, 34, 22, '#fd5', 'left', 'bold');
     ctx.drawImage(ICN.gem, x0, Math.round(58 - 18 * .34 - 9), 18, 18); txt(ms, x0 + 22, 58, 18, '#7fe8ff', 'left', 'bold'); }
   if (save.pts > 0) txt(`${save.pts} pontos por gastar`, 650, 28, 12, '#ffd34a', 'right', 'bold');
   const tabs = [['farm', 'Campanha'], ['raids', 'Raids'], ['tower', 'Torre'], ['char', 'Personagem'], ['bag', 'Mochila'], ['forge', 'Forja'], ['pets', 'Pets'], ['guild', 'Guilda'], ['events', 'Eventos'], ['shop', 'Shop'], ['rank', 'Ranking'], ['options', 'Opções']];
+  { const tt = tabs.find(t => t[0] === tab), st = { profile: ['Perfil', 'Profile'], rewards: ['Perfil', 'Profile'], ach: ['Conquistas', 'Achievements'] }[tab];   // titulo = separador aberto
+    const nm = tt ? (lang === 'en' ? EN_DICT[tt[1]] || tt[1] : tt[1]) : st ? T2(st[0], st[1]) : T2('Acampamento', 'Camp');
+    txtR(nm.toUpperCase(), UW / 2, 46, 26, '#f0c060', 'center', 'bold'); }
   tabs.forEach((t, i) => {
     const by = 74 + i * 27;
     if (t[0] === 'options') { btn(20, by, 150, 24, t[1], () => { rk.focus = ''; optBack = 'hub'; state = 'options'; }, { col: '#2a2a48', hot: '#d2a73a', size: 13 }); return; }
@@ -30,7 +32,17 @@ function drawHub() {
   btn(20, 458, 150, 28, '< Menu', () => state = 'menu', { size: 14, col: '#3a2a3a' });
   panel(185, 80, 605, 405);
   if (!tabOpen(tab)) drawTabLock(tab); else ({ farm: hubFarm, raids: hubRaids, tower: hubTower, char: hubChar, bag: hubBag, forge: hubForge, profile: hubProfile, rewards: () => { profileTabs(); hubRewards(); }, ach: () => { profileTabs(); hubAch(); }, pets: hubPets, guild: hubGuild, events: hubEvents, shop: hubShop, rank: hubRank })[tab]();
+  hubToastDraw();   // avisos (ex.: item de nivel alto) em destaque, em qualquer separador
   drawTutHub();   // passos guiados e lista "Primeiros passos" (94-tutorial.js)
+}
+function hubToastDraw() {
+  if (!(hubToast.t > 0)) return;
+  const s = L(hubToast.s), w = Math.min(560, txtW(s, 15, 'bold') + 48), x = 487 - w / 2, y = 432;
+  ctx.globalAlpha = Math.min(1, hubToast.t * 2);
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x + 3, y + 4, w, 36);
+  ctx.fillStyle = '#10101c'; ctx.fillRect(x, y, w, 36); ctx.strokeStyle = hubToast.col; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, 34);
+  ctx.fillStyle = hubToast.col; ctx.fillRect(x, y, 6, 36);
+  txtR(s, 490, y + 23, 15, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1;
 }
 let presAsk = -1;
 function drawPresAsk() {   // confirmacao do prestigio
