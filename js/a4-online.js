@@ -339,6 +339,7 @@ async function cloudStart() {
   const mine = !!local;
   if (r.save) {
     let cl; try { cl = normalize(r.save); } catch (e) { cloud.err = 'bad_data'; state = 'syncerr'; return; }
+    if (mine) local.bagSlots = Math.max(local.bagSlots | 0, cl.bagSlots | 0);   // mochilas desbloqueadas no servidor (codigo promocional) nunca se perdem
     if (mine && (local.ep | 0) !== (cl.ep | 0)) return cloudApply(cl, false);   // o servidor repos o save: o local e descartado
     if (mine && uns && srev !== r.rev) { cf = { cloud: cl, local, reason: 'dev', done: u => cloudApply(u ? local : cl, u) }; state = 'conflict'; return; }
     if (mine && uns) return cloudApply(local, true);
