@@ -102,7 +102,6 @@ function hubShop() {
     txt(`¢${gfmt(P.gold)} · ${gfmt(P.xp)} XP`, rx, Y + 148, 11, '#fd5');
     txt(`~${P.items} ${T2('itens', 'items')}${P.copies ? ` · ${P.copies} ${T2('cópias', 'copies')}` : ''}`, rx, Y + 162, 11, '#c9a0ff');
     if (P.overflow > 0) txt(T2(`Mochila: ${P.free} livres · ~${P.overflow} serão vendidos`, `Backpack: ${P.free} free · ~${P.overflow} will be sold`), rx, Y + 176, 9, '#ffb060', 'left', 'bold');
-    if (save.gems < disc(AR.cost)) txt(T2('Diamantes insuficientes.', 'Not enough diamonds.'), X + WD - 216, Y + 226, 11, '#f88');
   } else if (!open) wrap(T2('Ainda não concluíste esta raid nesta dificuldade.', 'You have not cleared this raid on this difficulty yet.'), rx, Y + 134, WD - 350 - 16, 14, 12, '#f88');   // ao lado, nao escondido atras do botao
   else wrap(T2('Carrega em Simular para veres quanto rende.', 'Press Simulate to see what you would get.'), rx, Y + 134, WD - 350 - 16, 14, 12, '#778');
   shopTowerCard(X, 366, WD);   // andares da Torre (a9-tower.js)

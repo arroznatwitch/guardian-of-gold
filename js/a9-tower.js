@@ -99,12 +99,11 @@ function hubTower() {
   bevel(px, 262, pw, 120, '#14142a', '#3a3a5a', '#05050a');
   txt(T2('Recompensas por andar', 'Rewards per floor'), px + 16, 286, 15, '#f0c060', 'left', 'bold');
   txt(`${T2('Andar', 'Floor')} ${f}: ¢${gfmt(towerGold(f))} · ${gfmt(towerXp(f))} XP`, px + 16, 308, 13, '#fd5', 'left', 'bold');
+  txt(`${T2('Nível dos monstros', 'Monster level')}: ${towerRec(f)}`, px + pw - 16, 286, 12, save.pl.lv >= towerRec(f) ? '#9cf' : '#f88', 'right', 'bold');
   const nb = Math.ceil(f / 5) * 5;
   txt(`${T2('Baú a cada 5 andares', 'Chest every 5 floors')} (${T2('próximo', 'next')}: ${nb}): +${towerGems(nb)} ◆ · ${T2('pedra', 'stone')} ${RAR[towerStone(nb)][0]}`, px + 16, 328, 12, '#7fe8ff');
   txt(T2(`Bosses largam itens; a cada 10 andares um item ${RAR[2][0]} ou melhor garantido.`, `Bosses drop items; every 10 floors a guaranteed ${L(RAR[2][0])} or better item.`), px + 16, 348, 11, '#c9a0ff');
   txt(T2('As recompensas de cada andar ficam guardadas logo. Sair a meio não perde nada.', 'Each floor\'s rewards are saved right away. Leaving mid-run loses nothing.'), px + 16, 368, 11, '#889');
   const can = !t.dead && t.tk > 0;
-  btn(px + pw - 196, 396, 196, 40, t.dead ? T2('Fechada até amanhã', 'Closed until tomorrow') : t.tk ? `${T2('Subir', 'Climb')} · ${T2('andar', 'floor')} ${f}` : T2('Sem andares', 'No floors'), startTower, { off: !can, size: 15, col: '#2f7a4a', hot: '#3fa061' });
-  btn(px, 404, 112, 26, `${T2('Velocidade', 'Speed')}: x${gameSpeed}`, toggleSpeed, { size: 12, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
-  txt(`${T2('Nível dos monstros', 'Monster level')}: ${towerRec(f)}`, px + 124, 422, 12, save.pl.lv >= towerRec(f) ? '#9cf' : '#f88', 'left', 'bold');
+  btn(px, 396, pw, 40, t.dead ? T2('Fechada até amanhã', 'Closed until tomorrow') : t.tk ? `${T2('Subir', 'Climb')} · ${T2('andar', 'floor')} ${f}` : T2('Sem andares', 'No floors'), startTower, { off: !can, size: 15, col: '#2f7a4a', hot: '#3fa061' });
 }
