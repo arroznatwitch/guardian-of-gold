@@ -81,12 +81,12 @@ let achCat = 'all', achPage = 0, codeMsg = { s: '', col: '#9ab' }, codeBusy = fa
 async function redeemCode() {   // codigos promocionais: validados no servidor e so se usam uma vez por CONTA
   const c = (rk.code || '').trim().toLowerCase(); rk.focus = ''; if (!c || codeBusy) return;
   if (!on.token) { codeMsg = { s: T2('Inicia sessão para usar códigos.', 'Log in to use codes.'), col: '#f88' }; SFX.error(); return; }
-  codeBusy = true; codeMsg = { s: T2('A verificar...', 'Checking...'), col: '#9ab' }; const r = await rpc('gog_redeem', { p_token: on.token, p_code: c }); codeBusy = false;
+  codeBusy = true; codeMsg = { s: T2('A verificar...', 'Checking...'), col: '#9ab' }; if (typeof cloudFlush === 'function') await cloudFlush(); const r = await rpc('gog_redeem', { p_token: on.token, p_code: c }); codeBusy = false;
   if (r && r.ok) {
-    save.codes = save.codes || {}; save.codes[c] = 1; save.gems += r.gems | 0; if (r.title && TITLES[r.title] && !save.title) save.title = r.title; rk.code = '';
-    codeMsg = { s: T2(`Código aceite: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · título ' + titleName(r.title) : ''), `Code accepted: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · title ' + titleName(r.title) : '')), col: '#6f6' }; hubToast = { t: 2.6, s: `+${r.gems | 0} ◆`, col: '#7fe8ff' }; SFX.buy(); persist();
+    save.codes = save.codes || {}; save.codes[c] = 1; save.gems += r.gems | 0; if (r.bags) { save.bagSlots = Math.max(save.bagSlots | 0, r.bags | 0); if (r.rev) cloud.rev = r.rev; persist(); } if (r.title && TITLES[r.title] && !save.title) save.title = r.title; rk.code = '';
+    codeMsg = r.bags ? { s: T2("Código aceite: as 4 mochilas estão desbloqueadas!", "Code accepted: all 4 backpacks are unlocked!"), col: '#6f6' } : { s: T2(`Código aceite: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · título ' + titleName(r.title) : ''), `Code accepted: +${r.gems | 0} ◆` + (r.title && TITLES[r.title] ? ' · title ' + titleName(r.title) : '')), col: '#6f6' }; hubToast = { t: 2.6, s: r.bags ? T2('Mochilas desbloqueadas!', 'Backpacks unlocked!') : `+${r.gems | 0} ◆`, col: '#7fe8ff' }; SFX.buy(); persist();
   } else {
-    const e = r && r.error; codeMsg = { s: e === 'used' ? T2('Este código já foi usado nesta conta.', 'This code was already used on this account.') : e === 'bad_code' ? T2('Código inválido.', 'Invalid code.') : e === 'auth' ? T2('Sessão expirada. Entra outra vez.', 'Session expired. Log in again.') : T2('Não foi possível verificar o código.', 'Could not check the code.'), col: '#f88' }; SFX.error();
+    const e = r && r.error; codeMsg = { s: e === 'used' ? T2('Este código já foi usado nesta conta.', 'This code was already used on this account.') : e === 'expired' ? T2('Este código já expirou.', 'This code has expired.') : e === 'bad_code' ? T2('Código inválido.', 'Invalid code.') : e === 'auth' ? T2('Sessão expirada. Entra outra vez.', 'Session expired. Log in again.') : T2('Não foi possível verificar o código.', 'Could not check the code.'), col: '#f88' }; SFX.error();
   }
 }
 function hubAch() {
