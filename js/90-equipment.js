@@ -65,16 +65,17 @@ const ringPct = (r, il) => +(RING_BASE[Math.min(3, r | 0)] * (.5 + .5 * Math.min
 function ringIcon(r, g, cx, cy, k) { const im = RING_SPR[Math.min(3, r | 0)][(g | 0) % 4]; k = Math.max(1, Math.round(k));   // escala inteira: os pixeis ficam nitidos
   ctx.drawImage(im, Math.round(cx - im.width * k / 2), Math.round(cy - im.height * k / 2), im.width * k, im.height * k); }
 function itemIcon(it, cx, cy, k) { if (it.slot === 'ring') ringIcon(it.r, it.gem, cx, cy, k); else slotIcon(it.slot, it.r | 0, cx, cy, k); }
-// conjunto completo = as 4 pecas de armadura equipadas e todas da mesma raridade (qualquer raridade); o anel so da bonus nesse caso
-function setComplete() { const g = save && save.gear; if (!g || !g.head || !g.chest || !g.boots || !g.amulet) return false; return g.chest.r === g.head.r && g.boots.r === g.head.r && g.amulet.r === g.head.r; }
+// o anel so da bonus com capacete, armadura e botas equipados (qualquer raridade); os bonus de conjunto (92-sets.js) sao a parte
+function setComplete() { const g = save && save.gear; return !!(g && g.head && g.chest && g.boots); }
 function setBonus() { const g = save && save.gear; if (!g || !g.ring) return null; return { ring: g.ring, k: g.ring.main.k, p: g.ring.main.v / 100, on: setComplete() }; }
 const AFF = {
   hp: { n: 'Vida', u: '', b: 12, p: 3 }, dmg: { n: 'Dano', u: '%', b: 2.5, p: .25 }, spd: { n: 'Velocidade', u: '%', b: 1.5, p: .12 }, cdr: { n: 'Vel. de ataque', u: '%', b: 1.5, p: .12 },
   crit: { n: 'Crítico', u: '%', b: 1.5, p: .1 }, ls: { n: 'Roubo de vida', u: '%', b: .8, p: .05 }, dr: { n: 'Redução de dano', u: '%', b: 1, p: .08 },
-  gf: { n: 'Ouro extra', u: '%', b: 3, p: .3 }, xpb: { n: 'XP extra', u: '%', b: 3, p: .3 }, burn: { n: 'Chance de queimar', u: '%', b: 6, p: .5 }, slow: { n: 'Chance de abrandar', u: '%', b: 6, p: .5 },
+  gf: { n: 'Ouro extra', u: '%', b: 3, p: .3 }, xpb: { n: 'XP extra', u: '%', b: 3, p: .3 }, burn: { n: 'Chance de queimar', u: '%', b: 6, p: .5 }, slow: { n: 'Chance de gelo', u: '%', b: 6, p: .5 },
+  poi: { n: 'Chance de envenenar', u: '%', b: 6, p: .5 }, elec: { n: 'Chance de eletrocutar', u: '%', b: 6, p: .5 },   // efeitos especiais novos (so no Encantar especial)
 };
 const AFF_POOL = ['hp', 'dmg', 'spd', 'cdr', 'crit', 'ls', 'dr', 'gf', 'xpb'];
-const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso']];
+const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso'], ['poi', 'Venenoso'], ['elec', 'Elétrico']];
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
 const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Agilidade', '+0.6% velocidade'], ['per', 'Perícia', '+0.6% vel. de ataque']];
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
@@ -84,7 +85,7 @@ const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.slot === 'ring' ? ' ' + GEM_NM[it.gem | 0] : ''}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
 const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
-const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5 };
+const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5, poi: .6, elec: .6 };
 function itemStats(it) { const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
   if (nw.slot === 'ring') { const s = nw.r - (old ? old.r : -1); return { score: s, rows: [], verdict: s > 0 ? 1 : s < 0 ? -1 : 0 }; }   // aneis: ganha a raridade mais alta
@@ -117,7 +118,7 @@ function mainVal(slot, r, il) {
 function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1) * (r === 4 ? MYTH_F : 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
 function rollSpec(it, avoid) {
   let c; do { c = SPEC_POOL[Math.floor(Math.random() * SPEC_POOL.length)]; } while (avoid && c[0] === avoid);
-  const cap = (c[0] === 'burn' || c[0] === 'slow') ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
+  const cap = ['burn', 'slow', 'poi', 'elec'].includes(c[0]) ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
 }
 function genItem(slot, r, il) {
   const it = { slot, r, il, ench: 0, rr: 0, main: { k: SLOT_MAIN[slot], v: mainVal(slot, r, il) }, aff: [], spec: null };
@@ -132,7 +133,7 @@ function genRing(r, il) {   // anel: so tem o bonus de conjunto (+2/5/7/10% do s
 }
 const genLoot = (r, il) => Math.random() < RING_DROP ? genRing(r, il) : genItem(SLOTS[Math.floor(Math.random() * 4)], r, il);
 function gearStats() {
-  const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0 };
+  const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0, poi: 0, elec: 0 };
   if (!save || !save.gear) return g;
   for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
   for (const b of armourSets()) if (b.k === 'crit') g.crit += b.p;   // conjuntos: o Critico soma pontos
@@ -218,7 +219,7 @@ function nextWave() {
 function endTitle(win) { return R.eventRes ? T2('EVENTO CONCLUÍDO!', 'EVENT COMPLETE!') : R.tower ? (win ? (R.tower.out ? T2('SEM ANDARES', 'OUT OF FLOORS') : T2('SAÍSTE DA TORRE', 'LEFT THE TOWER')) : T2('DERROTADO NA TORRE', 'DEFEATED IN THE TOWER')) : R.farm ? (win ? (R.exitMode === 'quit' ? 'SAÍSTE DA CAMPANHA' : 'CAMPANHA GUARDADA') : 'DERROTADO') : R.raid ? (win ? 'RAID CONCLUÍDA!' : 'RAID FALHADA') : (win ? 'MISSÃO CUMPRIDA!' : 'MISSÃO FALHADA'); }
 function endLines(win) {
   if (R.eventRes) return [T2('Estátua Dourada: tempo esgotado!', 'Golden Statue: time is up!'), ''];
-  if (R.tower) { const n = R.tower.n; return [T2(`Andares concluídos: ${n} (próximo: ${save.tw.f})`, `Floors cleared: ${n} (next: ${save.tw.f})`), win ? (R.tower.out ? T2(`Ganhas +${TW.per} andares por hora. Volta mais tarde!`, `You earn +${TW.per} floors per hour. Come back later!`) : T2('O teu progresso fica guardado: continua quando quiseres hoje.', 'Your progress is saved: continue any time today.')) : T2('Morreste: a Torre fecha até amanhã e volta ao andar 1.', 'You died: the Tower closes until tomorrow and resets to floor 1.')]; }
+  if (R.tower) { const n = R.tower.n; return [T2(`Andares concluídos: ${n} (próximo: ${save.tw.f})`, `Floors cleared: ${n} (next: ${save.tw.f})`), win ? (R.tower.out ? T2(`Ganhas +${twPer()} andares por hora. Volta mais tarde!`, `You earn +${twPer()} floors per hour. Come back later!`) : T2('O teu progresso fica guardado: continua quando quiseres hoje.', 'Your progress is saved: continue any time today.')) : T2('Morreste: a Torre fecha até amanhã e volta ao andar 1.', 'You died: the Tower closes until tomorrow and resets to floor 1.')]; }
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : `Morreste: ficaste com 40% do XP e 10% do ouro (¢${R.earned}) · itens perdidos`) : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
   a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
@@ -244,7 +245,7 @@ function itemCard(it, x, y, w = 230) {
   { const t0 = `${RAR[it.r][0]} · Item Nv ${it.il}`; txt(t0, x + 46, y + 32 + ex, 12, '#aab'); txt(`· Req. Nv ${itemReq(it)}`, x + 46 + txtW(t0, 12) + 6, y + 32 + ex, 12, canWear(it) ? '#6c8' : '#f66', 'left', 'bold'); }
   if (it.slot === 'ring') {
     let yy = y + 58 + ex; txt(`Bónus de conjunto: +${it.main.v}% ${AFF[it.main.k].n}`, x, yy, 14, '#fff', 'left', 'bold'); yy += 18;
-    wrap('Só fica ativo com 4 peças de armadura da mesma raridade (capacete, armadura, botas e amuleto).', x, yy, w - 8, 13, 11, '#9ab'); yy += 30;
+    wrap(T2('Só fica ativo com capacete, armadura e botas equipados (qualquer raridade).', 'Only active with a helmet, armour and boots equipped (any rarity).'), x, yy, w - 8, 13, 11, '#9ab'); yy += 30;
     const ok = setComplete(); txt(ok ? 'Conjunto completo' : 'Conjunto incompleto', x, yy, 13, ok ? '#6f6' : '#f88', 'left', 'bold'); return yy + 16;
   }
   let yy = y + 58 + ex; txt(statLine(it.main.k, ev(it.main.k, it.main.v, m)), x, yy, 14, '#fff', 'left', 'bold'); yy += 18;

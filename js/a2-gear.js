@@ -17,7 +17,7 @@ function hubChar() {
   const k = 3.3; drawSprBig(heroSpr(), cx, cy + Math.sin(T * 2) * 1.5, k);
   const base = w.t === 'melee' ? -.9 : w.t === 'arrow' ? -.12 : -1.3, ang = base + Math.sin(T * 2) * .05, hh = HAND[save.cls], hx = cx + hh[0] * 3 * k, hy = cy + Math.sin(T * 2) * 1.5 + hh[1] * 3 * k; const whs = k * .6; drawWeapon(w.id, hx, hy, ang, k, whs);   // no ecra da personagem as armas novas ficam mais pequenas (.6)
   if (GLOWW[w.id]) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = GLOWW[w.id]; ctx.globalAlpha = .45 + .15 * Math.sin(T * 8); ctx.beginPath(); ctx.arc(hx + Math.cos(ang) * wGlowD(w.id, whs, 27 * k / 3), hy + Math.sin(ang) * wGlowD(w.id, whs, 27 * k / 3), wGlowR(w.id, whs, 14), 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
-  const go = (sl) => () => { if (keys.ShiftLeft || keys.ShiftRight) { equipBest(sl); return; } bagFilter = sl; bagSel = -1; tab = 'bag'; };
+  const go = (sl) => () => { if (keys.ShiftLeft || keys.ShiftRight) { equipBest(sl); return; } bagFilter = sl; bagSel = -1; bagPage = 0; bagEq = save.gear[sl] ? sl : null; tab = 'bag'; };
   slotBtn(237, 128, 'head', 'Capacete', save.gear.head, null, go('head'));
   slotBtn(237, 190, 'chest', 'Armadura', save.gear.chest, null, go('chest'));
   slotBtn(237, 252, 'boots', 'Botas', save.gear.boots, null, go('boots'));
@@ -30,7 +30,7 @@ function hubChar() {
   txt(`${c.name} · Nv ${L}`, cx, 284, 14, '#fff', 'center', 'bold');
   const hv = slotHover, itH = hv && EQ_SLOTS.includes(hv) ? save.gear[hv] : null;
   if (itH) itemCard(itH, 208, 296, 268); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n}: ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
-  else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap('Com as 4 peças de armadura da mesma raridade, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 208, 340, 262, 14, 12, '#9ab'); }
+  else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap(T2('Com capacete, armadura e botas equipados, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 'With a helmet, armour and boots equipped, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring level.'), 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
   else { drawSetInfo(208, 304); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 354 + i * 18, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // tira da mochila para o slot sobre o qual estas
@@ -66,13 +66,40 @@ function hubChar() {
   btn(504, 314, 130, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { spendG(rc); save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: used === 0, col: '#6a3a2a' });
   { const bc = disc(attrBuyCost(save.buyN | 0)); btn(641, 314, 130, 26, `+1 ponto ¢${gfmt(bc)}`, () => { if (save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo; cada compra torna o proximo mais caro
   txt('Estatísticas', 504, 362, 15, '#f0c060', 'left', 'bold');
-  const s = stats(), E = [['Vida', s.hp], ['Dano', '+' + Math.round((s.dm - 1) * 100) + '%'], ['Velocidade', Math.round(s.spd)], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%'], ['Crítico', g.crit.toFixed(1) + '%'], ['Roubo de vida', g.ls.toFixed(1) + '%'], ['Redução de dano', g.dr.toFixed(1) + '%'], ['Ouro extra', g.gf.toFixed(0) + '%'], ['XP extra', g.xpb.toFixed(0) + '%'], ['Queimar', g.burn.toFixed(0) + '%'], ['Abrandar', g.slow.toFixed(0) + '%']];
-  const SC = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a', '#ff7ae0', '#ff5a8a', '#6a9aff', '#ffd34a', '#7fe8ff', '#ff7a3a', '#a8e8ff'];   // uma cor por estatistica
-  E.forEach(([n, v], i) => { const col = i % 2, row = Math.floor(i / 2), x = 504 + col * 136, y = 380 + row * 16; ctx.fillStyle = SC[i]; ctx.fillRect(x - 6, y - 8, 3, 9); txt(n, x, y, 11, '#aab'); txt(String(v), x + 126, y, 11, SC[i], 'right', 'bold'); });
+  // estatisticas agrupadas pelos 4 atributos: a linha mostra os valores; passar o rato (ou o dedo) abre o detalhe
+  const s = stats(), pc = (v, d) => v.toFixed(d) + '%';   // as cores de cada estatistica mantem-se
+  const SG = [
+    ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', pc(g.dr, 1), '#6a9aff']]],
+    ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Crítico', pc(g.crit, 1), '#ff7ae0'], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%', '#ffe24a']]],
+    ['Agilidade', [['Velocidade', Math.round(s.spd), '#6adfff']]],
+    ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], ['XP extra', pc(g.xpb, 0), '#7fe8ff'], ['Ouro extra', pc(g.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff']]]];
+  let sgHov = -1;
+  SG.forEach(([nm, rows], i) => {
+    const y = 368 + i * 22, hov = mouse.x - UIOX >= 498 && mouse.x - UIOX <= 778 && mouse.y >= y && mouse.y < y + 20; if (hov) sgHov = i;
+    ctx.fillStyle = hov ? '#26264a' : '#1c1c34'; ctx.fillRect(498, y, 280, 20); ctx.fillStyle = rows[0][2]; ctx.fillRect(498, y, 3, 20);
+    txt(nm, 507, y + 15, 13, '#fff', 'left', 'bold');
+    let x = 771; for (let k = rows.length - 1; k >= 0; k--) { const v = String(rows[k][1]), w = txtW(v, 11, 'bold'); if (x - w < 590) { txt('…', x, y + 15, 11, '#778', 'right', 'bold'); break; } txt(v, x, y + 15, 11, rows[k][2], 'right', 'bold'); x -= w + 8; }
+    ui.push({ x: 498, y, w: 280, h: 20, fn: () => {} });   // no telemovel um toque fixa o rato aqui e abre o detalhe
+  });
   drawLoadouts();   // builds (a7-loadouts.js)
+  if (sgHov >= 0) {   // detalhe do grupo por cima de tudo
+    const [nm, rows] = SG[sgHov], h = 30 + rows.length * 17, y = 368 + sgHov * 22 - h - 4;
+    ctx.fillStyle = '#0c0c18f2'; ctx.fillRect(498, y, 280, h); ctx.strokeStyle = rows[0][2]; ctx.lineWidth = 2; ctx.strokeRect(498, y, 280, h);
+    txt(nm, 510, y + 20, 14, '#f0c060', 'left', 'bold');
+    rows.forEach(([n, v, c], k) => { const yy = y + 38 + k * 17; ctx.fillStyle = c; ctx.fillRect(510, yy - 9, 3, 10); txt(n, 518, yy, 12, '#cdd'); txt(String(v), 766, yy, 12, c, 'right', 'bold'); });
+  }
 }
 // ----- Mochila -----
-let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0, forgeSub = 'ench';
+function bagDrop() {   // largar o item arrastado: se ficar em cima do slot equipado certo, equipa
+  const d = bagDrag; bagDrag = null; if (!d || !d.mv) return;
+  const mx = mouse.x - UIOX, k = Math.floor((mx - 197) / 50), sl = EQ_SLOTS[k];
+  if (!sl || mouse.y < 434 || mouse.y > 482 || mx - 197 - k * 50 > 48) return;
+  if (sl !== d.it.slot) { SFX.error(); hubToast = { t: 2, s: T2('Esse item é para o slot: ', 'That item goes in the slot: ') + L(SLOT_LBL[d.it.slot]), col: '#f88' }; return; }
+  const i = save.bag.indexOf(d.it); if (i < 0) return;
+  if (!canWear(d.it)) { SFX.error(); hubToast = { t: 2, s: T2('Requer Nv ', 'Requires Lv ') + itemReq(d.it), col: '#f88' }; return; }
+  equipFromBag(i); bagEq = sl;
+}
+let bagPage = 0, bagMulti = false, bagPick = new Set(), bagBuy = 0, forgeSub = 'ench', bagEq = null, bagDrag = null;   // bagEq: slot equipado escolhido; bagDrag: item a ser arrastado
 function hubBag() {
   { const BAGF = [['all', 'Todos']].concat(EQ_SLOTS.map(sl => [sl, SLOT_LBL[sl]]), [['mat', 'Materiais'], ['weapons', 'Armas']]), gap = 5, bw = (492 - 197 - gap * (BAGF.length - 1)) / BAGF.length;
     BAGF.forEach(([k, l], i) => { let fs = 9; while (fs > 7 && txtW(l, fs, 'bold') > bw - 4) fs--;
@@ -89,7 +116,9 @@ function hubBag() {
   }
   { const nk = slots < 5 ? BAG_COST[slots] : null; if (nk) { const gem = nk[0] === 'd', can = gem ? save.gems >= nk[1] : save.gold >= nk[1]; txt('Próxima: ' + (gem ? '◆' : '¢') + gfmt(nk[1]), 430, 132, 11, can ? (gem ? '#7fe8ff' : '#fd5') : '#a88', 'left', 'bold'); } }
   txt(`${save.bag.length}/${bagMax()}`, 495, 417, 13, save.bag.length >= bagMax() ? '#f66' : '#aab', 'right', 'bold');
-  const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter), pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);
+  const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter);
+  if (list.length && bagPage * BAG_PAGE >= list.length) bagPage = Math.min(slots - 1, Math.floor((list.length - 1) / BAG_PAGE));   // com filtro, nao mostra uma pagina vazia quando ha itens
+  const pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);
   for (let n = 0; n < BAG_PAGE; n++) {
     const x = 197 + (n % 6) * 50, y = 146 + Math.floor(n / 6) * 45, o = pageList[n], picked = o && bagPick.has(o.it);
     bevel(x, y, 46, 41, picked ? '#16301c' : '#10101c', o ? RAR[o.it.r][1] : '#26263a', '#05050a');
@@ -100,7 +129,7 @@ function hubBag() {
       if (o.it.lk) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(x + 33, y + 27, 11, 11); ctx.fillStyle = '#3a2a08'; ctx.fillRect(x + 35, y + 29, 7, 7); ctx.fillStyle = '#ffd34a'; ctx.fillRect(x + 37, y + 31, 3, 3); }
       if (picked) { ctx.strokeStyle = '#4cf06a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 43); txt('✓', x + 38, y + 38, 12, '#4cf06a', 'center', 'bold'); }
       else if (!bagMulti && bagSel === o.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 43); }
-      const idx = o.i, it2 = o.it; ui.push({ x, y, w: 46, h: 41, fn: () => { if (bagMulti) { if (it2.lk) { SFX.error(); hubToast = { t: 2, s: T2('Item bloqueado: não pode ser vendido', 'Locked item: it cannot be sold'), col: '#f88' }; } else if (bagPick.has(it2)) bagPick.delete(it2); else bagPick.add(it2); } else bagSel = idx; } });
+      const idx = o.i, it2 = o.it; ui.push({ x, y, w: 46, h: 41, fn: () => { if (bagDrag) { if (Math.hypot(mouse.x - bagDrag.x0, mouse.y - bagDrag.y0) > 6) bagDrag.mv = true; return; } if (bagMulti) { if (it2.lk) { SFX.error(); hubToast = { t: 2, s: T2('Item bloqueado: não pode ser vendido', 'Locked item: it cannot be sold'), col: '#f88' }; } else if (bagPick.has(it2)) bagPick.delete(it2); else bagPick.add(it2); } else { bagSel = idx; bagEq = null; bagDrag = { it: it2, x0: mouse.x, y0: mouse.y, mv: false }; } }, drag: true, rel: bagDrop });
     }
   }
   btn(197, 376, 112, 26, 'Vender Comuns', () => { let n = 0; for (let i = save.bag.length - 1; i >= 0; i--) if (save.bag[i].r === 0 && !save.bag[i].lk) { save.gold += sellValue(save.bag[i]); if (enchItem === save.bag[i]) enchItem = null; bagPick.delete(save.bag[i]); save.bag.splice(i, 1); n++; } bagSel = -1; persist(); n ? SFX.coin() : SFX.error(); }, { size: 12, col: '#6a4a2a' });
@@ -113,8 +142,10 @@ function hubBag() {
       bevel(x, y, 46, 40, hl ? '#2c2410' : '#10101c', it ? RAR[it.r][1] : '#26263a', '#05050a');
       if (it) { itemIcon(it, x + 23, y + 20, 2.6); if (it.ench) txt('+' + it.ench, x + 43, y + 36, 9, '#fff', 'right', 'bold'); miniStars(it.st || 0, x + 6, y + 6); } else { ctx.globalAlpha = .3; slotIcon(sl, 0, x + 23, y + 20, 2.6); ctx.globalAlpha = 1; }
       if (hl) { ctx.strokeStyle = '#ffd34a'; ctx.lineWidth = 2; ctx.strokeRect(x - 1, y - 1, 48, 42); }
-      ui.push({ x, y, w: 46, h: 40, fn: () => { bagFilter = sl; bagSel = -1; bagPage = 0; } }); });
+      if (bagDrag && bagDrag.mv && bagDrag.it.slot === sl) { ctx.strokeStyle = '#6f6'; ctx.lineWidth = 2; ctx.strokeRect(x - 2, y - 2, 50, 44); }   // destino ao arrastar
+      ui.push({ x, y, w: 46, h: 40, fn: () => { bagFilter = sl; bagSel = -1; bagPage = 0; bagEq = it ? sl : null; } }); });
     if (ref !== 'all') txt(`← ${SLOT_LBL[ref]}`, 345, 434, 12, '#ffd34a', 'left', 'bold'); }
+  if (bagDrag && bagDrag.mv) { ctx.globalAlpha = .85; itemIcon(bagDrag.it, mouse.x - UIOX, mouse.y, 2.6); ctx.globalAlpha = 1; }
   panel(500, 90, 280, 388, '#16162a');
   if (bagMulti) {
     const picked = save.bag.filter(q => bagPick.has(q)), tot = picked.reduce((a, q) => a + sellValue(q), 0), vis = save.bag.filter(q => !q.lk && (bagFilter === 'all' || q.slot === bagFilter));
@@ -126,7 +157,14 @@ function hubBag() {
     return;
   }
   const it = save.bag[bagSel];
-  if (!it) { txt('Seleciona um item', 640, 270, 15, '#667', 'center'); return; }
+  if (!it && bagEq && save.gear[bagEq]) {   // item equipado: ver e desequipar
+    const q = save.gear[bagEq], yy = itemCard(q, 512, 98, 256), full = save.bag.length >= bagMax();
+    txt(T2('Equipado', 'Equipped'), 512, yy + 14, 13, '#f0c060', 'left', 'bold');
+    btn(512, 412, 256, 28, full ? T2('Mochila cheia', 'Backpack full') : T2('Desequipar', 'Unequip'), () => { if (save.bag.length >= bagMax()) { SFX.error(); return; } save.bag.push(q); save.gear[bagEq] = null; bagSel = save.bag.length - 1; bagEq = null; persist(); SFX.click(); }, { size: 14, off: full, col: '#6a4a2a', hot: '#8a6a3a' });
+    wrap(T2('Dica: arrasta um item da mochila para o slot equipado para o equipar.', 'Tip: drag a backpack item onto its equipped slot to equip it.'), 512, 456, 256, 13, 10, '#778');
+    return;
+  }
+  if (!it) { txt('Seleciona um item', 640, 260, 15, '#667', 'center'); wrap(T2('Arrasta um item para o slot equipado em baixo para o equipar. Clica num item equipado para o desequipar.', 'Drag an item onto the equipped slot below to equip it. Click an equipped item to unequip it.'), 524, 288, 232, 14, 11, '#778'); return; }
   const yy = itemCard(it, 512, 98, 232), cur = save.gear[it.slot];
   { const lx = 744, ly = 98; btn(lx, ly, 26, 24, '', () => { it.lk = it.lk ? 0 : 1; if (it.lk) bagPick.delete(it); sellArm = null; persist(); SFX.click(); }, { col: it.lk ? '#a8821f' : '#2a2a48', hot: '#c9a030' }); ctx.fillStyle = it.lk ? '#fff' : '#9aa'; ctx.fillRect(lx + 8, ly + 11, 10, 8); ctx.fillRect(lx + 10, ly + 6, 2, 6); ctx.fillRect(lx + 14, ly + 6, 2, 6); ctx.fillRect(lx + 10, ly + 5, 6, 2); if (it.lk) { ctx.fillStyle = '#a8821f'; ctx.fillRect(lx + 12, ly + 13, 2, 4); } }
   txt(cur ? `Equipado: ${itemName(cur)}` : 'Equipado: —', 512, yy + 12, 12, cur ? RAR[cur.r][1] : '#667');
@@ -220,7 +258,7 @@ function setItemLevel(it, il2) {
   const fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
   it.main.v = fx(it.main.k, it.main.v, MAIN_BASE[it.slot](il2) / MAIN_BASE[it.slot](it.il));
   for (const a of it.aff) a.v = fx(a.k, a.v, fa(a.k));
-  if (it.spec) { const cap = (it.spec.k === 'burn' || it.spec.k === 'slow') ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
+  if (it.spec) { const cap = ['burn', 'slow', 'poi', 'elec'].includes(it.spec.k) ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
   it.il = il2;
 }
 function evolveItem(it) {
@@ -228,7 +266,7 @@ function evolveItem(it) {
   const il2 = Math.min(120, it.il + 2), fx = (k, v, f) => k === 'hp' ? Math.round(v * f) : +(v * f).toFixed(1), fa = k => (AFF[k].b + AFF[k].p * il2) / (AFF[k].b + AFF[k].p * it.il);
   it.main.v = fx(it.main.k, it.main.v, MAIN_BASE[it.slot](il2) / MAIN_BASE[it.slot](it.il));
   for (const a of it.aff) a.v = fx(a.k, a.v, fa(a.k));
-  if (it.spec) { const cap = (it.spec.k === 'burn' || it.spec.k === 'slow') ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
+  if (it.spec) { const cap = ['burn', 'slow', 'poi', 'elec'].includes(it.spec.k) ? 35 : it.spec.k === 'xpb' ? 20 : 45; it.spec.v = Math.min(cap, fx(it.spec.k, it.spec.v, fa(it.spec.k))); }
   it.il = il2; save.stones[it.r]--; enc.msg = `EVOLUÍDO! Nível ${il2}`; enc.col = '#7fe8ff'; enc.msgT = 2.5; SFX.special();
   for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#7fe8ff' }); persist();
 }

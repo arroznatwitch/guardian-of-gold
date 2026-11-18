@@ -21,7 +21,7 @@ function drawHub() {
   tabs.forEach((t, i) => {
     const by = 74 + i * 27;
     if (t[0] === 'options') { btn(20, by, 150, 24, t[1], () => { rk.focus = ''; optBack = 'hub'; state = 'options'; }, { col: '#2a2a48', hot: '#d2a73a', size: 13 }); return; }
-    btn(20, by, 150, 24, t[1], () => { rk.focus = ''; tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
+    btn(20, by, 150, 24, t[1], () => { rk.focus = ''; if (t[0] === 'bag' && tab !== 'bag') { bagFilter = 'all'; bagSel = -1; bagEq = null; } tab = t[0]; if (tab === 'rank') { rkLoad(false); autoSync(); } if (!tabOpen(t[0])) lockClick(t[0]); }, { col: tab === t[0] ? '#a8821f' : '#2a2a48', hot: '#d2a73a', size: 13 });
     if (!tabOpen(t[0])) drawIcon('lock', 36, by + 13, 1.3);
     if (t[0] === 'events' && (dailyReady() > 0 || evBonusToday())) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }
     if (t[0] === 'char' && save.pts > 0) { ctx.fillStyle = '#ffd34a'; ctx.fillRect(152, by + 5, 12, 14); txt('!', 158, by + 16, 11, '#000', 'center', 'bold'); }

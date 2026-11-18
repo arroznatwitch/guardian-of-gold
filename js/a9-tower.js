@@ -6,6 +6,8 @@
    Se morreres, a Torre fecha ate ao dia seguinte; no dia seguinte volta ao andar 1.
    ===================================================================== */
 const TW = { lv: 50, free: 10, per: 2, cap: 20, hr: 3600e3, buyN: 10, buyCost: 500, max: 99 };   // na Shop: +10 andares por 500 diamantes (podem passar dos 20)
+const isTowerDay = () => evDay() === 2, twX = () => isTowerDay() ? 3 : 1;   // tercas: andares x3 (gratis, por hora e limite)
+const twFree = () => TW.free * twX(), twPer = () => TW.per * twX(), twCap = () => TW.cap * twX();
 const towerMap = f => Math.floor((f - 1) / 5) % MISSIONS.length;            // o cenario muda a cada 5 andares
 const towerRec = f => Math.min(130, Math.round(40 + 1.5 * f));             // nivel dos monstros (forca e itens)
 const towerTw = f => 3 + Math.floor(f * .4);                                // "onda" equivalente (vida, dano e quantidade)
@@ -17,11 +19,11 @@ const towerGems = f => towerBoss(f) ? 3 + Math.floor(f / 5) : 0;           // ba
 const towerStone = f => Math.min(4, Math.floor(f / 15));
 function twState() {
   let t = save.tw; const now = Date.now(), k = todayKey();
-  if (!t || typeof t !== 'object') t = save.tw = { d: '', f: 1, dead: 0, tk: TW.free, at: now, best: 0 };
+  if (!t || typeof t !== 'object') t = save.tw = { d: '', f: 1, dead: 0, tk: twFree(), at: now, best: 0 };
   t.f = Math.max(1, t.f | 0); t.tk = Math.max(0, Math.min(TW.max, t.tk | 0)); t.best = Math.max(0, t.best | 0); if (!(t.at <= now)) t.at = now;
-  if (t.d !== k) { t.d = k; t.f = 1; t.dead = 0; t.tk = Math.max(t.tk, TW.free); }   // novo dia: volta ao andar 1 e recebe os 10 gratis
-  if (t.tk >= TW.cap) t.at = now;   // cheio: o relogio so conta quando ha espaco
-  else { const n = Math.floor((now - t.at) / TW.hr); if (n > 0) { t.tk = Math.min(TW.cap, t.tk + n * TW.per); t.at += n * TW.hr; if (t.tk >= TW.cap) t.at = now; } }
+  if (t.d !== k) { t.d = k; t.f = 1; t.dead = 0; t.tk = Math.max(t.tk, twFree()); }   // novo dia: volta ao andar 1 e recebe os 10 gratis
+  if (t.tk >= twCap()) t.at = now;   // cheio: o relogio so conta quando ha espaco
+  else { const n = Math.floor((now - t.at) / TW.hr); if (n > 0) { t.tk = Math.min(twCap(), t.tk + n * twPer()); t.at += n * TW.hr; if (t.tk >= twCap()) t.at = now; } }
   return t;
 }
 const towerOpen = () => save && save.pl.lv >= TW.lv;
@@ -43,7 +45,7 @@ function towerClear() {   // andar concluido: recompensas logo guardadas, gasta 
   const t = twState(), f = t.f, T = R.tower, g = towerGold(f), xp = towerXp(f), gm = towerGems(f);
   save.gold = Math.min(GOLD_MAX, save.gold + g); addXP(xp); T.g += g; T.xp += xp; T.n++;
   if (gm) { save.gems += gm; T.gems += gm; const r = towerStone(f); save.stones[r]++; T.st[r]++; }
-  t.f = f + 1; if (t.tk >= TW.cap) t.at = Date.now(); t.tk = Math.max(0, t.tk - 1); if (f > t.best) t.best = f;   // estava cheio: o relogio das horas arranca agora
+  t.f = f + 1; if (t.tk >= twCap()) t.at = Date.now(); t.tk = Math.max(0, t.tk - 1); if (f > t.best) t.best = f;   // estava cheio: o relogio das horas arranca agora
   R.texts.push({ x: R.p.x, y: R.p.y - 40, s: `+¢${gfmt(g)} · +${gfmt(xp)} XP` + (gm ? ` · +${gm} ◆` : ''), t: 2, col: '#ffd34a', sz: 14 });
   persist(); SFX.win();
   if (t.tk <= 0) { R.tower.out = true; R.endT = 1.6; R.endWin = true; R.phase = 'done'; R.enemies = []; return; }   // acabaram os andares: sai e guarda tudo
@@ -61,7 +63,7 @@ function shopTowerCard(X, Y, WD) {   // cartao na Shop
   const t = save ? twState() : null, c = disc(TW.buyCost), open = towerOpen(), ask = twAsk > T;
   bevel(X, Y, WD, 54, '#14142a', '#6a4aa8', '#05050a');
   txt(T2(`Torre · +${TW.buyN} andares`, `Tower · +${TW.buyN} floors`), X + 16, Y + 22, 16, '#d0a0ff', 'left', 'bold');
-  txt(!open ? T2(`Abre no nível ${TW.lv}.`, `Unlocks at level ${TW.lv}.`) : t.dead ? T2('Morreste hoje: a Torre só abre amanhã.', 'You died today: the Tower only opens tomorrow.') : T2(`Tens ${t.tk} andares disponíveis. Os comprados podem passar dos ${TW.cap}.`, `You have ${t.tk} floors available. Bought floors can go past ${TW.cap}.`), X + 16, Y + 42, 11, open && !t.dead ? '#9ab' : '#f88');
+  txt(!open ? T2(`Abre no nível ${TW.lv}.`, `Unlocks at level ${TW.lv}.`) : t.dead ? T2('Morreste hoje: a Torre só abre amanhã.', 'You died today: the Tower only opens tomorrow.') : T2(`Tens ${t.tk} andares disponíveis. Os comprados podem passar dos ${twCap()}.`, `You have ${t.tk} floors available. Bought floors can go past ${twCap()}.`), X + 16, Y + 42, 11, open && !t.dead ? '#9ab' : '#f88');
   const ok = open && !t.dead && save.gems >= c && t.tk + TW.buyN <= TW.max;
   btn(X + WD - 216, Y + 11, 200, 32, ask ? T2(`Confirmar · ${c} ◆`, `Confirm · ${c} ◆`) : `${T2('Comprar', 'Buy')} · ${c} ◆`, towerBuy, { size: 14, off: !ok, col: ask ? '#a06a20' : '#2f7a4a', hot: ask ? '#c98a30' : '#3fa061' });
 }
@@ -87,11 +89,12 @@ function hubTower() {
   bevel(px, 132, pw, 120, '#14142a', t.dead ? '#8a3030' : '#a8821f', '#05050a');
   txt(t.dead ? T2('Morreste hoje', 'You died today') : `${T2('Próximo andar', 'Next floor')}: ${f}`, px + 16, 160, 20, t.dead ? '#f88' : '#fff', 'left', 'bold');
   txt(`${T2('Melhor andar', 'Best floor')}: ${t.best}`, px + pw - 16, 160, 13, '#9cf', 'right', 'bold');
-  txt(`${T2('Andares disponíveis', 'Floors available')}: ${t.tk}/${TW.cap}`, px + 16, 186, 15, t.tk ? '#6f6' : '#f88', 'left', 'bold');
-  bar(px + 16, 194, pw - 32, 8, t.tk / TW.cap, '#6f6');
-  if (t.tk < TW.cap) { const left = Math.max(0, TW.hr - (now - t.at)), mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60; txt(`+${TW.per} ${T2('andares em', 'floors in')} ${mm}:${String(ss).padStart(2, '0')}`, px + 16, 222, 12, '#cdd6f4'); }
+  if (isTowerDay()) txt(T2('Terça: andares x3!', 'Tuesday: floors x3!'), px + pw - 16, 186, 13, '#ff8a5a', 'right', 'bold');
+  txt(`${T2('Andares disponíveis', 'Floors available')}: ${t.tk}/${twCap()}`, px + 16, 186, 15, t.tk ? '#6f6' : '#f88', 'left', 'bold');
+  bar(px + 16, 194, pw - 32, 8, t.tk / twCap(), '#6f6');
+  if (t.tk < twCap()) { const left = Math.max(0, TW.hr - (now - t.at)), mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60; txt(`+${twPer()} ${T2('andares em', 'floors in')} ${mm}:${String(ss).padStart(2, '0')}`, px + 16, 222, 12, '#cdd6f4'); }
   else txt(T2('Cheio: joga para voltares a ganhar andares.', 'Full: play to start earning floors again.'), px + 16, 222, 12, '#ffd34a');
-  txt(t.dead ? T2('A Torre volta a abrir amanhã, no andar 1.', 'The Tower reopens tomorrow, on floor 1.') : T2(`${TW.free} grátis por dia · +${TW.per} por hora (até ${TW.cap})`, `${TW.free} free per day · +${TW.per} per hour (up to ${TW.cap})`), px + 16, 242, 11, t.dead ? '#f99' : '#889');
+  txt(t.dead ? T2('A Torre volta a abrir amanhã, no andar 1.', 'The Tower reopens tomorrow, on floor 1.') : T2(`${twFree()} grátis por dia · +${twPer()} por hora (até ${twCap()})`, `${twFree()} free per day · +${twPer()} per hour (up to ${twCap()})`), px + 16, 242, 11, t.dead ? '#f99' : '#889');
   // recompensas
   bevel(px, 262, pw, 120, '#14142a', '#3a3a5a', '#05050a');
   txt(T2('Recompensas por andar', 'Rewards per floor'), px + 16, 286, 15, '#f0c060', 'left', 'bold');
