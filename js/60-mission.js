@@ -71,7 +71,7 @@ function dmgE(e, d, ang, kb, quiet) {
   if (e.air) return;   // o Guardiao esta no ar durante o salto
   let crit = false; const g = R.G;
   if (g && !quiet) {
-    if (Math.random() * 100 < Math.min(75, g.crit)) { d *= CRIT_X; crit = true; }
+    if (Math.random() * 100 < Math.min(75, g.crit)) { d *= critX(g); crit = true; }
     if (g.ls) lsHeal(Math.min(R.p.max * .003, d * 10 * g.ls / 100 * .2), 'Roubo de vida (equipamento)');   // 20% do valor, no maximo 0,3% da vida por golpe
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);

@@ -72,15 +72,18 @@ const AFF = {
   hp: { n: 'Vida', u: '', b: 12, p: 3 }, dmg: { n: 'Dano', u: '%', b: 2.5, p: .25 }, spd: { n: 'Velocidade', u: '%', b: 1.5, p: .12 }, cdr: { n: 'Vel. de ataque', u: '%', b: 1.5, p: .12 },
   crit: { n: 'Chance de crítico', u: '%', b: 1.5, p: .1 }, ls: { n: 'Roubo de vida', u: '%', b: .8, p: .05 }, dr: { n: 'Redução de dano', u: '%', b: 1, p: .08 },
   gf: { n: 'Ouro extra', u: '%', b: 3, p: .3 }, xpb: { n: 'XP extra', u: '%', b: 3, p: .3 }, burn: { n: 'Chance de queimar', u: '%', b: 6, p: .5 }, slow: { n: 'Chance de gelo', u: '%', b: 6, p: .5 },
-  poi: { n: 'Chance de envenenar', u: '%', b: 6, p: .5 }, elec: { n: 'Chance de eletrocutar', u: '%', b: 6, p: .5 },   // efeitos especiais novos (so no Encantar especial)
+  poi: { n: 'Chance de envenenar', u: '%', b: 6, p: .5 }, elec: { n: 'Chance de eletrocutar', u: '%', b: 6, p: .5 },
+  cdmg: { n: 'Dano crítico', u: '%', b: 6, p: .5 }, skc: { n: 'Redução de recarga (E)', u: '%', b: 3, p: .2 },   // dano critico (soma ao x1.75) e recarga da habilidade em %   // efeitos especiais novos (so no Encantar especial)
 };
 const AFF_POOL = ['hp', 'dmg', 'spd', 'cdr', 'crit', 'ls', 'dr', 'gf', 'xpb'];
-const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso'], ['poi', 'Venenoso'], ['elec', 'Elétrico']];
+const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso'], ['poi', 'Venenoso'], ['elec', 'Elétrico'], ['cdmg', 'Brutal'], ['skc', 'Veloz']];
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
 const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Destreza', '+0.6% vel. de ataque / velocidade'], ['per', 'Perícia', '-0.02s recarga']];
 const CRIT_X = 1.75;   // dano critico: multiplicador do golpe
 const SK_CD_PT = .02, SK_CD_MIN = .5;   // cada ponto de Pericia tira 0,02 s a recarga da habilidade (E), sem limite (so nunca desce de 0,5 s)
-const skCd = w => Math.max(SK_CD_MIN, w.sk.cd - SK_CD_PT * ((save && save.attr && save.attr.per) | 0));
+const skCd = w => Math.max(SK_CD_MIN, (w.sk.cd - SK_CD_PT * ((save && save.attr && save.attr.per) | 0)) * (1 - ((state === 'play' && R && R.G) || gearStats()).skc / 100));   // Pericia (s) e depois o encantamento Veloz (%)
+const specCap = k => ['burn', 'slow', 'poi', 'elec'].includes(k) ? 35 : k === 'xpb' || k === 'skc' ? 20 : 45;   // teto do encantamento especial (igual no servidor)
+const critX = g => CRIT_X + (g ? g.cdmg : 0) / 100;   // multiplicador do critico
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
 const refCost = it => disc(Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1) * lvMul()));
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15) * lvMul());
@@ -88,7 +91,7 @@ const ev = (k, v, m) => k === 'hp' ? Math.round(v * m) : +(v * m).toFixed(1);
 const statLine = (k, v) => { const a = AFF[k]; return a.u ? `+${v}${a.u} ${a.n}` : `+${v} ${a.n}`; };
 const itemName = it => `${ITEM_NAMES[it.slot][it.r]}${it.slot === 'ring' ? ' ' + GEM_NM[it.gem | 0] : ''}${it.spec ? ' ' + it.spec.nm : ''}${it.ench ? ` +${it.ench}` : ''}${it.st ? ' ' + '★'.repeat(it.st) : ''}`;
 const sellValue = it => Math.round(.6 * (6 + it.il * 2) * (1 + it.r * it.r * .8) * (1 + .15 * it.ench) * (1 + .5 * (it.st || 0)));
-const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5, poi: .6, elec: .6 };
+const CMP_W = { hp: 1, dmg: 1.5, spd: .8, cdr: 1.2, crit: 1.1, ls: 1, dr: 1, gf: .5, xpb: .5, burn: .6, slow: .5, poi: .6, elec: .6, cdmg: .8, skc: .8 };
 function itemStats(it) { const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0], o = {}; o[it.main.k] = (o[it.main.k] || 0) + it.main.v * m; for (const a of it.aff) o[a.k] = (o[a.k] || 0) + a.v * m; if (it.spec) o[it.spec.k] = (o[it.spec.k] || 0) + it.spec.v * m; return o; }
 function cmpItems(nw, old) {
   if (nw.slot === 'ring') { const s = nw.r - (old ? old.r : -1); return { score: s, rows: [], verdict: s > 0 ? 1 : s < 0 ? -1 : 0 }; }   // aneis: ganha a raridade mais alta
@@ -121,7 +124,7 @@ function mainVal(slot, r, il) {
 function affVal(k, r, il) { const a = AFF[k], v = (a.b + a.p * il) * (.75 + .5 * Math.random()) * (1 + .1 * r) * (GEAR_F[k] || 1) * (r === 4 ? MYTH_F : 1); return k === 'hp' ? Math.round(v) : +v.toFixed(1); }
 function rollSpec(it, avoid) {
   let c; do { c = SPEC_POOL[Math.floor(Math.random() * SPEC_POOL.length)]; } while (avoid && c[0] === avoid);
-  const cap = ['burn', 'slow', 'poi', 'elec'].includes(c[0]) ? 35 : c[0] === 'xpb' ? 20 : 45; return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
+  const cap = specCap(c[0]); return { k: c[0], nm: c[1], v: Math.min(cap, +(affVal(c[0], it.r + 1, it.il) * 1.5).toFixed(1)) };
 }
 function genItem(slot, r, il) {
   const it = { slot, r, il, ench: 0, rr: 0, main: { k: SLOT_MAIN[slot], v: mainVal(slot, r, il) }, aff: [], spec: null };
@@ -136,11 +139,11 @@ function genRing(r, il) {   // anel: so tem o bonus de conjunto (+2/5/7/10% do s
 }
 const genLoot = (r, il) => Math.random() < RING_DROP ? genRing(r, il) : genItem(SLOTS[Math.floor(Math.random() * 4)], r, il);
 function gearStats() {
-  const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0, poi: 0, elec: 0 };
+  const g = { hp: 0, dmg: 0, spd: 0, cdr: 0, crit: 0, ls: 0, dr: 0, gf: 0, xpb: 0, burn: 0, slow: 0, poi: 0, elec: 0, cdmg: 0, skc: 0 };
   if (!save || !save.gear) return g;
   for (const sl of SLOTS) { const it = save.gear[sl]; if (!it) continue; const m = (1 + ENC_K * it.ench) * GEAR_STAR[it.st || 0]; g[it.main.k] += it.main.v * m; for (const a of it.aff) g[a.k] += a.v * m; if (it.spec) g[it.spec.k] += it.spec.v * m; }
   for (const b of armourSets()) if (b.k === 'crit') g.crit += b.p;   // conjuntos: o Critico soma pontos
-  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(4, g.ls);   // tetos   // XP extra tem teto
+  g.xpb = Math.min(25, g.xpb); g.ls = Math.min(4, g.ls); g.skc = Math.min(30, g.skc);   // tetos   // XP extra tem teto
   return g;
 }
 // pesos de raridade (Comum..Mitico): Lendario ronda 1% e Mitico 0,1% mesmo no melhor caso
