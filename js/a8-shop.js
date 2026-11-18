@@ -103,10 +103,11 @@ function hubShop() {
     if (P.overflow > 0) txt(T2(`Mochila: ${P.free} livres · ~${P.overflow} serão vendidos`, `Backpack: ${P.free} free · ~${P.overflow} will be sold`), rx, Y + 182, 10, '#ffb060', 'left', 'bold');
     if (save.gems < disc(AR.cost)) txt(T2('Diamantes insuficientes.', 'Not enough diamonds.'), X + WD - 216, Y + 226, 11, '#f88');
   } else txt(T2('Carrega em Simular para veres quanto rende.', 'Press Simulate to see what you would get.'), rx, Y + 140, 12, '#778');
+  shopTowerCard(X, 366, WD);   // andares da Torre (a9-tower.js)
   // ultima compra
-  txt(T2('Última compra', 'Last purchase'), X, 384, 14, '#f0c060', 'left', 'bold');
-  if (!shopLast) txt(T2('Ainda não compraste nada.', 'You have not bought anything yet.'), X, 408, 12, '#667');
+  txt(T2('Última compra', 'Last purchase'), X, 440, 14, '#f0c060', 'left', 'bold');
+  if (!shopLast) txt(T2('Ainda não compraste nada.', 'You have not bought anything yet.'), X, 460, 12, '#667');
   else { const r = shopLast;
-    txt(`${r.n} ${T2('raids', 'raids')} (${r.t}s ${T2('cada', 'each')}) · ¢${gfmt(r.gold + r.sold)} · ${gfmt(r.xp)} XP${r.lvUp ? ` (+${r.lvUp} ${T2('níveis', 'levels')})` : ''}`, X, 408, 12, '#cdd6f4');
-    txt(`${r.items - r.soldN} ${T2('itens na mochila', 'items in the backpack')}${r.soldN ? ` · ${r.soldN} ${T2('vendidos (mochila cheia)', 'sold (backpack full)')} +¢${gfmt(r.sold)}` : ''}${r.copies ? ` · ${r.copies} ${T2('cópias de arma', 'weapon copies')}` : ''}`, X, 428, 12, r.soldN ? '#ffb060' : '#9ab'); }
+    txt(`${r.n} ${T2('raids', 'raids')} (${r.t}s ${T2('cada', 'each')}) · ¢${gfmt(r.gold + r.sold)} · ${gfmt(r.xp)} XP${r.lvUp ? ` (+${r.lvUp} ${T2('níveis', 'levels')})` : ''}`, X, 460, 12, '#cdd6f4');
+    txt(`${r.items - r.soldN} ${T2('itens na mochila', 'items in the backpack')}${r.soldN ? ` · ${r.soldN} ${T2('vendidos (mochila cheia)', 'sold (backpack full)')} +¢${gfmt(r.sold)}` : ''}${r.copies ? ` · ${r.copies} ${T2('cópias de arma', 'weapon copies')}` : ''}`, X, 478, 12, r.soldN ? '#ffb060' : '#9ab'); }
 }
