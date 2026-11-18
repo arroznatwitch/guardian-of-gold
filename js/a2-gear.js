@@ -52,10 +52,10 @@ function hubChar() {
   panel(490, 88, 295, 390, '#16162a', '#3a3a5a');
   const pn = on && on.nick ? on.nick : c.name;
   txt(pn, 504, 114, 20, '#fff', 'left', 'bold'); txt(`Nv ${L}`, 504 + txtW(pn, 20, 'bold') + 10, 113, 16, '#6cf', 'left', 'bold');
-  bar(504, 122, 267, 8, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#6cf'); txt(L >= MAXLV ? 'MAX' : `${save.pl.xp}/${xpNeed(L)} XP`, 504, 148, 11, '#8ab', 'left');
+  bar(504, 119, 267, 13, L >= MAXLV ? 1 : save.pl.xp / xpNeed(L), '#3a8acf'); txt(L >= MAXLV ? 'MAX' : `${gfmt(save.pl.xp)} / ${gfmt(xpNeed(L))} XP`, 637, 130, 10, '#fff', 'center', 'bold');   // XP dentro da barra
   { const ps = Math.floor(+save.pt || 0), h = Math.floor(ps / 3600), m = Math.floor(ps / 60) % 60, v = h ? `${h}h ${m}m` : `${m}m ${ps % 60}s`, end = 504 + txtW(pn, 20, 'bold') + 10 + txtW(`Nv ${L}`, 16, 'bold') + 8, full = T2('Tempo de jogo: ', 'Play time: ') + v;
     const s2 = 771 - txtW(full, 11) >= end ? full : 771 - txtW('⏱ ' + v, 11) >= end ? '⏱ ' + v : ''; if (s2) txt(s2, 771, 112, 11, '#8ab', 'right'); }   // tempo de jogo deste personagem; com nicks compridos so mostra o valor (ou nada, se nao couber)
-  txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
+  txt('Atributos', 504, 172, 14, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 172, 14, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint0], i) => { let hint = hint0;
     const y = 176 + i * 34;
     if (key === 'agi') hint = a.agi % 2 === 0 ? T2('Próximo: +0.6% vel. ataque', 'Next: +0.6% atk speed') : T2('Próximo: +0.6% velocidade', 'Next: +0.6% speed');   // curto: nao passa por cima do numero   // a Destreza alterna entre os dois
@@ -112,11 +112,11 @@ function hubBag() {
   const slots = save.bagSlots || 1; if (bagPage >= slots) bagPage = 0;
   txt('Mochila', 197, 132, 12, '#8a9ab8', 'left', 'bold');
   for (let k = 0; k < 5; k++) {
-    const x = 252 + k * 34, open = k < slots, next = k === slots;
+    const x = 197 + txtW('Mochila', 12, 'bold') + 10 + k * 34, open = k < slots, next = k === slots;
     btn(x, 117, 30, 22, open ? String(k + 1) : '', () => { if (open) { bagPage = k; bagSel = -1; } else if (next) { bagBuy = k + 1; } else { SFX.error(); hubToast = { t: 2.4, s: 'Desbloqueia primeiro a Mochila anterior', col: '#f88' }; } }, { size: 13, col: open ? (bagPage === k ? '#a8821f' : '#2a2a48') : next ? '#4a3a1a' : '#1e1e2a', hot: open ? '#c9a030' : '#7a6a3a' });
     if (!open) drawIcon('lock', x + 15, 128, 1);
   }
-  { const nk = slots < 5 ? BAG_COST[slots] : null; if (nk) { const gem = nk[0] === 'd', can = gem ? save.gems >= nk[1] : save.gold >= nk[1]; txt('Próxima: ' + (gem ? '◆' : '¢') + gfmt(nk[1]), 430, 132, 11, can ? (gem ? '#7fe8ff' : '#fd5') : '#a88', 'left', 'bold'); } }
+  { const nk = slots < 5 ? BAG_COST[slots] : null; if (nk) { const gem = nk[0] === 'd', can = gem ? save.gems >= nk[1] : save.gold >= nk[1]; txt('Próxima: ' + (gem ? '◆' : '¢') + gfmt(nk[1]), 495, 132, 11, can ? (gem ? '#7fe8ff' : '#fd5') : '#a88', 'right', 'bold'); } }
   txt(`${save.bag.length}/${bagMax()}`, 495, 417, 13, save.bag.length >= bagMax() ? '#f66' : '#aab', 'right', 'bold');
   const list = save.bag.map((it, i) => ({ it, i })).filter(o => bagFilter === 'all' || o.it.slot === bagFilter);
   const pageList = list.slice(bagPage * BAG_PAGE, bagPage * BAG_PAGE + BAG_PAGE);

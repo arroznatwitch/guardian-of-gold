@@ -261,14 +261,14 @@ function itemCard(it, x, y, w = 230, compact = false) {   // compact: stats em 2
   if (compact) {
     const L2 = [[statLine(it.main.k, ev(it.main.k, it.main.v, m)), '#fff', 'bold']].concat(it.aff.map(a => [statLine(a.k, ev(a.k, a.v, m)), '#7cf', 'normal']));
     L2.forEach(([t, c, b], i) => txt(t, x + (i % 2) * (w / 2), yy - 4 + Math.floor(i / 2) * 15, 12, c, 'left', b)); yy += Math.ceil(L2.length / 2) * 15;
-    if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy - 4, 12, '#ffd34a'); yy += 15; }
+    if (it.spec) { yy = wrap(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy - 4, w - 4, 14, 12, '#ffd34a') + 4 + 15; }
     const ex2 = [it.ench ? `Refinado +${it.ench}` : '', it.st ? `Fusão ${'★'.repeat(it.st)} (×${GEAR_STAR[it.st].toFixed(2)})` : ''].filter(Boolean).join(' · ');
     if (ex2) { txt(ex2, x, yy - 4, 11, '#9fe'); yy += 14; }
     return yy;
   }
   txt(statLine(it.main.k, ev(it.main.k, it.main.v, m)), x, yy, 14, '#fff', 'left', 'bold'); yy += 18;
   for (const a of it.aff) { txt(statLine(a.k, ev(a.k, a.v, m)), x, yy, 13, '#7cf'); yy += 16; }
-  if (it.spec) { txt(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy, 13, '#ffd34a'); yy += 16; }
+  if (it.spec) { yy = wrap(`${it.spec.nm}: ${statLine(it.spec.k, ev(it.spec.k, it.spec.v, m))}`, x, yy, w - 4, 15, 13, '#ffd34a') + 16; }   // quebra a linha se nao couber na carta
   if (it.ench) { txt(`Refinado +${it.ench}`, x, yy, 12, '#9fe'); yy += 15; }
   if (it.st) { txt(`Fusão ${'★'.repeat(it.st)} (×${GEAR_STAR[it.st].toFixed(2)})`, x, yy, 12, '#ffd34a'); yy += 15; }
   return yy;
