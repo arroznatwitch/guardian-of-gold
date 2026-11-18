@@ -62,9 +62,7 @@ function keyName(c) {
   const m = { Space: 'Espaço', ShiftLeft: 'Shift', ShiftRight: 'Shift (dir.)', ControlLeft: 'Ctrl', ControlRight: 'Ctrl (dir.)', AltLeft: 'Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Escape: 'Esc', Enter: 'Enter', Tab: 'Tab', Backspace: '⌫' };
   if (m[c]) return m[c]; if (c.startsWith('Key')) return c.slice(3); if (c.startsWith('Digit')) return c.slice(5); return c;
 }
-// o travao acompanha o nivel: cada ponto vale por inteiro ate 15 + 1,2 x nivel num atributo; ate ao dobro vale metade e depois um quarto
-const attrCap = L => 15 + 1.2 * (L || (save && save.pl && save.pl.lv) || 1);
-const attrEff = (n, L) => { const T = attrCap(L); return n <= T ? n : n <= 2 * T ? T + (n - T) * .5 : 1.5 * T + (n - 2 * T) * .25; };
+const attrEff = n => n;   // sem travao por nivel: cada ponto vale sempre por inteiro (cada um distribui como quiser)
 const stats = () => {
   const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, ga = 1 + gb().attr, a = { vit: attrEff(save.attr.vit) * ga, str: attrEff(save.attr.str) * ga, agi: attrEff(save.attr.agi) * ga, per: attrEff(save.attr.per) * ga };
   const sb = setBonus(), bm = k => (sb && sb.on && sb.k === k ? 1 + sb.p : 1) * (1 + setPct(k));   // bonus do anel (so com o conjunto completo) e dos conjuntos de armadura (92-sets.js)
