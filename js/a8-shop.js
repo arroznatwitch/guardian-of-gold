@@ -56,15 +56,15 @@ function arPlan(o, n) {   // o que a compra dava (-10%); sem diamantes nem pedra
   return { items, free, overflow: Math.max(0, items - free), gold: Math.round(o.gold * n * k), xp: Math.round(o.xp * n * k), copies: Math.floor(o.wloot.length * n * k) };
 }
 async function arBuyUI() {   // o servidor cobra os 1000 diamantes e regista a compra (ar.paid); depois aplica-se o resultado
-  const o = shopSim, n = arRuns(o); if (buyBusy || !o || !o.win || o.key !== arKey() || n < 1 || save.gems < AR.cost) { SFX.error(); return; }
+  const o = shopSim, n = arRuns(o); if (buyBusy || !o || !o.win || o.key !== arKey() || n < 1 || save.gems < disc(AR.cost)) { SFX.error(); return; }
   buyBusy = true; const sv = await shopServer('ar', 0); buyBusy = false;
   if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
   if (shopSim !== o) { SFX.error(); return; }
   arBuy(sv.ok ? sv.paid : null);
 }
 function arBuy(paid) {
-  const o = shopSim, n = arRuns(o); if (!o || !o.win || o.key !== arKey() || n < 1 || save.gems < AR.cost) { SFX.error(); return; }
-  const P = arPlan(o, n); save.gems -= AR.cost;
+  const o = shopSim, n = arRuns(o); if (!o || !o.win || o.key !== arKey() || n < 1 || save.gems < disc(AR.cost)) { SFX.error(); return; }
+  const P = arPlan(o, n); save.gems -= disc(AR.cost);
   const lv0 = save.pl.lv, res = { n, t: o.t, gold: P.gold, xp: P.xp, items: 0, sold: 0, soldN: 0, copies: 0, lvUp: 0 };
   for (let k = 0; k < P.items; k++) { const tp = o.loot[Math.floor(Math.random() * o.loot.length)], it = genLoot(tp.r, tp.il); res.items++; if (!addBag(it)) { res.sold += sellValue(it); res.soldN++; } }   // mochila cheia: o resto vende-se
   for (let c = 0; c < P.copies; c++) { const id = o.wloot[c % o.wloot.length]; if (save.wst[id]) { save.wst[id][0]++; res.copies++; } }   // copias de arma (-10%)
@@ -79,7 +79,7 @@ function hubShop() {
   const X = 197, Y = 126, WD = 583, o = shopSim, n = arRuns(o), open = arOpen(shopSel.i, shopSel.d), ok = !!o && o.win && o.key === arKey();
   bevel(X, Y, WD, 232, '#14142a', '#a8821f', '#05050a');
   txt(T2('Auto-Raid · 5 minutos', 'Auto-Raid · 5 minutes'), X + 16, Y + 30, 20, '#f0c060', 'left', 'bold');
-  txt(`${gfmt(AR.cost)} ◆`, X + WD - 16, Y + 30, 20, '#7fe8ff', 'right', 'bold');
+  txt(`${gfmt(disc(AR.cost))} ◆`, X + WD - 16, Y + 30, 20, '#7fe8ff', 'right', 'bold');
   wrap(T2('O teu personagem faz a raid sozinho. Simulamos uma raid (como se estivesses AFK), vemos quanto demora e calculamos quantas vezes a farias em 5 minutos. Recebes tudo de uma vez: ouro, XP, itens e cópias de arma, com -10%. Sem diamantes nem pedras.', 'Your character runs the raid on its own. We simulate one raid (as if you were AFK), see how long it takes and work out how many times you would run it in 5 minutes. You get everything at once: gold, XP, items and weapon copies, with -10%. No diamonds or stones.'), X + 16, Y + 52, WD - 32, 15, 12, '#cdd6f4');
   txt(T2('Se a mochila encher, os itens a mais são vendidos automaticamente. Não conta para o ranking de raids nem para as missões diárias.', 'If your backpack fills up, extra items are sold automatically. Does not count for the raids ranking or daily missions.'), X + 16, Y + 108, 11, '#ffb060');
   // escolha da raid e da dificuldade
@@ -88,7 +88,7 @@ function hubShop() {
   sel(T2('Dificuldade', 'Difficulty'), Y + 150, RAID_D[shopSel.d].n, RAID_D[shopSel.d].col, () => { shopSel.d = (shopSel.d + RAID_D.length - 1) % RAID_D.length; shopSim = null; }, () => { shopSel.d = (shopSel.d + 1) % RAID_D.length; shopSim = null; });
   if (!open) txt(T2('Ainda não concluíste esta raid.', 'You have not cleared this raid yet.'), X + 16, Y + 196, 12, '#f88', 'left', 'bold');
   btn(X + 16, Y + 186, 150, 32, shopBusy ? T2('A simular...', 'Simulating...') : T2('Simular (grátis)', 'Simulate (free)'), arRun, { size: 14, off: shopBusy || !open, col: '#2a5a7a', hot: '#3a7aa0' });
-  btn(X + WD - 216, Y + 186, 200, 32, `${T2('Comprar', 'Buy')} · ${gfmt(AR.cost)} ◆`, arBuyUI, { size: 14, off: !ok || n < 1 || save.gems < AR.cost, col: '#2f7a4a', hot: '#3fa061' });
+  btn(X + WD - 216, Y + 186, 200, 32, `${T2('Comprar', 'Buy')} · ${gfmt(disc(AR.cost))} ◆`, arBuyUI, { size: 14, off: !ok || n < 1 || save.gems < disc(AR.cost), col: '#2f7a4a', hot: '#3fa061' });
   // resultado da simulacao
   const rx = X + 350;
   if (shopBusy) txt(T2('A simular a raid...', 'Simulating the raid...'), rx, Y + 140, 13, '#ffd34a', 'left', 'bold');
@@ -101,7 +101,7 @@ function hubShop() {
     txt(`¢${gfmt(P.gold)} · ${gfmt(P.xp)} XP`, rx, Y + 152, 12, '#fd5');
     txt(`~${P.items} ${T2('itens', 'items')}${P.copies ? ` · ${P.copies} ${T2('cópias', 'copies')}` : ''}`, rx, Y + 168, 12, '#c9a0ff');
     if (P.overflow > 0) txt(T2(`Mochila: ${P.free} livres · ~${P.overflow} serão vendidos`, `Backpack: ${P.free} free · ~${P.overflow} will be sold`), rx, Y + 182, 10, '#ffb060', 'left', 'bold');
-    if (save.gems < AR.cost) txt(T2('Diamantes insuficientes.', 'Not enough diamonds.'), X + WD - 216, Y + 226, 11, '#f88');
+    if (save.gems < disc(AR.cost)) txt(T2('Diamantes insuficientes.', 'Not enough diamonds.'), X + WD - 216, Y + 226, 11, '#f88');
   } else txt(T2('Carrega em Simular para veres quanto rende.', 'Press Simulate to see what you would get.'), rx, Y + 140, 12, '#778');
   // ultima compra
   txt(T2('Última compra', 'Last purchase'), X, 384, 14, '#f0c060', 'left', 'bold');

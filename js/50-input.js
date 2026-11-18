@@ -61,5 +61,5 @@ cv.addEventListener('mousedown', e => {
   }
 });
 addEventListener('mouseup', () => { mdown = false; stopHold(); if (activeDrag) { if (activeDrag.rel) activeDrag.rel(); activeDrag = null; } });
-function goHub() { state = 'hub'; tab = 'farm'; setMusic('calm'); }
+function goHub() { state = 'hub'; tab = typeof R === 'object' && R && R.tower ? 'tower' : 'farm'; setMusic('calm'); }
 

@@ -1442,7 +1442,6 @@ begin
     ee := gog._n(it, 'ench'); lvl := gog._n(s, 'pl', 'lv');
     if ee < 0 or ee >= 10 or ee >= floor(lvl / 4) then return jsonb_build_object('ok', false, 'error', 'state'); end if;
     cg := round(45 * (1 + gog._n(it, 'il') * .25) * (1 + gog._n(it, 'r') * .5) * (ee + 1) * (1 + lvl * .05));
-    if gold < cg then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
     ok2 := random() * 100 < (array[100, 90, 80, 70, 60, 50, 40, 30, 22, 15])[ee::int + 1];
     dn := not ok2 and ee >= 6 and random() < .3;
     resn := case when ok2 then 'ok' when dn then 'down' else 'fail' end;
@@ -1459,6 +1458,7 @@ begin
     pets := pets || jsonb_build_object('names', gog._obj(pets->'names') || jsonb_build_object(pk, nm));
     s := jsonb_set(s, '{pets}', pets);
   end if;
+  if extract(isodow from now() at time zone 'Europe/Lisbon') = 5 then cg := round(cg * .8); cd := round(cd * .8); end if;   -- sexta: -20%
   if gold < cg or gems < cd then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
   s := jsonb_set(s, '{gold}', to_jsonb(gold - cg));
   s := jsonb_set(s, '{gems}', to_jsonb(gems - cd));
@@ -1664,3 +1664,24 @@ begin
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); execute format('grant execute on function %s to authenticated', f); end if;
   end loop;
 end $$;
+
+-- ===== tempo de jogo (save.pt) controlado pelo servidor (igual a update-play-time.sql) =====
+-- Tempo de jogo (save.pt, em segundos) controlado pelo servidor.
+-- O jogo conta o tempo e envia-o no save, mas o servidor nunca deixa o valor subir mais do que o tempo real
+-- que passou desde o ultimo save (+60 s de folga). Se alguem alterar o valor, fica cortado, sem ban.
+-- Funciona com qualquer versao do gog_save_put (e um trigger na tabela). Corre no SQL Editor do Supabase.
+create or replace function gog._save_pt() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare o numeric; n numeric; lim numeric;
+begin
+  if new.save is null or jsonb_typeof(new.save) <> 'object' then return new; end if;
+  o := case when old.save is not null and jsonb_typeof(old.save->'pt') = 'number' then greatest((old.save->>'pt')::numeric, 0) else 0 end;
+  n := case when jsonb_typeof(new.save->'pt') = 'number' then greatest((new.save->>'pt')::numeric, 0) else o end;
+  lim := o + greatest(extract(epoch from now() - coalesce(old.save_at, now())), 0) + 60;
+  if n > lim then n := lim; end if;
+  new.save := jsonb_set(new.save, '{pt}', to_jsonb(round(n)));
+  return new;
+end $$;
+revoke all on function gog._save_pt() from public, anon, authenticated;
+drop trigger if exists save_pt on gog.players;
+create trigger save_pt before update of save on gog.players for each row execute function gog._save_pt();

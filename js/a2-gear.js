@@ -64,7 +64,7 @@ function hubChar() {
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
   btn(504, 314, 130, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { spendG(rc); save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: used === 0, col: '#6a3a2a' });
-  { const bc = attrBuyCost(save.buyN | 0); btn(641, 314, 130, 26, `+1 ponto ¢${gfmt(bc)}`, () => { if (save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo; cada compra torna o proximo mais caro
+  { const bc = disc(attrBuyCost(save.buyN | 0)); btn(641, 314, 130, 26, `+1 ponto ¢${gfmt(bc)}`, () => { if (save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo; cada compra torna o proximo mais caro
   txt('Estatísticas', 504, 362, 15, '#f0c060', 'left', 'bold');
   const s = stats(), E = [['Vida', s.hp], ['Dano', '+' + Math.round((s.dm - 1) * 100) + '%'], ['Velocidade', Math.round(s.spd)], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%'], ['Crítico', g.crit.toFixed(1) + '%'], ['Roubo de vida', g.ls.toFixed(1) + '%'], ['Redução de dano', g.dr.toFixed(1) + '%'], ['Ouro extra', g.gf.toFixed(0) + '%'], ['XP extra', g.xpb.toFixed(0) + '%'], ['Queimar', g.burn.toFixed(0) + '%'], ['Abrandar', g.slow.toFixed(0) + '%']];
   const SC = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a', '#ff7ae0', '#ff5a8a', '#6a9aff', '#ffd34a', '#7fe8ff', '#ff7a3a', '#a8e8ff'];   // uma cor por estatistica
@@ -165,8 +165,8 @@ const sellTargets = () => (sellAsk === 'pick' ? save.bag.filter(it => bagPick.ha
 async function buyWeapon(i, w) {   // arma da loja: o servidor confere o preco e os requisitos
   buyBusy = true; const sv = i > 0 ? await shopServer('wpn', i) : { fallback: true }; buyBusy = false;
   if (sv.ok === false) { hubToast = { t: 3, s: buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
-  if (save.own[save.cls][i] || save.gold < w.price) return;
-  spendG(w.price); save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy();
+  if (save.own[save.cls][i] || save.gold < disc(w.price)) return;
+  spendG(disc(w.price)); save.own[save.cls][i] = 1; save.wst[w.id][0] = Math.max(1, save.wst[w.id][0]); save.eq[save.cls] = i; persist(); SFX.buy();
 }
 async function buyBag(k) {   // compra de mochila: o servidor confere o preco e a ordem
   buyBusy = true; const sv = await shopServer('bag', k + 1); buyBusy = false;
@@ -391,7 +391,7 @@ function hubWeapons() {
     txt(own || rq.ok ? w.info : rq.text, x + 80, y + 40, 12, own || rq.ok ? '#bbc' : '#f88'); if (!locked) txt(`Dano ${Math.round(w.dmg * 10 * wlm(lv) * STAR_MULT[wStar(w.id)] * TUNE.cls[save.cls])} · ${(1 / w.cd).toFixed(1)}/s`, x + wd - 74, y + 66, 11, '#9cf', 'center');
     if (!eq && !locked) { const pc = Math.round((wpnDps(w) / wpnDps(c.weapons[save.eq[save.cls]]) - 1) * 100); txt(pc === 0 ? 'igual à equipada' : `${pc > 0 ? '+' : ''}${pc}% vs equipada`, x + wd - 74, y + 55, 11, pc > 0 ? '#6f6' : pc < 0 ? '#f77' : '#fd5', 'center', 'bold'); }
     if (!locked) txt(`[E] ${w.sk.n} (${w.sk.cd}s): ${w.sk.d}`, x + 80, y + 58, 12, '#7cf');
-    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${w.price}` : 'Bloqueada', () => { if (rq.ok && save.gold >= w.price && !buyBusy) buyWeapon(i, w); else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
+    if (!own) btn(x + wd - 135, y + 8, 122, 36, rq.ok ? `Comprar ¢${disc(w.price)}` : 'Bloqueada', () => { if (rq.ok && save.gold >= disc(w.price) && !buyBusy) buyWeapon(i, w); else if (!rq.ok) lockClick(w.id); else SFX.error(); }, { col: !rq.ok ? '#26262f' : save.gold >= w.price ? '#a06a20' : '#4a3a3a', hot: !rq.ok ? '#33333f' : '#c98a30', size: 14 });
     else if (!eq) btn(x + wd - 135, y + 8, 122, 36, 'Equipar', () => { save.eq[save.cls] = i; persist(); }, { size: 15 });
     else txt('✓ Equipada', x + wd - 74, y + 32, 14, '#f0c060', 'center', 'bold');
   });

@@ -246,7 +246,7 @@ function drawHUD() {
   ctx.globalAlpha = 1;
   const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
   txt(autoAtk ? `AUTO-ATAQUE (${keyName(binds.auto)})` : '', W - 12, 70, 12, '#7f7', 'right', 'bold');
-  txt(R.phase === 'hunt' ? (R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : R.lab ? 'LABORATÓRIO' : 'Derrota o Boss!', W - 12, 26, 16, R.farm && R.hordeB && R.phase === 'hunt' ? (Math.floor(T * 3) % 2 ? '#ff6a6a' : '#fff') : '#fff', 'right', 'bold');
+  txt(R.phase === 'hunt' ? (R.tower ? `${T2('Andar', 'Floor')} ${save.tw.f} · ${R.waveKills}/${R.need}` : R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : R.lab ? 'LABORATÓRIO' : 'Derrota o Boss!', W - 12, 26, 16, R.farm && R.hordeB && R.phase === 'hunt' ? (Math.floor(T * 3) % 2 ? '#ff6a6a' : '#fff') : '#fff', 'right', 'bold');
   if (R.farm && R.hordeB && R.phase === 'hunt') txt('HORDA!', W - 12, 134, 14, '#ff6a6a', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
   if (R.raid) txt(`Raid ${RAID_D[R.raid.d].n} · Onda ${R.wave}/4`, W - 12, 92, 13, RAID_D[R.raid.d].col, 'right', 'bold');
   if (gameSpeed === 2) txt('VELOCIDADE x2', W - 12, 112, 13, '#ffd34a', 'right', 'bold');
@@ -306,7 +306,8 @@ function playOverlay() {
     overlay('PAUSA', '#fff', []);
     btn(300, 215, 200, 44, 'Continuar', () => state = 'play', { size: 18, col: '#2f7a4a' });
     btn(300, 269, 200, 44, 'Opções', () => { optBack = 'pause'; state = 'options'; }, { size: 17 });
-    if (R.farm) { btn(300, 323, 200, 44, 'Sair da campanha (só 30%)', () => { R.retire = true; endMission(true, 'quit'); }, { size: 15, col: '#8a3a2a', hot: '#b04a3a' }); txt('Sair a meio guarda só 30% do que ganhaste.', 400, 428, 11, '#f99', 'center'); }
+    if (R.tower) { btn(300, 323, 200, 44, T2('Sair da Torre', 'Leave the Tower'), () => endMission(true, 'quit'), { size: 16, col: '#8a3a2a', hot: '#b04a3a' }); txt(T2('Os andares feitos ficam guardados; o andar atual recomeça.', 'Cleared floors are kept; the current floor restarts.'), 400, 428, 11, '#f99', 'center'); }
+    else if (R.farm) { btn(300, 323, 200, 44, 'Sair da campanha (só 30%)', () => { R.retire = true; endMission(true, 'quit'); }, { size: 15, col: '#8a3a2a', hot: '#b04a3a' }); txt('Sair a meio guarda só 30% do que ganhaste.', 400, 428, 11, '#f99', 'center'); }
     else btn(300, 323, 200, 44, 'Abandonar missão', () => goHub(), { size: 16, col: '#6a2a2a' });
     btn(300, 377, 200, 40, `Velocidade: x${gameSpeed}`, toggleSpeed, { size: 15, col: gameSpeed === 2 ? '#a06a20' : '#2a2a48' });
   } else if (state === 'win') drawResults(true);
