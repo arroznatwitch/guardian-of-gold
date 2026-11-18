@@ -172,7 +172,7 @@ const SS = () => wStar(curW().id);
 const STAR_FX = {"k_sword": ["2 investidas", "3 investidas", "4 investidas"], "k_axe": ["2 ondas de choque", "3 ondas de choque", "4 ondas de choque"], "k_spear": ["onda maior", "2 ondas", "3 ondas"], "k_hammer": ["frenesim de 7s", "frenesim de 8s", "frenesim de 10s"], "k_blade": ["onda maior", "2 ondas", "3 ondas"], "a_bow": ["10 flechas", "14 flechas", "20 flechas"], "a_triple": ["tiro maior", "tiro mais forte", "tiro gigante"], "a_cross": ["12 virotes", "15 virotes", "21 virotes"], "a_dark": ["11 virotes", "14 virotes, 5 ricochetes", "18 virotes, 5 ricochetes"], "a_fire": ["explosão maior", "explosão enorme", "explosão colossal"], "m_fire": ["2 meteoros", "3 meteoros", "CHUVA DE METEOROS"], "m_ice": ["área maior", "área e gelo maiores", "nova gigante (5s de gelo)"], "m_bolt": ["10 raios", "14 raios", "20 raios"], "m_arcane": ["círculo de 7s", "círculo de 8s", "círculo enorme de 10s"], "m_dark": ["dreno de 6s", "dreno de 7s", "dreno de 8s e maior"]};
 const SK = {
   k_sword() {
-    const n = 1 + SS(), lunge = () => { const p = R.p; p.lunge = { t: .22, hit: new Set(), dm: DM() * (n > 1 ? .8 : 1) }; p.dashT = .22; p.vx = Math.cos(p.face) * 760; p.vy = Math.sin(p.face) * 760; p.inv = Math.max(p.inv, .35); };
+    const n = 1 + SS(), lunge = () => { const p = R.p; p.lunge = { t: .22, hit: new Set(), dm: DM() * (n > 1 ? .8 : 1) }; p.dashT = .22; p.inv = Math.max(p.inv, .32); /* imune durante a investida */ p.vx = Math.cos(p.face) * 760; p.vy = Math.sin(p.face) * 760; p.inv = Math.max(p.inv, .35); };
     lunge(); for (let i = 1; i < n; i++) sched(i * .32, lunge);
   },
   k_axe() {
