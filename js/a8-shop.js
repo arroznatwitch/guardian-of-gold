@@ -66,7 +66,7 @@ function arBuy(paid) {
   const o = shopSim, n = arRuns(o); if (!o || !o.win || o.key !== arKey() || n < 1 || save.gems < disc(AR.cost)) { SFX.error(); return; }
   const P = arPlan(o, n); save.gems -= disc(AR.cost);
   const lv0 = save.pl.lv, res = { n, t: o.t, gold: P.gold, xp: P.xp, items: 0, sold: 0, soldN: 0, copies: 0, lvUp: 0 };
-  for (let k = 0; k < P.items; k++) { const tp = o.loot[Math.floor(Math.random() * o.loot.length)], it = genLoot(tp.r, tp.il); res.items++; if (!addBag(it)) { res.sold += sellValue(it); res.soldN++; } }   // mochila cheia: o resto vende-se
+  for (let k = 0; k < P.items; k++) { const tp = o.loot[Math.floor(Math.random() * o.loot.length)], it = genLoot(tp.r, tp.il); res.items++; if (autoSell(it)) { asNote(it); res.sold += sellValue(it); res.soldN++; } else if (!addBag(it)) { res.sold += sellValue(it); res.soldN++; } }   // mochila cheia: o resto vende-se
   for (let c = 0; c < P.copies; c++) { const id = o.wloot[c % o.wloot.length]; if (save.wst[id]) { save.wst[id][0]++; res.copies++; } }   // copias de arma (-10%)
   save.gold = Math.min(GOLD_MAX, save.gold + res.gold + res.sold); addXP(res.xp); res.lvUp = save.pl.lv - lv0;
   if (o.petXp && save.pets && save.pets.eq && save.pets.own[save.pets.eq]) { try { addPetXp(save.pets.eq, Math.round(o.petXp * n * AR.k)); } catch (e) { } }

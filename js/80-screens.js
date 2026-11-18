@@ -168,12 +168,39 @@ function drawOptions() {
   btn(215, 200, 370, 28, muted ? 'Som: DESLIGADO' : 'Som: LIGADO', () => muted = !muted, { size: 15, col: '#4a3a6a' });
   btn(215, 230, 370, 28, autoAtk ? 'Auto-ataque: LIGADO' : 'Auto-ataque: DESLIGADO', () => { autoAtk = !autoAtk; try { localStorage.setItem('bladehunter_auto', autoAtk ? '1' : '0'); } catch (e) {} }, { size: 15 });
   btn(215, 264, 370, 28, `Velocidade do jogo: x${gameSpeed}`, toggleSpeed, { size: 15, col: gameSpeed === 2 ? '#a06a20' : '#5c4a20' });
-  btn(215, 298, 370, 28, 'Ecrã inteiro (F)', toggleFS, { size: 15 });
-  btn(215, 332, 370, 28, 'Teclas', () => openKeys('options'), { size: 15 });
-  btn(215, 366, 370, 28, dmgLog ? 'Logs de Dano: LIGADO' : 'Logs de Dano: DESLIGADO', () => { dmgLog = !dmgLog; try { localStorage.setItem('gog_dmglog', dmgLog ? '1' : '0'); } catch (e) {} }, { size: 15, col: dmgLog ? '#2f7a4a' : '#5c4a20' });   // mostra de onde vem o dano e a cura em combate
+  btn(215, 298, 182, 28, 'Ecrã inteiro (F)', toggleFS, { size: 15 });
+  btn(403, 298, 182, 28, 'Teclas', () => openKeys('options'), { size: 15 });
+  btn(215, 332, 370, 28, dmgLog ? 'Logs de Dano: LIGADO' : 'Logs de Dano: DESLIGADO', () => { dmgLog = !dmgLog; try { localStorage.setItem('gog_dmglog', dmgLog ? '1' : '0'); } catch (e) {} }, { size: 15, col: dmgLog ? '#2f7a4a' : '#5c4a20' });   // mostra de onde vem o dano e a cura em combate
+  if (save) {   // auto-vender por raridade: um botao que abre a janela de escolha (fica guardado no personagem)
+    const A = save.as = Array.isArray(save.as) ? save.as : [0, 0, 0, 0, 0], on = RAR.filter((q, r) => A[r]).map(q => L(q[0]));
+    btn(215, 366, 370, 28, T2('Auto-vender: ', 'Auto-sell: ') + (on.length ? on.join(', ') : T2('DESLIGADO', 'OFF')), () => { asOpen = true; }, { size: on.length > 2 ? 13 : 15, col: on.length ? '#8a3a2a' : '#5c4a20', hot: on.length ? '#b04a3a' : undefined });
+  }
   labCheck(); if (labAllowed() && optBack === 'hub') btn(215, 400, 370, 28, 'Laboratório de batalha (Admin)', labStart, { size: 15, col: '#2f6a8a', hot: '#3f8ab0' });   // so para a conta admin (96-lab.js)
   txt(`${T2('Versão', 'Build')} ${GAME_BUILD}`, UW - 8, H - 8, 10, '#667', 'right');
   btn(300, 448, 200, 34, '< Voltar', () => { state = optBack; }, { size: 15 });
+  if (asOpen && save) drawAutoSell(); else asOpen = false;
+}
+let asOpen = false;
+function drawAutoSell() {   // janela do auto-vender: uma linha por raridade, com o icone e um visto
+  const A = save.as, X = 230, Y = 70, Wd = 340, Hd = 372;
+  ui.push({ x: 0, y: 0, w: UW, h: H, fn: () => {} });   // bloqueia os botoes por baixo
+  ctx.fillStyle = '#000b'; ctx.fillRect(-UIOX, 0, W, H);
+  panel(X, Y, Wd, Hd, '#14142a', '#a8821f');
+  txt(T2('AUTO-VENDER', 'AUTO-SELL'), X + Wd / 2, Y + 32, 22, '#f0c060', 'center', 'bold');
+  wrap(T2('Os itens das raridades marcadas vendem-se logo quando caem. Perdes o item e só ganhas o ouro da venda.', 'Items of the ticked rarities are sold as soon as they drop. You lose the item and only get the sale gold.'), X + 20, Y + 54, Wd - 40, 14, 11, '#cdd6f0');
+  RAR.forEach(([nm, col], r) => {
+    const y = Y + 92 + r * 46, on = !!A[r], hov = mouse.x - UIOX >= X + 16 && mouse.x - UIOX <= X + Wd - 16 && mouse.y >= y && mouse.y < y + 40;
+    bevel(X + 16, y, Wd - 32, 40, on ? '#2a1414' : hov ? '#1c1c34' : '#10101c', on ? col : '#2a2a3a', '#05050a');
+    slotIcon('head', r, X + 44, y + 20, 2.2);
+    txt(nm, X + 70, y + 26, 16, col, 'left', 'bold');
+    const bx = X + Wd - 56, by = y + 9; ctx.fillStyle = on ? col : '#0a0a14'; ctx.fillRect(bx, by, 22, 22); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(bx + 1, by + 1, 20, 20);
+    if (on) txt('✓', bx + 11, by + 18, 16, '#000', 'center', 'bold');
+    txt(on ? T2('vende', 'sells') : T2('guarda', 'keeps'), bx - 10, y + 26, 11, on ? '#f88' : '#778', 'right');
+    ui.push({ x: X + 16, y, w: Wd - 32, h: 40, fn: () => { A[r] = on ? 0 : 1; persist(); SFX.click(); } });
+  });
+  const n = A.filter(Boolean).length;
+  btn(X + 16, Y + Hd - 46, 120, 32, n === 5 ? T2('Nenhum', 'None') : T2('Todos', 'All'), () => { const v = n === 5 ? 0 : 1; for (let r = 0; r < 5; r++) A[r] = v; persist(); }, { size: 14, col: '#3a3a5a' });
+  btn(X + Wd - 136, Y + Hd - 46, 120, 32, T2('Feito', 'Done'), () => { asOpen = false; }, { size: 15, col: '#2f7a4a', hot: '#3fa061' });
 }
 function drawKeys() {
   menuBg(); txt('TECLAS', UW / 2, 48, 34, '#f0c060', 'center', 'bold');

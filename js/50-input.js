@@ -30,7 +30,7 @@ addEventListener('keydown', e => {
     else if (e.code === binds.pause || e.code === 'KeyP') state = 'pause';
   } else if (state === 'pause') { if (e.code === binds.pause || e.code === 'KeyP') state = 'play'; }
   else if (state === 'keys') { if (e.code === 'Escape') state = keysBack; }
-  else if (state === 'options') { if (e.code === 'Escape') state = optBack; }
+  else if (state === 'options') { if (e.code === 'Escape') { if (asOpen) asOpen = false; else state = optBack; } }
   else if (state === 'menu' && ['ArrowUp', 'KeyW', 'ArrowDown', 'KeyS'].includes(e.code)) { const n = menuItems.length || 1; menuSel = (menuSel + (e.code === 'ArrowUp' || e.code === 'KeyW' ? n - 1 : 1)) % n; menuConfirm = false; SFX.click(); }
   else if (e.code === 'Enter') {
     if (state === 'win' || state === 'lose') goHub(); else if (state === 'menu') menuActivate();

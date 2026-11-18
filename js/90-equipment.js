@@ -114,6 +114,9 @@ function arrowTri(x, y, up, col) { ctx.fillStyle = col; ctx.beginPath(); if (up)
 const wpnDps = w => w.dmg * (w.count || 1) * 10 * wlm(save.wl[w.id] || 0) * STAR_MULT[wStar(w.id)] / w.cd;
 function spendG(n) { save.gold -= n; const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; t.spent = (t.spent | 0) + Math.max(0, n | 0); }   // o ouro gasto conta para as conquistas
 function statUp(k, v) { const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; t[k] = (t[k] | 0) + (v === undefined ? 1 : v); }
+// Auto-vender (Opcoes): as raridades marcadas vendem-se logo quando caem, so da ouro
+const autoSell = it => !!(it && save && Array.isArray(save.as) && save.as[it.r | 0]);
+function asNote(it) { const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; if (it.r > (t.rar | 0)) t.rar = it.r; }   // conta para as conquistas de raridade na mesma
 function addBag(it) { const t = save.stats = save.stats || { kills: 0, gold: 0, bosses: 0 }; if (it && it.r > (t.rar | 0)) t.rar = it.r; if (save.bag.length >= bagMax()) return false; save.bag.push(it); return true; }
 function mainVal(slot, r, il) {
   if (slot === 'head') return Math.round((30 + 8 * il) * (1 + .24 * r) * GEAR_F.hp * (r === 4 ? MYTH_F : 1));
@@ -228,7 +231,7 @@ function endLines(win) {
   if (R.tower) { const n = R.tower.n; return [T2(`Andares concluídos: ${n} (próximo: ${save.tw.f})`, `Floors cleared: ${n} (next: ${save.tw.f})`), win ? (R.tower.out ? T2(`Ganhas +${twPer()} andares por hora. Volta mais tarde!`, `You earn +${twPer()} floors per hour. Come back later!`) : T2('O teu progresso fica guardado: continua quando quiseres hoje.', 'Your progress is saved: continue any time today.')) : T2('Morreste: a Torre fecha até amanhã e volta ao andar 1.', 'You died: the Tower closes until tomorrow and resets to floor 1.')]; }
   const a = [R.farm ? `Onda alcançada: ${R.wave}` : win ? `${MISSIONS[R.m].boss.name} foi derrotado!` : 'Foste derrotado...'];
   a.push(R.farm ? (win ? (R.exitMode === 'quit' ? `Saíste a meio: ficaste com 30% (¢${R.earned})` : `Guardaste tudo: ¢${R.earned}`) : `Morreste: ficaste com 40% do XP e 10% do ouro (¢${R.earned}) · itens perdidos`) : win ? `Ganhaste ¢${R.earned} (inclui recompensa)` : `Guardaste ¢${R.earned} (metade do ouro)`);
-  a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : ''));
+  a.push(`+${R.xpGain} XP · Itens: ${R.lootN}` + (R.wlootN ? ` · Cópias: ${R.wlootN}` : '') + (R.asN ? T2(` · Auto-vendidos: ${R.asN} (¢${gfmt(R.asG)})`, ` · Auto-sold: ${R.asN} (¢${gfmt(R.asG)})`) : ''));
   { const B = gb(); if (B.gold || B.xp) a.push(E2(`Guild bonus: +${Math.round(B.gold * 1000) / 10}% gold, +${Math.round(B.xp * 1000) / 10}% XP`, `Bónus da guilda: +${Math.round(B.gold * 1000) / 10}% ouro, +${Math.round(B.xp * 1000) / 10}% XP`)); }
   if (R.petGain) a.push(`${petDisplayName(save.pets.eq)}: +${R.petGain} XP` + (R.petUp ? T2(` · subiu para o nível ${petLv(save.pets.eq)}!`, ` · reached level ${petLv(save.pets.eq)}!`) : ''));
   if (R.lvUp) a.push(`Subiste para o nível ${R.lvUp}! (+${R.ptsGain} pontos)`);
