@@ -576,6 +576,10 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   ok('spec electric 35% accepted', (await bad({ k: 'elec', nm: 'Elétrico', v: 35 })) === false);
   ok('spec poison 60% rejected', (await bad({ k: 'poi', nm: 'Venenoso', v: 60 })) === true);
   ok('unknown spec rejected', (await bad({ k: 'zzz', nm: 'X', v: 5 })) === true);
+  ok('spec crit damage 45% accepted', (await bad({ k: 'cdmg', nm: 'Brutal', v: 45 })) === false);
+  ok('spec crit damage 60% rejected', (await bad({ k: 'cdmg', nm: 'Brutal', v: 60 })) === true);
+  ok('spec skill cooldown 20% accepted', (await bad({ k: 'skc', nm: 'Veloz', v: 20 })) === false);
+  ok('spec skill cooldown 30% rejected', (await bad({ k: 'skc', nm: 'Veloz', v: 30 })) === true);
 }
 
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');
