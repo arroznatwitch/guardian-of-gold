@@ -1,6 +1,6 @@
 'use strict';
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const GAME_BUILD = 41;   // igual ao ?v= do index.html: aparece em Opcoes para saber que versao esta a correr
+const GAME_BUILD = 42;   // igual ao ?v= do index.html: aparece em Opcoes para saber que versao esta a correr
 const H = 500, UW = 800; let W = 800, UIOX = 0, vign = null;
 
 /* ---------- ecrã adaptável (ocupa a janela toda, mantém proporção) ---------- */

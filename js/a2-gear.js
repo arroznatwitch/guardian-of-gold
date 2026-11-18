@@ -57,7 +57,7 @@ function hubChar() {
   txt('Atributos', 504, 168, 15, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 168, 15, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
-    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, a[key] > attrCap() ? '#ff9a4a' : '#f0c060', 'right', 'bold'); if (a[key] > attrCap()) txt(`efetivo ${Math.round(attrEff(a[key]))}`, 690, y + 31, 9, '#c98a4a', 'right');
+    txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
     const capped = key === 'per' && stats().cdm <= .3001;   // a velocidade de ataque tem limite de +70%: mais pontos seriam desperdicados
     if (capped) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
