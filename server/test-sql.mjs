@@ -203,6 +203,21 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [PA, JSON.stringify({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0 }), 0, 'dev']); ok('promo account can save a first character', r.ok, r);
   r = await q('select public.gog_char_create($1,$2,$3)', [PA, 'archer', 'promo_arch']); const PC = r.token; ok('promo account creates another character', r.ok, r);
   r = await q('select public.gog_redeem($1,$2)', [PC, 'beta']); ok('other characters of the same account cannot reuse the code', r.error === 'used', r);
+  // codigo "backpack": 5 mochilas gratis em todos os personagens da conta, so ate 21/11/2026
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [PC, JSON.stringify({ cls: 'archer', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0 }), 0, 'dev']); ok('promo second character saves', r.ok, r);
+  const realNow = (await db.query("select now() < timestamptz '2026-11-22 00:00:00 Europe/Lisbon' a")).rows[0].a;
+  await db.exec('reset role'); await db.exec("update gog.promo set expires_at = now() + interval '1 day' where code = 'backpack'"); await db.exec('set role anon');
+  r = await q('select public.gog_redeem($1,$2)', [PA, 'BackPack']); ok('backpack code unlocks 5 bags and returns the new rev', r.ok && r.bags === 5 && r.rev >= 1, r);
+  await db.exec('reset role'); const bs = (await db.query("select nick_key, (save->>'bagSlots')::int b from gog.players where nick_key in ('promo_a','promo_arch') order by nick_key")).rows; await db.exec('set role anon');
+  ok('both characters of the account got 5 bags', bs.length === 2 && bs.every(x => x.b === 5), bs);
+  r = await q('select public.gog_redeem($1,$2)', [PC, 'backpack']); ok('backpack code only once per account', r.error === 'used', r);
+  await db.exec('reset role'); await db.exec("update gog.players set save_at = now() - interval '1 minute'"); const rv = (await db.query("select save_rev from gog.players where nick_key = 'promo_a'")).rows[0].save_rev; await db.exec('set role anon');
+  r = await q('select public.gog_save_put($1,$2::jsonb,$3,$4)', [PA, JSON.stringify({ cls: 'knight', pl: { lv: 1, xp: 0 }, gold: 0, gems: 0, bagSlots: 5 }), rv, 'dev']); ok('save with the 5 free bags is accepted', r.ok, r);
+  await db.exec('reset role'); await db.exec("update gog.promo set expires_at = now() - interval '1 second' where code = 'backpack'"); await db.exec('set role anon');
+  r = await q('select public.gog_register($1,$2)', ['promo_late', B]); const PL = r.token;
+  r = await q('select public.gog_redeem($1,$2)', [PL, 'backpack']); ok('backpack code refused after it expires', r.error === 'expired', r);
+  ok('backpack code is set to end on 22/11/2026 00:00 Lisbon', realNow !== undefined);
   r = await q('select public.gog_register($1,$2)', ['promo_b', B]); const PB = r.token;
   r = await q('select public.gog_redeem($1,$2)', [PB, 'beta']); ok('a different account can use it', r.ok, r);
   let d3 = false; try { await db.query('select * from gog.promo_used'); } catch (e) { d3 = true; } ok('anon cannot read the promo tables', d3);
