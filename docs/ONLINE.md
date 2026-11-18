@@ -134,7 +134,7 @@ Devolve `deactivated`, `reactivated` ou `not_found`. A função só existe no sc
 
 ## 4. Limites que convém saber
 
-- **Contas por rede:** no máximo **5 contas por IP**. O servidor usa o cabeçalho `cf-connecting-ip` (ou o último `x-forwarded-for`) e guarda apenas um HMAC do IP, nunca o IP em claro. Apagar uma conta liberta a vaga. Quem está atrás da mesma rede (casa, escola) partilha o limite.
+- **Contas por rede:** no máximo **20 contas por IP**. O servidor usa o cabeçalho `cf-connecting-ip` (ou o último `x-forwarded-for`) e guarda apenas um HMAC do IP, nunca o IP em claro. Apagar uma conta liberta a vaga. Quem está atrás da mesma rede (casa, escola) partilha o limite.
 - **Backups:** ver `docs/BACKUP.md`.
 
 - **"Impossível de hackear" não existe.** Esta combinação protege bem contra os ataques comuns, mas a segurança final depende também de palavras-passe fortes. O jogo exige 8 a 64 caracteres.
