@@ -8,6 +8,7 @@ function slotBtn(cx, cy, key, label, it, drawIconFn, fn) {
   else { ctx.globalAlpha = .25; slotIcon(key, 0, cx, cy, 3.4); ctx.globalAlpha = 1; }
   ui.push({ x, y, w: 54, h: 54, fn });
 }
+const sgCol = (nm, rows) => nm === 'Perícia' ? '#7cf' : rows[0][2];   // cor da barra de cada grupo de stats (a Skill usa a cor da recarga)
 function hubChar() {
   const c = CLASSES[save.cls], g = gearStats(), L = save.pl.lv, a = save.attr, w = curW(); slotHover = null;
   panel(195, 88, 285, 390, '#16162a', '#3a3a5a');
@@ -77,7 +78,7 @@ function hubChar() {
   let sgHov = -1;
   SG.forEach(([nm, rows], i) => {
     const y = 368 + i * 22, hov = mouse.x - UIOX >= 498 && mouse.x - UIOX <= 778 && mouse.y >= y && mouse.y < y + 20; if (hov) sgHov = i;
-    ctx.fillStyle = hov ? '#26264a' : '#1c1c34'; ctx.fillRect(498, y, 280, 20); ctx.fillStyle = rows[0][2]; ctx.fillRect(498, y, 3, 20);
+    ctx.fillStyle = hov ? '#26264a' : '#1c1c34'; ctx.fillRect(498, y, 280, 20); ctx.fillStyle = sgCol(nm, rows); ctx.fillRect(498, y, 3, 20);
     txt(nm, 507, y + 15, 13, '#fff', 'left', 'bold');
     let x = 771; const x0 = 507 + txtW(nm, 13, 'bold') + 12; for (let k = rows.length - 1; k >= 0; k--) { if (rows[k][3]) continue; const v = String(rows[k][1]), w = txtW(v, 11, 'bold'); if (x - w < x0) { txt('…', x, y + 15, 11, '#778', 'right', 'bold'); break; } txt(v, x, y + 15, 11, rows[k][2], 'right', 'bold'); x -= w + 8; }
     ui.push({ x: 498, y, w: 280, h: 20, fn: () => {} });   // no telemovel um toque fixa o rato aqui e abre o detalhe
@@ -85,7 +86,7 @@ function hubChar() {
   drawLoadouts();   // builds (a7-loadouts.js)
   if (sgHov >= 0) {   // detalhe do grupo por cima de tudo
     const [nm, rows] = SG[sgHov], h = 30 + rows.length * 17, y = 368 + sgHov * 22 - h - 4;
-    ctx.fillStyle = '#0c0c18f2'; ctx.fillRect(498, y, 280, h); ctx.strokeStyle = rows[0][2]; ctx.lineWidth = 2; ctx.strokeRect(498, y, 280, h);
+    ctx.fillStyle = '#0c0c18f2'; ctx.fillRect(498, y, 280, h); ctx.strokeStyle = sgCol(nm, rows); ctx.lineWidth = 2; ctx.strokeRect(498, y, 280, h);
     txt(nm, 510, y + 20, 14, '#f0c060', 'left', 'bold');
     rows.forEach(([n, v, c], k) => { const yy = y + 38 + k * 17; ctx.fillStyle = c; ctx.fillRect(510, yy - 9, 3, 10); txt(n, 518, yy, 12, '#cdd'); txt(String(v), 766, yy, 12, c, 'right', 'bold'); });
   }
