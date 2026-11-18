@@ -124,7 +124,8 @@ function drawProfile() {
   else txt('—', px, py + 166, 13, '#556');
   // atributos
   const mx = x + 184; sec('Atributos', mx, y + 100, 130);
-  if (b && b.attr) ATTRS.forEach((q, i) => { const ry = y + 114 + i * 38, ac = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a'][i]; ctx.fillStyle = ac; ctx.fillRect(mx, ry + 4, 2, 28); txt(q[1], mx + 12, ry + 24, 13, '#aab6d0'); txt(gfmt(b.attr[q[0]] | 0), mx + 130, ry + 24, 14, ac, 'right', 'bold'); });   // mesmas linhas do equipamento
+  let atHov = -1;
+  if (b && b.attr) ATTRS.forEach((q, i) => { const ry = y + 114 + i * 38, ac = ['#ff6a7a', '#ff9a3a', '#6adfff', '#ffe24a'][i], hv = mouse.x - UIOX >= mx - 4 && mouse.x - UIOX <= mx + 136 && mouse.y >= ry && mouse.y < ry + 36; if (hv) { atHov = i; ctx.fillStyle = '#22224a'; ctx.fillRect(mx - 4, ry + 1, 140, 34); } ctx.fillStyle = ac; ctx.fillRect(mx, ry + 4, 2, 28); ui.push({ x: mx - 4, y: ry, w: 140, h: 36, fn: () => {} }); txt(q[1], mx + 12, ry + 24, 13, '#aab6d0'); txt(gfmt(b.attr[q[0]] | 0), mx + 130, ry + 24, 14, ac, 'right', 'bold'); });   // mesmas linhas do equipamento
   else txt('Sem build partilhada', mx, y + 130, 12, '#778');
   // equipamento
   const ex = x + 334; sec('Equipamento', ex, y + 100, 146);
@@ -142,6 +143,24 @@ function drawProfile() {
   [['Mobs mortos', gfmt(d.kills | 0)], ['Ouro ganho', gfmt(d.gold | 0)], ['Bosses', gfmt(d.bosses | 0)], ['Raids', gfmt(d.raids | 0)]].forEach(([n, v], i) => { const tx = x + 20 + i * 118; txt(n, tx, ty + 4, 11, '#8a9ab8'); txt(v, tx, ty + 24, 16, i === 1 ? '#fd5' : '#fff', 'left', 'bold'); });
   sec('Recorde de waves', x + 20, ty + 56, w - 40);
   (d.waves || []).forEach((v, i) => { const wx = x + 20 + (i % 3) * 158, wy = ty + 82 + Math.floor(i / 3) * 24; txt(MISSIONS[i] ? MISSIONS[i].name : 'Mapa ' + (i + 1), wx, wy, 11, '#8a9ab8'); txt(String(v | 0), wx + 146, wy, 13, v ? ((v | 0) >= FARM_UNLOCK[i] ? '#ffd34a' : '#fff') : '#556', 'right', 'bold'); });
+  if (atHov >= 0) profAttrTip(b, atHov, mx + 140, y + 114 + atHov * 38);   // detalhe do atributo por cima do equipamento
+}
+
+function profAttrTip(b, i, tx, ty) {   // perfil publico: estatisticas de cada atributo (como no Personagem)
+  const S = b.stats, a = b.attr, col = ['#ff6a7a', '#ff9a3a', '#6adfff', '#7cf'][i], pc = (v, d) => (+v || 0).toFixed(d) + '%';
+  let rows;
+  if (S) rows = [
+    [['Vida', gfmt(S.hp | 0), '#ff6a7a'], ['Redução de dano', pc(S.dr, 1), '#6a9aff']],
+    [['Dano', '+' + (S.dm | 0) + '%', '#ff9a3a'], ['Chance de crítico', pc(S.cr, 1), '#ff7ae0'], ['Dano crítico', 'x' + (+S.cx || 0).toFixed(2), '#ff7ae0']],
+    [['Vel. de ataque', (S.as | 0) >= 70 ? '+70% MÁX' : '+' + (S.as | 0) + '%', (S.as | 0) >= 70 ? '#6f6' : '#ffe24a'], ['Velocidade', String(S.sp | 0), '#6adfff']],
+    [[T2('Queimadura', 'Burn'), pc(S.bu, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(S.fr, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(S.xp, 0) + ' · ' + pc(S.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(S.po, 0), '#8be04a'], ['Roubo de vida', pc(S.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(S.el, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (+S.cd || 0).toFixed(2) + 's', '#7cf']]][i];
+  else { const v = a.vit | 0, st = a.str | 0, ag = a.agi | 0, pe = a.per | 0;   // jogador ainda sem a versao nova: so o que os pontos dao
+    rows = [[['Vida', '+' + gfmt(v * 7), '#ff6a7a']], [['Dano', '+' + st + '%', '#ff9a3a']], [['Vel. de ataque', '+' + (Math.ceil(ag / 2) * .6).toFixed(1) + '%', '#ffe24a'], ['Velocidade', '+' + (Math.floor(ag / 2) * .6).toFixed(1) + '%', '#6adfff']], [[T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (pe * .02).toFixed(2) + 's', '#7cf']]][i]; }
+  const w = 250, h = 30 + rows.length * 17 + (S ? 0 : 14), y0 = Math.min(ty, 470 - h);
+  ctx.fillStyle = '#0c0c18f2'; ctx.fillRect(tx, y0, w, h); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.strokeRect(tx, y0, w, h);
+  txt(ATTRS[i][1], tx + 12, y0 + 20, 14, '#f0c060', 'left', 'bold'); txt(gfmt(a[ATTRS[i][0]] | 0) + ' ' + T2('pontos', 'points'), tx + w - 12, y0 + 20, 11, '#8a9ab8', 'right');
+  rows.forEach(([n, v, c], k) => { const yy = y0 + 38 + k * 17; ctx.fillStyle = c; ctx.fillRect(tx + 12, yy - 9, 3, 10); txt(n, tx + 20, yy, 12, '#cdd'); txt(v, tx + w - 12, yy, 12, c, 'right', 'bold'); });
+  if (!S) txt(T2('Valores completos quando o jogador atualizar o jogo.', 'Full values once this player updates the game.'), tx + 12, y0 + h - 8, 9, '#778');
 }
 
 /* ----- Pets ----- */
