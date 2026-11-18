@@ -17,10 +17,10 @@ const WEEKEND_X = 2;
 const EVENTS = [{ id: 'statue', day: 3, tries: 2, secs: 30, goldPer: 1 / 33, goldCap: 40000 }];   // estatua dourada: 30 s para dar o maximo de dano
 const eventOn = ev => evDay() === ev.day;
 const WEEK = [   // [dia, PT, EN, cor] pela ordem segunda..domingo
-  [1, ['—', '—'], '#556'], [2, ['—', '—'], '#556'], [3, ['Estátua Dourada', 'Golden Statue'], '#f5c542'], [4, ['Drops x2', 'Drops x2'], '#c9a0ff'],
+  [1, ['—', '—'], '#556'], [2, ['Torre x3', 'Tower x3'], '#ff8a5a'], [3, ['Estátua Dourada', 'Golden Statue'], '#f5c542'], [4, ['Drops x2', 'Drops x2'], '#c9a0ff'],
   [5, ['Compras -20%', 'Shop -20%'], '#5ad6ff'], [6, ['XP e Ouro x2', 'XP & Gold x2'], '#ffd34a'], [0, ['XP e Ouro x2', 'XP & Gold x2'], '#ffd34a']];
 const DAY_N = [['Dom', 'Sun'], ['Seg', 'Mon'], ['Ter', 'Tue'], ['Qua', 'Wed'], ['Qui', 'Thu'], ['Sex', 'Fri'], ['Sáb', 'Sat']];
-const evBonusToday = () => isWeekend() || isLuckDay() || isSaleDay() || EVENTS.some(eventOn);
+const evBonusToday = () => (isTowerDay() && towerOpen()) || isWeekend() || isLuckDay() || isSaleDay() || EVENTS.some(eventOn);
 
 /* ---- missoes diarias: 3 por dia, sempre as mesmas para o mesmo dia ---- */
 const DAILY_POOL = [

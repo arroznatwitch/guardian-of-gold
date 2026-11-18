@@ -224,15 +224,18 @@ function abilBox(x, y, key, name, cd, max, ready, col) {
   rr(x + 6, y + 6, 24, 24, 5); ctx.fillStyle = ready ? '#a80' : '#333'; ctx.fill(); txt(keyName(key).slice(0, 3), x + 18, y + 24, 15, ready ? '#000' : '#999', 'center', 'bold');
   txt(name, x + 36, y + 16, 11, ready ? '#fff' : '#aab', 'left', 'bold'); txt(ready ? 'PRONTO' : Math.ceil(cd) + 's', x + 36, y + 30, 11, ready ? col : '#fff', 'left', 'bold');
 }
+// nomes das origens no registo de dano, em ingles (traduz cada parte de "Prefixo: nome")
+const DL_EN = { 'Ataque': 'Attack', 'Habilidade': 'Skill', 'Especial da classe': 'Class special', 'Especial': 'Special', 'Renovação Arcana': 'Arcane Renewal', 'Queimadura': 'Burn', 'Veneno': 'Poison', 'Eletricidade': 'Electricity', 'Roubo de vida (equipamento)': 'Life steal (gear)', 'Roubo de vida (arma)': 'Life steal (weapon)', 'Fúria / sanguessuga': 'Fury / leech', 'Dreno de Vida (habilidade)': 'Life Drain (skill)', 'Pet': 'Pet', 'regeneração': 'regeneration', 'ovos': 'eggs', 'Corações': 'Hearts', 'Outros': 'Other', 'Contacto': 'Contact', 'Boss': 'Boss', 'contacto': 'contact', 'giro': 'spin', 'investida': 'charge', 'círculo': 'circle', 'armadilha': 'trap', 'Explosão de inimigo': 'Enemy explosion', 'Ataque do boss (zona)': 'Boss attack (area)', 'Projétil inimigo': 'Enemy projectile', 'Conjunto': 'Set' };
+const dlName = k => { const s = lang !== 'en' ? k : k.split(': ').map(q => DL_EN[q] || L(q)).join(': '); return s.length > 28 ? s.slice(0, 27) + '…' : s; };
 function drawDmgLog() {   // opcao "Logs de Dano": de onde vem o dano e a cura
   const L = R.dl; if (!L) return; const rowsT = o => Object.entries(o || {}).sort((a, b) => b[1].v - a[1].v).slice(0, 4).map(([k, v]) => ({ k, v: v.v })), x = 14, y0 = 62, t = Math.max(1, R.time || 1), tk = rowsT(L.taken), tot = Object.values(L.dmg).reduce((a, o) => a + o.v, 0), th = Object.values(L.heal).reduce((a, o) => a + o.v, 0);
   const rows = (o, tt) => Object.entries(o).sort((a, b) => b[1].v - a[1].v).slice(0, 6).map(([k, v]) => ({ k, v: v.v, n: v.n, p: tt ? v.v / tt : 0 }));
   const d = rows(L.dmg, tot), h = rows(L.heal, th), hgt = 36 + (d.length + h.length + tk.length) * 14 + (h.length ? 22 : 0) + (tk.length ? 22 : 0); ctx.globalAlpha = .72; ctx.fillStyle = '#000'; ctx.fillRect(x - 6, y0 - 14, 258, hgt); ctx.globalAlpha = 1;
   const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(Math.round(v)), f = v => fmt(v * 10);   // o jogo mostra o dano x10
   txt(`${T2('Dano', 'Damage')}: ${f(tot)}  (${f(tot / t)}/s)`, x, y0, 11, '#ffd34a', 'left', 'bold'); let y = y0 + 14;
-  d.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${f(r.v)}`, x + 250, y, 10, '#9cf', 'right'); y += 14; });
-  if (tk.length) { y += 8; txt(T2('Dano sofrido', 'Damage taken'), x, y, 11, '#f88', 'left', 'bold'); y += 14; tk.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(fmt(r.v), x + 250, y, 10, '#f99', 'right'); y += 14; }); }
-  if (h.length) { y += 8; txt(`${T2('Cura', 'Healing')}: ${fmt(th)}  (${(th / t).toFixed(1)}/s)`, x, y, 11, '#6f6', 'left', 'bold'); y += 14; h.forEach(r => { txt(`${r.k.slice(0, 26)}`, x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${fmt(r.v)}`, x + 250, y, 10, '#8f8', 'right'); y += 14; }); }
+  d.forEach(r => { txtR(dlName(r.k), x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${f(r.v)}`, x + 250, y, 10, '#9cf', 'right'); y += 14; });
+  if (tk.length) { y += 8; txt(T2('Dano sofrido', 'Damage taken'), x, y, 11, '#f88', 'left', 'bold'); y += 14; tk.forEach(r => { txtR(dlName(r.k), x, y, 10, '#ddd'); txt(fmt(r.v), x + 250, y, 10, '#f99', 'right'); y += 14; }); }
+  if (h.length) { y += 8; txt(`${T2('Cura', 'Healing')}: ${fmt(th)}  (${(th / t).toFixed(1)}/s)`, x, y, 11, '#6f6', 'left', 'bold'); y += 14; h.forEach(r => { txtR(dlName(r.k), x, y, 10, '#ddd'); txt(`${Math.round(r.p * 100)}% · ${fmt(r.v)}`, x + 250, y, 10, '#8f8', 'right'); y += 14; }); }
 }
 function drawHUD() {
   const p = R.p, M = MISSIONS[R.m], w = curW(); if (dmgLog) drawDmgLog();
