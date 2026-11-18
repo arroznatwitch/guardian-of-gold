@@ -1333,7 +1333,7 @@ begin
   end if;
   if jsonb_typeof(it->'spec') = 'object' then
     kk := it->'spec'->>'k';
-    cap := case when kk in ('burn', 'slow') then 35 when kk = 'xpb' then 20 when kk in ('ls', 'crit', 'gf', 'dr', 'dmg') then 45 end;
+    cap := case when kk in ('burn', 'slow', 'poi', 'elec') then 35 when kk = 'xpb' then 20 when kk in ('ls', 'crit', 'gf', 'dr', 'dmg') then 45 end;
     if cap is null or gog._n(it, 'spec', 'v') > cap + 0.5 then return true; end if;
   end if;
   return false;

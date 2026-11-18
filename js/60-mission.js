@@ -75,6 +75,11 @@ function dmgE(e, d, ang, kb, quiet) {
     if (g.ls) lsHeal(Math.min(R.p.max * .003, d * 10 * g.ls / 100 * .2), 'Roubo de vida (equipamento)');   // 20% do valor, no maximo 0,3% da vida por golpe
     if (g.burn && Math.random() * 100 < g.burn) e.burn = Math.max(e.burn, 2);
     if (g.slow && Math.random() * 100 < g.slow) e.slow = Math.max(e.slow, 1.5);
+    if (g.poi && Math.random() * 100 < g.poi) { e.psn = Math.max(e.psn || 0, 3); e.pd = Math.max(e.pd || 0, d * .08); }   // veneno: 3 s, 8% do golpe a cada 0,5 s
+    if (g.elec && Math.random() * 100 < g.elec) {   // eletricidade: salta para 2 inimigos perto com 30% do golpe
+      const near = targets().filter(o => o !== e && !o.air && Math.hypot(o.x - e.x, o.y - e.y) < 130).sort((a, b) => Math.hypot(a.x - e.x, a.y - e.y) - Math.hypot(b.x - e.x, b.y - e.y)).slice(0, 2);
+      for (const o of near) { inSrc('Eletricidade', () => dmgE(o, d * .3, 0, 0, true)); R.fx.push({ k: 'zap', pts: [{ x: e.x, y: e.y }, { x: o.x, y: o.y }], t: .15, max: .15 }); spark(o.x, o.y, '#ffe14a', 4, 120, .3, 3, 0); }
+    }
   }
   e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d); if (e.statue && R.event) R.event.dmg += d;
   if (kb) { const k = e.boss ? kb * .12 : kb; e.kx = Math.cos(ang) * k; e.ky = Math.sin(ang) * k; }

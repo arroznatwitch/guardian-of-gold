@@ -568,4 +568,14 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   r2 = await sq('select public.gog_login($1,$2)', ['mod_victim', B]); ok('admin: the erased account cannot log in', r2.error === 'bad_login', r2);
 }
 
+// efeitos especiais novos (Veneno e Eletricidade) com teto de 35%
+{
+  await db.exec('reset role');
+  const bad = async spec => (await db.query("select gog._item_stat_bad($1::jsonb) b", [JSON.stringify({ slot: 'head', r: 3, il: 50, main: { k: 'hp', v: 100 }, aff: [], spec })])).rows[0].b;
+  ok('spec poison 30% accepted', (await bad({ k: 'poi', nm: 'Venenoso', v: 30 })) === false);
+  ok('spec electric 35% accepted', (await bad({ k: 'elec', nm: 'Elétrico', v: 35 })) === false);
+  ok('spec poison 60% rejected', (await bad({ k: 'poi', nm: 'Venenoso', v: 60 })) === true);
+  ok('unknown spec rejected', (await bad({ k: 'zzz', nm: 'X', v: 5 })) === true);
+}
+
 console.log(fail ? 'FAILED ' + fail : 'ALL PASSED');
