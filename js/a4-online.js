@@ -132,10 +132,15 @@ function statPayload() {
   const t = save.stats || { kills: 0, gold: 0, bosses: 0 }, f = save.farmBest || {}, o = { cls: save.cls, level: save.pl.lv, kills: Math.floor(t.kills), gold: Math.floor(t.gold), bosses: t.bosses | 0, raids: Object.values(save.raids || {}).reduce((a, v) => a + (v || []).reduce((x, y) => x + y, 0), 0) };
   for (let i = 0; i < 6; i++) o['w' + i] = f[i] | 0; o.build = buildPayload(); return o;
 }
+function pubStats() {   // estatisticas calculadas para o perfil publico (passar o rato nos atributos); so numeros
+  try { const s = stats(), g = gearStats(), w = curW(), r = (v, d) => +(+v || 0).toFixed(d);
+    return { hp: Math.round(s.hp), dr: r(g.dr, 1), dm: Math.round((s.dm - 1) * 100), cr: r(Math.min(75, g.crit), 1), cx: r(critX(g), 2), as: Math.round((1 - s.cdm) * 100), sp: Math.round(s.spd),
+      bu: r(g.burn, 0), fr: r(g.slow, 0), xp: r(g.xpb, 0), gf: r(g.gf, 0), po: r(g.poi, 0), ls: r(g.ls, 1), el: r(g.elec, 0), cd: r(w.sk.cd - skCd(w), 2) }; } catch (e) { return null; }
+}
 // build publica (so dados de jogo): skin, arma, atributos e equipamento
 function buildPayload() {
   const g = {}; for (const sl of EQ_SLOTS) { const it = save.gear[sl]; if (it) { g[sl] = { r: it.r, e: it.ench || 0, st: it.st || 0, sp: it.spec ? it.spec.nm : '' }; if (sl === 'ring') g[sl].g = it.gem | 0; } }   // o anel leva a cor da gema (g)
-  const w = curW(); return { pet: save.pets && save.pets.eq && save.pets.own[save.pets.eq] ? { id: save.pets.eq, lv: petLv(save.pets.eq), name: (save.pets.names && save.pets.names[save.pets.eq]) || '' } : null, skin: 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g };
+  const w = curW(); return { pet: save.pets && save.pets.eq && save.pets.own[save.pets.eq] ? { id: save.pets.eq, lv: petLv(save.pets.eq), name: (save.pets.names && save.pets.names[save.pets.eq]) || '' } : null, skin: 0, title: save.title && TITLES[save.title] && titleOwned(save.title) ? save.title : '', weapon: { id: w.id, lv: wlvl(), st: wStar(w.id) }, attr: Object.assign({}, save.attr), gear: g, stats: pubStats() };
 }
 async function openProfile(nick) {
   rk.prof = { nick, d: null, err: '' }; const r = await rpc('gog_profile', { p_nick: nick });

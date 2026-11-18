@@ -82,12 +82,13 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
 {
   r = await q('select public.gog_register($1,$2)', ['builder', A]); const TB = r.token;
   const BUILD = { skin: 2, title: 'inferno', weapon: { id: 'm_fire', lv: 3, st: 1 }, attr: { vit: 12, str: 99999999, agi: 3, per: 4, evil: 1 },
-    gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, junk: 'x'.repeat(50) };
+    gear: { head: { r: 3, e: 5, st: 1, sp: 'Ígneo<script>' }, weapon: { r: 4 }, chest: { r: 99, e: -4 } }, stats: { hp: 4290, cx: 2.324, cr: 'x', evil: 5, dm: 1e12 }, junk: 'x'.repeat(50) };
   const SB = JSON.stringify({ cls: 'mage', level: 10, kills: 100, gold: 500, bosses: 1, raids: 0, w0: 4, w1: 0, w2: 0, w3: 0, w4: 0, w5: 0, build: BUILD });
   await db.exec('reset role'); await db.exec(`update gog.players set save = '{"cls":"mage","pl":{"lv":10},"stats":{"kills":100,"gold":500,"bosses":1},"farmBest":[4,0,0,0,0,0]}'::jsonb where nick = 'builder'`); await db.exec('set role anon');
   r = await q('select public.gog_submit($1,$2::jsonb)', [TB, SB]); ok('submit with build', r.ok, r);
   r = await q('select public.gog_profile($1)', ['BUILDER']); const bd = r.build;
   ok('profile returns cleaned build', r.ok && r.cls === 'mage' && r.level === 10 && bd.skin === 2 && bd.weapon.id === 'm_fire' && !bd.attr && !('junk' in bd), r);
+  ok('build stats keep only known numbers, clamped', bd.stats && bd.stats.hp === 4290 && bd.stats.cx === 2.32 && !('cr' in bd.stats) && !('evil' in bd.stats) && bd.stats.dm === 10000000, bd.stats);
   ok('gear slots whitelisted and clamped', Object.keys(bd.gear).sort().join() === 'chest,head' && bd.gear.chest.r === 4 && bd.gear.chest.e === 0 && bd.gear.head.sp === 'Ígneoscript', bd);
   r = await q('select public.gog_board($1,5,null)', ['level']); const row = r.rows.find(x => x.nick === 'builder'); ok('board rows carry class, level and skin', row && row.cls === 'mage' && row.lv === 10 && row.skin === 2, r);
   ok('a forged title in the build is dropped', !('title' in bd) && !row.title, row);
