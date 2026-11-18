@@ -206,7 +206,7 @@ const SK = {
 function skill() {
   const p = R.p, w = curW();
   if (p.sk > 0 || R.endT !== undefined) return;
-  p.sk = w.sk.cd; p.swd = p.sw = .22; SFX.special(); R.skName = w.sk.n; R.skillN = (R.skillN | 0) + 1; inSrc('Habilidade: ' + w.sk.n, () => SK[w.id]());
+  p.sk = skCd(w); p.swd = p.sw = .22; SFX.special(); R.skName = w.sk.n; R.skillN = (R.skillN | 0) + 1; inSrc('Habilidade: ' + w.sk.n, () => SK[w.id]());
 }
 function dash() {
   const p = R.p;

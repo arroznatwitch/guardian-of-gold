@@ -77,7 +77,9 @@ const AFF = {
 const AFF_POOL = ['hp', 'dmg', 'spd', 'cdr', 'crit', 'ls', 'dr', 'gf', 'xpb'];
 const SPEC_POOL = [['burn', 'Ígneo'], ['slow', 'Gélido'], ['ls', 'Vampírico'], ['crit', 'Letal'], ['gf', 'Próspero'], ['xpb', 'Sábio'], ['dr', 'Protetor'], ['dmg', 'Poderoso'], ['poi', 'Venenoso'], ['elec', 'Elétrico']];
 const SLOT_MAIN = { head: 'hp', chest: 'hp', boots: 'spd', amulet: 'dmg' };
-const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Agilidade', '+0.6% velocidade'], ['per', 'Perícia', '+0.6% vel. de ataque']];
+const ATTRS = [['vit', 'Vitalidade', '+7 vida'], ['str', 'Força', '+1% dano'], ['agi', 'Agilidade', '+0.6% velocidade'], ['per', 'Perícia', '+0.6% vel. de ataque · -0.02s recarga']];
+const SK_CD_PT = .02, SK_CD_MIN = .4;   // cada ponto de Pericia tira 0,02 s a recarga da habilidade (E), ate 40% da recarga base
+const skCd = w => Math.max(w.sk.cd * SK_CD_MIN, w.sk.cd - SK_CD_PT * ((save && save.attr && save.attr.per) | 0));
 const ENC_CH = [100, 90, 80, 70, 60, 50, 40, 30, 22, 15], ENC_MAX = 10;
 const refCost = it => disc(Math.round(45 * (1 + it.il * .25) * (1 + it.r * .5) * (it.ench + 1) * lvMul()));
 const specCost = it => Math.round(150 * (1 + it.il * .2) * (1 + it.r * .4) * (1 + (it.rr || 0) * .15) * lvMul());

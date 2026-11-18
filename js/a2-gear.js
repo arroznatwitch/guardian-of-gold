@@ -58,8 +58,8 @@ function hubChar() {
   ATTRS.forEach(([key, nm, hint], i) => {
     const y = 176 + i * 34;
     txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
-    const capped = key === 'per' && stats().cdm <= .3001;   // a velocidade de ataque tem limite de +70%: mais pontos seriam desperdicados
-    if (capped) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
+    const capped = key === 'per' && stats().cdm <= .3001 && skCd(w) <= w.sk.cd * SK_CD_MIN + 1e-9;   // so bloqueia quando a vel. de ataque (+70%) e a recarga da habilidade ja estao no limite
+    if (key === 'per' && stats().cdm <= .3001) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
     btn(710, y + 4, 60, 26, '+', () => { if (save.pts > 0 && !capped) { save.pts--; a[key]++; persist(); SFX.click(); } }, { off: save.pts <= 0 || capped, rep: true, size: 16, col: '#2f7a4a', hot: '#3fa061' });
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
@@ -72,7 +72,7 @@ function hubChar() {
     ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', pc(g.dr, 1), '#6a9aff']]],
     ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Crítico', pc(g.crit, 1), '#ff7ae0'], ['Vel. de ataque', '+' + Math.round((1 - s.cdm) * 100) + '%', '#ffe24a']]],
     ['Agilidade', [['Velocidade', Math.round(s.spd), '#6adfff']]],
-    ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], ['XP extra', pc(g.xpb, 0), '#7fe8ff'], ['Ouro extra', pc(g.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff']]]];
+    ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], ['XP extra', pc(g.xpb, 0), '#7fe8ff'], ['Ouro extra', pc(g.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (w.sk.cd - skCd(w)).toFixed(2) + 's', '#7cf']]]];
   let sgHov = -1;
   SG.forEach(([nm, rows], i) => {
     const y = 368 + i * 22, hov = mouse.x - UIOX >= 498 && mouse.x - UIOX <= 778 && mouse.y >= y && mouse.y < y + 20; if (hov) sgHov = i;

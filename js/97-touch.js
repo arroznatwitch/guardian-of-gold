@@ -25,7 +25,7 @@ function touchButtons() {
   const p = R && R.p, w = (typeof curW === 'function' && save) ? curW() : null;
   return [
     { id: 'dash', x: W - 62, y: H - 130, r: 34, fn: () => dash(), label: E2('Dash', 'Esquiva'), cd: p ? p.dashCd : 0, max: DASH_CD, col: '#4a9ad0' },
-    { id: 'skill', x: W - 148, y: H - 112, r: 30, fn: () => skill(), label: E2('Skill', 'Hab.'), cd: p ? p.sk : 0, max: w ? w.sk.cd : 6, col: '#7cf' },
+    { id: 'skill', x: W - 148, y: H - 112, r: 30, fn: () => skill(), label: E2('Skill', 'Hab.'), cd: p ? p.sk : 0, max: w ? skCd(w) : 6, col: '#7cf' },
     { id: 'spec', x: W - 62, y: H - 214, r: 30, fn: () => special(), label: E2('Special', 'Esp.'), cd: p ? p.sp : 0, max: 8, col: '#fc6' },
     { id: 'pause', x: W - 34, y: 106, r: 20, fn: () => { state = 'pause'; }, label: 'II', cd: 0, max: 1, col: '#aab' },
   ];
