@@ -105,18 +105,18 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   let d2 = false; try { await db.query("select gog._clean_build('{}'::jsonb)"); } catch (e) { d2 = true; } ok('anon cannot call _clean_build', d2);
   r = await q('select public.gog_save_reset($1)', [TB]); r = await q('select public.gog_profile($1)', ['builder']); ok('reset clears the build', r.build === null && r.level === 0, r);
 }
-// limite de 5 contas por IP
+// limite de 20 contas por IP
 {
   await db.exec('reset role'); await db.exec("update gog.throttle set n = 0"); await db.exec('set role anon');
   const hdr = ip => db.exec(`select set_config('request.headers', '{"cf-connecting-ip":"${ip}"}', false)`);
   await hdr('203.0.113.7');
-  for (let i = 1; i <= 5; i++) { r = await q('select public.gog_register($1,$2)', ['ipuser' + i, B]); ok('ip account ' + i + ' allowed', r.ok, r); }
-  r = await q('select public.gog_register($1,$2)', ['ipuser6', B]); ok('6th account from same ip blocked', !r.ok && r.error === 'ip_limit', r);
-  await hdr('198.51.100.9'); r = await q('select public.gog_register($1,$2)', ['ipuser7', B]); ok('other ip still allowed', r.ok, r);
+  for (let i = 1; i <= 20; i++) { r = await q('select public.gog_register($1,$2)', ['ipuser' + i, B]); ok('ip account ' + i + ' allowed', r.ok, r); }
+  r = await q('select public.gog_register($1,$2)', ['ipuser21', B]); ok('21st account from same ip blocked', !r.ok && r.error === 'ip_limit', r);
+  await hdr('198.51.100.9'); r = await q('select public.gog_register($1,$2)', ['ipotherA', B]); ok('other ip still allowed', r.ok, r);
   await db.exec("select set_config('request.headers', '{\"x-forwarded-for\":\"8.8.8.8, 203.0.113.7\"}', false)");
-  r = await q('select public.gog_register($1,$2)', ['ipuser8', B]); ok('forwarded-for last hop counts', !r.ok && r.error === 'ip_limit', r);
+  r = await q('select public.gog_register($1,$2)', ['ipotherB', B]); ok('forwarded-for last hop counts', !r.ok && r.error === 'ip_limit', r);
   await db.exec("select set_config('request.headers', '', false)");
-  r = await q('select public.gog_register($1,$2)', ['ipuser9', B]); ok('no header means no ip limit', r.ok, r);
+  r = await q('select public.gog_register($1,$2)', ['ipotherC', B]); ok('no header means no ip limit', r.ok, r);
   await db.exec('reset role'); const raw = (await db.query("select count(*)::int c from gog.players where reg_ip like '%.%' or length(reg_ip) <> 64")).rows[0].c; ok('ip is stored hashed, not raw', raw === 0); await db.exec('set role anon');
   let d3 = false; try { await db.query('select * from gog.secrets'); } catch (e) { d3 = true; } ok('anon cannot read secrets', d3);
 }
