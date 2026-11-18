@@ -5,20 +5,20 @@
    Andares disponiveis: 10 gratis por dia + 2 por cada hora (acumulam ate 20).
    Se morreres, a Torre fecha ate ao dia seguinte; no dia seguinte volta ao andar 1.
    ===================================================================== */
-const TW = { lv: 50, free: 10, per: 2, cap: 20, hr: 3600e3 };
+const TW = { lv: 50, free: 10, per: 2, cap: 20, hr: 3600e3, buyN: 10, buyCost: 500, max: 99 };   // na Shop: +10 andares por 500 diamantes (podem passar dos 20)
 const towerMap = f => Math.floor((f - 1) / 5) % MISSIONS.length;            // o cenario muda a cada 5 andares
 const towerRec = f => Math.min(130, Math.round(40 + 1.5 * f));             // nivel dos monstros (forca e itens)
 const towerTw = f => 3 + Math.floor(f * .4);                                // "onda" equivalente (vida, dano e quantidade)
 const towerNeed = f => Math.min(30, 10 + Math.floor(f / 3));                // monstros por andar
 const towerBoss = f => f % 5 === 0;
 const towerGold = f => Math.round((300 + 60 * f) * (1 + ((save && save.pl.lv) || 50) / 50));
-const towerXp = f => Math.max(1, Math.round(xpNeed(save.pl.lv) * (.03 + .001 * f)));
+const towerXp = f => Math.max(1, Math.round(xpNeed(save.pl.lv) * (.015 + .0005 * f)));
 const towerGems = f => towerBoss(f) ? 3 + Math.floor(f / 5) : 0;           // bau a cada 5 andares: diamantes + 1 pedra de evolucao
 const towerStone = f => Math.min(4, Math.floor(f / 15));
 function twState() {
   let t = save.tw; const now = Date.now(), k = todayKey();
   if (!t || typeof t !== 'object') t = save.tw = { d: '', f: 1, dead: 0, tk: TW.free, at: now, best: 0 };
-  t.f = Math.max(1, t.f | 0); t.tk = Math.max(0, Math.min(TW.cap, t.tk | 0)); t.best = Math.max(0, t.best | 0); if (!(t.at <= now)) t.at = now;
+  t.f = Math.max(1, t.f | 0); t.tk = Math.max(0, Math.min(TW.max, t.tk | 0)); t.best = Math.max(0, t.best | 0); if (!(t.at <= now)) t.at = now;
   if (t.d !== k) { t.d = k; t.f = 1; t.dead = 0; t.tk = Math.max(t.tk, TW.free); }   // novo dia: volta ao andar 1 e recebe os 10 gratis
   if (t.tk >= TW.cap) t.at = now;   // cheio: o relogio so conta quando ha espaco
   else { const n = Math.floor((now - t.at) / TW.hr); if (n > 0) { t.tk = Math.min(TW.cap, t.tk + n * TW.per); t.at += n * TW.hr; if (t.tk >= TW.cap) t.at = now; } }
@@ -48,6 +48,22 @@ function towerClear() {   // andar concluido: recompensas logo guardadas, gasta 
   persist(); SFX.win();
   if (t.tk <= 0) { R.tower.out = true; R.endT = 1.6; R.endWin = true; R.phase = 'done'; R.enemies = []; return; }   // acabaram os andares: sai e guarda tudo
   heal(R.p.max * .25); towerSetup(t.f); R.shake = 6;
+}
+let twAsk = 0;   // confirmacao da compra de andares (segundos que o botao fica em "Confirmar")
+function towerBuy() {
+  const t = twState(), c = disc(TW.buyCost);
+  if (!towerOpen() || t.dead || save.gems < c || t.tk + TW.buyN > TW.max) { SFX.error(); return; }
+  if (!(twAsk > T)) { twAsk = T + 3; SFX.click(); return; }   // 1.o clique pede confirmacao
+  twAsk = 0; save.gems -= c; t.tk += TW.buyN; persist(); SFX.buy();
+  hubToast = { t: 3, s: T2(`+${TW.buyN} andares da Torre!`, `+${TW.buyN} Tower floors!`), col: '#ffd34a' };
+}
+function shopTowerCard(X, Y, WD) {   // cartao na Shop
+  const t = save ? twState() : null, c = disc(TW.buyCost), open = towerOpen(), ask = twAsk > T;
+  bevel(X, Y, WD, 54, '#14142a', '#6a4aa8', '#05050a');
+  txt(T2(`Torre · +${TW.buyN} andares`, `Tower · +${TW.buyN} floors`), X + 16, Y + 22, 16, '#d0a0ff', 'left', 'bold');
+  txt(!open ? T2(`Abre no nível ${TW.lv}.`, `Unlocks at level ${TW.lv}.`) : t.dead ? T2('Morreste hoje: a Torre só abre amanhã.', 'You died today: the Tower only opens tomorrow.') : T2(`Tens ${t.tk} andares disponíveis. Os comprados podem passar dos ${TW.cap}.`, `You have ${t.tk} floors available. Bought floors can go past ${TW.cap}.`), X + 16, Y + 42, 11, open && !t.dead ? '#9ab' : '#f88');
+  const ok = open && !t.dead && save.gems >= c && t.tk + TW.buyN <= TW.max;
+  btn(X + WD - 216, Y + 11, 200, 32, ask ? T2(`Confirmar · ${c} ◆`, `Confirm · ${c} ◆`) : `${T2('Comprar', 'Buy')} · ${c} ◆`, towerBuy, { size: 14, off: !ok, col: ask ? '#a06a20' : '#2f7a4a', hot: ask ? '#c98a30' : '#3fa061' });
 }
 function towerEnd(win) {   // chamado no fim da missao: morrer fecha a Torre ate amanha
   const t = twState(); if (!win) t.dead = 1;
