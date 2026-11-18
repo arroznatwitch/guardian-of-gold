@@ -247,7 +247,7 @@ function drawHUD() {
   txt(keyName(binds.dash).slice(0, 5), bx, bt + 31, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 24, 160, 7, 1 - Math.max(0, p.dashCd) / DASH_CD, '#4cf', '#0006');
   txt(`Nv ${save.pl.lv}`, bx, bt + 48, 10, '#6cf', 'left', 'bold'); bar(bx + 36, bt + 42, 160, 7, save.pl.lv >= MAXLV ? 1 : save.pl.xp / xpNeed(save.pl.lv), '#6cf', '#0006');
   ctx.globalAlpha = 1;
-  const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, w.sk.cd, p.skR, '#7cf');
+  const by = R.boss ? H - 90 : H - 52; abilBox(W / 2 - 136, by, binds.special, CLASSES[save.cls].sp, p.sp, 8, p.spR, '#fc6'); abilBox(W / 2 + 6, by, binds.skill, w.sk.n, p.sk, skCd(w), p.skR, '#7cf');
   txt(autoAtk ? `AUTO-ATAQUE (${keyName(binds.auto)})` : '', W - 12, 70, 12, '#7f7', 'right', 'bold');
   txt(R.phase === 'hunt' ? (R.tower ? `${T2('Andar', 'Floor')} ${save.tw.f} · ${R.waveKills}/${R.need}` : R.farm ? `Onda ${R.wave} · ${R.waveKills}/${R.need}` : `Monstros ${R.kills}/${R.need}`) : R.lab ? 'LABORATÓRIO' : 'Derrota o Boss!', W - 12, 26, 16, R.farm && R.hordeB && R.phase === 'hunt' ? (Math.floor(T * 3) % 2 ? '#ff6a6a' : '#fff') : '#fff', 'right', 'bold');
   if (R.farm && R.hordeB && R.phase === 'hunt') txt('HORDA!', W - 12, 134, 14, '#ff6a6a', 'right', 'bold'); txt('¢' + R.gold + ' · Itens ' + R.loot.length, W - 12, 48, 16, '#fd5', 'right', 'bold');
