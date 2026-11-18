@@ -31,6 +31,7 @@ function bootDone() { if (booted) return; booted = true; const b = document.getE
 (function notice() {
   try { if (localStorage.getItem('gog_notice') === '1') return; } catch (e) { return; }
   const n = document.getElementById('notice'); if (!n) return; n.style.display = 'flex';
+  if (lang === 'en') { const sp = n.querySelector('span'); if (sp) sp.innerHTML = 'This game stores your progress and settings in your browser (localStorage) and, if you create an account, your nick, country and progress on our servers. No tracking cookies. <a href="privacy.html" target="_blank" rel="noopener">Privacy</a> · <a href="terms.html" target="_blank" rel="noopener">Terms</a>'; }   // aviso em ingles
   const ok = document.getElementById('notice-ok'); if (ok) ok.onclick = () => { n.style.display = 'none'; try { localStorage.setItem('gog_notice', '1'); } catch (e) {} };
 })();
 
