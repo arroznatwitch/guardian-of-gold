@@ -18,7 +18,7 @@ function startMission(i, rd, farm) {
     R.need = Math.round(M.kills * 1.2) + 2 * rd; R.capB = RAID_MINI.cap + RAID_MINI.capD * rd; R.wave = 1; R.toast = `Raid ${D.n}: ${M.name}`; R.toastT = 3.5;
   }
   R.bg = makeBG(M.theme); R.G = gearStats(); R.loot = []; R.wloot = []; R.farm = !!farm; R.rec = farm ? farmRec(i) : 0; R.waveKills = 0; R.retire = false; R.lootN = 0;
-  if (farm) { R.wave = 1; applyWave(); R.toast = `Campanha: ${M.name}`; R.toastT = 3; }
+  if (farm) { R.wave = R.w0 = farmStart(i); applyWave(); R.toast = `Campanha: ${M.name}` + (R.w0 > 1 ? T2(` · onda ${R.w0}`, ` · wave ${R.w0}`) : ''); R.toastT = 3; }
   state = 'play'; setMusic(R.raid ? 'raid' : 'm' + R.m); mdown = false;
 }
 function endMission(win, mode) {
@@ -32,7 +32,7 @@ function endMission(win, mode) {
   else if (R.farm) {
     if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
     save.presW = save.presW || [0, 0, 0, 0, 0, 0]; const doneW = mode === 'cash' ? R.wave : R.wave - 1; if (doneW > (save.presW[R.m] | 0)) save.presW[R.m] = doneW;   // melhor onda CONCLUIDA neste prestigio (morrer ou sair a meio da onda 30 nao conta)
-    if (R.wave >= 10) { save.farmN = save.farmN || [0, 0, 0, 0, 0, 0]; save.farmN[R.m] = (save.farmN[R.m] | 0) + 1; }   // Farm concluida (chegou a onda 10)
+    if (R.wave >= 10 && (R.w0 | 0) <= 1) { save.farmN = save.farmN || [0, 0, 0, 0, 0, 0]; save.farmN[R.m] = (save.farmN[R.m] | 0) + 1; }   // Farm concluida (chegou a onda 10)
     if (!win) { g = Math.floor(g * .1); xp = Math.floor(xp * .4); R.loot = []; R.wloot = []; }           // morrer no Farm: ficas com 10% do ouro e 40% do XP (os itens perdem-se)
     else if (mode === 'quit') { g = Math.floor(g * .3); xp = Math.floor(xp * .3); R.loot = R.loot.filter(() => Math.random() < .3); R.wloot = R.wloot.filter(() => Math.random() < .3); }   // sair a meio (Esc): so 30%
   }
