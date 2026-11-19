@@ -14,7 +14,8 @@ const code = `({
   rarW: [0, 2, 4, 6, 8, 10].map(b => { const w = rarityWeights(b), t = w.reduce((x, y) => x + y, 0); return w.map(v => +(100 * v / t).toFixed(2)); }),
   gearStar: GEAR_STAR, starMult: STAR_MULT, wstarReq: WSTAR_REQ, xp: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120].map(l => [l, xpNeed(l)]),
   rewards: Array.from({ length: 120 }, (_, i) => levelReward(i + 1)),
-  starfx: STAR_FX, daily: DAILY_POOL.map(p => ({ k: p.k, min: p.min || 0, pt: p.pt(p.goal(1)) })), events: EVENTS, presWave: MISSIONS.map((m, i) => presWave(i)), farmStarts: FARM_STARTS, ar: AR, build: GAME_BUILD
+  starfx: STAR_FX, daily: DAILY_POOL.map(p => ({ k: p.k, min: p.min || 0, pt: p.pt(p.goal(1)) })), events: EVENTS, presWave: MISSIONS.map((m, i) => presWave(i)), farmStarts: FARM_STARTS, ar: AR,
+  scale: { tune: TUNE, maps: MISSIONS.map((m, i) => Array.from({ length: PRES_MAX + 1 }, (_, P) => { const rec = farmRec(i, P); return { rec, dm: farmK(rec).dm }; })) }, build: GAME_BUILD
 })`;
 const D = JSON.parse(JSON.stringify(vm.runInContext(code, ctx)));
 fs.writeFileSync(path.join(__dirname, 'wiki-data.json'), JSON.stringify(D, null, 1));

@@ -108,9 +108,31 @@ H.push(sec('conquistas', 'Conquistas e títulos', 'No separador Perfil › Conqu
   Object.keys(CATN).map(c => `<h3>${CATN[c]}</h3><table><tr><th>Conquista</th><th>Objetivo</th><th>Prémio</th><th>Título</th></tr>${D.ach.filter(a => a.cat === c).map(a => `<tr data-s="${esc((a.name[0] + ' ' + a.desc[0]).toLowerCase())}"><td>${esc(a.name[0])}</td><td>${esc(a.desc[0])}</td><td>◆ ${a.gems}</td><td>${a.title ? esc(D.titles[a.title][0]) : ''}</td></tr>`).join('')}</table>`).join('')));
 H.push(sec('mapas', 'Mapas e bosses', 'Cada mapa tem 6 monstros próprios (no Abismo Final aparecem todos), um semi-boss na onda 5 (e de 10 em 10 ondas a seguir) e o boss na onda 10. Cada mapa tem também a sua música, cada uma mais intensa que a anterior.', '<div class="grid">' + D.missions.map((m, i) => card(m.name + ' ' + m.boss.name + ' ' + m.semi.name, `<img src="docs/img/map-${i}.jpg" class="map" alt="" loading="lazy"><h3>${esc(m.name)}</h3><p class="mut">${esc(m.desc)}</p><p>Nível recomendado: <b>${D.recBase[i]}</b> (prestígio 1 a 5: ${[1, 2, 3, 4, 5].map(k => D.recBase[i] + 10 * k).join(', ')})</p><div class="row">${img(`boss-${m.semi.pal}.png`, 56)}<div><b>${esc(m.semi.name)}</b> <span class="mut">(semi-boss)</span><p class="mut">${[...new Set(m.semi.pattern)].map(x => PAT[x]).join(', ')}</p></div></div><div class="row">${img(`boss-${m.boss.pal}.png`, 64)}<div><b>${esc(m.boss.name)}</b> <span class="mut">(boss)</span><p class="mut">${[...new Set(m.boss.pattern)].map(x => PAT[x]).join(', ')}</p></div></div>`)).join('') + '</div>'));
 
-H.push(sec('inimigos', 'Inimigos', 'Seis monstros por mapa. Os fracos aparecem mais vezes; os fortes largam mais vezes equipamento e de nível mais alto.', D.missions.map((m, i) => `<h3 class="cl">${esc(m.name)}${i === 5 ? ' (aparecem todos os monstros do jogo)' : ''}</h3><div class="grid">` + D.mobsByMap[i].map(id => { const e = D.enemies[id], md = D.mobs[id]; return card(md.n + ' ' + AID[md.a] + ' ' + m.name, `<div class="row">${img(`enemy-${id}.png`, 56)}<div><h3>${esc(md.n)}</h3><p class="mut">${AID[md.a]}</p><p>Vida base ${e.hp} · ¢${e.gold}</p></div></div>`); }).join('') + '</div>').join('')));
+H.push(sec('inimigos', 'Inimigos', 'Seis monstros por mapa. Os fracos aparecem mais vezes; os fortes largam mais vezes equipamento e de nível mais alto.', D.missions.map((m, i) => `<h3 class="cl">${esc(m.name)}${i === 5 ? ' (aparecem todos os monstros do jogo)' : ''}</h3><div class="grid">` + D.mobsByMap[i].map(id => { const e = D.enemies[id], md = D.mobs[id]; return card(md.n + ' ' + AID[md.a] + ' ' + m.name, `<div class="row">${img(`enemy-${id}.png`, 56)}<div><h3>${esc(md.n)}</h3><p class="mut">${AID[md.a]}</p><p>Vida base ${e.hp} · Dano base ${e.ai === 'shoot' ? '8 (projétil)' : e.dmg}${e.boom ? ' · explosão 14' : ''} · ¢${e.gold}</p></div></div>`); }).join('') + '</div>').join('')));
 
 
+// Forca dos monstros: o mesmo calculo do jogo (hurt em js/60-mission.js e applyWave em js/90-equipment.js)
+{
+  const T = D.scale.tune, WV = [1, 10, 20, 30, 40, 50, 60, 80, 100];
+  const mult = (w, s) => (1 + T.wDM * (w - 1)) * s.dm * T.eDmg * (1 + T.lDM * (s.rec - 1));
+  const hpK = hp => 1 + Math.max(0, hp - 500) / 700, nf = x => x >= 100 ? Math.round(x).toLocaleString('pt-PT') : x.toFixed(1).replace('.', ',');
+  const ex = { s: D.scale.maps[4][5], w: 20, hp: 8000 }, exB = 9 * mult(ex.w, ex.s) * hpK(ex.hp);
+  H.push(sec('forca', 'Força dos monstros', 'Quanto dano um monstro te tira em cada mapa, prestígio e onda da Campanha.',
+`<h3>Como se calcula um golpe</h3>
+<p><b>Dano = dano base do monstro × multiplicador da onda e do mapa × fator da tua vida máxima × (1 − redução de dano)</b></p>
+<ul>
+<li><b>Dano base:</b> está em cada monstro, na secção Inimigos (a maioria tem 6 a 9; os tanques 18; os que investem 15; projéteis 8; explosões 14).</li>
+<li><b>Multiplicador da onda e do mapa</b> (tabela abaixo): +5% por onda, e cresce com o <b>nível do mapa</b> (o nível recomendado, que sobe 10 a cada prestígio). Na Campanha conta o nível do mapa, não o teu.</li>
+<li><b>Fator da tua vida máxima:</b> os monstros batem mais forte em quem tem mais vida: <b>1 + (vida máxima − 500) ÷ 700</b>. Por isso, a partir de alguns milhares de vida, mais vida quase não aumenta o número de golpes que aguentas (com 2 000 de vida já aguentas ~91% dos golpes que aguentarias com vida infinita; com 8 000, ~98%).</li>
+<li><b>Redução de dano: o máximo que conta é ${60}%</b> (o Knight já tem ${T.dr.knight}% de base, incluído nesse limite). O ecrã de Stats pode mostrar mais, mas acima de 60% não tem efeito.</li>
+<li>O escudo do Knight tira mais 60% ao golpe que já foi reduzido.</li>
+</ul>
+<h3>Fator da vida máxima</h3><table><tr><th>Vida máxima</th>${[500, 1000, 2000, 3000, 5000, 8000, 10000, 15000].map(h => `<th>${h.toLocaleString('pt-PT')}</th>`).join('')}</tr><tr><td>Fator</td>${[500, 1000, 2000, 3000, 5000, 8000, 10000, 15000].map(h => `<td>×${nf(hpK(h))}</td>`).join('')}</tr></table>
+<h3>Multiplicador da onda e do mapa</h3><p class="mut">Multiplica o dano base. Ex.: um monstro de dano base 9 com ×20 tira 180 antes da tua vida e da redução de dano. A linha "P0" é o mapa sem prestígios; cada prestígio (P1 a P5) sobe 10 níveis ao mapa.</p>
+${D.missions.map((m, i) => `<h3 class="cl">${esc(m.name)}</h3><div class="scroll"><table><tr><th>Prestígio (nível do mapa)</th>${WV.map(w => `<th>Onda ${w}</th>`).join('')}</tr>` + D.scale.maps[i].map((s, P) => `<tr><td>P${P} (Nv ${s.rec})</td>${WV.map(w => `<td>×${nf(mult(w, s))}</td>`).join('')}</tr>`).join('') + '</table></div>').join('')}
+<h3>Exemplo</h3><p>Serpente da Areia (dano base 9) no ${esc(D.missions[4].name)} com 5 prestígios (Nv ${ex.s.rec}), onda ${ex.w}, com ${ex.hp.toLocaleString('pt-PT')} de vida: 9 × ${nf(mult(ex.w, ex.s))} × ${nf(hpK(ex.hp))} = <b>${nf(exB)}</b> sem redução; com a redução no máximo (60%) fica <b>${nf(exB * .4)}</b> por golpe, quer tenhas 60% ou 97,5% de redução.</p>
+<p class="mut">Nas Raids e na Torre os monstros usam outros multiplicadores (dificuldade da raid e andar da Torre), mas o fator da vida máxima e o limite de 60% de redução são os mesmos.</p>`));
+}
 H.push(sec('materiais', 'Pedras de evolução', 'Materiais que não se vendem (separador Mochila › Materiais). Há uma por raridade.',
   `<div class="grid">${['comum', 'rara', 'epica', 'lendaria', 'mitica'].map((n, i) => card('pedra de evolução ' + D.rar[i][0].toLowerCase(), `<div class="row">${img(`stone-${n}.png`, 56)}<div><h3>Pedra de evolução · ${D.rar[i][0]}</h3></div></div>`)).join('')}</div>
 <table><tr><th>Como obter</th><th>Para que serve</th></tr>
@@ -129,7 +151,7 @@ H.push(sec('shop', 'Shop (Auto-Raid)', 'Separador Shop do acampamento.',
 <p class="mut">Se a mochila encher, os itens a mais são vendidos automaticamente (o ecrã avisa antes). Estas raids não contam para o ranking de raids feitas, nem para os abates, as missões diárias ou os objetivos das armas. Se o personagem perder ou não acabar a raid simulada, não deixa comprar.</p>`));
 
 const NAV = [['O jogo', [['classes', 'Classes'], ['armas', 'Armas'], ['fusao', 'Fusão'], ['equipamento', 'Equipamento'], ['encantos', 'Encantos e bigorna'], ['progressao', 'Progressão'], ['recompensas', 'Recompensas por nível'], ['materiais', 'Pedras de evolução'], ['loadouts', 'Loadouts']]],
-  ['Combate', [['raids', 'Campanha e raids'], ['drops', 'Drops'], ['mapas', 'Mapas e bosses'], ['inimigos', 'Inimigos'], ['eventos', 'Eventos e missões'], ['shop', 'Shop (Auto-Raid)']]],
+  ['Combate', [['raids', 'Campanha e raids'], ['drops', 'Drops'], ['mapas', 'Mapas e bosses'], ['inimigos', 'Inimigos'], ['forca', 'Força dos monstros'], ['eventos', 'Eventos e missões'], ['shop', 'Shop (Auto-Raid)']]],
   ['Coleção', [['pets', 'Pets'], ['guildas', 'Guildas'], ['conquistas', 'Conquistas e títulos']]]];
 const html = `<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wiki · Guardians of Gold</title>
 <link rel="icon" href="docs/img/skin-knight-0.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
