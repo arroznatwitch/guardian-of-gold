@@ -109,4 +109,7 @@ const THEMES = [
 ];
 
 
+const FARM_STARTS = [1, 10, 20, 30, 40];   // com os 5 prestigios de um mapa podes comecar mais a frente (sem recompensas pelas ondas saltadas)
+const farmStarts = i => save && (save.pres || [])[i] >= PRES_MAX ? FARM_STARTS.filter(w => w === 1 || w <= (save.farmBest[i] | 0)) : [1];   // so ate a tua melhor onda
+const farmStart = i => { const ok = farmStarts(i), w = ((save && save.sw) || [])[i] | 0; return ok.includes(w) ? w : 1; };
 const presWave = i => i === REC_BASE.length - 1 ? 30 : PRES_WAVE;   // prestigio na onda 20; no Abismo Final (ultima zona) continua a ser na 30

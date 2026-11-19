@@ -291,6 +291,12 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   const empty = '{"cls":"mage","pl":{"lv":1},"ach":{}}';
   let nothing = []; for (const tt of titles) { const x = (await db.query("select gog._title_ok(($1::jsonb) || jsonb_build_object('title', $2::text), 1, $2) as x", [empty, tt])).rows[0].x; if (x) nothing.push(tt); }
   ok('no title is accepted for an empty save', nothing.length === 0, nothing);
+  { const T = async (sv, t) => (await db.query("select gog._title_ok(($1::jsonb) || jsonb_build_object('title', $2::text), 1, $2) as x", [sv, t])).rows[0].x;
+    const s40 = '{"cls":"mage","pl":{"lv":60},"farmBest":[40,0,0,0,0,40],"ach":{"wave0_40":2,"wave5_40":2}}', s50old = '{"cls":"mage","pl":{"lv":60},"farmBest":[50,0,0,0,0,0],"ach":{"wave0_50":2}}';
+    ok('map title (lord0) is earned at wave 40', await T(s40, 'lord0'));
+    ok('Final Abyss title (lord5) still needs wave 50', !(await T(s40, 'lord5')));
+    ok('old owners of lord0 via wave 50 keep the title', await T(s50old, 'lord0'));
+    ok('lord0 is refused without the waves', !(await T('{"cls":"mage","pl":{"lv":60},"farmBest":[39,0,0,0,0,0],"ach":{"wave0_40":2}}', 'lord0'))); }
   await db.exec('set role anon');
 }
 // pets na build publica e no anti-batota
