@@ -33,7 +33,8 @@ function hubChar() {
   if (itH) itemCard(itH, 208, 292, 268, true); else if (hv === 'weapon') { txt(w.n + (wlvl() ? ` +${wlvl()}` : ''), 208, 318, 15, '#fff', 'left', 'bold'); txt(w.info, 208, 338, 12, '#bbb'); wrap(`[E] ${w.sk.n} (${T2('recarga', 'cooldown')} ${+skCd(w).toFixed(2)}s): ${w.sk.d}`, 208, 356, 262, 14, 12, '#7cf'); const ws = wStar(w.id); txt(ws ? `Fusão: ${'★'.repeat(ws)} · Dano ×${STAR_MULT[ws].toFixed(2)} · Vel. +${ws * 3}%` : 'Fusão: sem estrelas', 208, 392, 12, '#ffd34a'); if (ws) txt(STAR_FX[w.id][ws - 1], 208, 428, 11, '#6f6'); txt(L < FUSE_LV ? `A Fusão desbloqueia no Nível ${FUSE_LV}` : 'Junta cópias no ecrã Fusão', 208, 410, 11, L < FUSE_LV ? '#f88' : '#889'); }
   else if (hv === 'ring') { txt('Anel', 208, 318, 15, '#fff', 'left', 'bold'); wrap(T2('Com capacete, armadura e botas equipados, o anel dá um bónus ao stat da cor da gema: até +3% (Prata), +6,5% (Ouro), +9% (Diamante) ou +13% (Roxo), conforme o nível do anel.', 'With a helmet, armour and boots equipped, the ring gives a bonus to the stat of its gem colour: up to +3% (Silver), +6.5% (Gold), +9% (Diamond) or +13% (Purple), depending on the ring level.'), 208, 340, 262, 14, 12, '#9ab'); }
   else if (hv) txt('Vazio', 208, 318, 14, '#889');
-  else { drawSetInfo(208, 304); EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, 354 + i * 18, 13, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
+  else { const sh = drawSetInfo(208, 304), y0 = Math.max(354, 304 + sh + 12), dy = Math.min(18, (472 - y0) / 4), fs = dy < 16 ? 12 : 13;   // a lista comeca depois dos conjuntos (com 2 conjuntos ativos nao fica por cima)
+    EQ_SLOTS.forEach((sl, i) => { const q = save.gear[sl]; txt(q ? itemName(q) : `${SLOT_LBL[sl]}: —`, 208, y0 + i * dy, fs, q ? RAR[q.r][1] : '#556', 'left', q ? 'bold' : 'normal'); }); }
   // tira da mochila para o slot sobre o qual estas
   const inLeft = mouse.x - UIOX >= 195 && mouse.x - UIOX <= 480 && mouse.y >= 88 && mouse.y <= 478;
   if (hv && EQ_SLOTS.includes(hv)) charStrip = hv; else if (!inLeft || hv === 'weapon') charStrip = null;   // a arma mostra a sua descricao: a tira da mochila nao pode ficar por cima
@@ -57,7 +58,7 @@ function hubChar() {
   txt('Atributos', 504, 172, 14, '#f0c060', 'left', 'bold'); txt(`Pontos: ${save.pts}`, 771, 172, 14, save.pts ? '#ffd34a' : '#778', 'right', 'bold');
   ATTRS.forEach(([key, nm, hint0], i) => { let hint = hint0;
     const y = 176 + i * 34;
-    if (key === 'agi') hint = a.agi % 2 === 0 ? T2('Próximo: +0.6% vel. ataque', 'Next: +0.6% atk speed') : T2('Próximo: +0.6% velocidade', 'Next: +0.6% speed');   // curto: nao passa por cima do numero   // a Destreza alterna entre os dois
+    if (key === 'agi') hint = a.agi % 2 === 0 ? (stats().cdm <= .3001 ? T2('Próximo: vel. ataque (já no MÁX)', 'Next: atk speed (already MAX)') : T2('Próximo: +0.6% vel. ataque', 'Next: +0.6% atk speed')) : T2('Próximo: +0.6% velocidade', 'Next: +0.6% speed');   // curto: nao passa por cima do numero   // a Destreza alterna entre os dois
     txt(nm, 504, y + 14, 14, '#fff', 'left', 'bold'); txt(hint, 504, y + 28, 10, '#7a8aa8'); txt(String(a[key]), 690, y + 20, 16, '#f0c060', 'right', 'bold');
     const capped = false;   // a Pericia nunca bloqueia: com a vel. de ataque no maximo (+70%) os pontos continuam a baixar a recarga da habilidade
     if (key === 'agi' && stats().cdm <= .3001) txt('MÁX', 655, y + 20, 11, '#6f6', 'right', 'bold');
