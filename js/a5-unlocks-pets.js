@@ -196,19 +196,23 @@ function addPetXp(id, n) {   // devolve quantos niveis subiu
 }
 const petStats = (id, L) => ({
   dog: { spd: .06 + .001 * (L - 1), atk: .05 + .00085 * (L - 1) },
-  chicken: { egg: Math.max(1.1, 2 - .03 * (L - 1)), r: 34 + .8 * (L - 1), dmg: .6 + .03 * (L - 1), spd: 130 + 2 * (L - 1) },
-  bird: { regen: .004 + .00025 * (L - 1) },
+  chicken: { egg: Math.max(1.1, 2 - .03 * (L - 1)), r: 34 + .8 * (L - 1), dmg: .6 + .03 * (L - 1), spd: 130 + 2 * (L - 1), share: .0025 * L },   // share: 0.25% do teu dano por nivel
+  bird: { regen: .004 + .00025 * (L - 1), share: .0015 * L },   // cura 0.15% do teu dano por segundo, por nivel (abaixo de 50% de vida)
 })[id];
 const petImg = (id, t) => id === 'dog' ? PET_DOG[Math.floor(t * 4) % 2] : id === 'chicken' ? PET_CHICKEN[Math.floor(t * 4) % 2] : PET_BIRD[Math.floor(t * 5) % 2];
 function updatePet(dt) {
   ensurePets(); const p = R.p, id = save.pets.eq; R.petBuff = 0;
+  { const got = R.myDmg || 0; R.myDmg = 0; R.dps = (R.dps || 0) + (got / Math.max(dt, .001) - (R.dps || 0)) * Math.min(1, dt / 3);   // o teu dano por segundo (media dos ultimos ~3 s)
+    if (id === 'chicken' && save.pets.own[id]) R.petPool = (R.petPool || 0) + got * petStats(id, petLv(id)).share; }   // a galinha guarda uma parte do teu dano para os ovos
   if (R.eggs && R.eggs.length) {   // os ovos da galinha explodem passado um bocadinho
-    for (const e of R.eggs) { e.t += dt; if (e.t >= e.max && !e.done) { e.done = true; inSrc('Pet: ovos', () => areaDmg(e.x, e.y, e.r, e.d * DM(), { kb: 90 })); R.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r, t: .25, max: .25, col: '#ffe9a0' }); burst(e.x, e.y, '#fff3b0', 9); SFX.hit(); } }
+    for (const e of R.eggs) { e.t += dt; if (e.t >= e.max && !e.done) { e.done = true; const n = targets().filter(t => Math.hypot(t.x - e.x, t.y - e.y) <= e.r + t.r).length, pool = n ? R.petPool || 0 : 0; if (n) R.petPool = 0;
+      const d = Math.max(e.d * DM(), n ? pool / n : 0); inSrc('Pet: ovos', () => areaDmg(e.x, e.y, e.r, d, { kb: 90 })); /* o dano guardado divide-se pelos inimigos apanhados (nunca menos do que antes) */ R.fx.push({ k: 'ring', x: e.x, y: e.y, r: e.r, t: .25, max: .25, col: '#ffe9a0' }); burst(e.x, e.y, '#fff3b0', 9); SFX.hit(); } }
     R.eggs = R.eggs.filter(e => !e.done);
   }
   if (!id || !save.pets.own[id]) { R.pet = null; return; }
   if (!R.pet || R.pet.id !== id) R.pet = { id, x: p.x - 30, y: p.y + 12, flip: false, t: 0, egg: 1, ang: Math.random() * 6, wx: p.x, wy: p.y };
   const q = R.pet, L = petLv(id), S = petStats(id, L);
+  if (id !== 'chicken' && petFetch(q, p, dt, id === 'dog' ? stats().spd * 1.3 + 40 : 330)) return;   // o cao e o passaro tambem vao buscar moedas e coracoes perto de ti
   if (id === 'dog') {
     DOG_BUFF.spd = S.spd; DOG_BUFF.atk = S.atk;
     const tx = p.x + (p.flip ? 34 : -34), ty = p.y + 12, d = Math.hypot(tx - q.x, ty - q.y), sp = stats().spd * 1.15 + 40;
@@ -220,7 +224,9 @@ function updatePet(dt) {
     if (p.hp < p.max) for (const h of R.hearts) { if (h.got) continue; const d = Math.hypot(h.x - q.x, h.y - q.y); if (d < bd) { bd = d; tg = h; kind = 'h'; } }
     let tx, ty, sp = S.spd * .55;
     if (tg) { tx = tg.x; ty = tg.y; sp = S.spd * 1.3; }
-    else { if (Math.hypot(q.wx - q.x, q.wy - q.y) < 10 || (q.wt = (q.wt || 0) - dt) <= 0) { q.wx = 50 + Math.random() * (W - 100); q.wy = 60 + Math.random() * (H - 120); q.wt = 4; } tx = q.wx; ty = q.wy; }
+    else { let en = null, ed = 1e9; for (const e of targets()) { const d = Math.hypot(e.x - q.x, e.y - q.y); if (d < ed) { ed = d; en = e; } }   // sem moedas: vai para o inimigo mais perto, para os ovos acertarem
+      if (en) { tx = en.x + Math.cos(q.ang += dt) * 18; ty = en.y + Math.sin(q.ang) * 18; sp = S.spd; }
+      else { if (Math.hypot(q.wx - q.x, q.wy - q.y) < 10 || (q.wt = (q.wt || 0) - dt) <= 0) { q.wx = 50 + Math.random() * (W - 100); q.wy = 60 + Math.random() * (H - 120); q.wt = 4; } tx = q.wx; ty = q.wy; } }
     const d = Math.hypot(tx - q.x, ty - q.y) || 1;
     if (tg && d < 14) {
       tg.got = true;
@@ -230,9 +236,22 @@ function updatePet(dt) {
       if (q.egg <= 0) { q.egg = S.egg; R.eggs = R.eggs || []; R.eggs.push({ x: q.x, y: q.y + 8, t: 0, max: .7, r: S.r, d: S.dmg }); }   // so poe ovos quando anda
     }
   } else if (id === 'bird') {
-    q.ang += dt * (1.8 + .02 * L); q.t += dt; const px = p.x + Math.cos(q.ang) * 52, py = p.y - 20 + Math.sin(q.ang) * 20; q.flip = Math.cos(q.ang + 1.57) < 0; q.x = px; q.y = py;
-    if (p.hp > 0 && p.hp < p.max * .5 && R.endT === undefined) { heal(p.max * S.regen * dt, 'Pet: regeneração'); q.hs = (q.hs || 0) - dt; if (q.hs <= 0) { q.hs = .9; spark(p.x, p.y - 10, '#6f6', 3, 40, .6, 3, -30); } }
+    q.ang += dt * (1.8 + .02 * L); q.t += dt; const px = p.x + Math.cos(q.ang) * 52, py = p.y - 20 + Math.sin(q.ang) * 20; q.flip = Math.cos(q.ang + 1.57) < 0;
+    { const d = Math.hypot(px - q.x, py - q.y); if (d > 6) { const st = Math.min(d, 330 * dt); q.x += (px - q.x) / d * st; q.y += (py - q.y) / d * st; } else { q.x = px; q.y = py; } }   // volta a voar a tua volta depois de apanhar algo
+    if (p.hp > 0 && p.hp < p.max * .5 && R.endT === undefined) { heal(Math.max(p.max * S.regen, (R.dps || 0) * S.share) * dt, 'Pet: regeneração'); q.hs = (q.hs || 0) - dt; if (q.hs <= 0) { q.hs = .9; spark(p.x, p.y - 10, '#6f6', 3, 40, .6, 3, -30); } }
   }
+}
+function petFetch(q, p, dt, sp) {   // vai buscar a moeda ou o coracao mais perto (ate 170 px de ti); devolve true enquanto vai
+  let tg = null, bd = 1e9, kind = '';
+  for (const c of R.coins) { if (c.got || Math.hypot(c.x - p.x, c.y - p.y) > 170) continue; const d = Math.hypot(c.x - q.x, c.y - q.y); if (d < bd) { bd = d; tg = c; kind = 'c'; } }
+  if (p.hp < p.max) for (const h of R.hearts) { if (h.got || Math.hypot(h.x - p.x, h.y - p.y) > 170) continue; const d = Math.hypot(h.x - q.x, h.y - q.y); if (d < bd) { bd = d; tg = h; kind = 'h'; } }
+  if (!tg) return false;
+  if (bd < 14) { tg.got = true;
+    if (kind === 'c') { R.gold += tg.v; SFX.coin(); R.texts.push({ x: tg.x, y: tg.y - 8, s: '+' + tg.v, t: .6, col: '#fd5' }); }
+    else { const n = heartHeal(); heal(n, 'Corações'); SFX.heal(); R.texts.push({ x: p.x, y: p.y - 24, s: '+' + n, t: .8, col: '#6f6' }); }
+    return false; }
+  const st = Math.min(bd, sp * dt); q.x += (tg.x - q.x) / bd * st; q.y += (tg.y - q.y) / bd * st; q.t += dt; if (Math.abs(tg.x - q.x) > 2) q.flip = tg.x < q.x;
+  return true;
 }
 function drawPet(q) {
   const im = petImg(q.id, q.t), k = q.id === 'dog' ? 2.6 : q.id === 'chicken' ? 2.4 : 2.6, w = im.width * k, h = im.height * k, fl = q.id === 'bird' ? Math.sin(q.t * 6) * 2 : 0;
@@ -249,9 +268,9 @@ function drawEggs() {
 }
 const petLines = (id, L) => {   // o que o pet faz a este nivel (ingles primeiro)
   const S = petStats(id, L), f1 = v => (v * 100).toFixed(1).replace(/\.0$/, '');
-  if (id === 'dog') return [T2('Deals no damage; helps while close to you', 'Deals no damage; helps while close to you'), `+${f1(S.spd)}% ${T2('move speed', 'move speed')} · +${f1(S.atk)}% ${T2('attack speed', 'attack speed')}`];
-  if (id === 'chicken') return [T2('Collects coins and hearts for you', 'Collects coins and hearts for you'), T2(`Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`, `Lays an egg every ${S.egg.toFixed(1)}s while walking · blast ${Math.round(S.r)} · ${Math.round(S.dmg * 100)}% damage`)];
-  return [T2('Circles you and heals you below 50% health', 'Circles you and heals you below 50% health'), `${T2('Regen', 'Regen')} ${(S.regen * 100).toFixed(2)}% ${T2('max health per second', 'max health per second')}`];
+  if (id === 'dog') return [T2('Collects coins and hearts · helps while close to you', 'Collects coins and hearts · helps while close to you'), `+${f1(S.spd)}% ${T2('move speed', 'move speed')} · +${f1(S.atk)}% ${T2('attack speed', 'attack speed')}`];
+  if (id === 'chicken') return [T2('Collects coins and hearts · eggs every ' + S.egg.toFixed(1) + 's while walking', 'Collects coins and hearts · eggs every ' + S.egg.toFixed(1) + 's while walking'), T2(`Eggs deal ${(S.share * 100).toFixed(2)}% of your damage · blast ${Math.round(S.r)}`, `Eggs deal ${(S.share * 100).toFixed(2)}% of your damage · blast ${Math.round(S.r)}`)];
+  return [T2('Collects coins and hearts · heals you below 50% health', 'Collects coins and hearts · heals you below 50% health'), T2(`Heals ${(S.share * 100).toFixed(2)}% of your damage per second (min. ${(S.regen * 100).toFixed(2)}% max health)`, `Heals ${(S.share * 100).toFixed(2)}% of your damage per second (min. ${(S.regen * 100).toFixed(2)}% max health)`)];
 };
 async function buyPet(id, price) {   // comprar um pet: o servidor cobra o ouro
   buyBusy = true; const sv = await shopServer('pet', 0, id); buyBusy = false;

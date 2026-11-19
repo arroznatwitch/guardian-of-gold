@@ -81,7 +81,7 @@ function dmgE(e, d, ang, kb, quiet) {
       for (const o of near) { inSrc('Eletricidade', () => dmgE(o, d * .3, 0, 0, true)); R.fx.push({ k: 'zap', pts: [{ x: e.x, y: e.y }, { x: o.x, y: o.y }], t: .15, max: .15 }); spark(o.x, o.y, '#ffe14a', 4, 120, .3, 3, 0); }
     }
   }
-  e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d); if (e.statue && R.event) R.event.dmg += d;
+  e.hp -= d; e.hit = .1; dlAdd('dmg', SRC, d); if (SRC.slice(0, 4) !== 'Pet:') R.myDmg = (R.myDmg || 0) + d;   // os pets usam o dano que tu das if (e.statue && R.event) R.event.dmg += d;
   if (kb) { const k = e.boss ? kb * .12 : kb; e.kx = Math.cos(ang) * k; e.ky = Math.sin(ang) * k; }
   R.texts.push({ x: e.x + (Math.random() - .5) * 14, y: e.y - e.r, s: String(Math.max(1, Math.round(d * 10))), t: .6, col: quiet ? '#fa6' : crit ? '#ffd34a' : '#fff', sz: crit ? 20 : 15 });
   burst(e.x, e.y, e.boss ? '#d9a' : '#8f8', quiet ? 1 : 4); if (!quiet) SFX.hit();
