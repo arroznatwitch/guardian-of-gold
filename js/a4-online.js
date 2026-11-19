@@ -134,7 +134,7 @@ function statPayload() {
 }
 function pubStats() {   // estatisticas calculadas para o perfil publico (passar o rato nos atributos); so numeros
   try { const s = stats(), g = gearStats(), w = curW(), r = (v, d) => +(+v || 0).toFixed(d);
-    return { hp: Math.round(s.hp), dr: r(g.dr, 1), dm: Math.round((s.dm - 1) * 100), cr: r(Math.min(75, g.crit), 1), cx: r(critX(g), 2), as: Math.round((1 - s.cdm) * 100), sp: Math.round(s.spd),
+    return { hp: Math.round(s.hp), dr: r(Math.min(DR_MAX, drTot(g)), 1), dm: Math.round((s.dm - 1) * 100), cr: r(Math.min(75, g.crit), 1), cx: r(critX(g), 2), as: Math.round((1 - s.cdm) * 100), sp: Math.round(s.spd),
       bu: r(g.burn, 0), fr: r(g.slow, 0), xp: r(g.xpb, 0), gf: r(g.gf, 0), po: r(g.poi, 0), ls: r(g.ls, 1), el: r(g.elec, 0), cd: r(w.sk.cd - skCd(w), 2) }; } catch (e) { return null; }
 }
 // build publica (so dados de jogo): skin, arma, atributos e equipamento

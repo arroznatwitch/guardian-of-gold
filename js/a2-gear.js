@@ -71,7 +71,7 @@ function hubChar() {
   // estatisticas agrupadas pelos 4 atributos: a linha mostra os valores; passar o rato (ou o dedo) abre o detalhe
   const s = stats(), pc = (v, d) => v.toFixed(d) + '%';   // as cores de cada estatistica mantem-se
   const SG = [
-    ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', pc(g.dr, 1), '#6a9aff']]],
+    ['Vitalidade', [['Vida', s.hp, '#ff6a7a'], ['Redução de dano', drTot(g) >= DR_MAX ? DR_MAX + '% MÁX' : pc(drTot(g), 1), drTot(g) >= DR_MAX ? '#6f6' : '#6a9aff']]],
     ['Força', [['Dano', '+' + Math.round((s.dm - 1) * 100) + '%', '#ff9a3a'], ['Chance de crítico', pc(Math.min(75, g.crit), 1), '#ff7ae0'], ['Dano crítico', 'x' + critX(g).toFixed(2), '#ff7ae0']]],
     ['Destreza', [['Vel. de ataque', s.cdm <= .3001 ? '+70% MÁX' : '+' + Math.round((1 - s.cdm) * 100) + '%', s.cdm <= .3001 ? '#6f6' : '#ffe24a'], ['Velocidade', Math.round(s.spd), '#6adfff']]],
     ['Perícia', [[T2('Queimadura', 'Burn'), pc(g.burn, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(g.slow, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(g.xpb, 0) + ' · ' + pc(g.gf, 0), '#ffd34a', 1], [T2('Veneno', 'Poison'), pc(g.poi, 0), '#8be04a'], ['Roubo de vida', pc(g.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(g.elec, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (w.sk.cd - skCd(w)).toFixed(2) + 's', '#7cf']]]];

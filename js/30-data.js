@@ -33,6 +33,8 @@ function addXP(n) { const pl = save.pl; if (pl.lv >= MAXLV) { pl.lv = MAXLV; pl.
 const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona para abrir a seguinte
 // parametros de equilibrio (testados com o simulador)
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
+const DR_MAX = 60;   // reducao de dano: so conta ate 60% (equipamento + base da classe)
+const drTot = g => ((g && g.dr) || 0) + (TUNE.dr[save && save.cls] || 0);   // reducao de dano total, antes do limite
 const REC_BASE = [1, 15, 30, 45, 58, 70], PRES_MAX = 5, PRES_STEP = 10, PRES_WAVE = 20;   // nivel recomendado de cada zona; cada estrela de prestigio sobe 10 niveis (a ultima do Abismo Final e nivel 120); para dar prestigio chega a onda 20 (Abismo Final: 30, ver presWave)
 const farmRec = (m, P) => REC_BASE[m] + PRES_STEP * (P === undefined ? ((typeof save === 'object' && save && save.pres && save.pres[m]) | 0) : P);
 // forca extra dos monstros da campanha por nivel recomendado: [nivel, multiplicador de vida, multiplicador de dano] (calibrado com o simulador)
