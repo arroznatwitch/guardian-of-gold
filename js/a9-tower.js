@@ -21,7 +21,8 @@ function twState() {
   let t = save.tw; const now = Date.now(), k = todayKey();
   if (!t || typeof t !== 'object') t = save.tw = { d: '', f: 1, dead: 0, tk: twFree(), at: now, best: 0 };
   t.f = Math.max(1, t.f | 0); t.tk = Math.max(0, Math.min(TW.max, t.tk | 0)); t.best = Math.max(0, t.best | 0); if (!(t.at <= now)) t.at = now;
-  if (t.d !== k) { t.d = k; t.f = 1; t.dead = 0; t.tk = Math.max(t.tk, twFree()); }   // novo dia: volta ao andar 1 e recebe os 10 gratis
+  t.dead = 0;   // morrer ja nao fecha a Torre: podes voltar a tentar quando quiseres
+  if (t.d !== k) { t.d = k; t.f = 1; t.tk = Math.max(t.tk, twFree()); }   // novo dia: volta ao andar 1 e recebe os 10 gratis
   if (t.tk >= twCap()) t.at = now;   // cheio: o relogio so conta quando ha espaco
   else { const n = Math.floor((now - t.at) / TW.hr); if (n > 0) { t.tk = Math.min(twCap(), t.tk + n * twPer()); t.at += n * TW.hr; if (t.tk >= twCap()) t.at = now; } }
   return t;
@@ -67,13 +68,12 @@ function shopTowerCard(X, Y, WD) {   // cartao na Shop
   const ok = open && !t.dead && save.gems >= c && t.tk + TW.buyN <= TW.max;
   btn(X + WD - 216, Y + 11, 200, 32, ask ? T2(`Confirmar · ${c} ◆`, `Confirm · ${c} ◆`) : `${T2('Comprar', 'Buy')} · ${c} ◆`, towerBuy, { size: 14, off: !ok, col: ask ? '#a06a20' : '#2f7a4a', hot: ask ? '#c98a30' : '#3fa061' });
 }
-function towerEnd(win) {   // chamado no fim da missao: morrer fecha a Torre ate amanha
-  const t = twState(); if (!win) t.dead = 1;
-}
+function towerEnd(win) {}   // morrer ja nao fecha a Torre: ficas no mesmo andar e podes tentar outra vez
+const twResetLeft = () => { const n = new Date(), m = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1); return m - n; };   // o andar volta a 1 a meia-noite (novo dia)
 function hubTower() {
   const t = twState(), X = 197, WD = 583, now = Date.now(), f = t.f;
   txt(T2('Torre', 'Tower'), X, 114, 22, '#ffd34a', 'left', 'bold');
-  txt(T2('Sobe andar a andar. Boss a cada 5 andares. Se morreres, só voltas amanhã (andar 1).', 'Climb floor by floor. Boss every 5 floors. If you die, you only return tomorrow (floor 1).'), X + 80, 112, 11, '#9ab');
+  txt(T2('Sobe andar a andar. Boss a cada 5 andares. Se morreres, tenta outra vez. Todos os dias volta ao andar 1.', 'Climb floor by floor. Boss every 5 floors. If you die, just try again. Every day it resets to floor 1.'), X + 80, 112, 11, '#9ab');
   // torre desenhada: os proximos andares de baixo para cima
   const tx = X, ty = 132, tw = 150, th = 300, rows = 8;
   bevel(tx, ty, tw, th + 14, '#0f0f1e', '#3a3a5a', '#05050a');
@@ -92,6 +92,7 @@ function hubTower() {
   if (isTowerDay()) txt(T2('Terça: andares x3!', 'Tuesday: floors x3!'), px + pw - 16, 186, 13, '#ff8a5a', 'right', 'bold');
   txt(`${T2('Andares disponíveis', 'Floors available')}: ${t.tk}/${twCap()}`, px + 16, 186, 15, t.tk ? '#6f6' : '#f88', 'left', 'bold');
   bar(px + 16, 194, pw - 32, 8, t.tk / twCap(), '#6f6');
+  { const ms = twResetLeft(), hh = Math.floor(ms / 3600000), mm = Math.floor(ms / 60000) % 60; txt(T2(`Volta ao andar 1 em ${hh}h ${String(mm).padStart(2, '0')}m`, `Resets to floor 1 in ${hh}h ${String(mm).padStart(2, '0')}m`), px + pw - 16, 222, 12, hh < 3 ? '#ff6a5a' : '#ff9a5a', 'right', 'bold'); }   // aviso: o progresso do dia reinicia
   if (t.tk < twCap()) { const left = Math.max(0, TW.hr - (now - t.at)), mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60; txt(`+${twPer()} ${T2('andares em', 'floors in')} ${mm}:${String(ss).padStart(2, '0')}`, px + 16, 222, 12, '#cdd6f4'); }
   else txt(T2('Cheio: joga para voltares a ganhar andares.', 'Full: play to start earning floors again.'), px + 16, 222, 12, '#ffd34a');
   txt(t.dead ? T2('A Torre volta a abrir amanhã, no andar 1.', 'The Tower reopens tomorrow, on floor 1.') : T2(`${twFree()} grátis por dia · +${twPer()} por hora (até ${twCap()})`, `${twFree()} free per day · +${twPer()} per hour (up to ${twCap()})`), px + 16, 242, 11, t.dead ? '#f99' : '#889');

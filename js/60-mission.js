@@ -28,7 +28,7 @@ function endMission(win, mode) {
   const M = MISSIONS[R.m]; let g = R.gold + R.coins.reduce((a, c) => a + c.v, 0), xp = R.xp * (R.raid ? 1 + .5 * R.raid.d : 1) * (1 + (R.G ? R.G.xpb : 0) / 100) * (1 + gb().xp);
   g = Math.round(g * (1 + gb().gold));   // bonus de ouro da guilda
   if (isWeekend() && !labOn) { g *= WEEKEND_X; xp *= WEEKEND_X; R.boosted = true; }   // sabados e domingos: XP e ouro x2
-  if (R.tower) { towerEnd(win); if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }   // Torre: morrer fecha-a ate amanha e guarda metade das moedas e do XP apanhados (as recompensas dos andares feitos ja estao pagas)
+  if (R.tower) { towerEnd(win); if (!win) { g = Math.floor(g / 2); xp = Math.floor(xp / 2); } }   // Torre: morrer acaba a subida (podes voltar logo) e guarda metade das moedas e do XP apanhados (as recompensas dos andares feitos ja estao pagas)
   else if (R.farm) {
     if (R.wave > (save.farmBest[R.m] || 0)) save.farmBest[R.m] = R.wave;
     save.presW = save.presW || [0, 0, 0, 0, 0, 0]; const doneW = mode === 'cash' ? R.wave : R.wave - 1; if (doneW > (save.presW[R.m] | 0)) save.presW[R.m] = doneW;   // melhor onda CONCLUIDA neste prestigio (morrer ou sair a meio da onda 30 nao conta)
