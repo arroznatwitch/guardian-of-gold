@@ -1356,7 +1356,7 @@
     "Chega à onda 40 na Campanha de Floresta Sombria",
     "Reach wave 40 in the Floresta Sombria Campaign"
    ],
-   "title": ""
+   "title": "lord0"
   },
   {
    "id": "wave0_50",
@@ -1371,7 +1371,7 @@
     "Chega à onda 50 na Campanha de Floresta Sombria",
     "Reach wave 50 in the Floresta Sombria Campaign"
    ],
-   "title": "lord0"
+   "title": ""
   },
   {
    "id": "wave1_10",
@@ -1431,7 +1431,7 @@
     "Chega à onda 40 na Campanha de Cavernas Douradas",
     "Reach wave 40 in the Cavernas Douradas Campaign"
    ],
-   "title": ""
+   "title": "lord1"
   },
   {
    "id": "wave1_50",
@@ -1446,7 +1446,7 @@
     "Chega à onda 50 na Campanha de Cavernas Douradas",
     "Reach wave 50 in the Cavernas Douradas Campaign"
    ],
-   "title": "lord1"
+   "title": ""
   },
   {
    "id": "wave2_10",
@@ -1506,7 +1506,7 @@
     "Chega à onda 40 na Campanha de Castelo Maldito",
     "Reach wave 40 in the Castelo Maldito Campaign"
    ],
-   "title": ""
+   "title": "lord2"
   },
   {
    "id": "wave2_50",
@@ -1521,7 +1521,7 @@
     "Chega à onda 50 na Campanha de Castelo Maldito",
     "Reach wave 50 in the Castelo Maldito Campaign"
    ],
-   "title": "lord2"
+   "title": ""
   },
   {
    "id": "wave3_10",
@@ -1581,7 +1581,7 @@
     "Chega à onda 40 na Campanha de Pântano Tóxico",
     "Reach wave 40 in the Pântano Tóxico Campaign"
    ],
-   "title": ""
+   "title": "lord3"
   },
   {
    "id": "wave3_50",
@@ -1596,7 +1596,7 @@
     "Chega à onda 50 na Campanha de Pântano Tóxico",
     "Reach wave 50 in the Pântano Tóxico Campaign"
    ],
-   "title": "lord3"
+   "title": ""
   },
   {
    "id": "wave4_10",
@@ -1656,7 +1656,7 @@
     "Chega à onda 40 na Campanha de Deserto Ardente",
     "Reach wave 40 in the Deserto Ardente Campaign"
    ],
-   "title": ""
+   "title": "lord4"
   },
   {
    "id": "wave4_50",
@@ -1671,7 +1671,7 @@
     "Chega à onda 50 na Campanha de Deserto Ardente",
     "Reach wave 50 in the Deserto Ardente Campaign"
    ],
-   "title": "lord4"
+   "title": ""
   },
   {
    "id": "wave5_10",
@@ -2566,7 +2566,7 @@
    "p": 0.12
   },
   "crit": {
-   "n": "Crítico",
+   "n": "Chance de crítico",
    "u": "%",
    "b": 1.5,
    "p": 0.1
@@ -2602,10 +2602,34 @@
    "p": 0.5
   },
   "slow": {
-   "n": "Chance de abrandar",
+   "n": "Chance de gelo",
    "u": "%",
    "b": 6,
    "p": 0.5
+  },
+  "poi": {
+   "n": "Chance de envenenar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "elec": {
+   "n": "Chance de eletrocutar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "cdmg": {
+   "n": "Dano crítico",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "skc": {
+   "n": "Redução de recarga (E)",
+   "u": "%",
+   "b": 3,
+   "p": 0.2
   }
  },
  "attrs": [
@@ -2621,13 +2645,13 @@
   ],
   [
    "agi",
-   "Agilidade",
-   "+0.6% velocidade"
+   "Destreza",
+   "+0.6% vel. de ataque / velocidade"
   ],
   [
    "per",
    "Perícia",
-   "+0.6% vel. de ataque"
+   "-0.02s recarga"
   ]
  ],
  "enc": [
@@ -2674,6 +2698,22 @@
   [
    "dmg",
    "Poderoso"
+  ],
+  [
+   "poi",
+   "Venenoso"
+  ],
+  [
+   "elec",
+   "Elétrico"
+  ],
+  [
+   "cdmg",
+   "Brutal"
+  ],
+  [
+   "skc",
+   "Veloz"
   ]
  ],
  "slots": {
@@ -3197,7 +3237,7 @@
   {
    "stone": 0,
    "n": 1,
-   "kills": 5000
+   "kills": 1
   },
   {
    "stone": 1,
@@ -4525,16 +4565,27 @@
  "events": [
   {
    "id": "statue",
-   "until": "2026-11-18",
-   "untilTxt": [
-    "18 de Nov",
-    "Nov 18"
-   ],
+   "day": 3,
    "tries": 2,
    "secs": 30,
    "goldPer": 0.030303030303030304,
    "goldCap": 40000
   }
+ ],
+ "presWave": [
+  20,
+  20,
+  20,
+  20,
+  20,
+  30
+ ],
+ "farmStarts": [
+  1,
+  10,
+  20,
+  30,
+  40
  ],
  "ar": {
   "cost": 1000,
@@ -4542,5 +4593,5 @@
   "tmax": 400,
   "k": 0.9
  },
- "build": 24
+ "build": 72
 }
