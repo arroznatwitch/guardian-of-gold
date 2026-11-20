@@ -283,14 +283,16 @@ const DEV_ID = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toSt
 const cloudNew = () => ({ rev: 0, dirty: false, busy: false, timer: null, ready: false, err: '', confirmOut: false, uid: null, cls: null, taken: [] });
 let cloud = cloudNew(), cf = null;
 function lsSync(ok) { try { localStorage.setItem('bladehunter_unsynced', ok ? '0' : '1'); if (ok) localStorage.setItem('bladehunter_rev', String(cloud.rev)); } catch (e) {} }
-function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 11000); }
+function cloudMark() { if (!ONLINE_URL || !on.token || !cloud.ready || !save) return; cloud.dirty = true; lsSync(false); if (cloud.block) { cheatSay(); return; } if (!cloud.timer) cloud.timer = setTimeout(() => cloudFlush(), 11000); }
+function cheatSay() { hubToast = { t: 10, s: T2('O servidor recusou o save (valores suspeitos). Para proteger a tua conta, o jogo deixou de gravar online. Fala com o administrador.', 'The server refused the save (suspicious values). To protect your account, the game stopped saving online. Contact the admin.'), col: '#f88' }; }
 async function cloudFlush() {
   if (autoSim) return false;
   clearTimeout(cloud.timer); cloud.timer = null;
+  if (cloud.block) return false;   // o servidor recusou o save por valores suspeitos: nao se volta a tentar nesta sessao
   if (!cloud.dirty || cloud.busy || !on.token || !cloud.ready || !save) return !cloud.dirty;
   cloud.busy = true; cloud.dirty = false;
   const r = await rpc('gog_save_put', { p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }); cloud.busy = false;
-  if (r.ok) { cloud.rev = r.rev; cloud.err = ''; lsSync(!cloud.dirty); if (cloud.dirty) cloudMark(); return true; }
+  if (r.ok) { cloud.rev = r.rev; cloud.err = ''; if (cloud.tTry) { hubToast = { t: 8, s: T2('O servidor ainda não reconhece o título que tinhas equipado, por isso foi tirado. Podes voltar a pô-lo quando o servidor for atualizado.', 'The server does not recognise your equipped title yet, so it was removed. You can equip it again once the server is updated.'), col: '#ffd34a' }; cloud.tTry = null; } lsSync(!cloud.dirty); if (cloud.dirty) cloudMark(); return true; }
   cloud.dirty = true;
   if (r.error === 'conflict') {
     if (r.dev === DEV_ID) { cloud.rev = r.rev; cloud.timer = setTimeout(() => cloudFlush(), 500); return false; }   // foi esta mesma janela (ex.: envio ao fechar)
@@ -299,7 +301,12 @@ async function cloudFlush() {
   if (r.error === 'epoch') { cloudEpoch(); return false; }   // o servidor repos o save desta conta: o local deixa de valer
   if (r.error === 'auth') { dropSession(false); return false; }
   if (r.error === 'banned') { cloud.dirty = false; cloud.timer = null; dropSession(false); rkSay('banned'); return false; }   // anti-batota: valores impossiveis ou 3 ocorrencias
-  if (r.error === 'cheat') { cloud.err = 'cheat'; hubToast = { t: 6, s: 'O servidor recusou o save: valores suspeitos. Se jogaste normalmente, espera um pouco e tenta outra vez.', col: '#f88' }; cloud.timer = setTimeout(() => cloudFlush(), 60000); return false; }
+  if (r.error === 'cheat') {   // cada recusa pode contar como violacao (3 = conta desativada): nunca repetir sozinho
+    cloud.err = 'cheat';
+    if (save.title && cloud.tTry === undefined) { cloud.tTry = save.title; save.title = ''; cloud.timer = setTimeout(() => cloudFlush(), 1500); return false; }   // causa comum: um titulo que o servidor ainda nao conhece. Tenta uma vez sem ele (dentro de 10 min nao conta outra violacao)
+    if (cloud.tTry) { save.title = cloud.tTry; cloud.tTry = null; }   // nao era o titulo: volta a po-lo
+    cloud.block = true; cheatSay(); return false;
+  }
   if (r.error === 'not_new' || r.error === 'wrong_class' || r.error === 'class_taken') {   // o servidor so aceita um personagem novo numa conta nova: o save local nao pertence a esta conta
     try { const raw = localStorage.getItem(SAVE_KEY); if (raw) localStorage.setItem('bladehunter_orphan', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
     save = null; cloud.dirty = false; cloud.timer = null; lsSync(true); if (state !== 'play') state = 'menu'; return false;

@@ -37,12 +37,14 @@ function drawHub() {
 }
 function hubToastDraw() {
   if (!(hubToast.t > 0)) return;
-  const s = L(hubToast.s), w = Math.min(560, txtW(s, 15, 'bold') + 48), x = 487 - w / 2, y = 432;
+  const s = L(hubToast.s), sz = 15, mw = 512, lines = [];   // textos compridos partem-se em linhas e a caixa cresce para cima
+  let line = ''; for (const wd of s.split(' ')) { const t = line ? line + ' ' + wd : wd; if (line && txtW(t, sz, 'bold') > mw) { lines.push(line); line = wd; } else line = t; } lines.push(line);
+  const w = Math.min(560, Math.max(...lines.map(l => txtW(l, sz, 'bold'))) + 48), h = 16 + lines.length * 20, x = 487 - w / 2, y = 468 - h;
   ctx.globalAlpha = Math.min(1, hubToast.t * 2);
-  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x + 3, y + 4, w, 36);
-  ctx.fillStyle = '#10101c'; ctx.fillRect(x, y, w, 36); ctx.strokeStyle = hubToast.col; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, 34);
-  ctx.fillStyle = hubToast.col; ctx.fillRect(x, y, 6, 36);
-  txtR(s, 490, y + 23, 15, hubToast.col, 'center', 'bold'); ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x + 3, y + 4, w, h);
+  ctx.fillStyle = '#10101c'; ctx.fillRect(x, y, w, h); ctx.strokeStyle = hubToast.col; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.fillStyle = hubToast.col; ctx.fillRect(x, y, 6, h);
+  lines.forEach((l, i) => txtR(l, 490, y + 23 + i * 20, sz, hubToast.col, 'center', 'bold')); ctx.globalAlpha = 1;
 }
 let presAsk = -1;
 function drawPresAsk() {   // confirmacao do prestigio
