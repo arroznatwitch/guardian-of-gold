@@ -1401,10 +1401,11 @@ language plpgsql security definer set search_path = '' as $$
 declare pid bigint; v gog.players; s jsonb; gold numeric; gems numeric; cg numeric := 0; cd numeric := 0; slots int; own jsonb; ar jsonb; newrev int;
   cls text; wid text; arr jsonb; pets jsonb; pk text; nm text; lvr int[] := array[1, 6, 12, 30, 50]; ok_req boolean;
   it jsonb; it2 jsonb; sl text; bi int; ee numeric; lvl numeric; ok2 boolean; dn boolean; resn text; t text;
+  sk text; sb numeric; sp numeric; sf numeric; scap numeric; sv numeric; ir int; iil numeric; irr numeric;
 begin
   pid := gog._auth(p_token);
   if pid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
-  if p_what is null or p_what not in ('bag', 'lo', 'ar', 'wpn', 'pet', 'petname', 'refine') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+  if p_what is null or p_what not in ('bag', 'lo', 'ar', 'wpn', 'pet', 'petname', 'refine', 'spec') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
   if not gog._rate('buy:' || pid, 120, 60) then return jsonb_build_object('ok', false, 'error', 'busy'); end if;
   select * into v from gog.players where id = pid for update;
   if v.save is null then return jsonb_build_object('ok', false, 'error', 'no_save'); end if;
@@ -1448,7 +1449,7 @@ begin
     pets := pets || jsonb_build_object('own', gog._obj(pets->'own') || jsonb_build_object(pk, 1), 'lv', gog._obj(pets->'lv') || jsonb_build_object(pk, 1), 'xp', gog._obj(pets->'xp') || jsonb_build_object(pk, 0));
     if coalesce(pets->>'eq', '') = '' then pets := pets || jsonb_build_object('eq', pk); end if;
     s := jsonb_set(s, '{pets}', pets);
-  elsif p_what = 'refine' then   -- refinar um item (equipado ou na mochila): preco, hipotese de sucesso e sorteio no servidor
+  elsif p_what in ('refine', 'spec') then   -- refinar ou encantar especial um item (equipado ou na mochila): preco e sorteio no servidor
     begin it := p_s::jsonb; exception when others then return jsonb_build_object('ok', false, 'error', 'bad_request'); end;
     if jsonb_typeof(it) <> 'object' or (it->>'slot') not in ('head', 'chest', 'boots', 'amulet') then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
     sl := null; bi := null;
@@ -1458,12 +1459,28 @@ begin
     end if;
     if sl is null and bi is null then return jsonb_build_object('ok', false, 'error', 'sync'); end if;   -- o servidor ainda nao tem este item (grava e tenta outra vez)
     ee := gog._n(it, 'ench'); lvl := gog._n(s, 'pl', 'lv');
+    if p_what = 'spec' then   -- encantar especial: ouro + diamantes; sorteia um efeito diferente do atual (como rollSpec em js/90-equipment.js)
+      ir := gog._n(it, 'r')::int; iil := gog._n(it, 'il'); irr := gog._n(it, 'rr');
+      if ir < 0 or ir > 4 or iil < 1 or iil > 120 then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
+      cg := round(150 * (1 + iil * .2) * (1 + ir * .4) * (1 + irr * .15) * (1 + lvl * .05));
+      cd := 4 * (1 + ir + floor(irr / 2));
+      select k into sk from unnest(array['burn', 'slow', 'ls', 'crit', 'gf', 'xpb', 'dr', 'dmg', 'poi', 'elec', 'cdmg', 'skc']) k where k is distinct from (it->'spec'->>'k') order by random() limit 1;
+      sb := case sk when 'dmg' then 2.5 when 'crit' then 1.5 when 'ls' then .8 when 'dr' then 1 when 'gf' then 3 when 'xpb' then 3 when 'skc' then 3 else 6 end;
+      sp := case sk when 'dmg' then .25 when 'crit' then .1 when 'ls' then .05 when 'dr' then .08 when 'gf' then .3 when 'xpb' then .3 when 'skc' then .2 else .5 end;
+      sf := case sk when 'dmg' then .85 when 'xpb' then .5 when 'ls' then .35 else 1 end;
+      scap := case when sk in ('burn', 'slow', 'poi', 'elec') then 35 when sk in ('xpb', 'skc') then 20 else 45 end;
+      sv := round(((sb + sp * iil) * (.75 + .5 * random()::numeric) * (1 + .1 * (ir + 1)) * sf * (case when ir + 1 = 4 then .85 else 1 end))::numeric, 1);
+      sv := least(scap, round(sv * 1.5, 1));
+      it2 := it || jsonb_build_object('rr', irr + 1, 'spec', jsonb_build_object('k', sk, 'nm', case sk when 'burn' then 'Ígneo' when 'slow' then 'Gélido' when 'ls' then 'Vampírico' when 'crit' then 'Letal' when 'gf' then 'Próspero' when 'xpb' then 'Sábio' when 'dr' then 'Protetor' when 'dmg' then 'Poderoso' when 'poi' then 'Venenoso' when 'elec' then 'Elétrico' when 'cdmg' then 'Brutal' else 'Veloz' end, 'v', sv));
+      resn := 'ok';
+    else
     if ee < 0 or ee >= 10 or ee >= floor(lvl / 4) then return jsonb_build_object('ok', false, 'error', 'state'); end if;
     cg := round(45 * (1 + gog._n(it, 'il') * .25) * (1 + gog._n(it, 'r') * .5) * (ee + 1) * (1 + lvl * .05));
     ok2 := random() * 100 < (array[100, 90, 80, 70, 60, 50, 40, 30, 22, 15])[ee::int + 1];
     dn := not ok2 and ee >= 6 and random() < .3;
     resn := case when ok2 then 'ok' when dn then 'down' else 'fail' end;
     it2 := jsonb_set(it, '{ench}', to_jsonb(ee + case when ok2 then 1 when dn then -1 else 0 end));
+    end if;
     if sl is not null then s := jsonb_set(s, array['gear', sl], it2); else s := jsonb_set(s, array['bag', bi::text], it2); end if;
   else   -- petname: mudar o nome de um pet (50 diamantes); p_n = 0 cao, 1 galinha, 2 passaro
     if p_n is null or p_n < 0 or p_n > 2 then return jsonb_build_object('ok', false, 'error', 'bad_request'); end if;
@@ -1482,7 +1499,7 @@ begin
   s := jsonb_set(s, '{gems}', to_jsonb(gems - cd));
   if cg > 0 then s := jsonb_set(s, '{stats}', gog._obj(s->'stats') || jsonb_build_object('spent', gog._n(s, 'stats', 'spent') + cg)); end if;
   update gog.players set save = s, save_rev = save_rev + 1 where id = pid returning save_rev into newrev;   -- save_at nao muda: os limites de crescimento dependem dele
-  return jsonb_build_object('ok', true, 'rev', newrev, 'gold', gold - cg, 'gems', gems - cd, 'paid', gog._n(s, 'ar', 'paid'), 'cost', cg, 'res', resn);
+  return jsonb_build_object('ok', true, 'rev', newrev, 'gold', gold - cg, 'gems', gems - cd, 'paid', gog._n(s, 'ar', 'paid'), 'cost', cg, 'costd', cd, 'res', resn, 'item', case when p_what = 'spec' then it2 end);
 end $$;
 
 -- mudar o perfil: a bandeira so se muda por aqui (a 1.a e gratis; mudar custa 250 diamantes, cobrados no save do servidor)

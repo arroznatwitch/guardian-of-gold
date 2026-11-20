@@ -540,11 +540,26 @@ r = await q('select public.gog_register($1,$2)', ['someone', B]); ok('global reg
   r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(GOODIT)]); ok('refine: not enough gold', r.error === 'funds', r);
   await setSave('refine_one', { gold: 100000, pl: { lv: 3, xp: 0 }, bag: [GOODIT] });
   r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'refine', JSON.stringify(GOODIT)]); ok('refine: needs player level 4 for the first refine', r.error === 'state', r);
+  // encantar especial: o servidor cobra ouro e diamantes e sorteia um efeito diferente do atual, dentro do teto
+  { const SIT = { slot: 'chest', r: 3, il: 50, ench: 0, rr: 2, main: { k: 'hp', v: 500 }, aff: [], spec: { k: 'burn', nm: 'Ígneo', v: 20 } };
+    const fri = x => [x, Math.round(x * .8)], cG = Math.round(150 * (1 + 50 * .2) * (1 + 3 * .4) * (1 + 2 * .15) * (1 + 40 * .05)), cD = 4 * (1 + 3 + 1);
+    await setSave('refine_one', { gold: 1000000, gems: 500, pl: { lv: 40, xp: 0 }, bag: [SIT] });
+    r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'spec', JSON.stringify(SIT)]);
+    ok('spec: charges the gold and diamond price', r.ok && fri(cG).includes(r.cost) && fri(cD).includes(r.costd) && r.gold === 1000000 - r.cost && r.gems === 500 - r.costd, [r, cG, cD]);
+    ok('spec: rolls a different effect within its cap and counts the reroll', r.item && r.item.spec && r.item.spec.k !== 'burn' && r.item.spec.v > 0 && r.item.spec.v <= 45 && r.item.rr === 3, r.item);
+    g5 = await get(T8); ok('spec: the item on the server has the new effect', JSON.stringify(g5.save.bag[0].spec) === JSON.stringify(r.item.spec) && g5.save.bag[0].rr === 3, g5.save.bag[0]);
+    let capOk = true; for (let i = 0; i < 25; i++) { g5 = await get(T8); r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'spec', JSON.stringify(g5.save.bag[0])]); if (!r.ok) { capOk = false; break; } const sp = r.item.spec, cap = ['burn', 'slow', 'poi', 'elec'].includes(sp.k) ? 35 : sp.k === 'xpb' || sp.k === 'skc' ? 20 : 45; if (!(sp.v > 0 && sp.v <= cap) || sp.k === g5.save.bag[0].spec.k) capOk = false; if (g5.save.gems < 200) await setSave('refine_one', Object.assign({}, g5.save, { gold: 1000000, gems: 500 })); }
+    ok('spec: 25 rerolls never repeat the effect or pass the cap', capOk, r);
+    await setSave('refine_one', { gold: 1000000, gems: 3, pl: { lv: 40, xp: 0 }, bag: [SIT] });
+    r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'spec', JSON.stringify(SIT)]); ok('spec: not enough diamonds', r.error === 'funds', r);
+    r = await q('select public.gog_buy($1,$2,0,$3)', [T8, 'spec', JSON.stringify(Object.assign({}, SIT, { il: 51 }))]); ok('spec: an item the server does not have asks to sync', r.error === 'sync', r); }
   // impor: depois do enforce-server-shop.sql so o servidor mexe nas compras
   await db.exec('reset role'); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec(fs.readFileSync(new URL('./enforce-server-shop.sql', import.meta.url), 'utf8')); await db.exec('set role anon');
   r = await putFrom(T, s => { s.bagSlots = 5; return s; }); ok('enforce: a client-side bag purchase is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.ar.n = 5; return s; }); ok('enforce: ar.n above ar.paid is refused', r.error === 'outdated', r);
   r = await putFrom(T7, s => { s.bag[0].ench = 5; return s; }); ok('enforce: raising an enchant level on the client is refused', r.error === 'outdated', r);
+  await db.exec('reset role'); await db.exec(fs.readFileSync(new URL('./enforce-spec-server.sql', import.meta.url), 'utf8')); await db.exec(fs.readFileSync(new URL('./enforce-spec-server.sql', import.meta.url), 'utf8')); await db.exec('set role anon');
+  r = await putFrom(T7, s => { s.bag[0].rr = (s.bag[0].rr | 0) + 1; s.bag[0].spec = { k: 'dmg', nm: 'Poderoso', v: 40 }; return s; }); ok('enforce: a special enchant done on the client is refused', r.error === 'outdated', r);
   r = await putFrom(T, s => { s.gold += 10; return s; }); ok('enforce: normal saves still pass', r.ok, r);
   r = await q('select public.gog_guild_create($1,$2,$3)', [T2, 'Free Guild', 'FRE']); ok('enforce: the old free guild creation is closed', r.error === 'outdated', r);
   r = await putFrom(T4, s => { s.own = { knight: [1, 1, 1, 1, 1] }; return s; }); ok('enforce: client-side weapons are refused', r.error === 'outdated', r);

@@ -276,9 +276,13 @@ function evolveItem(it) {
   for (let i = 0; i < 24; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 300, vy: -Math.random() * 240, l: .8, c: '#7fe8ff' }); persist();
 }
 const specGems = it => 4 * (1 + it.r + Math.floor((it.rr || 0) / 2));   // encantar especial custa diamantes: sobem com a raridade e com cada repeticao
-function doSpec() {
-  const it = enchItem; if (!it || enc.t > 0) return; const c = specCost(it), gm = specGems(it); if (save.gold < c || save.gems < gm) { SFX.error(); return; }
-  spendG(c); save.gems -= gm; enc = { t: .9, res: { kind: 'spec', it }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
+async function doSpec() {
+  const it = enchItem; if (!it || enc.t > 0 || buyBusy) return; const c = specCost(it), gm = specGems(it); if (save.gold < c || save.gems < gm) { SFX.error(); return; }
+  buyBusy = true; const sv = await shopServer('spec', 0, JSON.stringify(it)); buyBusy = false;   // o servidor cobra (ouro e diamantes) e sorteia o efeito
+  if (sv.ok === false) { hubToast = { t: 3, s: sv.error === 'sync' ? 'A sincronizar o item com o servidor. Tenta outra vez daqui a uns segundos.' : buyMsg(sv.error), col: '#f88' }; SFX.error(); return; }
+  if (sv.ok) { spendG(sv.cost != null ? sv.cost : c); save.gems -= sv.costd != null ? sv.costd : gm; if (sv.item && sv.item.spec) { it.spec = sv.item.spec; it.rr = sv.item.rr; } }   // o servidor ja guardou o resultado: aplica-se logo
+  else { spendG(c); save.gems -= gm; }   // sem servidor (offline): sorteia aqui
+  enc = { t: .9, res: { kind: 'spec', it, done: !!(sv.ok && sv.item) }, msg: '', msgT: 0, col: '#fff', sparks: [] }; persist();
 }
 function updateEnchant(dt) {
   for (const q of enc.sparks) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 260 * dt; q.l -= dt; } enc.sparks = enc.sparks.filter(q => q.l > 0);
@@ -291,7 +295,7 @@ function updateEnchant(dt) {
         if (r.ok) { if (!r.done) it.ench++; enc.msg = `REFINADO +${it.ench}!`; enc.col = '#6f6'; SFX.buy(); }
         else if (r.down) { if (!r.done) it.ench--; enc.msg = `FALHOU! Desceu para +${it.ench}`; enc.col = '#f55'; SFX.error(); }
         else { enc.msg = 'FALHOU...'; enc.col = '#f96'; SFX.error(); }
-      } else { it.spec = rollSpec(it, it.spec ? it.spec.k : null); it.rr = (it.rr || 0) + 1; enc.msg = 'ENCANTADO!'; enc.col = '#d9a6ff'; SFX.special(); }
+      } else { if (!r.done) { it.spec = rollSpec(it, it.spec ? it.spec.k : null); it.rr = (it.rr || 0) + 1; } enc.msg = 'ENCANTADO!'; enc.col = '#d9a6ff'; SFX.special(); }
       enc.msgT = 2.5; for (let i = 0; i < 30; i++) enc.sparks.push({ x: 610, y: 232, vx: (Math.random() - .5) * 320, vy: -Math.random() * 260, l: .8, c: r.kind === 'spec' || r.ok ? '#fff' : '#f96' }); persist();
     }
   }
