@@ -246,6 +246,13 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 1 } }, rev); ok('anticheat: an earned achievement passes', r.ok, r); rev = r.rev;
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25 }, rev); ok('anticheat: claiming it gives its diamonds', r.ok, r); rev = r.rev;
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 400 }, rev); ok('anticheat: extra diamonds beyond the rewards are refused', r.error === 'cheat' || r.error === 'banned', r);
+  // diamantes que o save prova: baus da Torre, raids ganhas e missoes diarias (um save atrasado nao pode ser recusado por isso)
+  { const TK3 = await fresh('ac_gems'); r = await put(TK3, {}, 0); let rv3 = r.rev; const TW = { d: '2026-11-20', f: 81, best: 80 }, R5 = [[0, 0, 0, 0, 5], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]];
+    r = await put(TK3, { tw: TW, gems: 270 }, rv3); ok('gems: 80 Tower floors (184 diamonds) in one save pass', r.ok, r); rv3 = r.rev;
+    r = await put(TK3, { tw: TW, gems: 270 + 25 + 90, raids: R5 }, rv3); ok('gems: 5 Inferno raids (25 diamonds) on top of the normal margin pass', r.ok, r); rv3 = r.rev;
+    r = await put(TK3, { tw: TW, raids: R5, gems: 385 + 24 + 90, daily: { n: 3 } }, rv3); ok('gems: 3 daily missions on top of the normal margin pass', r.ok, r); rv3 = r.rev;
+    r = await put(TK3, { tw: TW, raids: R5, daily: { n: 3 }, gems: 499 + 200 }, rv3); ok('gems: diamonds without proof are still refused', r.error === 'cheat', r);
+    r = await put(TK3, { tw: Object.assign({}, TW, { d: '2026-11-21', f: 6 }), raids: R5, daily: { n: 3 }, gems: 499 + 4 + 90 }, rv3); ok('gems: a new Tower day counts from floor 1', r.ok, r); }
   // titulos
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);

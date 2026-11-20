@@ -453,3 +453,9 @@ function drawConflict() {
   wrap(cf.reason === 'legacy' ? 'O save que não escolheres deixa de existir. O da conta fica guardado online.' : 'Escolhe o da conta para carregar o que foi guardado, ou o desta janela para o substituir.', 150, 392, 500, 15, 13, '#9ab');
 }
 
+// save bloqueado por "valores suspeitos": nas Opcoes, um botao para tentar outra vez (ex.: depois de o servidor ser corrigido) sem recarregar a pagina (recarregar traria o save do servidor e perdia o progresso por gravar)
+const _dOptSave = drawOptions;
+drawOptions = function () {
+  _dOptSave.apply(this, arguments);
+  if (cloud.block && !asOpen) btn(190, 448, 100, 34, T2('Gravar agora', 'Save now'), async () => { cloud.block = false; cloud.tTry = null; cloud.dirty = true; const ok = await cloudFlush(); if (ok) hubToast = { t: 5, s: T2('Progresso gravado no servidor.', 'Progress saved to the server.'), col: '#6f6' }; }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
+};
