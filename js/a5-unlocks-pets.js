@@ -150,7 +150,7 @@ function profAttrTip(b, i, tx, ty) {   // perfil publico: estatisticas de cada a
   const S = b.stats, a = b.attr, col = ['#ff6a7a', '#ff9a3a', '#6adfff', '#7cf'][i], pc = (v, d) => (+v || 0).toFixed(d) + '%';
   let rows;
   if (S) rows = [
-    [['Vida', gfmt(S.hp | 0), '#ff6a7a'], ['Redução de dano', pc(S.dr, 1), '#6a9aff']],
+    [['Vida', gfmt(S.hp | 0), '#ff6a7a'], ['Redução de dano', (+S.dr || 0) >= DR_MAX ? DR_MAX + '% MÁX' : pc(S.dr, 1), (+S.dr || 0) >= DR_MAX ? '#6f6' : '#6a9aff']],
     [['Dano', '+' + (S.dm | 0) + '%', '#ff9a3a'], ['Chance de crítico', pc(S.cr, 1), '#ff7ae0'], ['Dano crítico', 'x' + (+S.cx || 0).toFixed(2), '#ff7ae0']],
     [['Vel. de ataque', (S.as | 0) >= 70 ? '+70% MÁX' : '+' + (S.as | 0) + '%', (S.as | 0) >= 70 ? '#6f6' : '#ffe24a'], ['Velocidade', String(S.sp | 0), '#6adfff']],
     [[T2('Queimadura', 'Burn'), pc(S.bu, 0), '#ff7a3a'], [T2('Gelo', 'Frost'), pc(S.fr, 0), '#a8e8ff'], [T2('XP e Ouro extra', 'Extra XP & Gold'), pc(S.xp, 0) + ' · ' + pc(S.gf, 0), '#ffd34a'], [T2('Veneno', 'Poison'), pc(S.po, 0), '#8be04a'], ['Roubo de vida', pc(S.ls, 1), '#ff5a8a'], [T2('Eletricidade', 'Electricity'), pc(S.el, 0), '#d9b8ff'], [T2('Recarga da habilidade (E)', 'Skill cooldown (E)'), '-' + (+S.cd || 0).toFixed(2) + 's', '#7cf']]][i];

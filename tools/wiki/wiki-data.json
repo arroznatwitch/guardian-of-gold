@@ -1356,7 +1356,7 @@
     "Chega à onda 40 na Campanha de Floresta Sombria",
     "Reach wave 40 in the Floresta Sombria Campaign"
    ],
-   "title": ""
+   "title": "lord0"
   },
   {
    "id": "wave0_50",
@@ -1371,7 +1371,7 @@
     "Chega à onda 50 na Campanha de Floresta Sombria",
     "Reach wave 50 in the Floresta Sombria Campaign"
    ],
-   "title": "lord0"
+   "title": ""
   },
   {
    "id": "wave1_10",
@@ -1431,7 +1431,7 @@
     "Chega à onda 40 na Campanha de Cavernas Douradas",
     "Reach wave 40 in the Cavernas Douradas Campaign"
    ],
-   "title": ""
+   "title": "lord1"
   },
   {
    "id": "wave1_50",
@@ -1446,7 +1446,7 @@
     "Chega à onda 50 na Campanha de Cavernas Douradas",
     "Reach wave 50 in the Cavernas Douradas Campaign"
    ],
-   "title": "lord1"
+   "title": ""
   },
   {
    "id": "wave2_10",
@@ -1506,7 +1506,7 @@
     "Chega à onda 40 na Campanha de Castelo Maldito",
     "Reach wave 40 in the Castelo Maldito Campaign"
    ],
-   "title": ""
+   "title": "lord2"
   },
   {
    "id": "wave2_50",
@@ -1521,7 +1521,7 @@
     "Chega à onda 50 na Campanha de Castelo Maldito",
     "Reach wave 50 in the Castelo Maldito Campaign"
    ],
-   "title": "lord2"
+   "title": ""
   },
   {
    "id": "wave3_10",
@@ -1581,7 +1581,7 @@
     "Chega à onda 40 na Campanha de Pântano Tóxico",
     "Reach wave 40 in the Pântano Tóxico Campaign"
    ],
-   "title": ""
+   "title": "lord3"
   },
   {
    "id": "wave3_50",
@@ -1596,7 +1596,7 @@
     "Chega à onda 50 na Campanha de Pântano Tóxico",
     "Reach wave 50 in the Pântano Tóxico Campaign"
    ],
-   "title": "lord3"
+   "title": ""
   },
   {
    "id": "wave4_10",
@@ -1656,7 +1656,7 @@
     "Chega à onda 40 na Campanha de Deserto Ardente",
     "Reach wave 40 in the Deserto Ardente Campaign"
    ],
-   "title": ""
+   "title": "lord4"
   },
   {
    "id": "wave4_50",
@@ -1671,7 +1671,7 @@
     "Chega à onda 50 na Campanha de Deserto Ardente",
     "Reach wave 50 in the Deserto Ardente Campaign"
    ],
-   "title": "lord4"
+   "title": ""
   },
   {
    "id": "wave5_10",
@@ -2566,7 +2566,7 @@
    "p": 0.12
   },
   "crit": {
-   "n": "Crítico",
+   "n": "Chance de crítico",
    "u": "%",
    "b": 1.5,
    "p": 0.1
@@ -2602,10 +2602,34 @@
    "p": 0.5
   },
   "slow": {
-   "n": "Chance de abrandar",
+   "n": "Chance de gelo",
    "u": "%",
    "b": 6,
    "p": 0.5
+  },
+  "poi": {
+   "n": "Chance de envenenar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "elec": {
+   "n": "Chance de eletrocutar",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "cdmg": {
+   "n": "Dano crítico",
+   "u": "%",
+   "b": 6,
+   "p": 0.5
+  },
+  "skc": {
+   "n": "Redução de recarga (E)",
+   "u": "%",
+   "b": 3,
+   "p": 0.2
   }
  },
  "attrs": [
@@ -2621,13 +2645,13 @@
   ],
   [
    "agi",
-   "Agilidade",
-   "+0.6% velocidade"
+   "Destreza",
+   "+0.6% vel. de ataque / velocidade"
   ],
   [
    "per",
    "Perícia",
-   "+0.6% vel. de ataque"
+   "-0.02s recarga"
   ]
  ],
  "enc": [
@@ -2674,6 +2698,22 @@
   [
    "dmg",
    "Poderoso"
+  ],
+  [
+   "poi",
+   "Venenoso"
+  ],
+  [
+   "elec",
+   "Elétrico"
+  ],
+  [
+   "cdmg",
+   "Brutal"
+  ],
+  [
+   "skc",
+   "Veloz"
   ]
  ],
  "slots": {
@@ -3197,7 +3237,7 @@
   {
    "stone": 0,
    "n": 1,
-   "kills": 5000
+   "kills": 1
   },
   {
    "stone": 1,
@@ -4525,16 +4565,27 @@
  "events": [
   {
    "id": "statue",
-   "until": "2026-11-18",
-   "untilTxt": [
-    "18 de Nov",
-    "Nov 18"
-   ],
+   "day": 3,
    "tries": 2,
    "secs": 30,
    "goldPer": 0.030303030303030304,
    "goldCap": 40000
   }
+ ],
+ "presWave": [
+  20,
+  20,
+  20,
+  20,
+  20,
+  30
+ ],
+ "farmStarts": [
+  1,
+  10,
+  20,
+  30,
+  40
  ],
  "ar": {
   "cost": 1000,
@@ -4542,5 +4593,249 @@
   "tmax": 400,
   "k": 0.9
  },
- "build": 24
+ "scale": {
+  "tune": {
+   "lvDmg": 0.04,
+   "eHP": 1.5,
+   "eDmg": 0.9,
+   "wHP": 0.15,
+   "wHP2": 0.007,
+   "wDM": 0.05,
+   "lHP": 0.02,
+   "lDM": 0.02,
+   "zHP": 0.1,
+   "boss": [
+    50,
+    60,
+    80,
+    105,
+    135,
+    170
+   ],
+   "dr": {
+    "knight": 15,
+    "archer": 0,
+    "mage": 0
+   },
+   "cls": {
+    "knight": 1.65,
+    "archer": 1,
+    "mage": 0.72
+   }
+  },
+  "drMax": 60,
+  "hit": [
+   [
+    1,
+    1
+   ],
+   [
+    10,
+    1.14
+   ],
+   [
+    20,
+    1.56
+   ],
+   [
+    30,
+    1.87
+   ],
+   [
+    40,
+    2.46
+   ],
+   [
+    50,
+    3.24
+   ],
+   [
+    60,
+    4.14
+   ],
+   [
+    70,
+    4.81
+   ],
+   [
+    80,
+    5.18
+   ],
+   [
+    90,
+    5.54
+   ],
+   [
+    100,
+    5.9
+   ],
+   [
+    110,
+    6.31
+   ],
+   [
+    120,
+    6.71
+   ]
+  ],
+  "maps": [
+   [
+    {
+     "rec": 1,
+     "dm": 0.8
+    },
+    {
+     "rec": 11,
+     "dm": 1.0214285714285716
+    },
+    {
+     "rec": 21,
+     "dm": 1.226
+    },
+    {
+     "rec": 31,
+     "dm": 1.4513333333333331
+    },
+    {
+     "rec": 41,
+     "dm": 1.9646666666666666
+    },
+    {
+     "rec": 51,
+     "dm": 2.602
+    }
+   ],
+   [
+    {
+     "rec": 15,
+     "dm": 1.11
+    },
+    {
+     "rec": 25,
+     "dm": 1.3033333333333332
+    },
+    {
+     "rec": 35,
+     "dm": 1.6566666666666665
+    },
+    {
+     "rec": 45,
+     "dm": 2.17
+    },
+    {
+     "rec": 55,
+     "dm": 2.8899999999999997
+    },
+    {
+     "rec": 65,
+     "dm": 3.4
+    }
+   ],
+   [
+    {
+     "rec": 30,
+     "dm": 1.4
+    },
+    {
+     "rec": 40,
+     "dm": 1.913333333333333
+    },
+    {
+     "rec": 50,
+     "dm": 2.53
+    },
+    {
+     "rec": 60,
+     "dm": 3.25
+    },
+    {
+     "rec": 70,
+     "dm": 3.5500000000000003
+    },
+    {
+     "rec": 80,
+     "dm": 3.85
+    }
+   ],
+   [
+    {
+     "rec": 45,
+     "dm": 2.17
+    },
+    {
+     "rec": 55,
+     "dm": 2.8899999999999997
+    },
+    {
+     "rec": 65,
+     "dm": 3.4
+    },
+    {
+     "rec": 75,
+     "dm": 3.7
+    },
+    {
+     "rec": 85,
+     "dm": 4
+    },
+    {
+     "rec": 95,
+     "dm": 4.266666666666667
+    }
+   ],
+   [
+    {
+     "rec": 58,
+     "dm": 3.106
+    },
+    {
+     "rec": 68,
+     "dm": 3.49
+    },
+    {
+     "rec": 78,
+     "dm": 3.79
+    },
+    {
+     "rec": 88,
+     "dm": 4.090000000000001
+    },
+    {
+     "rec": 98,
+     "dm": 4.336666666666667
+    },
+    {
+     "rec": 108,
+     "dm": 4.54
+    }
+   ],
+   [
+    {
+     "rec": 70,
+     "dm": 3.5500000000000003
+    },
+    {
+     "rec": 80,
+     "dm": 3.85
+    },
+    {
+     "rec": 90,
+     "dm": 4.15
+    },
+    {
+     "rec": 100,
+     "dm": 4.383333333333334
+    },
+    {
+     "rec": 110,
+     "dm": 4.566666666666666
+    },
+    {
+     "rec": 120,
+     "dm": 4.7
+    }
+   ]
+  ]
+ },
+ "build": 77
 }
