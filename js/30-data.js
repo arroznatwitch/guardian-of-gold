@@ -35,6 +35,11 @@ const FARM_UNLOCK = [10, 10, 10, 10, 10, 10];   // onda a atingir em cada zona p
 const TUNE = { lvDmg: .04, eHP: 1.5, eDmg: .9, wHP: .15, wHP2: .007, wDM: .05, lHP: .02, lDM: .02, zHP: .10, boss: [50, 60, 80, 105, 135, 170], dr: { knight: 15, archer: 0, mage: 0 }, cls: { knight: 1.65, archer: 1, mage: .72 } };
 const DR_MAX = 60;   // reducao de dano: so conta ate 60% (equipamento + base da classe)
 const drTot = g => ((g && g.dr) || 0) + (TUNE.dr[save && save.cls] || 0);   // reducao de dano total, antes do limite
+const drOver = g => Math.max(0, drTot(g) - DR_MAX);   // o que passa dos 60% vira vida: +1% de vida maxima por cada 1%
+// os monstros batem conforme o nivel (a vida de um jogador tipico desse nivel, medida com o simulador), nao conforme a TUA vida: mais vida = aguentas mais golpes
+const HP_REF = [[1, 270], [15, 780], [30, 1110], [45, 1730], [58, 2600], [70, 3170], [100, 3930], [120, 4500]];
+const hpRef = lv => { const t = HP_REF; if (lv <= t[0][0]) return t[0][1]; for (let i = 1; i < t.length; i++) if (lv <= t[i][0]) { const a = t[i - 1], b = t[i]; return a[1] + (b[1] - a[1]) * (lv - a[0]) / (b[0] - a[0]); } return t[t.length - 1][1]; };
+const hitK = lv => 1 + Math.max(0, hpRef(lv) - 500) / 700;
 const REC_BASE = [1, 15, 30, 45, 58, 70], PRES_MAX = 5, PRES_STEP = 10, PRES_WAVE = 20;   // nivel recomendado de cada zona; cada estrela de prestigio sobe 10 niveis (a ultima do Abismo Final e nivel 120); para dar prestigio chega a onda 20 (Abismo Final: 30, ver presWave)
 const farmRec = (m, P) => REC_BASE[m] + PRES_STEP * (P === undefined ? ((typeof save === 'object' && save && save.pres && save.pres[m]) | 0) : P);
 // forca extra dos monstros da campanha por nivel recomendado: [nivel, multiplicador de vida, multiplicador de dano] (calibrado com o simulador)

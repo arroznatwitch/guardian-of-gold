@@ -90,7 +90,7 @@ function hurt(n, src) {
   const p = R.p;
   if (labOn && labGod) return;
   if (p.inv > 0 || R.endT !== undefined) return;
-  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * (1 + Math.max(0, p.max - 500) / 700) * (1 - Math.min(DR_MAX, drTot(R.G)) / 100)));
+  n = Math.max(1, Math.round(n * (R.dmgM || 1) * TUNE.eDmg * lvDM() * hitK(lvOf()) * (1 - Math.min(DR_MAX, drTot(R.G)) / 100)));
   if (p.kshield > 0) n = Math.max(1, Math.round(n * .4));   // escudo do Cavaleiro: 60% menos dano
   dlAdd('taken', src || 'Outros', n); (R.lastHits = R.lastHits || []).push({ src: src || 'Outros', n }); if (R.lastHits.length > 3) R.lastHits.shift();
   p.hp -= n; p.inv = .7; R.shake = 9; SFX.hurt(); burst(p.x, p.y, p.kshield > 0 ? '#9cf' : '#f55', 10);

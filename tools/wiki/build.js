@@ -115,23 +115,23 @@ H.push(sec('inimigos', 'Inimigos', 'Seis monstros por mapa. Os fracos aparecem m
 {
   const T = D.scale.tune, WV = [1, 10, 20, 30, 40, 50, 60, 80, 100];
   const mult = (w, s) => (1 + T.wDM * (w - 1)) * s.dm * T.eDmg * (1 + T.lDM * (s.rec - 1));
-  const hpK = hp => 1 + Math.max(0, hp - 500) / 700, nf = x => x >= 100 ? Math.round(x).toLocaleString('pt-PT') : x.toFixed(1).replace('.', ',');
-  const ex = { s: D.scale.maps[4][5], w: 20, hp: 8000 }, exB = 9 * mult(ex.w, ex.s) * hpK(ex.hp);
+  const hitOf = lv => { const t = D.scale.hit; for (let i = 1; i < t.length; i++) if (lv <= t[i][0]) { const a = t[i - 1], b = t[i]; return a[1] + (b[1] - a[1]) * (lv - a[0]) / (b[0] - a[0]); } return t[t.length - 1][1]; }, nf = x => x >= 100 ? Math.round(x).toLocaleString('pt-PT') : x.toFixed(1).replace('.', ',');
+  const ex = { s: D.scale.maps[4][5], w: 20 }, exB = 9 * mult(ex.w, ex.s) * hitOf(ex.s.rec);
   H.push(sec('forca', 'Força dos monstros', 'Quanto dano um monstro te tira em cada mapa, prestígio e onda da Campanha.',
 `<h3>Como se calcula um golpe</h3>
-<p><b>Dano = dano base do monstro × multiplicador da onda e do mapa × fator da tua vida máxima × (1 − redução de dano)</b></p>
+<p><b>Dano = dano base do monstro × multiplicador da onda e do mapa × fator de nível × (1 − redução de dano)</b></p>
 <ul>
 <li><b>Dano base:</b> está em cada monstro, na secção Inimigos (a maioria tem 6 a 9; os tanques 18; os que investem 15; projéteis 8; explosões 14).</li>
 <li><b>Multiplicador da onda e do mapa</b> (tabela abaixo): +5% por onda, e cresce com o <b>nível do mapa</b> (o nível recomendado, que sobe 10 a cada prestígio). Na Campanha conta o nível do mapa, não o teu.</li>
-<li><b>Fator da tua vida máxima:</b> os monstros batem mais forte em quem tem mais vida: <b>1 + (vida máxima − 500) ÷ 700</b>. Por isso, a partir de alguns milhares de vida, mais vida quase não aumenta o número de golpes que aguentas (com 2 000 de vida já aguentas ~91% dos golpes que aguentarias com vida infinita; com 8 000, ~98%).</li>
-<li><b>Redução de dano: o máximo que conta é ${60}%</b> (o Knight já tem ${T.dr.knight}% de base, incluído nesse limite). O ecrã de Stats pode mostrar mais, mas acima de 60% não tem efeito.</li>
+<li><b>Fator de nível:</b> cresce com o nível dos monstros (na Campanha, o nível do mapa; nas Raids e na Torre, o teu). <b>Não depende da tua vida</b>: quanto mais vida tens, mais golpes aguentas.</li>
+<li><b>Redução de dano: conta até ${D.scale.drMax}%</b> (o Knight já tem ${T.dr.knight}% de base, incluído). O que passar dos ${D.scale.drMax}% vira vida: <b>+1% de vida máxima por cada 1% a mais</b> (no Personagem aparece "${D.scale.drMax}% MAX" e, no detalhe, quanto vira vida).</li>
 <li>O escudo do Knight tira mais 60% ao golpe que já foi reduzido.</li>
 </ul>
-<h3>Fator da vida máxima</h3><table><tr><th>Vida máxima</th>${[500, 1000, 2000, 3000, 5000, 8000, 10000, 15000].map(h => `<th>${h.toLocaleString('pt-PT')}</th>`).join('')}</tr><tr><td>Fator</td>${[500, 1000, 2000, 3000, 5000, 8000, 10000, 15000].map(h => `<td>×${nf(hpK(h))}</td>`).join('')}</tr></table>
+<h3>Fator de nível</h3><div class="scroll"><table><tr><th>Nível</th>${D.scale.hit.map(h => `<th>${h[0]}</th>`).join('')}</tr><tr><td>Fator</td>${D.scale.hit.map(h => `<td>×${nf(h[1])}</td>`).join('')}</tr></table></div>
 <h3>Multiplicador da onda e do mapa</h3><p class="mut">Multiplica o dano base. Ex.: um monstro de dano base 9 com ×20 tira 180 antes da tua vida e da redução de dano. A linha "P0" é o mapa sem prestígios; cada prestígio (P1 a P5) sobe 10 níveis ao mapa.</p>
 ${D.missions.map((m, i) => `<h3 class="cl">${esc(m.name)}</h3><div class="scroll"><table><tr><th>Prestígio (nível do mapa)</th>${WV.map(w => `<th>Onda ${w}</th>`).join('')}</tr>` + D.scale.maps[i].map((s, P) => `<tr><td>P${P} (Nv ${s.rec})</td>${WV.map(w => `<td>×${nf(mult(w, s))}</td>`).join('')}</tr>`).join('') + '</table></div>').join('')}
-<h3>Exemplo</h3><p>Serpente da Areia (dano base 9) no ${esc(D.missions[4].name)} com 5 prestígios (Nv ${ex.s.rec}), onda ${ex.w}, com ${ex.hp.toLocaleString('pt-PT')} de vida: 9 × ${nf(mult(ex.w, ex.s))} × ${nf(hpK(ex.hp))} = <b>${nf(exB)}</b> sem redução; com a redução no máximo (60%) fica <b>${nf(exB * .4)}</b> por golpe, quer tenhas 60% ou 97,5% de redução.</p>
-<p class="mut">Nas Raids e na Torre os monstros usam outros multiplicadores (dificuldade da raid e andar da Torre), mas o fator da vida máxima e o limite de 60% de redução são os mesmos.</p>`));
+<h3>Exemplo</h3><p>Serpente da Areia (dano base 9) no ${esc(D.missions[4].name)} com 5 prestígios (Nv ${ex.s.rec}), onda ${ex.w}: 9 × ${nf(mult(ex.w, ex.s))} × ${nf(hitOf(ex.s.rec))} = <b>${nf(exB)}</b> sem redução; com 60% de redução fica <b>${nf(exB * .4)}</b> por golpe, tenhas 3 000 ou 10 000 de vida.</p>
+<p class="mut">Nas Raids e na Torre os monstros usam outros multiplicadores (dificuldade da raid e andar da Torre), mas o fator de nível e o limite de redução são os mesmos.</p>`));
 }
 H.push(sec('materiais', 'Pedras de evolução', 'Materiais que não se vendem (separador Mochila › Materiais). Há uma por raridade.',
   `<div class="grid">${['comum', 'rara', 'epica', 'lendaria', 'mitica'].map((n, i) => card('pedra de evolução ' + D.rar[i][0].toLowerCase(), `<div class="row">${img(`stone-${n}.png`, 56)}<div><h3>Pedra de evolução · ${D.rar[i][0]}</h3></div></div>`)).join('')}</div>
