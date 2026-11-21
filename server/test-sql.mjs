@@ -7,6 +7,8 @@ const db = new PGlite({ extensions: { pgcrypto } });
 await db.exec("create role anon nologin; create role authenticated nologin; create schema extensions; grant usage on schema public to anon, authenticated;");
 await db.exec('create extension pgcrypto with schema extensions;');
 await db.exec(fs.readFileSync(new URL('./supabase.sql', import.meta.url), 'utf8'));
+for (const f of (process.env.MIGRATIONS ? fs.readdirSync(new URL('./migrations/', import.meta.url)).filter(f => f.endsWith('.sql')).sort() : [])) await db.exec(fs.readFileSync(new URL('./migrations/' + f, import.meta.url), 'utf8'));   // MIGRATIONS=1: aplica tambem server/migrations (como a GitHub Action)
+await db.exec("create or replace function gog._friday() returns boolean language sql as 'select false'");   // os precos dos testes sao os normais, mesmo a sexta
 await db.exec("grant usage on schema extensions to anon, authenticated;");
 const P = c => c.repeat(64), A = P('a'), B = P('b');
 const q = async (sql, params) => { const r = await db.query(sql, params); return r.rows[0] && Object.values(r.rows[0])[0]; };
@@ -253,6 +255,11 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
     r = await put(TK3, { tw: TW, raids: R5, gems: 385 + 24 + 90, daily: { n: 3 } }, rv3); ok('gems: 3 daily missions on top of the normal margin pass', r.ok, r); rv3 = r.rev;
     r = await put(TK3, { tw: TW, raids: R5, daily: { n: 3 }, gems: 499 + 200 }, rv3); ok('gems: diamonds without proof are still refused', r.error === 'cheat', r);
     r = await put(TK3, { tw: Object.assign({}, TW, { d: '2026-11-21', f: 6 }), raids: R5, daily: { n: 3 }, gems: 499 + 4 + 90 }, rv3); ok('gems: a new Tower day counts from floor 1', r.ok, r); }
+  // versao minima do jogo (gog.config min_build): saves de versoes antigas recebem 'update'
+  { const TK4 = await fresh('ac_build'); await db.exec('reset role'); await db.exec("update gog.config set v = '80' where k = 'min_build'"); await db.exec('set role anon');
+    r = await put(TK4, {}, 0); ok('min build: a save from an old game version gets update', r.error === 'update' && r.min === 80, r);
+    r = await put(TK4, { bld: 80 }, 0); ok('min build: a save from the current version passes', r.ok, r);
+    await db.exec('reset role'); await db.exec("update gog.config set v = '0' where k = 'min_build'"); await db.exec('set role anon'); }
   // titulos
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);

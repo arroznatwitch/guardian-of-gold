@@ -290,7 +290,7 @@ async function cloudFlush() {
   clearTimeout(cloud.timer); cloud.timer = null;
   if (cloud.block) return false;   // o servidor recusou o save por valores suspeitos: nao se volta a tentar nesta sessao
   if (!cloud.dirty || cloud.busy || !on.token || !cloud.ready || !save) return !cloud.dirty;
-  cloud.busy = true; cloud.dirty = false;
+  cloud.busy = true; cloud.dirty = false; save.bld = GAME_BUILD;   // o servidor recusa saves de versoes antigas (gog.config min_build)
   const r = await rpc('gog_save_put', { p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }); cloud.busy = false;
   if (r.ok) { cloud.rev = r.rev; cloud.err = ''; if (cloud.tTry) { hubToast = { t: 8, s: T2('O servidor ainda não reconhece o título que tinhas equipado, por isso foi tirado. Podes voltar a pô-lo quando o servidor for atualizado.', 'The server does not recognise your equipped title yet, so it was removed. You can equip it again once the server is updated.'), col: '#ffd34a' }; cloud.tTry = null; } lsSync(!cloud.dirty); if (cloud.dirty) cloudMark(); return true; }
   cloud.dirty = true;
@@ -298,6 +298,7 @@ async function cloudFlush() {
     if (r.dev === DEV_ID) { cloud.rev = r.rev; cloud.timer = setTimeout(() => cloudFlush(), 500); return false; }   // foi esta mesma janela (ex.: envio ao fechar)
     cloudConflict(); return false;
   }
+  if (r.error === 'update') { verNew = Math.max(verNew, r.min | 0, GAME_BUILD + 1); verForce = true; return false; }   // versao antiga: o servidor ja nao aceita saves; recarrega para a nova
   if (r.error === 'epoch') { cloudEpoch(); return false; }   // o servidor repos o save desta conta: o local deixa de valer
   if (r.error === 'auth') { dropSession(false); return false; }
   if (r.error === 'banned') { cloud.dirty = false; cloud.timer = null; dropSession(false); rkSay('banned'); return false; }   // anti-batota: valores impossiveis ou 3 ocorrencias
@@ -415,7 +416,7 @@ function dropSession(wipe) {
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) cloudFlush(); });
 addEventListener('pagehide', () => {
-  if (ONLINE_URL && cloud.dirty && on.token && cloud.ready && save) fetch(`${ONLINE_URL}/rest/v1/rpc/gog_save_put`, { method: 'POST', keepalive: true, headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }) }).catch(() => {});
+  if (ONLINE_URL && cloud.dirty && !cloud.block && !verForce && on.token && cloud.ready && save && (save.bld = GAME_BUILD)) fetch(`${ONLINE_URL}/rest/v1/rpc/gog_save_put`, { method: 'POST', keepalive: true, headers: { apikey: ONLINE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: on.token, p_save: save, p_rev: cloud.rev, p_dev: DEV_ID }) }).catch(() => {});
 });
 function menuAccount() { if (ONLINE_URL && on.token) btn(190, 8, 150, 24, 'Personagens', () => { state = 'hub'; tab = 'profile'; chList = null; editProf = null; }, { size: 12, col: '#2a3a5a', off: !save }); if (ONLINE_URL && on.token) btn(8, 8, 176, 24, cloud.confirmOut ? 'Sair sem guardar?' : 'Sair: ' + on.nick, rkLogout, { size: 12, col: cloud.confirmOut ? '#a03a3a' : '#3a2a3a' }); }
 function sumSave(sv) { let w = 0; for (const k in (sv.farmBest || {})) w = Math.max(w, sv.farmBest[k] | 0); return [`${CLASSES[sv.cls].name} · Nv ${sv.pl.lv}`, '¢' + gfmt(sv.gold | 0) + '   ◆' + (sv.gems | 0), 'Campanha: onda ' + w]; }
@@ -459,3 +460,21 @@ drawOptions = function () {
   _dOptSave.apply(this, arguments);
   if (cloud.block && !asOpen) btn(190, 448, 100, 34, T2('Gravar agora', 'Save now'), async () => { cloud.block = false; cloud.tTry = null; cloud.dirty = true; const ok = await cloudFlush(); if (ok) hubToast = { t: 5, s: T2('Progresso gravado no servidor.', 'Progress saved to the server.'), col: '#6f6' }; }, { size: 13, col: '#8a3a2a', hot: '#b04a3a' });
 };
+
+// ---- atualizacao automatica: o site publica version.json com a versao atual. Se houver uma mais nova, o jogo grava e recarrega
+// (so no acampamento, no menu ou nas opcoes: nunca a meio de uma missao). O ?b= no endereco obriga o browser a ir buscar o index.html novo.
+let verNew = 0, verT = 5, verBusy = false, verForce = false;
+async function verCheck() { try { const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; const j = await r.json(); if ((j.build | 0) > GAME_BUILD) verNew = Math.max(verNew, j.build | 0); } catch (e) {} }
+function verTick(dt) {
+  verT -= dt; if (verT <= 0) { verT = 120; verCheck(); }
+  if (verNew && !verBusy && ['hub', 'menu', 'options', 'login', 'class'].includes(state)) verReload();
+}
+async function verReload() {
+  verBusy = true; hubToast = { t: 6, s: T2('Nova versão do jogo: a atualizar...', 'New game version: updating...'), col: '#6cf' };
+  if (!verForce && ONLINE_URL && on.token && cloud.ready && save && (cloud.dirty || cloud.timer || cloud.busy)) {
+    const ok = await cloudFlush();
+    if (!ok) { hubToast = { t: 8, s: T2('Há uma versão nova, mas o progresso ainda não gravou. Tenta de novo daqui a pouco.', 'A new version is out, but your progress has not saved yet. Trying again shortly.'), col: '#ffd34a' }; verNew = 0; verT = 30; verBusy = false; return; }
+  }
+  try { location.replace(location.pathname + '?b=' + verNew); } catch (e) { verBusy = false; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) verT = Math.min(verT, 1); });   // ao voltar ao separador do jogo, confirma logo

@@ -1,0 +1,76 @@
+# Publica o jogo a cada merge no main:
+#   1. testes (versao alinhada + testes SQL),
+#   2. migracoes SQL no Supabase (so as que ainda nao correram; ver server/migrations e docs/DEPLOY.md),
+#   3. publica o site no GitHub Pages.
+# Se os testes ou uma migracao falharem, o site NAO e publicado (os jogadores nunca ficam com um jogo novo e um servidor velho).
+# Precisa do secret SUPABASE_DB_URL (o mesmo do backup) e de Settings > Pages > Source = GitHub Actions.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Versao igual em todo o lado
+        run: node tools/check-build.js
+      - name: Testes SQL
+        run: |
+          npm i --no-save --no-package-lock @electric-sql/pglite@0.5.16
+          node server/test-sql.mjs
+          MIGRATIONS=1 node server/test-sql.mjs
+
+  migrate:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secret
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB" ]; then echo "Falta o secret SUPABASE_DB_URL (ver docs/DEPLOY.md)"; exit 1; fi
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+      - name: Apply migrations
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PSQL: /usr/lib/postgresql/17/bin/psql
+        run: bash tools/migrate.sh
+
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: pages
+        uses: actions/deploy-pages@v4
