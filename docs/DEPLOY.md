@@ -23,6 +23,10 @@ Os jogadores que estão no acampamento, no menu ou nas opções recebem a versã
 - Uma migração que já correu **nunca** se edita: faz uma nova.
 - Para alterar uma função que outros patches também mudaram (ex.: `gog_save_put`), injeta só a linha nova com `pg_get_functiondef` + `replace`, como em `005-min-build.sql`.
 
+## Ficheiros antigos `server/update-*.sql`
+
+Eram para correr à mão e alguns nunca correram. A migração `008-sync-supabase.sql` pôs o servidor igual ao `server/supabase.sql`, que tem a versão final de tudo, e manteve ligadas as proteções `enforce-*.sql` que já estavam ligadas. Esses ficheiros antigos já **não são para correr**: ficam só como histórico.
+
 ## Obrigar toda a gente a usar a versão nova
 
 Numa migração:
