@@ -634,6 +634,18 @@ $$;
 create or replace function gog._rw_gems(o jsonb, nw jsonb) returns numeric
 language sql immutable set search_path = '' as $$ select 8 * gog._rw_levels(o, nw)::numeric $$;
 
+-- diamantes dos baus da Torre (a cada 5 andares: 3 + andar/5) nos andares subidos entre dois saves; num dia novo a Torre recomeca no andar 1
+create or replace function gog._tw_gems(o jsonb, nw jsonb) returns numeric
+language plpgsql immutable set search_path = '' as $$
+declare lo int; hi int; r numeric := 0; f int;
+begin
+  if jsonb_typeof(nw->'tw') <> 'object' then return 0; end if;
+  hi := least(greatest(coalesce(gog._n(nw, 'tw', 'f'), 1), 1), 2000)::int;
+  lo := case when jsonb_typeof(o->'tw') = 'object' and coalesce(o->'tw'->>'d', '') = coalesce(nw->'tw'->>'d', '') then least(greatest(coalesce(gog._n(o, 'tw', 'f'), 1), 1), 2000)::int else 1 end;
+  for f in lo..hi - 1 loop if f % 5 = 0 then r := r + 3 + floor(f / 5); end if; end loop;
+  return r;
+end $$;
+
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
 declare sl double precision := least(1, dt / 60); k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
@@ -694,7 +706,8 @@ begin
     if gog._tot(nw->'stones') > gog._tot(o->'stones') + greatest(60, 200 * sl) + dt / 2 then return 'growth:stones'; end if;
     if gog._tot(nw->'wst') > gog._tot(o->'wst') + greatest(150, 200 * sl) + dt / 2 then return 'growth:copies'; end if;
     -- diamantes: so sobem por subir de nivel (a cada 10), baus, conquistas recebidas (max. 75 cada) e o codigo promocional
-    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + greatest(40, 90 * sl) + gog._rw_gems(o, nw);
+    allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + greatest(40, 90 * sl) + gog._rw_gems(o, nw)
+      + 5 * greatest(0, r1 - r0) + gog._tw_gems(o, nw) + 8 * greatest(0, gog._n(nw, 'daily', 'n') - gog._n(o, 'daily', 'n'));   -- o que o save prova: raids ganhas (ate 5 cada), baus da Torre e missoes diarias (3 + bonus 5)
     -- reembolso unico das skins removidas: so conta o que o save anterior provava ter comprado (300, 600 e 900 diamantes)
     if nw ? 'skRef' and not (o ? 'skRef') then
       foreach c in array array['knight', 'archer', 'mage'] loop
@@ -985,7 +998,7 @@ do $$
 declare f text;
 begin
   foreach f in array array['gog._nv(jsonb)', 'gog._n(jsonb,text[])', 'gog._idx(jsonb,int)', 'gog._ach_ok(text,jsonb)', 'gog._title_ach(text)', 'gog._title_ok(jsonb,bigint,text)',
-    'gog._check_save(jsonb,jsonb,double precision,bigint)', 'gog._violation(bigint,text,text)'] loop
+    'gog._check_save(jsonb,jsonb,double precision,bigint)', 'gog._violation(bigint,text,text)', 'gog._tw_gems(jsonb,jsonb)'] loop
     execute format('revoke all on function %s from public', f);
     if exists (select 1 from pg_roles where rolname = 'anon') then execute format('revoke all on function %s from anon', f); end if;
     if exists (select 1 from pg_roles where rolname = 'authenticated') then execute format('revoke all on function %s from authenticated', f); end if;
