@@ -773,6 +773,15 @@ begin
   return jsonb_build_object('ok', true, 'n', tgt - cd, 'from', cd + 1, 'rev', newrev, 'chestDone', tgt, 'gold', g, 'gems', gm, 'pts', pt, 'stones', to_jsonb(st), 'items', items, 'wpn', wp);
 end $$;
 
+-- versao minima do jogo: saves de versoes mais antigas sao recusados com 'update' (o jogo recarrega para a versao nova).
+-- Muda-se com uma migracao: update gog.config set v = '80' where k = 'min_build';
+create table if not exists gog.config (k text primary key, v text not null);
+alter table gog.config enable row level security; revoke all on gog.config from public;
+insert into gog.config (k, v) values ('min_build', '0') on conflict (k) do nothing;
+create or replace function gog._min_build() returns int
+language sql stable security definer set search_path = '' as $$ select coalesce((select case when v ~ '^[0-9]{1,6}$' then v::int end from gog.config where k = 'min_build'), 0) $$;
+revoke all on function gog._min_build() from public;
+
 create or replace function public.gog_save_put(p_token text, p_save jsonb, p_rev int, p_dev text default null) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare pid bigint; v gog.players; newrev int; c text; reason text; banned boolean; pts numeric; dtv double precision;
@@ -782,6 +791,7 @@ begin
   if p_save is null or jsonb_typeof(p_save) <> 'object' or not (p_save ? 'cls') or p_rev is null then
     return jsonb_build_object('ok', false, 'error', 'bad_data');
   end if;
+  if coalesce(gog._n(p_save, 'bld'), 0) < gog._min_build() then return jsonb_build_object('ok', false, 'error', 'update', 'min', gog._min_build()); end if;   -- versao antiga do jogo: tem de recarregar
   if length(p_save::text) > 600000 then return jsonb_build_object('ok', false, 'error', 'too_big'); end if;
   select * into v from gog.players where id = pid for update;
   if v.save is not null and gog._n(p_save, 'ep') <> gog._n(v.save, 'ep') then return jsonb_build_object('ok', false, 'error', 'epoch'); end if;   -- o admin repos este save: o save que o cliente tem (local) e antigo e nunca pode substituir o do servidor
@@ -1409,6 +1419,11 @@ end $$;
 create or replace function gog._obj(j jsonb) returns jsonb
 language sql immutable set search_path = '' as $$ select case when jsonb_typeof(j) = 'object' then j else '{}'::jsonb end $$;
 
+-- sexta-feira em Lisboa (desconto de 20% na loja); numa funcao para os testes a poderem desligar
+create or replace function gog._friday() returns boolean
+language sql stable set search_path = '' as $$ select extract(isodow from now() at time zone 'Europe/Lisbon') = 5 $$;
+revoke all on function gog._friday() from public;
+
 create or replace function public.gog_buy(p_token text, p_what text, p_n int default 0, p_s text default null) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare pid bigint; v gog.players; s jsonb; gold numeric; gems numeric; cg numeric := 0; cd numeric := 0; slots int; own jsonb; ar jsonb; newrev int;
@@ -1506,7 +1521,7 @@ begin
     pets := pets || jsonb_build_object('names', gog._obj(pets->'names') || jsonb_build_object(pk, nm));
     s := jsonb_set(s, '{pets}', pets);
   end if;
-  if extract(isodow from now() at time zone 'Europe/Lisbon') = 5 then cg := round(cg * .8); cd := round(cd * .8); end if;   -- sexta: -20%
+  if gog._friday() then cg := round(cg * .8); cd := round(cd * .8); end if;   -- sexta: -20%
   if gold < cg or gems < cd then return jsonb_build_object('ok', false, 'error', 'funds'); end if;
   s := jsonb_set(s, '{gold}', to_jsonb(gold - cg));
   s := jsonb_set(s, '{gems}', to_jsonb(gems - cd));
