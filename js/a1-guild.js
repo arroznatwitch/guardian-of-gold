@@ -39,7 +39,7 @@ async function gbLoad(force) {
   rk.gbBusy = true; const r = await rpc('gog_guild_board', { p_token: on.token, p_offset: 0 }); rk.gbBusy = false;
   if (r.ok) rk.gb = { rows: r.rows || [], mine: r.mine || null, t: Date.now() }; else rkSay(r.error);
 }
-function saveGStyle() { guildCall('gog_guild_style', { p_color: gld.dc | 0, p_emblem: gld.de | 0, p_motto: (rk.gmotto || '').trim() }, E2('Saved!', 'Guardado!')).then(r => { if (r && r.ok) rk.gb = null; }); }
+function saveGStyle() { guildCall('gog_guild_style', { p_color: gld.dc | 0, p_emblem: gld.de | 0, p_motto: (rk.gmotto || '').trim() }, E2('Saved!', 'Guardado!')).then(r => { if (r && r.ok) { rk.gb = null; rk.at = {}; if (gld.info) Object.assign(gld.info, { color: gld.dc | 0, emblem: gld.de | 0, motto: (rk.gmotto || '').trim() }); } }); }   // o painel e os rankings mostram logo a cor e o emblema novos
 let gld = { cust: false, dc: 0, de: 0, info: null, list: [], loaded: false, busy: false, msg: '', col: '#f88', cd: 0, page: 0, at: 0, ask: '' };
 const gb = () => { const p = gld.info && gld.info.perks; return p ? { xp: p.xp * .01, gold: p.gold * .015, drop: p.drop * .0025, attr: p.attr * .005 } : { xp: 0, gold: 0, drop: 0, attr: 0 }; };
 const GMSG = {
