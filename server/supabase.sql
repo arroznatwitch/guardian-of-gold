@@ -352,20 +352,7 @@ begin
   if v.save is not null then n_level := least(n_level, greatest(1, gog._n(v.save, 'pl', 'lv'))::int); end if;   -- o nivel publico nunca passa do nivel do save verificado
   dt := least(greatest(extract(epoch from now() - coalesce(v.submitted_at, v.created_at)), 20), 7 * 86400);
   o_w := array[v.w0, v.w1, v.w2, v.w3, v.w4, v.w5];
-  -- limites de plausibilidade (o 1.o envio usa tetos fixos, os seguintes dependem do tempo passado)
-  if first_time then
-    if n_level > 300 or n_kills > 500000 or n_gold > 1000000000000 or n_bosses > 5000 or n_raids > 1000 or greatest(n_w[1], n_w[2], n_w[3], n_w[4], n_w[5], n_w[6]) > 300 then
-      return jsonb_build_object('ok', false, 'error', 'implausible');
-    end if;
-  else
-    if n_level > v.level + 10 + dt / 10 or n_kills > v.kills + 2000 + dt * 50 or n_gold > v.gold + 1000000 + dt * 5000
-       or n_bosses > v.bosses + 100 + dt / 3 or n_raids > v.raids + 20 + dt / 10 then
-      return jsonb_build_object('ok', false, 'error', 'implausible');
-    end if;
-    for i in 1..6 loop
-      if n_w[i] > o_w[i] + 20 + dt / 2 then return jsonb_build_object('ok', false, 'error', 'implausible'); end if;
-    end loop;
-  end if;
+  -- sem limites de crescimento: os valores acima ja vem do save verificado pelo servidor (gog_save_put); os limites so davam falsos 'implausible' (ex.: x2 de fim de semana)
   nb := gog._clean_build(p->'build');
   nb := gog._truth_build(nb, v.save);
   if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 4 * n_level + 1240 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico

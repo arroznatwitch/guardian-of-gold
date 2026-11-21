@@ -43,6 +43,9 @@ await db.exec('reset role'); await db.exec("update gog.players set submitted_at 
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 26, kills: 1500, w0: 15 })]); ok('submit plausible', r.ok, r);
 await db.exec('reset role'); await db.exec("update gog.players set submitted_at = now() - interval '5 minutes'"); await db.exec('set role anon');
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({ level: 10, kills: 10, gold: 1, w0: 1 })]); ok('lower values accepted but never decrease', r.ok, r);
+// um salto grande no save verificado (ex.: x2 de fim de semana, ou dias sem enviar) nunca e recusado: o ranking confia no save validado pelo gog_save_put
+await db.exec('reset role'); await db.exec(`update gog.players set submitted_at = now() - interval '30 seconds', save = '{"cls":"mage","pl":{"lv":26},"stats":{"kills":1500,"gold":50000000,"bosses":4},"farmBest":[15,3,0,0,0,0]}'::jsonb where nick_key = 'rui_99'`); await db.exec('set role anon');
+r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, S({})]); ok('ranking: a big jump in the verified save is accepted', r.ok, r);
 r = await q('select public.gog_board($1,10,$2)', ['level', tok2]); ok('board level keeps max', r.ok && r.rows[0].value === 26 && r.me.rank === 1, r);
 r = await q('select public.gog_submit($1,$2::jsonb)', ['f'.repeat(64), S({})]); ok('bad token', r.error === 'auth', r);
 r = await q('select public.gog_submit($1,$2::jsonb)', [tok2, '{"level":"x"}']); ok('bad data', r.error === 'bad_data' || r.error === 'slow', r);
