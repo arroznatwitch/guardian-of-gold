@@ -646,7 +646,7 @@ end $$;
 
 create or replace function gog._check_save(o jsonb, nw jsonb, dt double precision, p_root bigint) returns text
 language plpgsql security definer set search_path = '' as $$
-declare sl double precision := least(1, dt / 60); k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text;
+declare sl double precision := least(1, dt / 60); k text; val jsonb; oval jsonb; n_claim int := 0; allow numeric; lv0 numeric; lv1 numeric; i int; j int; g0 numeric; g1 numeric; t text; s0 numeric; s1 numeric; r0 numeric; r1 numeric; refund numeric := 0; c text; dts double precision;
 begin
   -- valores impossiveis (ban imediato)
   if gog._n(nw, 'gold') > 2147483647 or gog._n(nw, 'gems') > 60000 or gog._n(nw, 'pl', 'lv') > 400 or gog._n(nw, 'stats', 'kills') > 5000000
@@ -678,28 +678,31 @@ begin
   if not gog._title_ok(nw, p_root, t) then return 'title:' || left(coalesce(t, ''), 20); end if;
   -- saltos impossiveis face ao save anterior (dt = segundos desde a gravacao anterior)
   if o is not null then
+    -- abates, bosses, ondas, raids, niveis, pedras e copias so entram no save NO FIM da missao, mas o jogo grava a meio (tempo de jogo):
+    -- por isso contam desde a ultima vez que subiram (kt, escrito pelo servidor), nao desde a ultima gravacao. Sem kt: desde a ultima gravacao
+    dts := least(greatest(dt, case when o ? 'kt' and jsonb_typeof(o->'kt') = 'number' then extract(epoch from now()) - (o->>'kt')::numeric else 0 end), 7 * 86400);
     lv0 := gog._n(o, 'pl', 'lv'); g0 := gog._n(o, 'gems');
-    if lv1 > lv0 + greatest(5, 8 * sl) + dt / 10 then return 'level'; end if;
-    if gog._n(nw, 'stats', 'kills') > gog._n(o, 'stats', 'kills') + greatest(100, 100 * sl) + dt * 12 then return 'kills'; end if;
-    if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + greatest(5, 10 * sl) + dt / 8 then return 'bosses'; end if;
-    if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + greatest(2, 2 * sl) + dt / 60 then return 'guard'; end if;
+    if lv1 > lv0 + greatest(5, 8 * sl) + dts / 10 then return 'level'; end if;
+    if gog._n(nw, 'stats', 'kills') > gog._n(o, 'stats', 'kills') + greatest(100, 100 * sl) + dts * 12 then return 'kills'; end if;
+    if gog._n(nw, 'stats', 'bosses') > gog._n(o, 'stats', 'bosses') + greatest(5, 10 * sl) + dts / 8 then return 'bosses'; end if;
+    if gog._n(nw, 'stats', 'guard') > gog._n(o, 'stats', 'guard') + greatest(2, 2 * sl) + dts / 60 then return 'guard'; end if;
     if gog._n(nw, 'stats', 'fuses') > gog._n(o, 'stats', 'fuses') + greatest(5, 5 * sl) + dt / 20 then return 'fuses'; end if;
     if gog._n(nw, 'gold') > gog._n(o, 'gold') + gog._gcred(o, dt) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'gold'; end if;
     if gog._n(nw, 'stats', 'spent') > gog._n(o, 'stats', 'spent') + gog._n(o, 'gold') + gog._gcred(o, dt) + dt * 2000 + gog._rw_gold(o, nw) + gog._ar_gold(o, nw) then return 'spent'; end if;
     s0 := 0; s1 := 0; r0 := 0; r1 := 0;
     for i in 0..5 loop
-      if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + greatest(3, 6 * sl) + dt / 8 then return 'waves'; end if;
+      if gog._nv(gog._idx(nw->'farmBest', i)) > gog._nv(gog._idx(o->'farmBest', i)) + greatest(3, 6 * sl) + dts / 8 then return 'waves'; end if;
       s0 := s0 + gog._nv(gog._idx(o->'pres', i)); s1 := s1 + gog._nv(gog._idx(nw->'pres', i));
       for j in 0..4 loop
         r0 := r0 + gog._nv(gog._idx(gog._idx(o->'raids', i), j)); r1 := r1 + gog._nv(gog._idx(gog._idx(nw->'raids', i), j));
       end loop;
     end loop;
-    if s1 > s0 + 1 + dt / 120 then return 'prestige'; end if;
-    if r1 > r0 + greatest(2, 3 * sl) + dt / 45 then return 'raids'; end if;
+    if s1 > s0 + 1 + dts / 120 then return 'prestige'; end if;
+    if r1 > r0 + greatest(2, 3 * sl) + dts / 45 then return 'raids'; end if;
     -- crescimento de armas, pedras e copias (antes so se verificava o valor maximo de cada uma)
     if gog._tot(nw->'wl') > gog._tot(o->'wl') + greatest(6, 12 * sl) + dt / 10 then return 'growth:wl'; end if;
-    if gog._tot(nw->'stones') > gog._tot(o->'stones') + greatest(60, 200 * sl) + dt / 2 then return 'growth:stones'; end if;
-    if gog._tot(nw->'wst') > gog._tot(o->'wst') + greatest(150, 200 * sl) + dt / 2 then return 'growth:copies'; end if;
+    if gog._tot(nw->'stones') > gog._tot(o->'stones') + greatest(60, 200 * sl) + dts / 2 then return 'growth:stones'; end if;
+    if gog._tot(nw->'wst') > gog._tot(o->'wst') + greatest(150, 200 * sl) + dts / 2 then return 'growth:copies'; end if;
     -- diamantes: so sobem por subir de nivel (a cada 10), baus, conquistas recebidas (max. 75 cada) e o codigo promocional
     allow := 10 * greatest(0, floor(lv1 / 10) - floor(lv0 / 10)) + 5 * greatest(0, gog._n(nw, 'chestDone') - gog._n(o, 'chestDone')) + 75 * n_claim + greatest(40, 90 * sl) + gog._rw_gems(o, nw)
       + 5 * greatest(0, r1 - r0) + gog._tw_gems(o, nw) + 8 * greatest(0, gog._n(nw, 'daily', 'n') - gog._n(o, 'daily', 'n'));   -- o que o save prova: raids ganhas (ate 5 cada), baus da Torre e missoes diarias (3 + bonus 5)
@@ -820,6 +823,9 @@ begin
   if v.save is not null then   -- credito de ouro (o servidor escreve-o, o cliente nao o controla)
     p_save := jsonb_set(p_save, '{gcred}', to_jsonb(greatest(0, gog._gcred(v.save, dtv) - greatest(0, gog._n(p_save, 'gold') - gog._n(v.save, 'gold') - gog._rw_gold(v.save, p_save) - gog._ar_gold(v.save, p_save) - dtv * 2000))));
   else p_save := jsonb_set(p_save, '{gcred}', to_jsonb(500000)); end if;
+  if v.save is not null then   -- kt: quando os abates/bosses/raids subiram pela ultima vez (so o servidor o escreve; ver gog._check_save)
+    p_save := case when gog._n(p_save, 'stats', 'kills') > gog._n(v.save, 'stats', 'kills') or gog._n(p_save, 'stats', 'bosses') > gog._n(v.save, 'stats', 'bosses') or gog._raids_total(p_save) > gog._raids_total(v.save) then jsonb_set(p_save, '{kt}', to_jsonb(floor(extract(epoch from now())))) when v.save ? 'kt' then jsonb_set(p_save, '{kt}', v.save->'kt') else p_save - 'kt' end;
+  end if;
   update gog.players set save = p_save, char_cls = coalesce(char_cls, c), save_rev = save_rev + 1, save_at = now(), save_dev = left(p_dev, 32) where id = pid returning save_rev into newrev;
   if v.save is not null then   -- guilda: os mobs, bosses e raids novos (ja validados acima) dao pontos a guilda
     pts := greatest(0, gog._n(p_save, 'stats', 'kills') - gog._n(v.save, 'stats', 'kills')) + 10 * greatest(0, gog._n(p_save, 'stats', 'bosses') - gog._n(v.save, 'stats', 'bosses')) + 60 * greatest(0, gog._raids_total(p_save) - gog._raids_total(v.save));
