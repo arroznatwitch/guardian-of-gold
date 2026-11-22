@@ -10,6 +10,11 @@ Se o passo 1 ou o 2 falharem, o site **não** é publicado. Assim nunca fica um 
 
 Os jogadores que estão no acampamento, no menu ou nas opções recebem a versão nova em cerca de 2 minutos: o jogo vê o `version.json`, grava e recarrega sozinho. A meio de uma missão espera que voltes ao acampamento.
 
+## Se a Action falhar
+
+- **No passo deploy** ("No artifacts named github-pages"): é uma falha temporária do GitHub. A Action já tenta publicar uma segunda vez sozinha, 30 s depois. Se mesmo assim falhar, usa **Actions → Deploy → Run workflow** (uma corrida nova). Não uses "Re-run": deixa dois artefactos na mesma corrida e volta a falhar.
+- **Nos testes ou nas migrações:** o site não é publicado e o erro aparece no passo que falhou.
+
 ## Configurar (uma vez)
 
 1. **Secret `SUPABASE_DB_URL`** (o mesmo do backup, ver `docs/BACKUP.md`): GitHub → Settings → Secrets and variables → Actions.
