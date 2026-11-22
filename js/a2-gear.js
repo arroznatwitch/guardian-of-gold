@@ -66,7 +66,7 @@ function hubChar() {
   });
   const rc = 50 * L, used = Object.values(a).reduce((x, y) => x + y, 0);
   btn(504, 314, 130, 26, `Redistribuir (¢${rc})`, () => { if (used > 0 && save.gold >= rc) { spendG(rc); save.pts += used; for (const q in a) a[q] = 0; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: used === 0, col: '#6a3a2a' });
-  { const bc = disc(attrBuyCost(save.buyN | 0)); btn(641, 314, 130, 26, `+1 ponto ¢${gfmt(bc)}`, () => { if (save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo; cada compra torna o proximo mais caro
+  { const bc = disc(attrBuyCost(save.buyN | 0)), bmax = (save.buyN | 0) >= ATTR_BUY_MAX; btn(641, 314, 130, 26, bmax ? T2('Pontos: MÁX', 'Points: MAX') : `+1 ponto ¢${gfmt(bc)}`, () => { if (!bmax && save.gold >= bc) { spendG(bc); save.pts++; save.buyN = (save.buyN | 0) + 1; persist(); SFX.buy(); } else SFX.error(); }, { size: 12, off: bmax || save.gold < bc, col: '#2f6a8a', hot: '#3f8ab0' }); }   // compra um ponto de atributo (ate ATTR_BUY_MAX); cada compra torna o proximo mais caro
   txt('Estatísticas', 504, 362, 15, '#f0c060', 'left', 'bold');
   // estatisticas agrupadas pelos 4 atributos: a linha mostra os valores; passar o rato (ou o dedo) abre o detalhe
   const s = stats(), pc = (v, d) => v.toFixed(d) + '%';   // as cores de cada estatistica mantem-se
