@@ -26,6 +26,7 @@ const CLASSES = {
       { id: 'm_dark',   n: 'Cajado Vampírico', price: 30000, t: 'bolt', kind: 'blood', dmg: 3.6, cd: .45, spd: 400, pierce: 1, leech: .06, info: 'Rouba vida enquanto dispara.', sk: { n: 'Dreno de Vida', cd: 11, d: 'Suga a vida dos inimigos próximos.' } } ] },
 };
 const MAXLV = 120, xpNeed = l => Math.round((60 + 40 * (l - 1)) * (l <= 40 ? 1 : l <= 70 ? 1.09 ** (l - 40) : 1.09 ** 30 * 1.04 ** (l - 70)));   // nivel maximo 120; a partir do 40 o XP necessario cresce muito (9% por nivel ate ao 70, depois 4%)
+const ATTR_BUY_MAX = 1200;   // maximo de pontos comprados (o servidor recusa mais: gog._attr_lim)
 const attrBuyCost = n => Math.round((100 + 20 * n + .5 * n * n) / 5) * 5;   // preco do ponto de atributo n (n = pontos ja comprados): 100, 120, 140, 165, 190... sobe sempre
 const GOLD_MAX = 2147483647;   // limite do ouro: maior inteiro de 32 bits
 const gfmt = n => String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
