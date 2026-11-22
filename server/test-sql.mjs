@@ -270,6 +270,16 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
     ok('attrs: an absurd value is still an instant ban', await cs({ attr: { str: 5000 }, pts: 0 }) === 'abs:attrs');
     ok('attrs: bought points count', await cs({ attr: { str: 400 }, pts: 50, buyN: 100 }) === null);
     await db.exec('set role anon'); }
+  // abates so entram no fim da missao, mas o jogo grava a meio: o limite conta desde que os abates subiram (kt), nao desde a ultima gravacao
+  { const TK6 = await fresh('ac_kills'); r = await put(TK6, {}, 0); let rv = r.rev;
+    r = await put(TK6, { stats: { kills: 50, gold: 0, bosses: 0 } }, rv); ok('kills: a normal mission end passes and sets kt', r.ok, r); rv = r.rev;
+    await db.exec('reset role'); const kt0 = (await db.query("select (save->>'kt')::numeric k from gog.players where nick_key = 'ac_kills'")).rows[0].k;
+    await db.exec("update gog.players set save = jsonb_set(save, '{kt}', to_jsonb(floor(extract(epoch from now())) - 1200)) where nick_key = 'ac_kills'"); await db.exec('set role anon');
+    r = await put(TK6, { stats: { kills: 50, gold: 0, bosses: 0 }, gold: 10 }, rv); ok('kills: a save in the middle of the mission keeps kt', r.ok, r); rv = r.rev;
+    await db.exec('reset role'); const kt1 = (await db.query("select (save->>'kt')::numeric k from gog.players where nick_key = 'ac_kills'")).rows[0].k; await db.exec('set role anon');
+    ok('kills: kt was set by the server and kept by the mid-mission save', kt0 > 0 && Math.abs(Number(kt1) - (Number(kt0) - 1200)) <= 2, [kt0, kt1]);
+    r = await put(TK6, { stats: { kills: 3050, gold: 0, bosses: 0 }, gold: 10 }, rv); ok('kills: 3000 kills at the end of a 20-minute mission pass (last save was 2 min ago)', r.ok, r); rv = r.rev;
+    r = await put(TK6, { stats: { kills: 103050, gold: 0, bosses: 0 }, gold: 10 }, rv); ok('kills: 100 000 kills right after are still refused', r.error === 'cheat', r); }
   // titulos
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);
