@@ -263,6 +263,13 @@ r = await q('select public.gog_nick_free($1)', ['rui_99']); ok('nick stays reser
     r = await put(TK4, {}, 0); ok('min build: a save from an old game version gets update', r.error === 'update' && r.min === 80, r);
     r = await put(TK4, { bld: 80 }, 0); ok('min build: a save from the current version passes', r.ok, r);
     await db.exec('reset role'); await db.exec("update gog.config set v = '0' where k = 'min_build'"); await db.exec('set role anon'); }
+  // pontos de atributo: o reset das recompensas (16/11) deu os pontos delas duas vezes, isso e legitimo; so o absurdo bane logo
+  { await db.exec('reset role'); const cs = async o => (await db.query('select gog._check_save(null, $1::jsonb, 60, 1) r', [JSON.stringify(Object.assign({ cls: 'archer', pl: { lv: 77, xp: 0 }, gold: 0, gems: 0, chestDone: 77, title: '' }, o))])).rows[0].r;
+    ok('attrs: level 77 with the level points and the rewards twice (378) passes', await cs({ attr: { vit: 100, str: 150, agi: 100, per: 28 }, pts: 0 }) === null);
+    ok('attrs: a bit above the limit is a normal violation, not an instant ban', await cs({ attr: { vit: 200, str: 200, agi: 100, per: 0 }, pts: 0 }) === 'attrs');
+    ok('attrs: an absurd value is still an instant ban', await cs({ attr: { str: 5000 }, pts: 0 }) === 'abs:attrs');
+    ok('attrs: bought points count', await cs({ attr: { str: 400 }, pts: 50, buyN: 100 }) === null);
+    await db.exec('set role anon'); }
   // titulos
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'inferno' }, rev); ok('anticheat: a title you did not earn is refused', r.error === 'cheat' || r.error === 'banned', r);
   r = await put(TK2, { stats: { kills: 1200, gold: 0, bosses: 0 }, ach: { kills1000: 2 }, gems: 25, title: 'beta' }, rev); ok('anticheat: beta title needs the promo code', r.error === 'cheat' || r.error === 'banned', r);

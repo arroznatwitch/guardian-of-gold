@@ -355,7 +355,7 @@ begin
   -- sem limites de crescimento: os valores acima ja vem do save verificado pelo servidor (gog_save_put); os limites so davam falsos 'implausible' (ex.: x2 de fim de semana)
   nb := gog._clean_build(p->'build');
   nb := gog._truth_build(nb, v.save);
-  if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 4 * n_level + 1240 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico
+  if nb is not null and jsonb_typeof(nb->'attr') = 'object' and coalesce((nb->'attr'->>'vit')::numeric, 0) + coalesce((nb->'attr'->>'str')::numeric, 0) + coalesce((nb->'attr'->>'agi')::numeric, 0) + coalesce((nb->'attr'->>'per')::numeric, 0) > 5 * n_level + 1240 then nb := nb - 'attr'; end if;   -- atributos impossiveis para o nivel: nao entram no perfil publico
   if nb is not null then
     nb := nb - 'title';   -- o titulo mostrado vem do save verificado, nunca do pedido
     if v.save is not null and coalesce(v.save->>'title', '') <> '' and gog._title_ok(v.save, coalesce(v.owner, v.id), v.save->>'title') then nb := nb || jsonb_build_object('title', v.save->>'title'); end if;
@@ -569,17 +569,28 @@ create or replace function gog._item_bad(it jsonb) returns boolean
 language sql immutable set search_path = '' as $$
   select jsonb_typeof(it) = 'object' and (gog._n(it, 'il') > 125 or gog._n(it, 'il') < 0 or gog._n(it, 'ench') > 12 or gog._n(it, 'ench') < 0 or gog._n(it, 'st') > 3 or gog._n(it, 'st') < 0 or gog._n(it, 'r') > 4 or gog._n(it, 'r') < 0)
 $$;
+-- pontos de atributo: limite e total. 3 por nivel + as recompensas por nivel (ate 1 por nivel), que o reset unico das recompensas (rwv 3, 16/11)
+-- deixou resgatar duas vezes, por isso ate 5 por nivel; mais os comprados (max. 1200) e folga
+create or replace function gog._attr_lim(s jsonb) returns numeric
+language sql immutable set search_path = '' as $$ select 5 * coalesce(gog._n(s, 'pl', 'lv'), 1) + least(coalesce(gog._n(s, 'buyN'), 0), 1200) + 40 $$;
+create or replace function gog._attr_tot(s jsonb) returns numeric
+language sql immutable set search_path = '' as $$
+  select coalesce((select sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end)
+                   from jsonb_each_text(case when jsonb_typeof(s->'attr') = 'object' then s->'attr' else '{}'::jsonb end) e), 0) + coalesce(gog._n(s, 'pts'), 0)
+$$;
+revoke all on function gog._attr_lim(jsonb) from public; revoke all on function gog._attr_tot(jsonb) from public;
+
 create or replace function gog._sane(s jsonb) returns text
 language plpgsql immutable set search_path = '' as $$
 declare b jsonb; it jsonb; lim numeric; tot numeric;
 begin
-  lim := 4 * gog._n(s, 'pl', 'lv') + least(gog._n(s, 'buyN'), 1200) + 40;   -- 3 pontos por nivel + ate 1 por nivel das recompensas por nivel + os comprados
+  lim := gog._attr_lim(s);
   if gog._n(s, 'pts') < 0 or gog._n(s, 'buyN') < 0 or gog._n(s, 'pts') > 100000 then return 'abs:neg'; end if;
   if jsonb_typeof(s->'lo'->'b') = 'array' then   -- builds guardadas (loadouts)
     for b in select x from jsonb_array_elements(s->'lo'->'b') x loop
       if jsonb_typeof(b->'attr') = 'object' then
         select coalesce(sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end), 0) into tot from jsonb_each_text(b->'attr') e;
-        if tot > lim then return 'abs:attrs'; end if;
+        if tot > 2 * lim then return 'abs:attrs'; elsif tot > lim then return 'attrs'; end if;   -- so o absurdo bane logo
       end if;
       if jsonb_typeof(b->'gear') = 'object' then for it in select e.value from jsonb_each(b->'gear') e loop if gog._item_bad(it) then return 'abs:items'; end if; end loop; end if;
     end loop;
@@ -648,13 +659,10 @@ begin
   if jsonb_typeof(nw->'pets'->'lv') = 'object' and exists (select 1 from jsonb_each(nw->'pets'->'lv') e where gog._nv(e.value) > 30) then return 'abs:pets'; end if;   -- os pets vao ate ao nivel 30
   lv1 := gog._n(nw, 'pl', 'lv'); g1 := gog._n(nw, 'gems');
   if gog._n(nw, 'chestDone') > lv1 + 1 then return 'chests'; end if;
-  -- atributos: os pontos distribuidos + por gastar nunca passam de 3 por nivel + os pontos comprados (max. 1200); valores absurdos = ban imediato
-  if (select coalesce(sum(case when e.value ~ '^[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$' then e.value::numeric else 1e12 end), 0)
-        from jsonb_each_text(case when jsonb_typeof(nw->'attr') = 'object' then nw->'attr' else '{}'::jsonb end) e)
-     + coalesce(gog._n(nw, 'pts'), 0) > 4 * coalesce(gog._n(nw, 'pl', 'lv'), 1) + least(coalesce(gog._n(nw, 'buyN'), 0), 1200) + 40
-     or coalesce(gog._n(nw, 'buyN'), 0) > 1200 then
-    return 'abs:attrs';
-  end if;
+  -- atributos: os pontos distribuidos + por gastar nunca passam do limite (gog._attr_lim). So o absurdo (mais do dobro, ou compras acima de 1200) bane logo;
+  -- passar um pouco conta como violacao normal (3 = conta desativada), para um erro de contas nunca banir um jogador legitimo de uma vez
+  if coalesce(gog._n(nw, 'buyN'), 0) > 1200 or gog._attr_tot(nw) > 2 * gog._attr_lim(nw) then return 'abs:attrs'; end if;
+  if gog._attr_tot(nw) > gog._attr_lim(nw) then return 'attrs'; end if;
   if o is not null and gog._items_new_bad(o, nw) then return 'items:stats'; end if;   -- itens novos com estatisticas impossiveis para o nivel e a raridade
   if gog._sane(nw) is not null then return gog._sane(nw); end if;   -- itens, niveis de arma, pedras, copias e builds guardadas
   -- conquistas: so as novas precisam de prova no proprio save
